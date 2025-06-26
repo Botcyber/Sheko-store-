@@ -1,0 +1,68 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>دخول / تسجيل</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: 'Cairo', sans-serif; background: #f0f0f0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    .container { background: white; padding: 30px; border-radius: 10px; width: 350px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    h2 { text-align: center; }
+    input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
+    button { width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; margin-top: 10px; }
+    .switch { color: blue; text-align: center; margin-top: 10px; cursor: pointer; }
+    #message { text-align: center; margin-top: 10px; color: red; }
+  </style>
+  <!-- Firebase CDN -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h2 id="formTitle">تسجيل الدخول</h2>
+    <input type="email" id="email" placeholder="البريد الإلكتروني" required>
+    <input type="password" id="password" placeholder="كلمة المرور" required>
+    <button onclick="handleAuth()">دخول</button>
+    <div class="switch" onclick="toggleForm()">إنشاء حساب جديد</div>
+    <div id="message"></div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_BUCKET",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    let isLogin = true;
+    function toggleForm() {
+      isLogin = !isLogin;
+      document.getElementById("formTitle").innerText = isLogin ? "تسجيل الدخول" : "إنشاء حساب";
+      document.querySelector("button").innerText = isLogin ? "دخول" : "تسجيل";
+      document.getElementById("message").innerText = "";
+    }
+
+    function handleAuth() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const message = document.getElementById("message");
+
+      if (isLogin) {
+        auth.signInWithEmailAndPassword(email, password)
+          .then(() => { message.style.color = 'green'; message.innerText = "تم تسجيل الدخول"; })
+          .catch(err => message.innerText = err.message);
+      } else {
+        auth.createUserWithEmailAndPassword(email, password)
+          .then(() => { message.style.color = 'green'; message.innerText = "تم إنشاء الحساب بنجاح"; })
+          .catch(err => message.innerText = err.message);
+      }
+    }
+  </script>
+</body>
+</html>
