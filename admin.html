@@ -1,52 +1,136 @@
 <!DOCTYPE html><html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>لوحة تحكم الأدمن - Sheko Store</title>  <!-- Firebase -->  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>  <script>
+  <title>لوحة المدير - Sheko Store</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      direction: rtl;
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, button, select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
       projectId: "sheko-store",
       storageBucket: "sheko-store.firebasestorage.app",
       messagingSenderId: "113892775847",
-      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882",
-      measurementId: "G-MQCQE3X077"
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
     firebase.initializeApp(firebaseConfig);
-  </script></head>
+    const db = firebase.database();function addBalancePoints() {
+  const uid = document.getElementById("uid").value;
+  const balance = parseInt(document.getElementById("balance").value);
+  const points = parseInt(document.getElementById("points").value);
+  if (uid && !isNaN(balance)) db.ref("balance/" + uid).set(balance);
+  if (uid && !isNaN(points)) db.ref("points/" + uid).set(points);
+  alert("✅ تم التحديث بنجاح");
+}
+
+function loadOrders() {
+  db.ref("orders").once("value").then(snapshot => {
+    const ordersTable = document.getElementById("ordersBody");
+    ordersTable.innerHTML = "";
+    snapshot.forEach(userSnap => {
+      const uid = userSnap.key;
+      userSnap.forEach(orderSnap => {
+        const orderId = orderSnap.key;
+        const data = orderSnap.val();
+        const status = data.status || "قيد الانتظار";
+        const row = `
+          <tr>
+            <td>${uid}</td>
+            <td>${data.mainService} - ${data.subService}</td>
+            <td>${data.account}</td>
+            <td>${data.phone}</td>
+            <td>${data.date}</td>
+            <td>
+              <select onchange="updateStatus('${uid}', '${orderId}', this.value)">
+                <option ${status === "قيد التنفيذ" ? "selected" : ""}>قيد التنفيذ</option>
+                <option ${status === "تم" ? "selected" : ""}>تم</option>
+                <option ${status === "تم الإلغاء" ? "selected" : ""}>تم الإلغاء</option>
+              </select>
+            </td>
+          </tr>
+        `;
+        ordersTable.innerHTML += row;
+      });
+    });
+  });
+}
+
+function updateStatus(uid, orderId, status) {
+  db.ref("orders/" + uid + "/" + orderId + "/status").set(status);
+  alert("✅ تم تحديث الحالة");
+}
+
+window.onload = loadOrders;
+
+  </script>
+</head>
 <body>
-  <h2>لوحة تحكم الأدمن - الطلبات</h2>
-  <div id="orders"></div>  <script>
-    const db = firebase.database();
+  <div class="container">
+    <h2>لوحة التحكم الخاصة بالمدير</h2><h3>إضافة رصيد / نقاط</h3>
+<input type="text" id="uid" placeholder="ادخل UID الخاص بالمستخدم">
+<input type="number" id="balance" placeholder="رصيد بالجنيه">
+<input type="number" id="points" placeholder="نقاط الهدايا">
+<button onclick="addBalancePoints()">تحديث</button>
 
-    function renderOrders(snapshot) {
-      const ordersDiv = document.getElementById("orders");
-      ordersDiv.innerHTML = "";
+<h3>طلبات المستخدمين</h3>
+<table>
+  <thead>
+    <tr>
+      <th>UID</th>
+      <th>الخدمة</th>
+      <th>الحساب / ID</th>
+      <th>رقم التحويل</th>
+      <th>الوقت</th>
+      <th>الحالة</th>
+    </tr>
+  </thead>
+  <tbody id="ordersBody">
+    <tr><td colspan="6">جاري التحميل...</td></tr>
+  </tbody>
+</table>
 
-      snapshot.forEach(userSnap => {
-        userSnap.forEach(orderSnap => {
-          const order = orderSnap.val();
-          const card = document.createElement("div");
-          card.style.border = "1px solid #ccc";
-          card.style.padding = "10px";
-          card.style.margin = "10px";
-          card.innerHTML = `
-            <b>الخدمة:</b> ${order.service} <br>
-            <b>معرّف الحساب:</b> ${order.accountId} <br>
-            <b>المبلغ:</b> ${order.paid} جنيه<br>
-            <b>رقم الهاتف:</b> ${order.phone} <br>
-            <b>التاريخ:</b> ${order.date} <br>
-            <b>صورة التحويل:</b><br>
-            <img src="${order.image}" alt="إيصال التحويل" width="200"> <br>
-          `;
-          ordersDiv.appendChild(card);
-        });
-      });
-    }
-
-    db.ref("orders").once("value")
-      .then(renderOrders)
-      .catch(err => {
-        alert("❌ حدث خطأ: " + err.message);
-      });
-  </script></body>
+  </div>
+</body>
 </html>
