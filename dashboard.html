@@ -1,513 +1,197 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>لوحة التحكم - Dashboard</title>
-
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f4f4f4;
-    margin: 0; padding: 0;
-    direction: rtl;
-    text-align: right;
-  }
-  header {
-    background: #007bff;
-    color: white;
-    padding: 15px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  header div, header button {
-    font-weight: bold;
-    cursor: pointer;
-    user-select: none;
-  }
-  header #logout {
-    background: #ff4d4d;
-    padding: 6px 12px;
-    border-radius: 4px;
-    transition: background 0.3s ease;
-  }
-  header #logout:hover {
-    background: #e04343;
-  }
-  header #infoAccountBtn {
-    background: #28a745;
-    border: none;
-    color: white;
-    padding: 6px 12px;
-    border-radius: 4px;
-    transition: background 0.3s ease;
-  }
-  header #infoAccountBtn:hover {
-    background: #218838;
-  }
-  main {
-    max-width: 650px;
-    margin: 30px auto;
-    background: white;
-    padding: 20px 25px;
-    border-radius: 8px;
-    box-shadow: 0 0 8px rgba(0,0,0,0.1);
-  }
-  label {
-    display: block;
-    margin: 15px 0 8px;
-    font-weight: bold;
-    font-size: 16px;
-  }
-  select, input[type="text"], input[type="number"], input[type="email"] {
-    width: 100%;
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    font-size: 15px;
-    box-sizing: border-box;
-  }
-  button#sendOrderBtn, button#saveProfileBtn {
-    margin-top: 20px;
-    width: 100%;
-    padding: 14px;
-    background: #007bff;
-    border: none;
-    color: white;
-    font-size: 18px;
-    font-weight: bold;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-  button#sendOrderBtn:disabled, button#saveProfileBtn:disabled {
-    background: #aaa;
-    cursor: not-allowed;
-  }
-  #pricesContainer div {
-    margin: 10px 0;
-  }
-  #pricesContainer label {
-    font-weight: normal;
-    cursor: pointer;
-  }
-  #message, #profileMessage {
-    margin-top: 15px;
-    color: red;
-    font-weight: bold;
-    min-height: 24px;
-  }
-  #contactUs {
-    margin-top: 30px;
-    font-size: 14px;
-    text-align: center;
-    color: #333;
-  }
-  #contactUs a {
-    color: #007bff;
-    text-decoration: none;
-  }
-  #contactUs a:hover {
-    text-decoration: underline;
-  }
-
-  /* صندوق معلومات الحساب */
-  #accountInfoModal {
-    display: none;
-    position: fixed;
-    z-index: 999;
-    top: 10%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    max-width: 500px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.25);
-    padding: 25px 20px;
-  }
-  #accountInfoModal.show {
-    display: block;
-  }
-  #accountInfoModal h2 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-weight: bold;
-    text-align: center;
-  }
-  #closeModalBtn {
-    background: #ff4d4d;
-    border: none;
-    color: white;
-    padding: 8px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 15px;
-    width: 100%;
-  }
-  #closeModalBtn:hover {
-    background: #e04343;
-  }
-</style>
+  <meta charset="UTF-8">
+  <title>لوحة التحكم - Sheko Store</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      direction: rtl;
+      background-color: #f7f7f7;
+      padding: 20px;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .topbar .left, .topbar .right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    select, input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+    .link-button {
+      background-color: #ffc107;
+      color: black;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .note {
+      font-size: 14px;
+      color: #555;
+      margin-top: 10px;
+      line-height: 1.7;
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.firebasestorage.app",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882",
+      measurementId: "G-MQCQE3X077"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
 </head>
 <body>
+  <div class="topbar">
+    <div class="left">
+      <strong id="userEmail">جارٍ التحميل...</strong>
+      <span id="userBalance">رصيدك: 0 جنيه</span>
+    </div>
+    <div class="right">
+      <a class="link-button" href="account.html">معلومات حسابك</a>
+      <button onclick="logout()">تسجيل الخروج</button>
+    </div>
+  </div>
 
-<header>
-  <div id="logout">تسجيل الخروج</div>
-  <div>رصيدك: <span id="userBalance">...</span> جنيه</div>
-  <button id="infoAccountBtn">معلومات حسابك</button>
-</header>
-
-<main>
-
-  <!-- نموذج طلب الخدمة -->
-  <section id="orderSection">
-    <label for="serviceSelect">اختر الخدمة</label>
-    <select id="serviceSelect" disabled>
-      <option value="" disabled selected>جارٍ تحميل الخدمات...</option>
+  <div class="container">
+    <h2>طلب شحن</h2>
+    <label for="mainService">اختر نوع الخدمة:</label>
+    <select id="mainService" onchange="updateSubServices()">
+      <option value="">-- اختر --</option>
+      <option value="games">شحن ألعاب</option>
+      <option value="social">خدمات مواقع التواصل</option>
     </select>
 
-    <div id="subServicesContainer" style="display:none;">
-      <label for="subServiceSelect">الخدمات المتعلقة</label>
-      <select id="subServiceSelect"></select>
+    <label for="subService">اختر الخدمة الفرعية:</label>
+    <select id="subService">
+      <option value="">-- اختر الخدمة الفرعية --</option>
+    </select>
+
+    <div id="accountLabel">اسم الحساب / ID:</div>
+    <input type="text" id="accountInput" placeholder="أدخل البيانات المطلوبة هنا">
+
+    <div class="note">
+      💸 قم بتحويل المبلغ إلى رقم فودافون كاش: <strong>01099874914</strong><br>
+      📤 أدخل رقم التحويل:
+    </div>
+    <input type="text" id="paymentCode" placeholder="أدخل رقم التحويل">
+
+    <div class="note">
+      📞 إذا واجهت أي مشكلة راسلنا على واتساب: <strong>01099874914</strong>
     </div>
 
-    <div id="pricesContainer" style="display:none; margin-top:15px;"></div>
-
-    <label id="accountLabel" for="accountInput" style="display:none;"></label>
-    <input type="text" id="accountInput" style="display:none;" placeholder="أدخل اسم الحساب أو الايدي" />
-
-    <button id="sendOrderBtn" disabled>إرسال الطلب</button>
-
-    <div id="message"></div>
-  </section>
-
-  <!-- صندوق معلومات الحساب -->
-  <section id="accountInfoModal" aria-hidden="true" role="dialog" aria-labelledby="accountInfoTitle">
-    <h2 id="accountInfoTitle">معلومات حسابك</h2>
-    <label for="fullNameInput">الاسم الكامل</label>
-    <input type="text" id="fullNameInput" placeholder="أدخل الاسم الكامل" />
-
-    <label for="emailInput">البريد الإلكتروني (غير قابل للتعديل)</label>
-    <input type="email" id="emailInput" disabled />
-
-    <label for="phoneInput">رقم الهاتف</label>
-    <input type="text" id="phoneInput" placeholder="أدخل رقم الهاتف" />
-
-    <div>رصيدك الحالي: <strong id="modalUserBalance">...</strong> جنيه</div>
-
-    <button id="saveProfileBtn" disabled>حفظ التغييرات</button>
-    <button id="closeModalBtn">إغلاق</button>
-
-    <div id="profileMessage"></div>
-  </section>
-
-  <div id="contactUs">
-    إذا واجهت أي مشكلة راسلنا على الواتساب: <a href="https://wa.me/201099874914" target="_blank">01099874914</a>
+    <button onclick="submitOrder()">إرسال الطلب</button>
   </div>
-</main>
 
-<script>
-  // --- إعداد Firebase ---
-  const firebaseConfig = {
-    apiKey: "API_KEY_HERE",
-    authDomain: "PROJECT_ID.firebaseapp.com",
-    projectId: "PROJECT_ID",
-    storageBucket: "PROJECT_ID.appspot.com",
-    messagingSenderId: "SENDER_ID",
-    appId: "APP_ID"
-  };
+  <script>
+    const auth = firebase.auth();
+    const db = firebase.database();
+    let currentUID = "";
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-
-  // --- عناصر الصفحة ---
-  const serviceSelect = document.getElementById('serviceSelect');
-  const subServiceSelect = document.getElementById('subServiceSelect');
-  const subServicesContainer = document.getElementById('subServicesContainer');
-  const pricesContainer = document.getElementById('pricesContainer');
-  const accountInput = document.getElementById('accountInput');
-  const accountLabel = document.getElementById('accountLabel');
-  const sendOrderBtn = document.getElementById('sendOrderBtn');
-  const message = document.getElementById('message');
-  const userBalanceSpan = document.getElementById('userBalance');
-  const infoAccountBtn = document.getElementById('infoAccountBtn');
-  const logoutBtn = document.getElementById('logout');
-
-  // --- عناصر صندوق معلومات الحساب ---
-  const accountInfoModal = document.getElementById('accountInfoModal');
-  const fullNameInput = document.getElementById('fullNameInput');
-  const emailInput = document.getElementById('emailInput');
-  const phoneInput = document.getElementById('phoneInput');
-  const modalUserBalance = document.getElementById('modalUserBalance');
-  const saveProfileBtn = document.getElementById('saveProfileBtn');
-  const closeModalBtn = document.getElementById('closeModalBtn');
-  const profileMessage = document.getElementById('profileMessage');
-
-  // --- بيانات الخدمات ---
-  const data = {
-    games: {
-      name: "شحن ألعاب",
-      services: {
-        pubg: {name: "ببجي موبايل", prices: [
-          {desc: "60 شده", price: 50},
-          {desc: "300 شده", price: 250}
-        ]},
-        cod: {name: "كود موبايل", prices: [
-          {desc: "220 سي بي", price: 250}
-        ]},
-        freefire: {name: "فري فاير", prices: [
-          {desc: "100 جوهره", price: 70}
-        ]},
-        fifa: {name: "فيفا موبايل", prices: [
-          {desc: "20 كوينز", price: 40}
-        ]}
-      },
-      accountLabel: "الأي دي الخاص بك"
-    },
-    tiktok: {
-      name: "تيك توك",
-      services: {
-        followers: {name: "زيادة المتابعين"},
-        likes: {name: "زيادة الإعجابات"}
-      },
-      accountLabel: "اسم الحساب"
-    },
-    youtube: {
-      name: "يوتيوب",
-      services: {
-        subs: {name: "زيادة المشتركين"},
-        views: {name: "زيادة المشاهدات"}
-      },
-      accountLabel: "اسم الحساب"
-    },
-    instagram: {
-      name: "إنستجرام",
-      services: {
-        followers: {name: "زيادة المتابعين"},
-        likes: {name: "زيادة الإعجابات"}
-      },
-      accountLabel: "اسم الحساب"
-    }
-  };
-
-  let userBalance = 0;
-  let currentUser = null;
-  let userData = {};
-
-  // --- تحميل بيانات المستخدم والخدمات ---
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      currentUser = user;
-      loadUserData(user.uid);
-      loadServices();
-    } else {
-      window.location.href = 'login.html';
-    }
-  });
-
-  // --- تحميل بيانات المستخدم من Firestore ---
-  function loadUserData(uid){
-    db.collection('users').doc(uid).get()
-      .then(doc => {
-        if(doc.exists){
-          userData = doc.data();
-          userBalance = userData.balance || 0;
-          userBalanceSpan.textContent = userBalance;
-          serviceSelect.disabled = false;
-          // تهيئة بيانات حساب المستخدم في المودال
-          fullNameInput.value = userData.fullName || "";
-          emailInput.value = currentUser.email || "";
-          phoneInput.value = userData.phone || "";
-          modalUserBalance.textContent = userBalance;
-          saveProfileBtn.disabled = true;
-        } else {
-          // إنشاء بيانات افتراضية إذا لم تكن موجودة
-          db.collection('users').doc(uid).set({
-            fullName: "",
-            phone: "",
-            balance: 0
-          });
-          userBalance = 0;
-          userBalanceSpan.textContent = userBalance;
-          serviceSelect.disabled = false;
-        }
-      })
-      .catch(err => {
-        console.error("خطأ تحميل بيانات المستخدم:", err);
-        message.textContent = "خطأ في تحميل بيانات المستخدم.";
-      });
-  }
-
-  // --- تحميل الخدمات الرئيسية في Dropdown ---
-  function loadServices(){
-    serviceSelect.innerHTML = `<option value="" disabled selected>اختر الخدمة</option>`;
-    for(let key in data){
-      const option = document.createElement('option');
-      option.value = key;
-      option.textContent = data[key].name;
-      serviceSelect.appendChild(option);
-    }
-  }
-
-  // --- فتح صندوق معلومات الحساب ---
-  infoAccountBtn.addEventListener('click', () => {
-    profileMessage.textContent = "";
-    saveProfileBtn.disabled = true;
-    accountInfoModal.classList.add('show');
-    accountInfoModal.setAttribute('aria-hidden', 'false');
-  });
-
-  // --- إغلاق صندوق معلومات الحساب ---
-  closeModalBtn.addEventListener('click', () => {
-    accountInfoModal.classList.remove('show');
-    accountInfoModal.setAttribute('aria-hidden', 'true');
-  });
-
-  // --- تفعيل زر حفظ عند تعديل بيانات الحساب ---
-  function checkProfileChanges(){
-    let changed = false;
-    if(fullNameInput.value.trim() !== (userData.fullName || "")) changed = true;
-    if(phoneInput.value.trim() !== (userData.phone || "")) changed = true;
-    saveProfileBtn.disabled = !changed;
-    profileMessage.textContent = "";
-  }
-  fullNameInput.addEventListener('input', checkProfileChanges);
-  phoneInput.addEventListener('input', checkProfileChanges);
-
-  // --- حفظ بيانات الحساب ---
-  saveProfileBtn.addEventListener('click', () => {
-    const fullName = fullNameInput.value.trim();
-    const phone = phoneInput.value.trim();
-
-    if(fullName === ""){
-      profileMessage.textContent = "الاسم الكامل لا يمكن أن يكون فارغاً.";
-      return;
-    }
-
-    saveProfileBtn.disabled = true;
-    profileMessage.textContent = "جارٍ حفظ البيانات...";
-
-    db.collection('users').doc(currentUser.uid).update({
-      fullName: fullName,
-      phone: phone
-    }).then(() => {
-      profileMessage.style.color = "green";
-      profileMessage.textContent = "تم حفظ البيانات بنجاح.";
-      userData.fullName = fullName;
-      userData.phone = phone;
-    }).catch(err => {
-      profileMessage.style.color = "red";
-      profileMessage.textContent = "حدث خطأ أثناء الحفظ، حاول مرة أخرى.";
-      saveProfileBtn.disabled = false;
-      console.error(err);
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById("userEmail").textContent = user.email;
+        currentUID = user.uid;
+        db.ref("balance/" + currentUID).once("value").then(snap => {
+          document.getElementById("userBalance").textContent = `رصيدك: ${snap.val() || 0} جنيه`;
+        });
+      } else {
+        window.location.href = "index.html";
+      }
     });
-  });
 
-  // --- عند اختيار الخدمة الرئيسية ---
-  serviceSelect.addEventListener('change', () => {
-    clearMessage();
-    const serviceKey = serviceSelect.value;
-    if (!serviceKey) return resetForm();
-
-    // عرض الخدمات الفرعية
-    const services = data[serviceKey].services;
-    subServiceSelect.innerHTML = "";
-    for (const key in services) {
-      const option = document.createElement('option');
-      option.value = key;
-      option.textContent = services[key].name;
-      subServiceSelect.appendChild(option);
-    }
-    subServicesContainer.style.display = "block";
-
-    pricesContainer.style.display = "none";
-    pricesContainer.innerHTML = "";
-    accountInput.value = "";
-    accountInput.style.display = "none";
-    accountLabel.style.display = "none";
-    sendOrderBtn.disabled = true;
-  });
-
-  // --- عند اختيار الخدمة الفرعية ---
-  subServiceSelect.addEventListener('change', () => {
-    clearMessage();
-    const serviceKey = serviceSelect.value;
-    const subServiceKey = subServiceSelect.value;
-    if (!serviceKey || !subServiceKey) return;
-
-    if (serviceKey === "games") {
-      const game = data.games.services[subServiceKey];
-      pricesContainer.style.display = "block";
-      pricesContainer.innerHTML = "<strong>اختر السعر:</strong><br/>";
-      game.prices.forEach((item, index) => {
-        const radioId = "priceOption" + index;
-        pricesContainer.innerHTML += `
-          <div>
-            <input type="radio" name="priceOption" id="${radioId}" data-price="${item.price}" />
-            <label for="${radioId}">${item.desc} - ${item.price} جنيه</label>
-          </div>`;
+    function logout() {
+      auth.signOut().then(() => {
+        window.location.href = "index.html";
       });
+    }
 
-      accountLabel.textContent = data.games.accountLabel;
-      accountLabel.style.display = "block";
-      accountInput.style.display = "block";
-      accountInput.placeholder = "أدخل " + data.games.accountLabel;
+    function updateSubServices() {
+      const main = document.getElementById("mainService").value;
+      const sub = document.getElementById("subService");
+      const label = document.getElementById("accountLabel");
+      sub.innerHTML = "";
+      let options = [];
 
-      document.querySelectorAll('input[name="priceOption"]').forEach(radio => {
-        radio.addEventListener('change', validateForm);
+      if (main === "games") {
+        options = ["ببجي", "فري فاير", "كول اوف ديوتي", "فورتنايت"];
+        label.textContent = "الـ ID الخاص بك:";
+      } else if (main === "social") {
+        options = ["فيسبوك", "إنستجرام", "تيك توك", "يوتيوب"];
+        label.textContent = "اسم الحساب:";
+      }
+
+      options.forEach(opt => {
+        const option = document.createElement("option");
+        option.value = opt;
+        option.textContent = opt;
+        sub.appendChild(option);
       });
-
-      accountInput.addEventListener('input', validateForm);
-
-      sendOrderBtn.disabled = true;
-    } else {
-      pricesContainer.style.display = "none";
-      pricesContainer.innerHTML = "";
-
-      accountLabel.textContent = data[serviceKey].accountLabel;
-      accountLabel.style.display = "block";
-      accountInput.style.display = "block";
-      accountInput.placeholder = "أدخل " + data[serviceKey].accountLabel;
-
-      accountInput.addEventListener('input', validateForm);
-      sendOrderBtn.disabled = true;
-    }
-  });
-
-  // --- التحقق من صحة النموذج ---
-  function validateForm(){
-    clearMessage();
-    const serviceKey = serviceSelect.value;
-    const accountVal = accountInput.value.trim();
-    if(!serviceKey || accountVal === ""){
-      sendOrderBtn.disabled = true;
-      return;
     }
 
-    if(serviceKey === "games"){
-      const selectedPriceRadio = document.querySelector('input[name="priceOption"]:checked');
-      if(!selectedPriceRadio){
-        sendOrderBtn.disabled = true;
+    function submitOrder() {
+      const mainService = document.getElementById("mainService").value;
+      const subService = document.getElementById("subService").value;
+      const account = document.getElementById("accountInput").value.trim();
+      const paymentCode = document.getElementById("paymentCode").value.trim();
+      const now = new Date().toLocaleString();
+
+      if (!mainService || !subService || !account || !paymentCode) {
+        alert("يرجى ملء جميع الحقول");
         return;
       }
-      const price = Number(selectedPriceRadio.getAttribute('data-price'));
-      if(userBalance < price){
-        alert("رصيدك غير كافٍ");
-        sendOrderBtn.disabled = true;
-        return;
-      }
+
+      db.ref("orders/" + currentUID).push({
+        mainService,
+        subService,
+        account,
+        phone: paymentCode,
+        date: now
+      }).then(() => {
+        alert("✅ تم إرسال طلبك بنجاح وسيتم معالجته قريبًا");
+        document.getElementById("mainService").value = "";
+        document.getElementById("subService").innerHTML = "<option value=''>-- اختر الخدمة الفرعية --</option>";
+        document.getElementById("accountInput").value = "";
+        document.getElementById("paymentCode").value = "";
+      });
     }
-    sendOrderBtn.disabled = false;
-  }
-
-  accountInput.addEventListener('input', validateForm);
-
-  // ---
+  </script>
+</body>
+</html>
