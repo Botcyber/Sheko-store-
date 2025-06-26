@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="ar">
+<!DOCTYPE html><html lang="ar">
 <head>
   <meta charset="UTF-8">
   <title>لوحة تحكم الأدمن | SHEKO STORE</title>
@@ -14,27 +13,17 @@
     label { font-weight: bold; }
   </style>
 </head>
-<body>
+<body><div class="panel">
+  <h2>لوحة تحكم الأدمن</h2><label>UID الخاص بالمستخدم:</label> <input type="text" id="userUid" placeholder="مثال: abc123xyz...">
 
-<div class="panel">
-  <h2>لوحة تحكم الأدمن</h2>
+<label>العملية:</label> <select id="actionType"> <option value="addBalance">إضافة رصيد</option> <option value="deductBalance">خصم رصيد</option> <option value="addPoints">إضافة نقاط</option> <option value="deductPoints">خصم نقاط</option> </select>
 
-  <label>العملية:</label>
-  <select id="actionType">
-    <option value="addBalance">إضافة رصيد</option>
-    <option value="deductBalance">خصم رصيد</option>
-    <option value="addPoints">إضافة نقاط</option>
-    <option value="deductPoints">خصم نقاط</option>
-  </select>
+<label>القيمة:</label> <input type="number" id="value" placeholder="مثال: 50">
 
-  <label>القيمة:</label>
-  <input type="number" id="value" placeholder="مثال: 50">
+<button id="submitAction">تنفيذ العملية</button>
 
-  <button id="submitAction">تنفيذ العملية</button>
   <p id="statusMsg" style="color: green; text-align: center;"></p>
-</div>
-
-<script type="module">
+</div><script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -51,42 +40,43 @@
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  const uid = "mlifDgEAkKMaOeuUq63cs5NAkV93";
-
   document.getElementById("submitAction").addEventListener("click", async () => {
+    const uid = document.getElementById("userUid").value;
     const action = document.getElementById("actionType").value;
     const value = parseInt(document.getElementById("value").value);
     const msg = document.getElementById("statusMsg");
 
-    if (isNaN(value)) {
+    if (!uid || isNaN(value)) {
       msg.style.color = "red";
-      msg.textContent = "من فضلك أدخل قيمة صحيحة.";
+      msg.textContent = "يرجى إدخال UID وقيمة صحيحة";
       return;
     }
 
-    const userRef = ref(db, "users/" + uid);
-    const snap = await get(userRef);
-    if (!snap.exists()) {
+    const userRef = ref(db, `users/${uid}`);
+    const snapshot = await get(userRef);
+    if (!snapshot.exists()) {
       msg.style.color = "red";
-      msg.textContent = "هذا المستخدم غير موجود.";
+      msg.textContent = "هذا المستخدم غير موجود";
       return;
     }
 
-    const user = snap.val();
+    const userData = snapshot.val();
+    const currentBalance = userData.balance || 0;
+    const currentPoints = userData.points || 0;
     let updates = {};
 
-    switch (action) {
+    switch(action) {
       case "addBalance":
-        updates.balance = (user.balance || 0) + value;
+        updates.balance = currentBalance + value;
         break;
       case "deductBalance":
-        updates.balance = Math.max(0, (user.balance || 0) - value);
+        updates.balance = Math.max(0, currentBalance - value);
         break;
       case "addPoints":
-        updates.points = (user.points || 0) + value;
+        updates.points = currentPoints + value;
         break;
       case "deductPoints":
-        updates.points = Math.max(0, (user.points || 0) - value);
+        updates.points = Math.max(0, currentPoints - value);
         break;
     }
 
@@ -94,7 +84,5 @@
     msg.style.color = "green";
     msg.textContent = "تم تنفيذ العملية بنجاح ✅";
   });
-</script>
-
-</body>
+</script></body>
 </html>
