@@ -1,0 +1,69 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>لوحة التحكم</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: 'Cairo', sans-serif; margin: 0; background: #f2f2f2; }
+    header { background: #111; color: white; padding: 15px; text-align: center; }
+    .container { max-width: 800px; margin: 20px auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+    h2 { text-align: center; }
+    select, input, textarea { width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 5px; }
+    button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; margin-top: 15px; cursor: pointer; }
+    .balance { margin-top: 20px; background: #e9ecef; padding: 15px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>لوحة تحكم المستخدم</h1>
+</header>
+
+<div class="container">
+  <h2>طلب شحن جديد</h2>
+  <label>اختر الخدمة:</label>
+  <select>
+    <option>شحن PUBG</option>
+    <option>شحن Free Fire</option>
+    <option>شحن COD Mobile</option>
+    <option>متابعين TikTok</option>
+    <option>متابعين Instagram</option>
+  </select>
+
+  <label>اسم الحساب أو ID:</label>
+  <input type="text" placeholder="اكتب معرف حسابك هنا">
+
+  <label>الباقة المطلوبة:</label>
+  <select>
+    <option>5 جنيه</option>
+    <option>10 جنيه</option>
+    <option>20 جنيه</option>
+    <option>50 جنيه</option>
+  </select>
+
+  <label>رقم الهاتف الذي دفعت منه:</label>
+  <input type="text" placeholder="مثلاً: 01099874914">
+
+  <label>المبلغ الذي تم دفعه:</label>
+  <input type="number" placeholder="مثلاً: 20">
+
+  <label>أرفق صورة الدفع:</label>
+  <input type="file">
+
+  <label>ملاحظات إضافية:</label>
+  <textarea placeholder="اكتب أي تفاصيل أخرى هنا..."></textarea>
+
+  <button>إرسال الطلب</button>
+
+  <div class="balance">
+    <h3>بيانات حسابك:</h3>
+    <p>الرصيد الحالي: <strong>0 جنيه</strong></p>
+    <p>المبلغ الذي أنفقته: <strong>0 جنيه</strong></p>
+    <p>عدد الطلبات السابقة: <strong>0</strong></p>
+  </div>
+</div>
+
+</body>
+</html>
