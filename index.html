@@ -1,38 +1,53 @@
-
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!-- index.html - صفحة البداية (تسجيل الدخول) --><!DOCTYPE html><html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تسجيل الدخول أو إنشاء حساب</title>
-  <style>
-    body { font-family: 'Cairo', sans-serif; background-color: #f9f9f9; display: flex; justify-content: center; align-items: center; height: 100vh; }
-    .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 350px; }
-    h2 { text-align: center; }
-    input { width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 5px; }
-    button { width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; margin-top: 15px; cursor: pointer; }
-    .switch { text-align: center; margin-top: 15px; color: blue; cursor: pointer; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h2 id="formTitle">تسجيل الدخول</h2>
-    <input type="email" id="email" placeholder="البريد الإلكتروني">
-    <input type="password" id="password" placeholder="كلمة المرور">
-    <button onclick="handleAuth()">دخول</button>
-    <div class="switch" onclick="toggleForm()">أو إنشاء حساب جديد</div>
-  </div>
+  <title>Sheko Store - تسجيل الدخول</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+  authDomain: "sheko-store.firebaseapp.com",
+  projectId: "sheko-store",
+  storageBucket: "sheko-store.firebasestorage.app",
+  messagingSenderId: "113892775847",
+  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882",
+  measurementId: "G-MQCQE3X077"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
 
-  <script>
-    let isLogin = true;
-    function toggleForm() {
-      isLogin = !isLogin;
-      document.getElementById("formTitle").innerText = isLogin ? "تسجيل الدخول" : "إنشاء حساب";
-      document.querySelector("button").innerText = isLogin ? "دخول" : "تسجيل";
+    function loginUser() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          window.location.href = "dashboard.html";
+        })
+        .catch(error => {
+          alert("خطأ في تسجيل الدخول: " + error.message);
+        });
     }
-    function handleAuth() {
-      alert("سيتم ربط النموذج مع Firebase لاحقاً");
+
+    function registerUser() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => {
+          alert("تم إنشاء الحساب بنجاح");
+          window.location.href = "dashboard.html";
+        })
+        .catch(error => {
+          alert("حدث خطأ: " + error.message);
+        });
     }
-  </script>
+  </script></head>
+<body>
+  <h2>تسجيل الدخول أو إنشاء حساب</h2>
+  <input type="email" id="email" placeholder="البريد الإلكتروني"><br>
+  <input type="password" id="password" placeholder="كلمة المرور"><br>
+  <button onclick="loginUser()">تسجيل الدخول</button>
+  <button onclick="registerUser()">إنشاء حساب جديد</button>
 </body>
 </html>
