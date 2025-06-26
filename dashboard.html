@@ -54,9 +54,16 @@
       border-radius: 5px;
       margin-bottom: 20px;
     }
+    .note {
+      font-size: 14px;
+      color: #555;
+      margin-top: 10px;
+      line-height: 1.7;
+    }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
@@ -74,137 +81,50 @@
   <div class="topbar">
     <div class="left">
       <strong id="userEmail">جارٍ التحميل...</strong>
-      <span id="userBalance">0 جنيه</span>
+      <span id="userBalance">رصيدك: 0 جنيه</span>
     </div>
     <div class="right">
       <a class="link-button" href="account.html">معلومات حسابك</a>
       <button onclick="logout()">تسجيل الخروج</button>
     </div>
   </div>  <div class="container">
-    <!-- باقي محتوى النموذج والاختيارات -->
-    <p>محتوى النموذج وواجهة الطلبات...</p>
-  </div>  <script>
-    const auth = firebase.auth();
+    <h2>طلب شحن</h2>
+    <label for="mainService">اختر نوع الخدمة:</label>
+    <select id="mainService" onchange="updateSubServices()">
+      <option value="">-- اختر --</option>
+      <option value="games">شحن ألعاب</option>
+      <option value="social">خدمات مواقع التواصل</option>
+    </select><label for="subService">اختر الخدمة الفرعية:</label>
+<select id="subService">
+  <option value="">-- اختر الخدمة الفرعية --</option>
+</select>
 
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        document.getElementById("userEmail").textContent = user.email;
-        // يمكن هنا ربط وعرض الرصيد أيضًا إذا كنت تحفظه في قاعدة البيانات
-      } else {
-        window.location.href = "index.html";
-      }
-    });
+<div id="accountLabel">اسم الحساب / ID:</div>
+<input type="text" id="accountInput" placeholder="أدخل البيانات المطلوبة هنا">
 
-    function logout() {
-      auth.signOut().then(() => {
-        window.location.href = "index.html";
-      });
-    }
-  </script></body>
-</html>
-<!DOCTYPE html><html lang="ar">
-<head>
-  <meta charset="UTF-8">
-  <title>Sheko Store - طلب شحن</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      direction: rtl;
-      background-color: #f2f2f2;
-      padding: 20px;
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background-color: #333;
-      color: white;
-      padding: 10px 20px;
-      margin-bottom: 20px;
-      border-radius: 8px;
-    }
-    .form-container {
-      background-color: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      max-width: 600px;
-      margin: auto;
-    }
-    .form-container input,
-    .form-container select,
-    .form-container button {
-      width: 100%;
-      margin-bottom: 15px;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    .form-container button {
-      background-color: #28a745;
-      color: white;
-      font-weight: bold;
-    }
-    .note {
-      font-size: 14px;
-      color: #555;
-      margin-top: 10px;
-    }
-  </style>  <!-- Firebase -->  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-      authDomain: "sheko-store.firebaseapp.com",
-      projectId: "sheko-store",
-      storageBucket: "sheko-store.firebasestorage.app",
-      messagingSenderId: "113892775847",
-      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882",
-      measurementId: "G-MQCQE3X077"
-    };
-    firebase.initializeApp(firebaseConfig);
-  </script></head>
-<body>
-  <div class="header">
-    <div id="user-info">جارٍ تحميل الحساب...</div>
-    <button onclick="logout()">تسجيل الخروج</button>
-  </div>  <div class="form-container">
-    <form onsubmit="sendOrder(); return false;">
-      <label>اختر الخدمة:</label>
-      <select id="mainService" onchange="updateSubServices()">
-        <option value="">-- اختر الخدمة --</option>
-        <option value="ألعاب">شحن ألعاب</option>
-        <option value="سوشيال">خدمات مواقع التواصل</option>
-      </select><label>اختر نوع الخدمة:</label>
-  <select id="subService">
-    <option value="">-- اختر نوع الخدمة --</option>
-  </select>
+<div class="note">
+  💸 قم بتحويل المبلغ إلى رقم فودافون كاش: <strong>01099874914</strong><br>
+  📤 أدخل رقم التحويل:
+</div>
+<input type="text" id="paymentCode" placeholder="أدخل رقم التحويل">
 
-  <label id="accountLabel">البيانات:</label>
-  <input type="text" id="accountInput" placeholder="أدخل البيانات المطلوبة">
+<div class="note">
+  📞 إذا واجهت أي مشكلة راسلنا على واتساب: <strong>01099874914</strong>
+</div>
 
-  <label>ارسل المال إلى رقم فودافون كاش:</label>
-  <div style="font-weight: bold; font-size: 16px; margin-bottom: 10px;">01099874914</div>
-
-  <input type="text" id="phone" placeholder="رقم التحويل من فودافون كاش">
-  <input type="file" id="receipt">
-
-  <button type="submit">إرسال الطلب</button>
-  <div class="note">إذا واجهت أي مشكلة، راسلنا على الواتساب: <b>01099874914</b></div>
-</form>
+<button onclick="submitOrder()">إرسال الطلب</button>
 
   </div>  <script>
     const auth = firebase.auth();
     const db = firebase.database();
-    const storage = firebase.storage();
-
-    const userInfo = document.getElementById("user-info");
+    let currentUID = "";
 
     auth.onAuthStateChanged(user => {
       if (user) {
-        userInfo.textContent = `حسابك: ${user.email}`;
-        // استرجاع الرصيد
-        db.ref("balance/" + user.uid).once("value").then(snapshot => {
-          const balance = snapshot.val() || 0;
-          userInfo.textContent += ` | رصيدك: ${balance} جنيه`;
+        document.getElementById("userEmail").textContent = user.email;
+        currentUID = user.uid;
+        db.ref("balance/" + currentUID).once("value").then(snap => {
+          document.getElementById("userBalance").textContent = `رصيدك: ${snap.val() || 0} جنيه`;
         });
       } else {
         window.location.href = "index.html";
@@ -218,55 +138,52 @@
     }
 
     function updateSubServices() {
-      const subService = document.getElementById("subService");
-      const mainService = document.getElementById("mainService").value;
-      const accountLabel = document.getElementById("accountLabel");
-      const accountInput = document.getElementById("accountInput");
+      const main = document.getElementById("mainService").value;
+      const sub = document.getElementById("subService");
+      const label = document.getElementById("accountLabel");
+      sub.innerHTML = "";
+      let options = [];
 
-      subService.innerHTML = "";
-      if (mainService === "ألعاب") {
-        subService.innerHTML += "<option value='PUBG'>شحن PUBG</option>";
-        subService.innerHTML += "<option value='CODM'>شحن COD Mobile</option>";
-        accountLabel.textContent = "اكتب الـ ID الخاص بك:";
-        accountInput.placeholder = "مثلاً: 5152341234";
-      } else if (mainService === "سوشيال") {
-        subService.innerHTML += "<option value='Facebook'>خدمة Facebook</option>";
-        subService.innerHTML += "<option value='Instagram'>خدمة Instagram</option>";
-        accountLabel.textContent = "اسم الحساب:";
-        accountInput.placeholder = "مثلاً: sheko_store";
+      if (main === "games") {
+        options = ["ببجي", "فري فاير", "كول اوف ديوتي", "فورتنايت"];
+        label.textContent = "الـ ID الخاص بك:";
+      } else if (main === "social") {
+        options = ["فيسبوك", "إنستجرام", "تيك توك", "يوتيوب"];
+        label.textContent = "اسم الحساب:";
       }
+
+      options.forEach(opt => {
+        const option = document.createElement("option");
+        option.value = opt;
+        option.textContent = opt;
+        sub.appendChild(option);
+      });
     }
 
-    function sendOrder() {
+    function submitOrder() {
       const mainService = document.getElementById("mainService").value;
       const subService = document.getElementById("subService").value;
-      const account = document.getElementById("accountInput").value;
-      const phone = document.getElementById("phone").value;
-      const file = document.getElementById("receipt").files[0];
-      const user = auth.currentUser;
+      const account = document.getElementById("accountInput").value.trim();
+      const paymentCode = document.getElementById("paymentCode").value.trim();
+      const now = new Date().toLocaleString();
 
-      if (!mainService || !subService || !account || !phone || !file) {
-        alert("رجاءً املأ كل الحقول المطلوبة.");
+      if (!mainService || !subService || !account || !paymentCode) {
+        alert("يرجى ملء جميع الحقول");
         return;
       }
 
-      const storageRef = storage.ref("receipts/" + Date.now());
-      storageRef.put(file).then(snapshot => {
-        return snapshot.ref.getDownloadURL();
-      }).then(downloadURL => {
-        const orderData = {
-          mainService,
-          subService,
-          account,
-          phone,
-          image: downloadURL,
-          date: new Date().toLocaleString()
-        };
-        return db.ref("orders/" + user.uid).push(orderData);
+      db.ref("orders/" + currentUID).push({
+        mainService,
+        subService,
+        account,
+        phone: paymentCode,
+        date: now
       }).then(() => {
-        alert("✅ تم إرسال الطلب بنجاح!");
-      }).catch(err => {
-        alert("❌ حدث خطأ: " + err.message);
+        alert("✅ تم إرسال طلبك بنجاح وسيتم معالجته قريبًا");
+        document.getElementById("mainService").value = "";
+        document.getElementById("subService").innerHTML = "<option value=''>-- اختر الخدمة الفرعية --</option>";
+        document.getElementById("accountInput").value = "";
+        document.getElementById("paymentCode").value = "";
       });
     }
   </script></body>
