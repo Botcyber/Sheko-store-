@@ -1,114 +1,52 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html><html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>لوحة تحكم الأدمن - إدارة الطلبات</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: 'Cairo', sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
-    header { background: #222; color: white; padding: 15px; text-align: center; }
-    table { width: 100%; border-collapse: collapse; margin: 20px auto; max-width: 95%; background: white; border-radius: 8px; overflow: hidden; }
-    th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
-    th { background: #007bff; color: white; }
-    tr:nth-child(even) { background: #f2f2f2; }
-    button { padding: 5px 10px; border: none; background: #28a745; color: white; cursor: pointer; border-radius: 4px; }
-    img { max-height: 60px; border-radius: 4px; }
-  </style>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-</head>
+  <title>لوحة تحكم الأدمن - Sheko Store</title>  <!-- Firebase -->  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.firebasestorage.app",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882",
+      measurementId: "G-MQCQE3X077"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script></head>
 <body>
+  <h2>لوحة تحكم الأدمن - الطلبات</h2>
+  <div id="orders"></div>  <script>
+    const db = firebase.database();
 
-<header>
-  <h1>لوحة تحكم الأدمن - إدارة الطلبات</h1>
-</header>
+    function renderOrders(snapshot) {
+      const ordersDiv = document.getElementById("orders");
+      ordersDiv.innerHTML = "";
 
-<table>
-  <thead>
-    <tr>
-      <th>المستخدم</th>
-      <th>الخدمة</th>
-      <th>المعرف</th>
-      <th>المبلغ المدفوع</th>
-      <th>رقم الهاتف</th>
-      <th>الملاحظات</th>
-      <th>التاريخ</th>
-      <th>صورة التحويل</th>
-      <th>تمت المعالجة</th>
-    </tr>
-  </thead>
-  <tbody id="ordersBody">
-    <tr><td colspan="9">جاري تحميل الطلبات...</td></tr>
-  </tbody>
-</table>
-
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-  authDomain: "sheko-store.firebaseapp.com",
-  projectId: "sheko-store",
-  storageBucket: "sheko-store.firebasestorage.app",
-  messagingSenderId: "113892775847",
-  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882",
-  measurementId: "G-MQCQE3X077"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.database();
-
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      loadOrders();
-    } else {
-      alert("يرجى تسجيل الدخول أولاً.");
-      window.location.href = "main.html";
-    }
-  });
-
-  function loadOrders() {
-    const ordersBody = document.getElementById("ordersBody");
-    ordersBody.innerHTML = "";
-    db.ref("orders").once("value", snapshot => {
-      const data = snapshot.val();
-      if (!data) {
-        ordersBody.innerHTML = "<tr><td colspan='9'>لا توجد طلبات</td></tr>";
-        return;
-      }
-
-      for (let userId in data) {
-        for (let orderId in data[userId]) {
-          const o = data[userId][orderId];
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${userId}</td>
-            <td>${o.service}</td>
-            <td>${o.accountId}</td>
-            <td>${o.paid} ج</td>
-            <td>${o.phone}</td>
-            <td>${o.notes || ""}</td>
-            <td>${o.date}</td>
-            <td>
-              ${o.image ? `<a href="${o.image}" target="_blank"><img src="${o.image}" alt="إيصال"></a>` : "لا يوجد"}
-            </td>
-            <td><button onclick="markDone('${userId}', '${orderId}')">تم</button></td>
+      snapshot.forEach(userSnap => {
+        userSnap.forEach(orderSnap => {
+          const order = orderSnap.val();
+          const card = document.createElement("div");
+          card.style.border = "1px solid #ccc";
+          card.style.padding = "10px";
+          card.style.margin = "10px";
+          card.innerHTML = `
+            <b>الخدمة:</b> ${order.service} <br>
+            <b>معرّف الحساب:</b> ${order.accountId} <br>
+            <b>المبلغ:</b> ${order.paid} جنيه<br>
+            <b>رقم الهاتف:</b> ${order.phone} <br>
+            <b>التاريخ:</b> ${order.date} <br>
+            <b>صورة التحويل:</b><br>
+            <img src="${order.image}" alt="إيصال التحويل" width="200"> <br>
           `;
-          ordersBody.appendChild(row);
-        }
-      }
-    });
-  }
-
-  function markDone(userId, orderId) {
-    if (confirm("هل تريد حذف هذا الطلب بعد المعالجة؟")) {
-      db.ref("orders/" + userId + "/" + orderId).remove().then(() => {
-        alert("✅ تم حذف الطلب.");
-        loadOrders();
+          ordersDiv.appendChild(card);
+        });
       });
     }
-  }
-</script>
 
-</body>
+    db.ref("orders").once("value")
+      .then(renderOrders)
+      .catch(err => {
+        alert("❌ حدث خطأ: " + err.message);
+      });
+  </script></body>
 </html>
