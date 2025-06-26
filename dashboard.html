@@ -1,151 +1,72 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html><html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>لوحة التحكم - صورة التحويل</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: 'Cairo', sans-serif; margin: 0; background: #f2f2f2; }
-    header { background: #111; color: white; padding: 15px; text-align: center; }
-    .container { max-width: 800px; margin: 20px auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
-    h2 { text-align: center; }
-    select, input, textarea { width: 100%; padding: 10px; margin-top: 10px; border: 1px solid #ccc; border-radius: 5px; }
-    button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; margin-top: 15px; cursor: pointer; }
-    .balance { margin-top: 20px; background: #e9ecef; padding: 15px; border-radius: 5px; }
-  </style>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>
-</head>
-<body>
-
-<header>
-  <h1>اهلا بك في متجر شيكو</h1>
-</header>
-
-<div class="container">
-  <h2>طلب شحن جديد</h2>
-  
-  <h3>ارسال المال الي رقم 01099874914 لاتمام الطلب ثم ارسل الطلب ورقم التحويل والمبلغ:</h3>
-
-  <label>الخدمة:</label>
-  <select id="service">
-    <option value="pubg">شحن PUBG</option>
-    <option value="ff">شحن Free Fire</option>
-    <option value="cod">شحن COD Mobile</option>
-    <option value="tiktok">متابعين TikTok</option>
-    <option value="insta">متابعين Instagram</option>
-  </select>
-
-  <label>اسم الحساب أو ID:</label>
-  <input type="text" id="accountId">
-
-  <label>الباقة:</label>
-  <select id="amount">
-    <option value="5">5 جنيه</option>
-    <option value="10">10 جنيه</option>
-    <option value="20">20 جنيه</option>
-    <option value="50">50 جنيه</option>
-  </select>
-
-  <label>رقم هاتف الدفع:</label>
-  <input type="text" id="phone">
-
-  <label>المبلغ المدفوع:</label>
-  <input type="number" id="paid">
-
-  <label>أرفق صورة التحويل:</label>
-  <input type="file" id="image">
-
-  <label>ملاحظات:</label>
-  <textarea id="notes"></textarea>
-
-  <button onclick="submitOrder()">إرسال الطلب</button>
-
-  <div class="balance">
-    <h3>بيانات حسابك:</h3>
-    <p>الرصيد الحالي: <strong id="balance">0</strong> جنيه</p>
-    <p>الإنفاق: <strong id="spent">0</strong> جنيه</p>
-    <p>عدد الطلبات: <strong id="orders">0</strong></p>
-  </div>
-</div>
-
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+  <title>Sheko Store - طلب شحن</title>  <!-- Firebase -->  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
   authDomain: "sheko-store.firebaseapp.com",
   projectId: "sheko-store",
   storageBucket: "sheko-store.firebasestorage.app",
   messagingSenderId: "113892775847",
   appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882",
   measurementId: "G-MQCQE3X077"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
-const storage = firebase.storage();
-
-let currentUser;
-
-auth.onAuthStateChanged(user => {
-  if (user) {
-    currentUser = user;
-    loadUserData();
-  } else {
-    alert("يرجى تسجيل الدخول أولاً.");
-    window.location.href = "main.html";
-  }
-});
-
-function submitOrder() {
-  const service = document.getElementById("service").value;
-  const accountId = document.getElementById("accountId").value;
-  const amount = parseInt(document.getElementById("amount").value);
-  const phone = document.getElementById("phone").value;
-  const paid = parseFloat(document.getElementById("paid").value);
-  const notes = document.getElementById("notes").value;
-  const imageFile = document.getElementById("image").files[0];
-
-  if (!imageFile) return alert("يرجى اختيار صورة التحويل");
-
-  const storageRef = storage.ref("receipts/" + currentUser.uid + "/" + Date.now());
-  storageRef.put(imageFile).then(snapshot => snapshot.ref.getDownloadURL())
-  .then(downloadURL => {
-    const orderData = {
-      service, accountId, amount, phone, paid, notes,
-      date: new Date().toLocaleString(),
-      image: downloadURL
     };
-    return db.ref("orders/" + currentUser.uid).push(orderData);
-  })
-  .then(() => db.ref("users/" + currentUser.uid).once("value"))
-  .then(snapshot => {
-    const userData = snapshot.val() || { balance: 0, spent: 0, orders: 0 };
-    const updated = {
-      balance: userData.balance + paid,
-      spent: userData.spent + amount,
-      orders: userData.orders + 1
-    };
-    return db.ref("users/" + currentUser.uid).set(updated);
-  })
-  .then(() => {
-    alert("✅ تم إرسال الطلب بنجاح");
-    loadUserData();
-  })
-  .catch(err => alert("❌ حدث خطأ: " + err.message));
-}
+    firebase.initializeApp(firebaseConfig);
+  </script></head>
+<body>
+  <h2>طلب شحن</h2>
+  <form onsubmit="sendOrder(); return false;">
+    <input type="text" id="service" placeholder="اسم الخدمة"><br>
+    <input type="text" id="accountId" placeholder="معرّف الحساب"><br>
+    <input type="number" id="paid" placeholder="المبلغ المدفوع"><br>
+    <input type="text" id="phone" placeholder="رقم فودافون كاش"><br>
+    <input type="file" id="receipt"><br>
+    <button type="submit">إرسال الطلب</button>
+  </form>  <script>
+    const auth = firebase.auth();
+    const db = firebase.database();
+    const storage = firebase.storage();
 
-function loadUserData() {
-  db.ref("users/" + currentUser.uid).once("value").then(snapshot => {
-    const data = snapshot.val() || { balance: 0, spent: 0, orders: 0 };
-    document.getElementById("balance").innerText = data.balance;
-    document.getElementById("spent").innerText = data.spent;
-    document.getElementById("orders").innerText = data.orders;
-  });
-}
-</script>
+    // تحقق من تسجيل الدخول
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        alert("يجب تسجيل الدخول أولاً");
+        window.location.href = "index.html";
+      }
+    });
 
-</body>
+    function sendOrder() {
+      const service = document.getElementById("service").value;
+      const accountId = document.getElementById("accountId").value;
+      const paid = document.getElementById("paid").value;
+      const phone = document.getElementById("phone").value;
+      const file = document.getElementById("receipt").files[0];
+      const user = auth.currentUser;
+
+      if (!file) {
+        alert("رجاءً قم برفع صورة التحويل");
+        return;
+      }
+
+      const storageRef = storage.ref("receipts/" + Date.now());
+      storageRef.put(file).then(snapshot => {
+        return snapshot.ref.getDownloadURL();
+      }).then(downloadURL => {
+        const orderData = {
+          service,
+          accountId,
+          paid,
+          phone,
+          image: downloadURL,
+          date: new Date().toLocaleString()
+        };
+
+        return db.ref("orders/" + user.uid).push(orderData);
+      }).then(() => {
+        alert("✅ تم إرسال الطلب بنجاح!");
+      }).catch(err => {
+        alert("❌ حدث خطأ: " + err.message);
+      });
+    }
+  </script></body>
 </html>
