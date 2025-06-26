@@ -14,6 +14,10 @@
     button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; margin-top: 15px; cursor: pointer; }
     .balance { margin-top: 20px; background: #e9ecef; padding: 15px; border-radius: 5px; }
   </style>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -23,47 +27,112 @@
 
 <div class="container">
   <h2>طلب شحن جديد</h2>
-  <label>اختر الخدمة:</label>
-  <select>
-    <option>شحن PUBG</option>
-    <option>شحن Free Fire</option>
-    <option>شحن COD Mobile</option>
-    <option>متابعين TikTok</option>
-    <option>متابعين Instagram</option>
+  <label>الخدمة:</label>
+  <select id="service">
+    <option value="pubg">شحن PUBG</option>
+    <option value="ff">شحن Free Fire</option>
+    <option value="cod">شحن COD Mobile</option>
+    <option value="tiktok">متابعين TikTok</option>
+    <option value="insta">متابعين Instagram</option>
   </select>
 
   <label>اسم الحساب أو ID:</label>
-  <input type="text" placeholder="اكتب معرف حسابك هنا">
+  <input type="text" id="accountId" placeholder="اكتب معرف حسابك هنا">
 
-  <label>الباقة المطلوبة:</label>
-  <select>
-    <option>5 جنيه</option>
-    <option>10 جنيه</option>
-    <option>20 جنيه</option>
-    <option>50 جنيه</option>
+  <label>الباقة:</label>
+  <select id="amount">
+    <option value="5">5 جنيه</option>
+    <option value="10">10 جنيه</option>
+    <option value="20">20 جنيه</option>
+    <option value="50">50 جنيه</option>
   </select>
 
-  <label>رقم الهاتف الذي دفعت منه:</label>
-  <input type="text" placeholder="مثلاً: 01099874914">
+  <label>رقم هاتف الدفع:</label>
+  <input type="text" id="phone">
 
-  <label>المبلغ الذي تم دفعه:</label>
-  <input type="number" placeholder="مثلاً: 20">
+  <label>المبلغ المدفوع:</label>
+  <input type="number" id="paid">
 
-  <label>أرفق صورة الدفع:</label>
-  <input type="file">
+  <label>ملاحظات:</label>
+  <textarea id="notes" placeholder="أي ملاحظات إضافية..."></textarea>
 
-  <label>ملاحظات إضافية:</label>
-  <textarea placeholder="اكتب أي تفاصيل أخرى هنا..."></textarea>
-
-  <button>إرسال الطلب</button>
+  <button onclick="submitOrder()">إرسال الطلب</button>
 
   <div class="balance">
     <h3>بيانات حسابك:</h3>
-    <p>الرصيد الحالي: <strong>0 جنيه</strong></p>
-    <p>المبلغ الذي أنفقته: <strong>0 جنيه</strong></p>
-    <p>عدد الطلبات السابقة: <strong>0</strong></p>
+    <p>الرصيد الحالي: <strong id="balance">0</strong> جنيه</p>
+    <p>المبلغ الذي أنفقته: <strong id="spent">0</strong> جنيه</p>
+    <p>عدد الطلبات السابقة: <strong id="orders">0</strong></p>
   </div>
 </div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    databaseURL: "YOUR_DB_URL",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_BUCKET",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+
+  let currentUser;
+
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      currentUser = user;
+      loadUserData();
+    } else {
+      alert("يرجى تسجيل الدخول أولاً.");
+      window.location.href = "main.html";
+    }
+  });
+
+  function submitOrder() {
+    const service = document.getElementById("service").value;
+    const accountId = document.getElementById("accountId").value;
+    const amount = parseInt(document.getElementById("amount").value);
+    const phone = document.getElementById("phone").value;
+    const paid = parseFloat(document.getElementById("paid").value);
+    const notes = document.getElementById("notes").value;
+
+    const orderData = {
+      service, accountId, amount, phone, paid, notes,
+      date: new Date().toLocaleString()
+    };
+
+    const orderRef = db.ref("orders/" + currentUser.uid).push();
+    orderRef.set(orderData).then(() => {
+      db.ref("users/" + currentUser.uid).once("value").then(snapshot => {
+        const userData = snapshot.val() || { balance: 0, spent: 0, orders: 0 };
+        const updated = {
+          balance: userData.balance + paid,
+          spent: userData.spent + amount,
+          orders: userData.orders + 1
+        };
+        db.ref("users/" + currentUser.uid).set(updated);
+        document.getElementById("balance").innerText = updated.balance;
+        document.getElementById("spent").innerText = updated.spent;
+        document.getElementById("orders").innerText = updated.orders;
+        alert("✅ تم إرسال الطلب بنجاح");
+      });
+    });
+  }
+
+  function loadUserData() {
+    db.ref("users/" + currentUser.uid).once("value").then(snapshot => {
+      const data = snapshot.val() || { balance: 0, spent: 0, orders: 0 };
+      document.getElementById("balance").innerText = data.balance;
+      document.getElementById("spent").innerText = data.spent;
+      document.getElementById("orders").innerText = data.orders;
+    });
+  }
+</script>
 
 </body>
 </html>
