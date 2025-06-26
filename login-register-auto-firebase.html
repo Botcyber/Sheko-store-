@@ -1,0 +1,165 @@
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sheko Store - تسجيل</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      direction: rtl;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 350px;
+    }
+    h2 { text-align: center; color: #333; }
+    input {
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background: #0069d9;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .switch {
+      text-align: center;
+      margin-top: 10px;
+      color: #0069d9;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 id="formTitle">تسجيل الدخول</h2>
+    <input type="email" id="email" placeholder="البريد الإلكتروني" />
+    <input type="password" id="password" placeholder="كلمة المرور" />
+    <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور" style="display: none;" />
+    <button id="actionBtn">دخول</button>
+    <div class="switch" id="toggleForm">ليس لديك حساب؟ أنشئ الآن</div>
+    <div class="switch" onclick="resetPassword()">نسيت كلمة المرور؟</div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      sendPasswordResetEmail
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getDatabase,
+      ref,
+      set,
+      get
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    let isRegister = false;
+
+    const email = document.getElementById("email");
+    const password = document.getElementById("password");
+    const confirmPassword = document.getElementById("confirmPassword");
+    const actionBtn = document.getElementById("actionBtn");
+    const formTitle = document.getElementById("formTitle");
+    const toggleForm = document.getElementById("toggleForm");
+
+    toggleForm.onclick = () => {
+      isRegister = !isRegister;
+      formTitle.textContent = isRegister ? "إنشاء حساب" : "تسجيل الدخول";
+      actionBtn.textContent = isRegister ? "تسجيل" : "دخول";
+      confirmPassword.style.display = isRegister ? "block" : "none";
+      toggleForm.textContent = isRegister ? "لديك حساب؟ تسجيل الدخول" : "ليس لديك حساب؟ أنشئ الآن";
+    };
+
+    actionBtn.onclick = () => {
+      const userEmail = email.value.trim();
+      const userPass = password.value;
+      const confirmPass = confirmPassword.value;
+
+      if (isRegister) {
+        if (userPass !== confirmPass) {
+          alert("كلمتا المرور غير متطابقتين.");
+          return;
+        }
+
+        createUserWithEmailAndPassword(auth, userEmail, userPass)
+          .then((userCredential) => {
+            const user = userCredential.user;
+            set(ref(db, 'users/' + user.uid), {
+              email: user.email,
+              balance: 0,
+              points: 0
+            });
+            alert("✅ تم إنشاء الحساب!");
+            window.location.href = "dashboard.html";
+          })
+          .catch(error => alert("❌ " + error.message));
+
+      } else {
+        signInWithEmailAndPassword(auth, userEmail, userPass)
+          .then(async (userCredential) => {
+            const user = userCredential.user;
+            const userRef = ref(db, "users/" + user.uid);
+            const snapshot = await get(userRef);
+
+            if (!snapshot.exists()) {
+              await set(userRef, {
+                email: user.email,
+                balance: 0,
+                points: 0
+              });
+            }
+
+            alert("✅ تم تسجيل الدخول!");
+            window.location.href = "dashboard.html";
+          })
+          .catch(error => alert("❌ " + error.message));
+      }
+    };
+
+    window.resetPassword = () => {
+      const userEmail = email.value.trim();
+      if (!userEmail) return alert("يرجى إدخال بريدك أولاً.");
+      sendPasswordResetEmail(auth, userEmail)
+        .then(() => alert("📩 تم إرسال رابط إعادة تعيين كلمة المرور"))
+        .catch(error => alert("❌ " + error.message));
+    };
+  </script>
+</body>
+</html>
