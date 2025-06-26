@@ -1,24 +1,81 @@
-<!-- index.html - صفحة البداية (تسجيل الدخول) --><!DOCTYPE html><html>
+<!DOCTYPE html><html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>Sheko Store - تسجيل الدخول</title>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage-compat.js"></script>  <script>
+  <title>تسجيل الدخول - Sheko Store</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      direction: rtl;
+      background-color: #f7f7f7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    .form-container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .link {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 14px;
+      color: #007bff;
+      cursor: pointer;
+    }
+  </style>  <!-- Firebase -->  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-  authDomain: "sheko-store.firebaseapp.com",
-  projectId: "sheko-store",
-  storageBucket: "sheko-store.firebasestorage.app",
-  messagingSenderId: "113892775847",
-  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882",
-  measurementId: "G-MQCQE3X077"
+      authDomain: "sheko-store.firebaseapp.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.firebasestorage.app",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882",
+      measurementId: "G-MQCQE3X077"
     };
     firebase.initializeApp(firebaseConfig);
+  </script></head>
+<body>
+  <div class="form-container">
+    <h2>تسجيل الدخول</h2>
+    <input type="email" id="email" placeholder="البريد الإلكتروني">
+    <input type="password" id="password" placeholder="كلمة المرور">
+    <button onclick="login()">تسجيل الدخول</button>
+    <div class="link" onclick="resetPassword()">نسيت كلمة المرور؟</div>
+    <hr>
+    <h2>إنشاء حساب جديد</h2>
+    <input type="email" id="newEmail" placeholder="البريد الإلكتروني">
+    <input type="password" id="newPassword" placeholder="كلمة المرور">
+    <button onclick="signUp()">إنشاء حساب</button>
+  </div>  <script>
     const auth = firebase.auth();
 
-    function loginUser() {
+    function login() {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
       auth.signInWithEmailAndPassword(email, password)
@@ -26,28 +83,33 @@
           window.location.href = "dashboard.html";
         })
         .catch(error => {
-          alert("خطأ في تسجيل الدخول: " + error.message);
+          alert("❌ " + error.message);
         });
     }
 
-    function registerUser() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+    function signUp() {
+      const email = document.getElementById("newEmail").value;
+      const password = document.getElementById("newPassword").value;
       auth.createUserWithEmailAndPassword(email, password)
         .then(() => {
-          alert("تم إنشاء الحساب بنجاح");
-          window.location.href = "dashboard.html";
+          alert("✅ تم إنشاء الحساب بنجاح! يمكنك تسجيل الدخول الآن.");
         })
         .catch(error => {
-          alert("حدث خطأ: " + error.message);
+          alert("❌ " + error.message);
         });
     }
-  </script></head>
-<body>
-  <h2>تسجيل الدخول أو إنشاء حساب</h2>
-  <input type="email" id="email" placeholder="البريد الإلكتروني"><br>
-  <input type="password" id="password" placeholder="كلمة المرور"><br>
-  <button onclick="loginUser()">تسجيل الدخول</button>
-  <button onclick="registerUser()">إنشاء حساب جديد</button>
-</body>
+
+    function resetPassword() {
+      const email = prompt("أدخل بريدك الإلكتروني لاستعادة كلمة المرور:");
+      if (email) {
+        auth.sendPasswordResetEmail(email)
+          .then(() => {
+            alert("📧 تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني.");
+          })
+          .catch(error => {
+            alert("❌ " + error.message);
+          });
+      }
+    }
+  </script></body>
 </html>
