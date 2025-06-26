@@ -1,122 +1,160 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>لوحة التحكم - Dashboard</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>لوحة التحكم - Dashboard</title>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f4f4;
-      margin: 0; padding: 0;
-      direction: rtl;
-      text-align: right;
-    }
-    header {
-      background: #007bff;
-      color: white;
-      padding: 15px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    header div, header button {
-      font-weight: bold;
-      cursor: pointer;
-      user-select: none;
-    }
-    header #logout {
-      background: #ff4d4d;
-      padding: 6px 12px;
-      border-radius: 4px;
-      transition: background 0.3s ease;
-    }
-    header #logout:hover {
-      background: #e04343;
-    }
-    header #infoAccountBtn {
-      background: #28a745;
-      border: none;
-      color: white;
-      padding: 6px 12px;
-      border-radius: 4px;
-      transition: background 0.3s ease;
-    }
-    header #infoAccountBtn:hover {
-      background: #218838;
-    }
-    main {
-      max-width: 600px;
-      margin: 30px auto;
-      background: white;
-      padding: 20px 25px;
-      border-radius: 8px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
-    }
-    label {
-      display: block;
-      margin: 15px 0 8px;
-      font-weight: bold;
-      font-size: 16px;
-    }
-    select, input[type="text"], input[type="number"] {
-      width: 100%;
-      padding: 10px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      font-size: 15px;
-      box-sizing: border-box;
-    }
-    button#sendOrderBtn {
-      margin-top: 25px;
-      width: 100%;
-      padding: 14px;
-      background: #007bff;
-      border: none;
-      color: white;
-      font-size: 18px;
-      font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-    button#sendOrderBtn:disabled {
-      background: #aaa;
-      cursor: not-allowed;
-    }
-    #pricesContainer div {
-      margin: 10px 0;
-    }
-    #pricesContainer label {
-      font-weight: normal;
-      cursor: pointer;
-    }
-    #message {
-      margin-top: 15px;
-      color: red;
-      font-weight: bold;
-      min-height: 24px;
-    }
-    #contactUs {
-      margin-top: 30px;
-      font-size: 14px;
-      text-align: center;
-      color: #333;
-    }
-    #contactUs a {
-      color: #007bff;
-      text-decoration: none;
-    }
-    #contactUs a:hover {
-      text-decoration: underline;
-    }
-  </style>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    margin: 0; padding: 0;
+    direction: rtl;
+    text-align: right;
+  }
+  header {
+    background: #007bff;
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  header div, header button {
+    font-weight: bold;
+    cursor: pointer;
+    user-select: none;
+  }
+  header #logout {
+    background: #ff4d4d;
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: background 0.3s ease;
+  }
+  header #logout:hover {
+    background: #e04343;
+  }
+  header #infoAccountBtn {
+    background: #28a745;
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: background 0.3s ease;
+  }
+  header #infoAccountBtn:hover {
+    background: #218838;
+  }
+  main {
+    max-width: 650px;
+    margin: 30px auto;
+    background: white;
+    padding: 20px 25px;
+    border-radius: 8px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.1);
+  }
+  label {
+    display: block;
+    margin: 15px 0 8px;
+    font-weight: bold;
+    font-size: 16px;
+  }
+  select, input[type="text"], input[type="number"], input[type="email"] {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+    box-sizing: border-box;
+  }
+  button#sendOrderBtn, button#saveProfileBtn {
+    margin-top: 20px;
+    width: 100%;
+    padding: 14px;
+    background: #007bff;
+    border: none;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  button#sendOrderBtn:disabled, button#saveProfileBtn:disabled {
+    background: #aaa;
+    cursor: not-allowed;
+  }
+  #pricesContainer div {
+    margin: 10px 0;
+  }
+  #pricesContainer label {
+    font-weight: normal;
+    cursor: pointer;
+  }
+  #message, #profileMessage {
+    margin-top: 15px;
+    color: red;
+    font-weight: bold;
+    min-height: 24px;
+  }
+  #contactUs {
+    margin-top: 30px;
+    font-size: 14px;
+    text-align: center;
+    color: #333;
+  }
+  #contactUs a {
+    color: #007bff;
+    text-decoration: none;
+  }
+  #contactUs a:hover {
+    text-decoration: underline;
+  }
+
+  /* صندوق معلومات الحساب */
+  #accountInfoModal {
+    display: none;
+    position: fixed;
+    z-index: 999;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 500px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.25);
+    padding: 25px 20px;
+  }
+  #accountInfoModal.show {
+    display: block;
+  }
+  #accountInfoModal h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-weight: bold;
+    text-align: center;
+  }
+  #closeModalBtn {
+    background: #ff4d4d;
+    border: none;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 15px;
+    width: 100%;
+  }
+  #closeModalBtn:hover {
+    background: #e04343;
+  }
+</style>
 </head>
 <body>
 
@@ -127,24 +165,48 @@
 </header>
 
 <main>
-  <label for="serviceSelect">اختر الخدمة</label>
-  <select id="serviceSelect" disabled>
-    <option value="" disabled selected>جارٍ تحميل الخدمات...</option>
-  </select>
 
-  <div id="subServicesContainer" style="display:none;">
-    <label for="subServiceSelect">الخدمات المتعلقة</label>
-    <select id="subServiceSelect"></select>
-  </div>
+  <!-- نموذج طلب الخدمة -->
+  <section id="orderSection">
+    <label for="serviceSelect">اختر الخدمة</label>
+    <select id="serviceSelect" disabled>
+      <option value="" disabled selected>جارٍ تحميل الخدمات...</option>
+    </select>
 
-  <div id="pricesContainer" style="display:none; margin-top:15px;"></div>
+    <div id="subServicesContainer" style="display:none;">
+      <label for="subServiceSelect">الخدمات المتعلقة</label>
+      <select id="subServiceSelect"></select>
+    </div>
 
-  <label id="accountLabel" for="accountInput" style="display:none;"></label>
-  <input type="text" id="accountInput" style="display:none;" placeholder="أدخل اسم الحساب أو الايدي" />
+    <div id="pricesContainer" style="display:none; margin-top:15px;"></div>
 
-  <button id="sendOrderBtn" disabled>إرسال الطلب</button>
+    <label id="accountLabel" for="accountInput" style="display:none;"></label>
+    <input type="text" id="accountInput" style="display:none;" placeholder="أدخل اسم الحساب أو الايدي" />
 
-  <div id="message"></div>
+    <button id="sendOrderBtn" disabled>إرسال الطلب</button>
+
+    <div id="message"></div>
+  </section>
+
+  <!-- صندوق معلومات الحساب -->
+  <section id="accountInfoModal" aria-hidden="true" role="dialog" aria-labelledby="accountInfoTitle">
+    <h2 id="accountInfoTitle">معلومات حسابك</h2>
+    <label for="fullNameInput">الاسم الكامل</label>
+    <input type="text" id="fullNameInput" placeholder="أدخل الاسم الكامل" />
+
+    <label for="emailInput">البريد الإلكتروني (غير قابل للتعديل)</label>
+    <input type="email" id="emailInput" disabled />
+
+    <label for="phoneInput">رقم الهاتف</label>
+    <input type="text" id="phoneInput" placeholder="أدخل رقم الهاتف" />
+
+    <div>رصيدك الحالي: <strong id="modalUserBalance">...</strong> جنيه</div>
+
+    <button id="saveProfileBtn" disabled>حفظ التغييرات</button>
+    <button id="closeModalBtn">إغلاق</button>
+
+    <div id="profileMessage"></div>
+  </section>
 
   <div id="contactUs">
     إذا واجهت أي مشكلة راسلنا على الواتساب: <a href="https://wa.me/201099874914" target="_blank">01099874914</a>
@@ -168,7 +230,7 @@
   const auth = firebase.auth();
   const db = firebase.firestore();
 
-  // متغيرات عناصر الصفحة
+  // عناصر الصفحة
   const serviceSelect = document.getElementById('serviceSelect');
   const subServiceSelect = document.getElementById('subServiceSelect');
   const subServicesContainer = document.getElementById('subServicesContainer');
@@ -181,8 +243,19 @@
   const infoAccountBtn = document.getElementById('infoAccountBtn');
   const logoutBtn = document.getElementById('logout');
 
+  // عناصر صندوق معلومات الحساب
+  const accountInfoModal = document.getElementById('accountInfoModal');
+  const fullNameInput = document.getElementById('fullNameInput');
+  const emailInput = document.getElementById('emailInput');
+  const phoneInput = document.getElementById('phoneInput');
+  const modalUserBalance = document.getElementById('modalUserBalance');
+  const saveProfileBtn = document.getElementById('saveProfileBtn');
+  const closeModalBtn = document.getElementById('closeModalBtn');
+  const profileMessage = document.getElementById('profileMessage');
+
   let userBalance = 0;
   let currentUser = null;
+  let userData = {};
 
   // بيانات الخدمات (ثابتة)
   const data = {
@@ -231,28 +304,39 @@
     }
   };
 
-  // تهيئة الصفحة بعد تسجيل الدخول
+  // تحميل بيانات المستخدم بعد تسجيل الدخول
   auth.onAuthStateChanged(user => {
     if (user) {
       currentUser = user;
       loadUserData(user.uid);
       loadServices();
     } else {
-      window.location.href = 'login.html'; // غيرها حسب صفحة تسجيل الدخول عندك
+      window.location.href = 'login.html';
     }
   });
 
-  // تحميل بيانات المستخدم (الرصيد)
+  // جلب بيانات المستخدم من Firestore
   function loadUserData(uid){
     db.collection('users').doc(uid).get()
       .then(doc => {
         if(doc.exists){
-          userBalance = doc.data().balance || 0;
+          userData = doc.data();
+          userBalance = userData.balance || 0;
           userBalanceSpan.textContent = userBalance;
           serviceSelect.disabled = false;
+          // إعداد بيانات ملف الحساب
+          fullNameInput.value = userData.fullName || "";
+          emailInput.value = currentUser.email || "";
+          phoneInput.value = userData.phone || "";
+          modalUserBalance.textContent = userBalance;
+          saveProfileBtn.disabled = true;
         } else {
-          // انشئ بيانات جديدة للمستخدم برصيد 0 مثلاً
-          db.collection('users').doc(uid).set({balance: 0});
+          // إذا لم توجد بيانات - انشئ بيانات أولية
+          db.collection('users').doc(uid).set({
+            fullName: "",
+            phone: "",
+            balance: 0
+          });
           userBalance = 0;
           userBalanceSpan.textContent = userBalance;
           serviceSelect.disabled = false;
@@ -264,7 +348,7 @@
       });
   }
 
-  // تحميل الخيارات للخدمات الرئيسية
+  // تحميل الخدمات الرئيسية في قائمة اختيار الخدمة
   function loadServices(){
     serviceSelect.innerHTML = `<option value="" disabled selected>اختر الخدمة</option>`;
     for(let key in data){
@@ -274,6 +358,64 @@
       serviceSelect.appendChild(option);
     }
   }
+
+  // تغيير حالة زر الحفظ عند تعديل بيانات الحساب
+  function checkProfileChanges(){
+    let changed = false;
+    if(fullNameInput.value.trim() !== (userData.fullName || "")) changed = true;
+    if(phoneInput.value.trim() !== (userData.phone || "")) changed = true;
+    saveProfileBtn.disabled = !changed;
+    profileMessage.textContent = "";
+  }
+
+  // فتح صندوق معلومات الحساب
+  infoAccountBtn.addEventListener('click', () => {
+    profileMessage.textContent = "";
+    saveProfileBtn.disabled = true;
+    accountInfoModal.classList.add('show');
+    accountInfoModal.setAttribute('aria-hidden', 'false');
+  });
+
+  // إغلاق صندوق معلومات الحساب
+  closeModalBtn.addEventListener('click', () => {
+    accountInfoModal.classList.remove('show');
+    accountInfoModal.setAttribute('aria-hidden', 'true');
+  });
+
+  // استماع لتغييرات الحقول
+  fullNameInput.addEventListener('input', checkProfileChanges);
+  phoneInput.addEventListener('input', checkProfileChanges);
+
+  // حفظ تغييرات الحساب
+  saveProfileBtn.addEventListener('click', () => {
+    const fullName = fullNameInput.value.trim();
+    const phone = phoneInput.value.trim();
+
+    if(fullName === ""){
+      profileMessage.textContent = "الاسم الكامل لا يمكن أن يكون فارغاً.";
+      return;
+    }
+    // يمكنك إضافة تحقق رقم الهاتف هنا إذا أردت
+
+    saveProfileBtn.disabled = true;
+    profileMessage.textContent = "جارٍ حفظ البيانات...";
+
+    db.collection('users').doc(currentUser.uid).update({
+      fullName: fullName,
+      phone: phone
+    }).then(() => {
+      profileMessage.style.color = "green";
+      profileMessage.textContent = "تم حفظ البيانات بنجاح.";
+      // تحديث البيانات المحلية
+      userData.fullName = fullName;
+      userData.phone = phone;
+    }).catch(err => {
+      profileMessage.style.color = "red";
+      profileMessage.textContent = "حدث خطأ أثناء الحفظ، حاول مرة أخرى.";
+      saveProfileBtn.disabled = false;
+      console.error(err);
+    });
+  });
 
   // عند اختيار الخدمة الرئيسية
   serviceSelect.addEventListener('change', () => {
@@ -349,114 +491,4 @@
   // تحقق من صحة البيانات لتفعيل زر الإرسال
   function validateForm(){
     clearMessage();
-    const serviceKey = serviceSelect.value;
-    const subServiceKey = subServiceSelect.value;
-    if (!serviceKey || !subServiceKey) {
-      sendOrderBtn.disabled = true;
-      return;
-    }
-    const accountValue = accountInput.value.trim();
-    if (!accountValue) {
-      sendOrderBtn.disabled = true;
-      return;
-    }
-    if (serviceKey === "games") {
-      const selectedPriceRadio = document.querySelector('input[name="priceOption"]:checked');
-      if (!selectedPriceRadio) {
-        sendOrderBtn.disabled = true;
-        return;
-      }
-      const price = Number(selectedPriceRadio.getAttribute('data-price'));
-      if (userBalance < price) {
-        showMessage("رصيدك غير كافٍ لإتمام الطلب");
-        sendOrderBtn.disabled = true;
-        return;
-      }
-    }
-    sendOrderBtn.disabled = false;
-  }
-
-  // إرسال الطلب
-  sendOrderBtn.addEventListener('click', () => {
-    clearMessage();
-
-    if (!currentUser) {
-      alert("يجب تسجيل الدخول أولاً");
-      return;
-    }
-
-    const userId = currentUser.uid;
-    const serviceKey = serviceSelect.value;
-    const subServiceKey = subServiceSelect.value;
-    const accountValue = accountInput.value.trim();
-    let price = 0;
-
-    if(serviceKey === 'games'){
-      const selectedPriceRadio = document.querySelector('input[name="priceOption"]:checked');
-      price = Number(selectedPriceRadio.getAttribute('data-price'));
-    }
-
-    if(userBalance < price){
-      showMessage("رصيدك غير كافٍ لإتمام الطلب");
-      return;
-    }
-
-    // إضافة الطلب في Firestore
-    db.collection('orders').add({
-      userId: userId,
-      service: serviceKey,
-      subService: subServiceKey,
-      account: accountValue,
-      price: price,
-      status: "قيد التنفيذ",
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    })
-    .then(() => {
-      // تحديث الرصيد
-      userBalance -= price;
-      userBalanceSpan.textContent = userBalance;
-
-      db.collection('users').doc(userId).update({balance: userBalance});
-      alert("تم إرسال الطلب بنجاح!");
-      resetForm();
-    })
-    .catch(err => {
-      console.error("خطأ في إرسال الطلب:", err);
-      showMessage("حدث خطأ أثناء إرسال الطلب، حاول مرة أخرى.");
-    });
-  });
-
-  // زر معلومات الحساب
-  infoAccountBtn.addEventListener('click', () => {
-    alert(`معلومات حسابك:\nرصيدك الحالي: ${userBalance} جنيه\nيمكنك اختيار الخدمات وإرسال الطلب.`);
-  });
-
-  // تسجيل الخروج
-  logoutBtn.addEventListener('click', () => {
-    auth.signOut().then(() => {
-      window.location.href = 'login.html';
-    });
-  });
-
-  function showMessage(msg){
-    message.textContent = msg;
-  }
-  function clearMessage(){
-    message.textContent = "";
-  }
-  function resetForm(){
-    serviceSelect.value = "";
-    subServicesContainer.style.display = "none";
-    subServiceSelect.innerHTML = "";
-    pricesContainer.style.display = "none";
-    pricesContainer.innerHTML = "";
-    accountInput.value = "";
-    accountInput.style.display = "none";
-    accountLabel.style.display = "none";
-    sendOrderBtn.disabled = true;
-  }
-
-</script>
-
-</body>
-</html>
+    const serviceKey = serviceSelect.value
