@@ -1,0 +1,159 @@
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>تسجيل الدخول | Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(to right, #6a11cb, #2575fc);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      direction: rtl;
+    }
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 400px;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #2575fc;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .link {
+      text-align: center;
+      margin-top: 10px;
+      color: #2575fc;
+      cursor: pointer;
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 id="formTitle">تسجيل الدخول</h2>
+
+    <input type="email" id="email" placeholder="البريد الإلكتروني">
+    <input type="password" id="password" placeholder="كلمة المرور" class="password">
+    <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور" class="password hidden">
+
+    <button id="loginBtn">دخول</button>
+    <div class="link" id="toggleForm">ليس لديك حساب؟ أنشئ الآن</div>
+    <div class="link" onclick="forgotPassword()">نسيت كلمة المرور؟</div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      sendPasswordResetEmail
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getDatabase,
+      ref,
+      set
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getDatabase(app);
+
+    const loginBtn = document.getElementById("loginBtn");
+    const toggleForm = document.getElementById("toggleForm");
+    const formTitle = document.getElementById("formTitle");
+    const passwordFields = document.querySelectorAll(".password");
+
+    let isRegister = false;
+
+    toggleForm.addEventListener("click", () => {
+      isRegister = !isRegister;
+      formTitle.textContent = isRegister ? "إنشاء حساب" : "تسجيل الدخول";
+      toggleForm.textContent = isRegister ? "لديك حساب؟ تسجيل الدخول" : "ليس لديك حساب؟ أنشئ الآن";
+      passwordFields[1].classList.toggle("hidden");
+      loginBtn.textContent = isRegister ? "إنشاء حساب" : "دخول";
+    });
+
+    loginBtn.addEventListener("click", () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+
+      if (!email || !password || (isRegister && password !== confirmPassword)) {
+        alert("❗ الرجاء التأكد من تعبئة الحقول بشكل صحيح.");
+        return;
+      }
+
+      if (isRegister) {
+        createUserWithEmailAndPassword(auth, email, password)
+          .then((userCredential) => {
+            const user = userCredential.user;
+            // أضف المستخدم إلى قاعدة البيانات
+            set(ref(db, "users/" + user.uid), {
+              email: user.email,
+              balance: 0,
+              points: 0
+            });
+            alert("✅ تم إنشاء الحساب بنجاح!");
+            window.location.href = "dashboard.html";
+          })
+          .catch((error) => alert("❌ " + error.message));
+      } else {
+        signInWithEmailAndPassword(auth, email, password)
+          .then(() => {
+            alert("✅ تم تسجيل الدخول بنجاح!");
+            window.location.href = "dashboard.html";
+          })
+          .catch((error) => alert("❌ " + error.message));
+      }
+    });
+
+    window.forgotPassword = () => {
+      const email = document.getElementById("email").value.trim();
+      if (!email) {
+        alert("❗ الرجاء إدخال البريد الإلكتروني.");
+        return;
+      }
+      sendPasswordResetEmail(auth, email)
+        .then(() => alert("📩 تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك."))
+        .catch((error) => alert("❌ " + error.message));
+    };
+  </script>
+</body>
+</html>
