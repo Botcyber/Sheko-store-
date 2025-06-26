@@ -1,152 +1,88 @@
 <!DOCTYPE html><html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>لوحة المدير - Sheko Store</title>
+  <title>لوحة تحكم الأدمن | SHEKO STORE</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      direction: rtl;
-      background-color: #f5f5f5;
-      padding: 20px;
-    }
-    .container {
-      max-width: 800px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    input, button, select {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background-color: #28a745;
-      color: white;
-      cursor: pointer;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: center;
-    }
-    th {
-      background-color: #007bff;
-      color: white;
-    }
+    body { font-family: Arial; background: #f5f5f5; padding: 20px; }
+    .panel { background: white; padding: 20px; max-width: 600px; margin: auto; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #333; }
+    input, select, button { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #ccc; }
+    button { background-color: #007bff; color: white; border: none; cursor: pointer; }
+    button:hover { background-color: #0056b3; }
+    label { font-weight: bold; }
   </style>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-      authDomain: "sheko-store.firebaseapp.com",
-      projectId: "sheko-store",
-      storageBucket: "sheko-store.firebasestorage.app",
-      messagingSenderId: "113892775847",
-      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const auth = firebase.auth();// حماية الدخول - فقط للمدير
-auth.onAuthStateChanged(user => {
-  if (user) {
-    db.ref("adminUsers/" + user.uid).once("value").then(snap => {
-      if (!snap.exists()) {
-        alert("🚫 دخول غير مصرح به");
-        window.location.href = "index.html";
-      } else {
-        loadOrders();
-      }
-    });
-  } else {
-    window.location.href = "index.html";
-  }
-});
-
-function addBalancePoints() {
-  const uid = document.getElementById("uid").value;
-  const balance = parseInt(document.getElementById("balance").value);
-  const points = parseInt(document.getElementById("points").value);
-  if (uid && !isNaN(balance)) db.ref("balance/" + uid).set(balance);
-  if (uid && !isNaN(points)) db.ref("points/" + uid).set(points);
-  alert("✅ تم التحديث بنجاح");
-}
-
-function loadOrders() {
-  db.ref("orders").once("value").then(snapshot => {
-    const ordersTable = document.getElementById("ordersBody");
-    ordersTable.innerHTML = "";
-    snapshot.forEach(userSnap => {
-      const uid = userSnap.key;
-      userSnap.forEach(orderSnap => {
-        const orderId = orderSnap.key;
-        const data = orderSnap.val();
-        const status = data.status || "قيد الانتظار";
-        const row = `
-          <tr>
-            <td>${uid}</td>
-            <td>${data.mainService} - ${data.subService}</td>
-            <td>${data.account}</td>
-            <td>${data.phone}</td>
-            <td>${data.date}</td>
-            <td>
-              <select onchange="updateStatus('${uid}', '${orderId}', this.value)">
-                <option ${status === "قيد التنفيذ" ? "selected" : ""}>قيد التنفيذ</option>
-                <option ${status === "تم" ? "selected" : ""}>تم</option>
-                <option ${status === "تم الإلغاء" ? "selected" : ""}>تم الإلغاء</option>
-              </select>
-            </td>
-          </tr>
-        `;
-        ordersTable.innerHTML += row;
-      });
-    });
-  });
-}
-
-function updateStatus(uid, orderId, status) {
-  db.ref("orders/" + uid + "/" + orderId + "/status").set(status);
-  alert("✅ تم تحديث الحالة");
-}
-
-  </script>
 </head>
-<body>
-  <div class="container">
-    <h2>لوحة التحكم الخاصة بالمدير</h2><h3>إضافة رصيد / نقاط</h3>
-<input type="text" id="uid" placeholder="ادخل UID الخاص بالمستخدم">
-<input type="number" id="balance" placeholder="رصيد بالجنيه">
-<input type="number" id="points" placeholder="نقاط الهدايا">
-<button onclick="addBalancePoints()">تحديث</button>
+<body><div class="panel">
+  <h2>لوحة تحكم الأدمن</h2><label>أدخل UID المستخدم:</label> <input type="text" id="userUid" placeholder="مثال: 3sf8eUEe2gmn...">
 
-<h3>طلبات المستخدمين</h3>
-<table>
-  <thead>
-    <tr>
-      <th>UID</th>
-      <th>الخدمة</th>
-      <th>الحساب / ID</th>
-      <th>رقم التحويل</th>
-      <th>الوقت</th>
-      <th>الحالة</th>
-    </tr>
-  </thead>
-  <tbody id="ordersBody">
-    <tr><td colspan="6">جاري التحقق من الصلاحيات...</td></tr>
-  </tbody>
-</table>
+<label>العملية:</label> <select id="actionType"> <option value="addBalance">إضافة رصيد</option> <option value="deductBalance">خصم رصيد</option> <option value="addPoints">إضافة نقاط</option> <option value="deductPoints">خصم نقاط</option> </select>
 
-  </div>
-</body>
+<label>القيمة:</label> <input type="number" id="value" placeholder="مثال: 50">
+
+<button id="submitAction">تنفيذ العملية</button>
+
+  <p id="statusMsg" style="color: green; text-align: center;"></p>
+</div><script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getDatabase, ref, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+    authDomain: "sheko-store.firebaseapp.com",
+    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+    projectId: "sheko-store",
+    storageBucket: "sheko-store.appspot.com",
+    messagingSenderId: "113892775847",
+    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  document.getElementById("submitAction").addEventListener("click", async () => {
+    const uid = document.getElementById("userUid").value;
+    const action = document.getElementById("actionType").value;
+    const value = parseInt(document.getElementById("value").value);
+    const msg = document.getElementById("statusMsg");
+
+    if (!uid || isNaN(value)) {
+      msg.style.color = "red";
+      msg.textContent = "يرجى إدخال UID وقيمة صحيحة";
+      return;
+    }
+
+    const userRef = ref(db, `users/${uid}`);
+    const snapshot = await get(userRef);
+    if (!snapshot.exists()) {
+      msg.style.color = "red";
+      msg.textContent = "هذا المستخدم غير موجود";
+      return;
+    }
+
+    const userData = snapshot.val();
+    const currentBalance = userData.balance || 0;
+    const currentPoints = userData.points || 0;
+    let updates = {};
+
+    switch(action) {
+      case "addBalance":
+        updates.balance = currentBalance + value;
+        break;
+      case "deductBalance":
+        updates.balance = Math.max(0, currentBalance - value);
+        break;
+      case "addPoints":
+        updates.points = currentPoints + value;
+        break;
+      case "deductPoints":
+        updates.points = Math.max(0, currentPoints - value);
+        break;
+    }
+
+    await update(userRef, updates);
+    msg.style.color = "green";
+    msg.textContent = "تم تنفيذ العملية بنجاح";
+  });
+</script></body>
 </html>
