@@ -45,6 +45,7 @@
     }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
   <script>
     const firebaseConfig = {
@@ -56,7 +57,24 @@
       appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();function addBalancePoints() {
+    const db = firebase.database();
+    const auth = firebase.auth();// حماية الدخول - فقط للمدير
+auth.onAuthStateChanged(user => {
+  if (user) {
+    db.ref("adminUsers/" + user.uid).once("value").then(snap => {
+      if (!snap.exists()) {
+        alert("🚫 دخول غير مصرح به");
+        window.location.href = "index.html";
+      } else {
+        loadOrders();
+      }
+    });
+  } else {
+    window.location.href = "index.html";
+  }
+});
+
+function addBalancePoints() {
   const uid = document.getElementById("uid").value;
   const balance = parseInt(document.getElementById("balance").value);
   const points = parseInt(document.getElementById("points").value);
@@ -102,8 +120,6 @@ function updateStatus(uid, orderId, status) {
   alert("✅ تم تحديث الحالة");
 }
 
-window.onload = loadOrders;
-
   </script>
 </head>
 <body>
@@ -127,7 +143,7 @@ window.onload = loadOrders;
     </tr>
   </thead>
   <tbody id="ordersBody">
-    <tr><td colspan="6">جاري التحميل...</td></tr>
+    <tr><td colspan="6">جاري التحقق من الصلاحيات...</td></tr>
   </tbody>
 </table>
 
