@@ -1,6 +1,110 @@
 <!DOCTYPE html><html lang="ar">
 <head>
   <meta charset="UTF-8">
+  <title>لوحة التحكم - Sheko Store</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      direction: rtl;
+      background-color: #f7f7f7;
+      padding: 20px;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .topbar .left, .topbar .right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .container {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 600px;
+      margin: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    select, input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      cursor: pointer;
+    }
+    .link-button {
+      background-color: #ffc107;
+      color: black;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.firebasestorage.app",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882",
+      measurementId: "G-MQCQE3X077"
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="left">
+      <strong id="userEmail">جارٍ التحميل...</strong>
+      <span id="userBalance">0 جنيه</span>
+    </div>
+    <div class="right">
+      <a class="link-button" href="account.html">معلومات حسابك</a>
+      <button onclick="logout()">تسجيل الخروج</button>
+    </div>
+  </div>  <div class="container">
+    <!-- باقي محتوى النموذج والاختيارات -->
+    <p>محتوى النموذج وواجهة الطلبات...</p>
+  </div>  <script>
+    const auth = firebase.auth();
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById("userEmail").textContent = user.email;
+        // يمكن هنا ربط وعرض الرصيد أيضًا إذا كنت تحفظه في قاعدة البيانات
+      } else {
+        window.location.href = "index.html";
+      }
+    });
+
+    function logout() {
+      auth.signOut().then(() => {
+        window.location.href = "index.html";
+      });
+    }
+  </script></body>
+</html>
+<!DOCTYPE html><html lang="ar">
+<head>
+  <meta charset="UTF-8">
   <title>Sheko Store - طلب شحن</title>
   <style>
     body {
