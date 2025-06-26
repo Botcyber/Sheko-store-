@@ -1,0 +1,106 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>لوحة تحكم الأدمن</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: 'Cairo', sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
+    header { background: #222; color: white; padding: 15px; text-align: center; }
+    table { width: 100%; border-collapse: collapse; margin: 20px auto; max-width: 95%; background: white; border-radius: 8px; overflow: hidden; }
+    th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+    th { background: #007bff; color: white; }
+    tr:nth-child(even) { background: #f2f2f2; }
+    h2 { text-align: center; margin-top: 20px; }
+  </style>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<header>
+  <h1>لوحة تحكم الأدمن - عرض الطلبات</h1>
+</header>
+
+<h2>جميع الطلبات</h2>
+<table id="ordersTable">
+  <thead>
+    <tr>
+      <th>المستخدم</th>
+      <th>الخدمة</th>
+      <th>المعرف</th>
+      <th>المبلغ المطلوب</th>
+      <th>المبلغ المدفوع</th>
+      <th>رقم الدفع</th>
+      <th>ملاحظات</th>
+      <th>التاريخ</th>
+    </tr>
+  </thead>
+  <tbody id="ordersBody">
+    <tr><td colspan="8">تحميل الطلبات...</td></tr>
+  </tbody>
+</table>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    databaseURL: "YOUR_DB_URL",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_BUCKET",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      // Optional: Restrict access to specific admin email
+      // if (user.email !== "youradmin@email.com") return alert("ليس لديك صلاحية الدخول");
+      loadAllOrders();
+    } else {
+      alert("يرجى تسجيل الدخول كمدير أولاً.");
+      window.location.href = "main.html";
+    }
+  });
+
+  function loadAllOrders() {
+    const ordersBody = document.getElementById("ordersBody");
+    ordersBody.innerHTML = "";
+    db.ref("orders").once("value", snapshot => {
+      const orders = snapshot.val();
+      if (!orders) {
+        ordersBody.innerHTML = "<tr><td colspan='8'>لا توجد طلبات حتى الآن</td></tr>";
+        return;
+      }
+
+      for (let userId in orders) {
+        for (let orderId in orders[userId]) {
+          const o = orders[userId][orderId];
+          const row = `
+            <tr>
+              <td>${userId}</td>
+              <td>${o.service}</td>
+              <td>${o.accountId}</td>
+              <td>${o.amount} ج</td>
+              <td>${o.paid} ج</td>
+              <td>${o.phone}</td>
+              <td>${o.notes || ""}</td>
+              <td>${o.date}</td>
+            </tr>
+          `;
+          ordersBody.innerHTML += row;
+        }
+      }
+    });
+  }
+</script>
+
+</body>
+</html>
