@@ -1,0 +1,89 @@
+<!DOCTYPE html><html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>إدارة الطلبات | SHEKO STORE</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial; background: #f4f4f4; padding: 20px; }
+    .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #333; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+    th { background-color: #007bff; color: white; }
+    select { padding: 5px; }
+    button { padding: 5px 10px; margin-top: 5px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h2>لوحة إدارة الطلبات</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>رقم الطلب</th>
+        <th>UID المستخدم</th>
+        <th>الخدمة</th>
+        <th>الكمية</th>
+        <th>السعر</th>
+        <th>الحالة</th>
+        <th>إجراء</th>
+      </tr>
+    </thead>
+    <tbody id="ordersTable"></tbody>
+  </table>
+</div><script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+    authDomain: "sheko-store.firebaseapp.com",
+    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+    projectId: "sheko-store",
+    storageBucket: "sheko-store.appspot.com",
+    messagingSenderId: "113892775847",
+    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  const ordersRef = ref(db, "orders");
+  const tableBody = document.getElementById("ordersTable");
+
+  get(ordersRef).then(snapshot => {
+    if (snapshot.exists()) {
+      const orders = snapshot.val();
+      for (let key in orders) {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+          <td>${key}</td>
+          <td>${orders[key].uid}</td>
+          <td>${orders[key].service}</td>
+          <td>${orders[key].amount}</td>
+          <td>${orders[key].price} جنيه</td>
+          <td>
+            <select id="status-${key}">
+              <option value="قيد التنفيذ" ${orders[key].status === "قيد التنفيذ" ? "selected" : ""}>قيد التنفيذ</option>
+              <option value="تم التنفيذ" ${orders[key].status === "تم التنفيذ" ? "selected" : ""}>تم التنفيذ</option>
+              <option value="تم الإلغاء" ${orders[key].status === "تم الإلغاء" ? "selected" : ""}>تم الإلغاء</option>
+            </select>
+          </td>
+          <td><button onclick="updateStatus('${key}')">تحديث</button></td>
+        `;
+
+        tableBody.appendChild(row);
+      }
+    } else {
+      tableBody.innerHTML = '<tr><td colspan="7">لا توجد طلبات حالياً</td></tr>';
+    }
+  });
+
+  window.updateStatus = async (orderId) => {
+    const newStatus = document.getElementById(`status-${orderId}`).value;
+    await update(ref(db, `orders/${orderId}`), { status: newStatus });
+    alert("تم تحديث حالة الطلب بنجاح ✅");
+  };
+</script></body>
+</html>
