@@ -1,190 +1,462 @@
-<!DOCTYPE html><html lang="ar">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>لوحة التحكم - Sheko Store</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>لوحة التحكم - Dashboard</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0; padding: 0;
       direction: rtl;
-      background-color: #f7f7f7;
-      padding: 20px;
+      text-align: right;
     }
-    .topbar {
+    header {
+      background: #007bff;
+      color: white;
+      padding: 15px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background-color: #007bff;
+    }
+    header div, header button {
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+    }
+    header #logout {
+      background: #ff4d4d;
+      padding: 6px 12px;
+      border-radius: 4px;
+      transition: background 0.3s ease;
+    }
+    header #logout:hover {
+      background: #e04343;
+    }
+    header #infoAccountBtn {
+      background: #28a745;
+      border: none;
       color: white;
-      padding: 10px 20px;
-      border-radius: 8px;
-      margin-bottom: 20px;
+      padding: 6px 12px;
+      border-radius: 4px;
+      transition: background 0.3s ease;
     }
-    .topbar .left, .topbar .right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    header #infoAccountBtn:hover {
+      background: #218838;
     }
-    .container {
-      background-color: white;
-      padding: 20px;
-      border-radius: 10px;
+    main {
       max-width: 600px;
-      margin: auto;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin: 30px auto;
+      background: white;
+      padding: 20px 25px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
     }
-    select, input, button {
+    label {
+      display: block;
+      margin: 15px 0 8px;
+      font-weight: bold;
+      font-size: 16px;
+    }
+    select, input[type="text"], input[type="number"] {
       width: 100%;
       padding: 10px;
-      margin: 10px 0;
       border-radius: 5px;
       border: 1px solid #ccc;
+      font-size: 15px;
+      box-sizing: border-box;
     }
-    button {
-      background-color: #28a745;
+    button#sendOrderBtn {
+      margin-top: 25px;
+      width: 100%;
+      padding: 14px;
+      background: #007bff;
+      border: none;
       color: white;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button#sendOrderBtn:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+    #pricesContainer div {
+      margin: 10px 0;
+    }
+    #pricesContainer label {
+      font-weight: normal;
       cursor: pointer;
     }
-    .link-button {
-      background-color: #ffc107;
-      color: black;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      padding: 10px;
-      border-radius: 5px;
-      margin-bottom: 20px;
+    #message {
+      margin-top: 15px;
+      color: red;
+      font-weight: bold;
+      min-height: 24px;
     }
-    .note {
+    #contactUs {
+      margin-top: 30px;
       font-size: 14px;
-      color: #555;
-      margin-top: 10px;
-      line-height: 1.7;
+      text-align: center;
+      color: #333;
+    }
+    #contactUs a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    #contactUs a:hover {
+      text-decoration: underline;
     }
   </style>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-      authDomain: "sheko-store.firebaseapp.com",
-      projectId: "sheko-store",
-      storageBucket: "sheko-store.firebasestorage.app",
-      messagingSenderId: "113892775847",
-      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882",
-      measurementId: "G-MQCQE3X077"
-    };
-    firebase.initializeApp(firebaseConfig);
-  </script>
 </head>
 <body>
-  <div class="topbar">
-    <div class="left">
-      <strong id="userEmail">جارٍ التحميل...</strong>
-      <span id="userBalance">رصيدك: 0 جنيه</span>
-    </div>
-    <div class="right">
-      <a class="link-button" href="account.html">معلومات حسابك</a>
-      <button onclick="logout()">تسجيل الخروج</button>
-    </div>
-  </div>  <div class="container">
-    <h2>طلب شحن</h2>
-    <label for="mainService">اختر نوع الخدمة:</label>
-    <select id="mainService" onchange="updateSubServices()">
-      <option value="">-- اختر --</option>
-      <option value="games">شحن ألعاب</option>
-      <option value="social">خدمات مواقع التواصل</option>
-    </select><label for="subService">اختر الخدمة الفرعية:</label>
-<select id="subService">
-  <option value="">-- اختر الخدمة الفرعية --</option>
-</select>
 
-<div id="accountLabel">اسم الحساب / ID:</div>
-<input type="text" id="accountInput" placeholder="أدخل البيانات المطلوبة هنا">
+<header>
+  <div id="logout">تسجيل الخروج</div>
+  <div>رصيدك: <span id="userBalance">...</span> جنيه</div>
+  <button id="infoAccountBtn">معلومات حسابك</button>
+</header>
 
-<div class="note">
-  💸 قم بتحويل المبلغ إلى رقم فودافون كاش: <strong>01099874914</strong><br>
-  📤 أدخل رقم التحويل:
-</div>
-<input type="text" id="paymentCode" placeholder="أدخل رقم التحويل">
+<main>
+  <label for="serviceSelect">اختر الخدمة</label>
+  <select id="serviceSelect" disabled>
+    <option value="" disabled selected>جارٍ تحميل الخدمات...</option>
+  </select>
 
-<div class="note">
-  📞 إذا واجهت أي مشكلة راسلنا على واتساب: <strong>01099874914</strong>
-</div>
+  <div id="subServicesContainer" style="display:none;">
+    <label for="subServiceSelect">الخدمات المتعلقة</label>
+    <select id="subServiceSelect"></select>
+  </div>
 
-<button onclick="submitOrder()">إرسال الطلب</button>
+  <div id="pricesContainer" style="display:none; margin-top:15px;"></div>
 
-  </div>  <script>
-    const auth = firebase.auth();
-    const db = firebase.database();
-    let currentUID = "";
+  <label id="accountLabel" for="accountInput" style="display:none;"></label>
+  <input type="text" id="accountInput" style="display:none;" placeholder="أدخل اسم الحساب أو الايدي" />
 
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        document.getElementById("userEmail").textContent = user.email;
-        currentUID = user.uid;
-        db.ref("balance/" + currentUID).once("value").then(snap => {
-          document.getElementById("userBalance").textContent = `رصيدك: ${snap.val() || 0} جنيه`;
-        });
-      } else {
-        window.location.href = "index.html";
-      }
-    });
+  <button id="sendOrderBtn" disabled>إرسال الطلب</button>
 
-    function logout() {
-      auth.signOut().then(() => {
-        window.location.href = "index.html";
-      });
+  <div id="message"></div>
+
+  <div id="contactUs">
+    إذا واجهت أي مشكلة راسلنا على الواتساب: <a href="https://wa.me/201099874914" target="_blank">01099874914</a>
+  </div>
+</main>
+
+<script>
+  // ----- إعداد Firebase -----
+  const firebaseConfig = {
+    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+  authDomain: "sheko-store.firebaseapp.com",
+  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+  projectId: "sheko-store",
+  storageBucket: "sheko-store.firebasestorage.app",
+  messagingSenderId: "113892775847",
+  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882",
+  measurementId: "G-MQCQE3X077"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  // متغيرات عناصر الصفحة
+  const serviceSelect = document.getElementById('serviceSelect');
+  const subServiceSelect = document.getElementById('subServiceSelect');
+  const subServicesContainer = document.getElementById('subServicesContainer');
+  const pricesContainer = document.getElementById('pricesContainer');
+  const accountInput = document.getElementById('accountInput');
+  const accountLabel = document.getElementById('accountLabel');
+  const sendOrderBtn = document.getElementById('sendOrderBtn');
+  const message = document.getElementById('message');
+  const userBalanceSpan = document.getElementById('userBalance');
+  const infoAccountBtn = document.getElementById('infoAccountBtn');
+  const logoutBtn = document.getElementById('logout');
+
+  let userBalance = 0;
+  let currentUser = null;
+
+  // بيانات الخدمات (ثابتة)
+  const data = {
+    games: {
+      name: "شحن ألعاب",
+      services: {
+        "pubg": {name: "ببجي موبايل", prices: [
+          {desc: "60 شده", price: 50},
+          {desc: "300 شده", price: 250}
+        ]},
+        "cod": {name: "كود موبايل", prices: [
+          {desc: "220 سي بي", price: 250}
+        ]},
+        "freefire": {name: "فري فاير", prices: [
+          {desc: "100 جوهره", price: 70}
+        ]},
+        "fifa": {name: "فيفا موبايل", prices: [
+          {desc: "20 كوينز", price: 40}
+        ]}
+      },
+      accountLabel: "الأي دي الخاص بك"
+    },
+    tiktok: {
+      name: "تيك توك",
+      services: {
+        "followers": {name: "زيادة المتابعين"},
+        "likes": {name: "زيادة الإعجابات"}
+      },
+      accountLabel: "اسم الحساب"
+    },
+    youtube: {
+      name: "يوتيوب",
+      services: {
+        "subs": {name: "زيادة المشتركين"},
+        "views": {name: "زيادة المشاهدات"}
+      },
+      accountLabel: "اسم الحساب"
+    },
+    instagram: {
+      name: "إنستجرام",
+      services: {
+        "followers": {name: "زيادة المتابعين"},
+        "likes": {name: "زيادة الإعجابات"}
+      },
+      accountLabel: "اسم الحساب"
     }
+  };
 
-    function updateSubServices() {
-      const main = document.getElementById("mainService").value;
-      const sub = document.getElementById("subService");
-      const label = document.getElementById("accountLabel");
-      sub.innerHTML = "";
-      let options = [];
-
-      if (main === "games") {
-        options = ["ببجي", "فري فاير", "كول اوف ديوتي", "فورتنايت"];
-        label.textContent = "الـ ID الخاص بك:";
-      } else if (main === "social") {
-        options = ["فيسبوك", "إنستجرام", "تيك توك", "يوتيوب"];
-        label.textContent = "اسم الحساب:";
-      }
-
-      options.forEach(opt => {
-        const option = document.createElement("option");
-        option.value = opt;
-        option.textContent = opt;
-        sub.appendChild(option);
-      });
+  // تهيئة الصفحة بعد تسجيل الدخول
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      currentUser = user;
+      loadUserData(user.uid);
+      loadServices();
+    } else {
+      window.location.href = 'login.html'; // غيرها حسب صفحة تسجيل الدخول عندك
     }
+  });
 
-    function submitOrder() {
-      const mainService = document.getElementById("mainService").value;
-      const subService = document.getElementById("subService").value;
-      const account = document.getElementById("accountInput").value.trim();
-      const paymentCode = document.getElementById("paymentCode").value.trim();
-      const now = new Date().toLocaleString();
+  // تحميل بيانات المستخدم (الرصيد)
+  function loadUserData(uid){
+    db.collection('users').doc(uid).get()
+      .then(doc => {
+        if(doc.exists){
+          userBalance = doc.data().balance || 0;
+          userBalanceSpan.textContent = userBalance;
+          serviceSelect.disabled = false;
+        } else {
+          // انشئ بيانات جديدة للمستخدم برصيد 0 مثلاً
+          db.collection('users').doc(uid).set({balance: 0});
+          userBalance = 0;
+          userBalanceSpan.textContent = userBalance;
+          serviceSelect.disabled = false;
+        }
+      })
+      .catch(err => {
+        console.error("خطأ تحميل بيانات المستخدم:", err);
+        message.textContent = "خطأ في تحميل بيانات المستخدم.";
+      });
+  }
 
-      if (!mainService || !subService || !account || !paymentCode) {
-        alert("يرجى ملء جميع الحقول");
+  // تحميل الخيارات للخدمات الرئيسية
+  function loadServices(){
+    serviceSelect.innerHTML = `<option value="" disabled selected>اختر الخدمة</option>`;
+    for(let key in data){
+      const option = document.createElement('option');
+      option.value = key;
+      option.textContent = data[key].name;
+      serviceSelect.appendChild(option);
+    }
+  }
+
+  // عند اختيار الخدمة الرئيسية
+  serviceSelect.addEventListener('change', () => {
+    clearMessage();
+    const serviceKey = serviceSelect.value;
+    if (!serviceKey) return resetForm();
+
+    // عرض الخدمات الفرعية
+    const services = data[serviceKey].services;
+    subServiceSelect.innerHTML = "";
+    for (const key in services) {
+      const option = document.createElement('option');
+      option.value = key;
+      option.textContent = services[key].name;
+      subServiceSelect.appendChild(option);
+    }
+    subServicesContainer.style.display = "block";
+
+    pricesContainer.style.display = "none";
+    pricesContainer.innerHTML = "";
+    accountInput.value = "";
+    accountInput.style.display = "none";
+    accountLabel.style.display = "none";
+    sendOrderBtn.disabled = true;
+  });
+
+  // عند اختيار الخدمة الفرعية
+  subServiceSelect.addEventListener('change', () => {
+    clearMessage();
+    const serviceKey = serviceSelect.value;
+    const subServiceKey = subServiceSelect.value;
+    if (!serviceKey || !subServiceKey) return;
+
+    if (serviceKey === "games") {
+      const game = data.games.services[subServiceKey];
+      pricesContainer.style.display = "block";
+      pricesContainer.innerHTML = "<strong>اختر السعر:</strong><br/>";
+      game.prices.forEach((item, index) => {
+        const radioId = "priceOption" + index;
+        pricesContainer.innerHTML += `
+          <div>
+            <input type="radio" name="priceOption" id="${radioId}" data-price="${item.price}" />
+            <label for="${radioId}">${item.desc} - ${item.price} جنيه</label>
+          </div>`;
+      });
+
+      accountLabel.textContent = data.games.accountLabel;
+      accountLabel.style.display = "block";
+      accountInput.style.display = "block";
+      accountInput.placeholder = "أدخل " + data.games.accountLabel;
+
+      document.querySelectorAll('input[name="priceOption"]').forEach(radio => {
+        radio.addEventListener('change', validateForm);
+      });
+
+      accountInput.addEventListener('input', validateForm);
+
+      sendOrderBtn.disabled = true;
+    } else {
+      pricesContainer.style.display = "none";
+      pricesContainer.innerHTML = "";
+
+      accountLabel.textContent = data[serviceKey].accountLabel;
+      accountLabel.style.display = "block";
+      accountInput.style.display = "block";
+      accountInput.placeholder = "أدخل " + data[serviceKey].accountLabel;
+
+      accountInput.addEventListener('input', validateForm);
+      sendOrderBtn.disabled = true;
+    }
+  });
+
+  // تحقق من صحة البيانات لتفعيل زر الإرسال
+  function validateForm(){
+    clearMessage();
+    const serviceKey = serviceSelect.value;
+    const subServiceKey = subServiceSelect.value;
+    if (!serviceKey || !subServiceKey) {
+      sendOrderBtn.disabled = true;
+      return;
+    }
+    const accountValue = accountInput.value.trim();
+    if (!accountValue) {
+      sendOrderBtn.disabled = true;
+      return;
+    }
+    if (serviceKey === "games") {
+      const selectedPriceRadio = document.querySelector('input[name="priceOption"]:checked');
+      if (!selectedPriceRadio) {
+        sendOrderBtn.disabled = true;
         return;
       }
-
-      db.ref("orders/" + currentUID).push({
-        mainService,
-        subService,
-        account,
-        phone: paymentCode,
-        date: now
-      }).then(() => {
-        alert("✅ تم إرسال طلبك بنجاح وسيتم معالجته قريبًا");
-        document.getElementById("mainService").value = "";
-        document.getElementById("subService").innerHTML = "<option value=''>-- اختر الخدمة الفرعية --</option>";
-        document.getElementById("accountInput").value = "";
-        document.getElementById("paymentCode").value = "";
-      });
+      const price = Number(selectedPriceRadio.getAttribute('data-price'));
+      if (userBalance < price) {
+        showMessage("رصيدك غير كافٍ لإتمام الطلب");
+        sendOrderBtn.disabled = true;
+        return;
+      }
     }
-  </script></body>
+    sendOrderBtn.disabled = false;
+  }
+
+  // إرسال الطلب
+  sendOrderBtn.addEventListener('click', () => {
+    clearMessage();
+
+    if (!currentUser) {
+      alert("يجب تسجيل الدخول أولاً");
+      return;
+    }
+
+    const userId = currentUser.uid;
+    const serviceKey = serviceSelect.value;
+    const subServiceKey = subServiceSelect.value;
+    const accountValue = accountInput.value.trim();
+    let price = 0;
+
+    if(serviceKey === 'games'){
+      const selectedPriceRadio = document.querySelector('input[name="priceOption"]:checked');
+      price = Number(selectedPriceRadio.getAttribute('data-price'));
+    }
+
+    if(userBalance < price){
+      showMessage("رصيدك غير كافٍ لإتمام الطلب");
+      return;
+    }
+
+    // إضافة الطلب في Firestore
+    db.collection('orders').add({
+      userId: userId,
+      service: serviceKey,
+      subService: subServiceKey,
+      account: accountValue,
+      price: price,
+      status: "قيد التنفيذ",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    })
+    .then(() => {
+      // تحديث الرصيد
+      userBalance -= price;
+      userBalanceSpan.textContent = userBalance;
+
+      db.collection('users').doc(userId).update({balance: userBalance});
+      alert("تم إرسال الطلب بنجاح!");
+      resetForm();
+    })
+    .catch(err => {
+      console.error("خطأ في إرسال الطلب:", err);
+      showMessage("حدث خطأ أثناء إرسال الطلب، حاول مرة أخرى.");
+    });
+  });
+
+  // زر معلومات الحساب
+  infoAccountBtn.addEventListener('click', () => {
+    alert(`معلومات حسابك:\nرصيدك الحالي: ${userBalance} جنيه\nيمكنك اختيار الخدمات وإرسال الطلب.`);
+  });
+
+  // تسجيل الخروج
+  logoutBtn.addEventListener('click', () => {
+    auth.signOut().then(() => {
+      window.location.href = 'login.html';
+    });
+  });
+
+  function showMessage(msg){
+    message.textContent = msg;
+  }
+  function clearMessage(){
+    message.textContent = "";
+  }
+  function resetForm(){
+    serviceSelect.value = "";
+    subServicesContainer.style.display = "none";
+    subServiceSelect.innerHTML = "";
+    pricesContainer.style.display = "none";
+    pricesContainer.innerHTML = "";
+    accountInput.value = "";
+    accountInput.style.display = "none";
+    accountLabel.style.display = "none";
+    sendOrderBtn.disabled = true;
+  }
+
+</script>
+
+</body>
 </html>
