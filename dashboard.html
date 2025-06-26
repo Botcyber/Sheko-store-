@@ -214,23 +214,21 @@
 </main>
 
 <script>
-  // ----- إعداد Firebase -----
+  // --- إعداد Firebase ---
   const firebaseConfig = {
-    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-  authDomain: "sheko-store.firebaseapp.com",
-  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-  projectId: "sheko-store",
-  storageBucket: "sheko-store.firebasestorage.app",
-  messagingSenderId: "113892775847",
-  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882",
-  measurementId: "G-MQCQE3X077"
+    apiKey: "API_KEY_HERE",
+    authDomain: "PROJECT_ID.firebaseapp.com",
+    projectId: "PROJECT_ID",
+    storageBucket: "PROJECT_ID.appspot.com",
+    messagingSenderId: "SENDER_ID",
+    appId: "APP_ID"
   };
 
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
 
-  // عناصر الصفحة
+  // --- عناصر الصفحة ---
   const serviceSelect = document.getElementById('serviceSelect');
   const subServiceSelect = document.getElementById('subServiceSelect');
   const subServicesContainer = document.getElementById('subServicesContainer');
@@ -243,7 +241,7 @@
   const infoAccountBtn = document.getElementById('infoAccountBtn');
   const logoutBtn = document.getElementById('logout');
 
-  // عناصر صندوق معلومات الحساب
+  // --- عناصر صندوق معلومات الحساب ---
   const accountInfoModal = document.getElementById('accountInfoModal');
   const fullNameInput = document.getElementById('fullNameInput');
   const emailInput = document.getElementById('emailInput');
@@ -253,26 +251,22 @@
   const closeModalBtn = document.getElementById('closeModalBtn');
   const profileMessage = document.getElementById('profileMessage');
 
-  let userBalance = 0;
-  let currentUser = null;
-  let userData = {};
-
-  // بيانات الخدمات (ثابتة)
+  // --- بيانات الخدمات ---
   const data = {
     games: {
       name: "شحن ألعاب",
       services: {
-        "pubg": {name: "ببجي موبايل", prices: [
+        pubg: {name: "ببجي موبايل", prices: [
           {desc: "60 شده", price: 50},
           {desc: "300 شده", price: 250}
         ]},
-        "cod": {name: "كود موبايل", prices: [
+        cod: {name: "كود موبايل", prices: [
           {desc: "220 سي بي", price: 250}
         ]},
-        "freefire": {name: "فري فاير", prices: [
+        freefire: {name: "فري فاير", prices: [
           {desc: "100 جوهره", price: 70}
         ]},
-        "fifa": {name: "فيفا موبايل", prices: [
+        fifa: {name: "فيفا موبايل", prices: [
           {desc: "20 كوينز", price: 40}
         ]}
       },
@@ -281,30 +275,34 @@
     tiktok: {
       name: "تيك توك",
       services: {
-        "followers": {name: "زيادة المتابعين"},
-        "likes": {name: "زيادة الإعجابات"}
+        followers: {name: "زيادة المتابعين"},
+        likes: {name: "زيادة الإعجابات"}
       },
       accountLabel: "اسم الحساب"
     },
     youtube: {
       name: "يوتيوب",
       services: {
-        "subs": {name: "زيادة المشتركين"},
-        "views": {name: "زيادة المشاهدات"}
+        subs: {name: "زيادة المشتركين"},
+        views: {name: "زيادة المشاهدات"}
       },
       accountLabel: "اسم الحساب"
     },
     instagram: {
       name: "إنستجرام",
       services: {
-        "followers": {name: "زيادة المتابعين"},
-        "likes": {name: "زيادة الإعجابات"}
+        followers: {name: "زيادة المتابعين"},
+        likes: {name: "زيادة الإعجابات"}
       },
       accountLabel: "اسم الحساب"
     }
   };
 
-  // تحميل بيانات المستخدم بعد تسجيل الدخول
+  let userBalance = 0;
+  let currentUser = null;
+  let userData = {};
+
+  // --- تحميل بيانات المستخدم والخدمات ---
   auth.onAuthStateChanged(user => {
     if (user) {
       currentUser = user;
@@ -315,7 +313,7 @@
     }
   });
 
-  // جلب بيانات المستخدم من Firestore
+  // --- تحميل بيانات المستخدم من Firestore ---
   function loadUserData(uid){
     db.collection('users').doc(uid).get()
       .then(doc => {
@@ -324,14 +322,14 @@
           userBalance = userData.balance || 0;
           userBalanceSpan.textContent = userBalance;
           serviceSelect.disabled = false;
-          // إعداد بيانات ملف الحساب
+          // تهيئة بيانات حساب المستخدم في المودال
           fullNameInput.value = userData.fullName || "";
           emailInput.value = currentUser.email || "";
           phoneInput.value = userData.phone || "";
           modalUserBalance.textContent = userBalance;
           saveProfileBtn.disabled = true;
         } else {
-          // إذا لم توجد بيانات - انشئ بيانات أولية
+          // إنشاء بيانات افتراضية إذا لم تكن موجودة
           db.collection('users').doc(uid).set({
             fullName: "",
             phone: "",
@@ -348,7 +346,7 @@
       });
   }
 
-  // تحميل الخدمات الرئيسية في قائمة اختيار الخدمة
+  // --- تحميل الخدمات الرئيسية في Dropdown ---
   function loadServices(){
     serviceSelect.innerHTML = `<option value="" disabled selected>اختر الخدمة</option>`;
     for(let key in data){
@@ -359,16 +357,7 @@
     }
   }
 
-  // تغيير حالة زر الحفظ عند تعديل بيانات الحساب
-  function checkProfileChanges(){
-    let changed = false;
-    if(fullNameInput.value.trim() !== (userData.fullName || "")) changed = true;
-    if(phoneInput.value.trim() !== (userData.phone || "")) changed = true;
-    saveProfileBtn.disabled = !changed;
-    profileMessage.textContent = "";
-  }
-
-  // فتح صندوق معلومات الحساب
+  // --- فتح صندوق معلومات الحساب ---
   infoAccountBtn.addEventListener('click', () => {
     profileMessage.textContent = "";
     saveProfileBtn.disabled = true;
@@ -376,17 +365,24 @@
     accountInfoModal.setAttribute('aria-hidden', 'false');
   });
 
-  // إغلاق صندوق معلومات الحساب
+  // --- إغلاق صندوق معلومات الحساب ---
   closeModalBtn.addEventListener('click', () => {
     accountInfoModal.classList.remove('show');
     accountInfoModal.setAttribute('aria-hidden', 'true');
   });
 
-  // استماع لتغييرات الحقول
+  // --- تفعيل زر حفظ عند تعديل بيانات الحساب ---
+  function checkProfileChanges(){
+    let changed = false;
+    if(fullNameInput.value.trim() !== (userData.fullName || "")) changed = true;
+    if(phoneInput.value.trim() !== (userData.phone || "")) changed = true;
+    saveProfileBtn.disabled = !changed;
+    profileMessage.textContent = "";
+  }
   fullNameInput.addEventListener('input', checkProfileChanges);
   phoneInput.addEventListener('input', checkProfileChanges);
 
-  // حفظ تغييرات الحساب
+  // --- حفظ بيانات الحساب ---
   saveProfileBtn.addEventListener('click', () => {
     const fullName = fullNameInput.value.trim();
     const phone = phoneInput.value.trim();
@@ -395,7 +391,6 @@
       profileMessage.textContent = "الاسم الكامل لا يمكن أن يكون فارغاً.";
       return;
     }
-    // يمكنك إضافة تحقق رقم الهاتف هنا إذا أردت
 
     saveProfileBtn.disabled = true;
     profileMessage.textContent = "جارٍ حفظ البيانات...";
@@ -406,7 +401,6 @@
     }).then(() => {
       profileMessage.style.color = "green";
       profileMessage.textContent = "تم حفظ البيانات بنجاح.";
-      // تحديث البيانات المحلية
       userData.fullName = fullName;
       userData.phone = phone;
     }).catch(err => {
@@ -417,7 +411,7 @@
     });
   });
 
-  // عند اختيار الخدمة الرئيسية
+  // --- عند اختيار الخدمة الرئيسية ---
   serviceSelect.addEventListener('change', () => {
     clearMessage();
     const serviceKey = serviceSelect.value;
@@ -442,7 +436,7 @@
     sendOrderBtn.disabled = true;
   });
 
-  // عند اختيار الخدمة الفرعية
+  // --- عند اختيار الخدمة الفرعية ---
   subServiceSelect.addEventListener('change', () => {
     clearMessage();
     const serviceKey = serviceSelect.value;
@@ -488,7 +482,32 @@
     }
   });
 
-  // تحقق من صحة البيانات لتفعيل زر الإرسال
+  // --- التحقق من صحة النموذج ---
   function validateForm(){
     clearMessage();
-    const serviceKey = serviceSelect.value
+    const serviceKey = serviceSelect.value;
+    const accountVal = accountInput.value.trim();
+    if(!serviceKey || accountVal === ""){
+      sendOrderBtn.disabled = true;
+      return;
+    }
+
+    if(serviceKey === "games"){
+      const selectedPriceRadio = document.querySelector('input[name="priceOption"]:checked');
+      if(!selectedPriceRadio){
+        sendOrderBtn.disabled = true;
+        return;
+      }
+      const price = Number(selectedPriceRadio.getAttribute('data-price'));
+      if(userBalance < price){
+        alert("رصيدك غير كافٍ");
+        sendOrderBtn.disabled = true;
+        return;
+      }
+    }
+    sendOrderBtn.disabled = false;
+  }
+
+  accountInput.addEventListener('input', validateForm);
+
+  // ---
