@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <title>لوحة التحكم - SHEKO STORE</title>
@@ -43,24 +42,26 @@
       color: red;
       margin-top: 10px;
     }
+    .price-button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 10px;
+      margin-top: 10px;
+      cursor: default;
+    }
   </style>
 </head>
-<body>
-
-<header>
+<body><header>
   <h1>لوحة التحكم - SHEKO STORE</h1>
-</header>
-
-<div class="top-bar">
+</header><div class="top-bar">
   <div>رصيدك: <span id="balance">0</span> جنيه</div>
   <div>
     <button onclick="logout()">تسجيل الخروج</button>
     <button onclick="goToAccount()">معلومات حسابك</button>
     <button onclick="goToOrders()">طلباتك</button>
   </div>
-</div>
-
-<div class="container">
+</div><div class="container">
   <label>اختر نوع الخدمة:</label>
   <select id="serviceType" onchange="updateServiceOptions()">
     <option value="">-- اختر --</option>
@@ -68,57 +69,49 @@
     <option value="tiktok">تيك توك</option>
     <option value="youtube">يوتيوب</option>
     <option value="instagram">انستجرام</option>
-  </select>
-
-  <div id="gamesOptions" class="service-section">
+  </select>  <div id="gamesOptions" class="service-section">
     <label>اختر اللعبة:</label>
-    <select id="gameOption" onchange="showGamePrices()">
+    <select id="gameOption">
       <option value="">-- اختر اللعبة --</option>
       <option value="pubg">ببجي موبايل</option>
       <option value="cod">كود موبايل</option>
       <option value="freefire">فري فاير</option>
       <option value="fifa">فيفا موبايل</option>
     </select>
-    <div id="gamePrices"></div>
+    <button class="price-button">ببجي: 60 شدة = 50 جنيه، 300 شدة = 250 جنيه</button>
+    <button class="price-button">كود موبايل: 220 CP = 250 جنيه</button>
+    <button class="price-button">فري فاير: 100 جوهرة = 70 جنيه</button>
+    <button class="price-button">فيفا: 20 كوينز = 40 جنيه</button>
     <input type="text" placeholder="الـ ID الخاص بك" id="gameId">
-  </div>
-
-  <div id="socialOptions" class="service-section">
+  </div>  <div id="socialOptions" class="service-section">
     <label>الخدمة:</label>
     <select id="socialService">
       <option value="">-- اختر الخدمة --</option>
-      <option value="tiktok_1000">تيك توك - ١٠٠٠ متابع - ٥٠ جنيه</option>
-      <option value="youtube_1000">يوتيوب - ١٠٠٠ مشترك - ٥٠ جنيه</option>
-      <option value="instagram_1000">انستجرام - ١٠٠٠ متابع - ٥٠ جنيه</option>
+      <option value="tiktok_1000">تيك توك</option>
+      <option value="youtube_1000">يوتيوب</option>
+      <option value="instagram_1000">انستجرام</option>
     </select>
+    <button class="price-button">١٠٠٠ متابع/مشترك = ٥٠ جنيه</button>
     <input type="text" placeholder="اسم الحساب" id="socialAccount">
-  </div>
-
-  <div>
-    <p>ارسل المال إلى رقم: <strong>01099874914</strong></p>
-    <input type="text" placeholder="رقم التحويل" id="transferCode">
+  </div>  <div>
     <button onclick="submitRequest()">إرسال الطلب</button>
     <div class="note">إذا واجهت أي مشكلة، راسلنا على الواتساب: 01099874914</div>
   </div>
-</div>
-
-<script>
-  // إعداد Firebase
+</div><script>
   const firebaseConfig = {
     apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-  authDomain: "sheko-store.firebaseapp.com",
-  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-  projectId: "sheko-store",
-  storageBucket: "sheko-store.firebasestorage.app",
-  messagingSenderId: "113892775847",
-  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882",
-  measurementId: "G-MQCQE3X077"
+    authDomain: "sheko-store.firebaseapp.com",
+    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+    projectId: "sheko-store",
+    storageBucket: "sheko-store.firebasestorage.app",
+    messagingSenderId: "113892775847",
+    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882",
+    measurementId: "G-MQCQE3X077"
   };
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
 
-  // تحميل بيانات المستخدم
   auth.onAuthStateChanged(async (user) => {
     if (user) {
       const doc = await db.collection("users").doc(user.uid).get();
@@ -148,17 +141,6 @@
     const type = document.getElementById("serviceType").value;
     document.getElementById("gamesOptions").style.display = type === "games" ? "block" : "none";
     document.getElementById("socialOptions").style.display = ["tiktok", "youtube", "instagram"].includes(type) ? "block" : "none";
-  }
-
-  function showGamePrices() {
-    const game = document.getElementById("gameOption").value;
-    const prices = {
-      pubg: "60 شدة = 50 جنيه، 300 شدة = 250 جنيه",
-      cod: "220 CP = 250 جنيه",
-      freefire: "100 جوهرة = 70 جنيه",
-      fifa: "20 كوينز = 40 جنيه"
-    };
-    document.getElementById("gamePrices").innerText = prices[game] || "";
   }
 
   async function submitRequest() {
@@ -191,8 +173,6 @@
     }
 
     if (balance < cost) return alert("رصيد غير كافٍ");
-    const transferCode = document.getElementById("transferCode").value;
-    if (!transferCode) return alert("يجب كتابة رقم التحويل");
 
     await db.collection("orders").add({
       uid,
@@ -200,7 +180,6 @@
       service,
       detail,
       amount: cost,
-      transferCode,
       status: "قيد التنفيذ",
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -212,7 +191,5 @@
     alert("تم إرسال الطلب بنجاح");
     location.reload();
   }
-</script>
-
-</body>
+</script></body>
 </html>
