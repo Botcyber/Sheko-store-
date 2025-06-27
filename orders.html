@@ -1,95 +1,85 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>طلباتك - Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background: #f1f1f1;
-      padding: 20px;
-    }
-    h2 {
-      text-align: center;
-    }
-    .order {
-      background: white;
-      margin: 10px auto;
-      padding: 15px;
-      border-radius: 10px;
-      max-width: 600px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    }
-    .order p {
-      margin: 5px 0;
-    }
-    .status {
-      font-weight: bold;
-      color: green;
-    }
+    body { font-family: 'Cairo', sans-serif; margin: 0; background: #f1f1f1; }
+    header, .top-bar { background: #222; color: white; padding: 15px; text-align: center; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
+    .dashboard { max-width: 800px; margin: auto; padding: 20px; background: white; border-radius: 12px; margin-top: 30px; }
+    .order { padding: 10px; border-bottom: 1px solid #ccc; }
+    .order:last-child { border-bottom: none; }
+    .nav-links { display: flex; gap: 10px; }
+    .nav-links a { color: white; background: #444; padding: 8px 12px; border-radius: 5px; text-decoration: none; }
   </style>
 </head>
-<body>
-
+<body><div class="top-bar">
+  <div class="nav-links">
+    <a href="dashboard.html">لوحة التحكم</a>
+    <a href="account.html">معلومات حسابك</a>
+  </div>
+  <div>
+    <span id="balance">رصيدك: ...</span>
+    <button onclick="logout()">تسجيل الخروج</button>
+  </div>
+</div><div class="dashboard">
   <h2>طلباتك السابقة</h2>
-  <div id="ordersContainer">جاري التحميل...</div>
+  <div id="ordersList">جاري التحميل...</div>
+</div><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script><script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+  authDomain: "sheko-store.firebaseapp.com",
+  projectId: "sheko-store",
+  storageBucket: "sheko-store.firebasestorage.app",
+  messagingSenderId: "113892775847",
+  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+};
 
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const ordersList = document.getElementById("ordersList");
+const balanceEl = document.getElementById("balance");
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-      authDomain: "sheko-store.firebaseapp.com",
-      projectId: "sheko-store",
-      storageBucket: "sheko-store.firebasestorage.app",
-      messagingSenderId: "113892775847",
-      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-    };
+let currentUser = null;
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+auth.onAuthStateChanged(user => {
+  if (!user) return location.href = 'index.html';
+  currentUser = user;
 
-    const container = document.getElementById("ordersContainer");
+  db.collection("users").doc(user.uid).onSnapshot(doc => {
+    if (doc.exists) {
+      const data = doc.data();
+      balanceEl.textContent = `رصيدك: ${data.balance || 0} جنيه`;
+    }
+  });
 
-    auth.onAuthStateChanged(user => {
-      if (!user) {
-        window.location.href = "index.html";
+  db.collection("orders")
+    .where("uid", "==", user.uid)
+    .orderBy("timestamp", "desc")
+    .onSnapshot(snapshot => {
+      if (snapshot.empty) {
+        ordersList.innerHTML = "لا يوجد طلبات حتى الآن.";
         return;
       }
-
-      db.collection("orders")
-        .where("uid", "==", user.uid)
-        .orderBy("timestamp", "desc")
-        .get()
-        .then(snapshot => {
-          if (snapshot.empty) {
-            container.innerHTML = "<p>لا توجد طلبات حتى الآن.</p>";
-            return;
-          }
-
-          container.innerHTML = "";
-          snapshot.forEach(doc => {
-            const order = doc.data();
-            const div = document.createElement("div");
-            div.className = "order";
-            div.innerHTML = `
-              <p><strong>الخدمة:</strong> ${order.service}</p>
-              <p><strong>الباقة:</strong> ${order.package}</p>
-              <p><strong>الحساب:</strong> ${order.account}</p>
-              <p><strong>الحالة:</strong> <span class="status">${order.status}</span></p>
-            `;
-            container.appendChild(div);
-          });
-        })
-        .catch(err => {
-          console.error("فشل في تحميل الطلبات:", err);
-          container.innerHTML = "<p>حدث خطأ أثناء تحميل الطلبات.</p>";
-        });
+      ordersList.innerHTML = "";
+      snapshot.forEach(doc => {
+        const order = doc.data();
+        const div = document.createElement("div");
+        div.className = "order";
+        div.innerHTML = `
+          <strong>الخدمة:</strong> ${order.service}<br>
+          <strong>الباقة:</strong> ${order.package}<br>
+          <strong>الحساب:</strong> ${order.account}<br>
+          <strong>الحالة:</strong> ${order.status || "جارٍ التنفيذ"}<br>
+        `;
+        ordersList.appendChild(div);
+      });
     });
-  </script>
-</body>
+});
+
+function logout() {
+  auth.signOut().then(() => location.href = 'index.html');
+}
+</script></body>
 </html>
