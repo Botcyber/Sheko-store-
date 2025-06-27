@@ -1,56 +1,60 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>لوحة تحكم الادمن - Sheko Store</title>
+  <title>لوحة تحكم الأدمن - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: 'Cairo', sans-serif; margin: 0; background: #f5f5f5; }
-    .container { max-width: 900px; margin: auto; padding: 20px; background: white; border-radius: 10px; margin-top: 30px; }
-    h2 { text-align: center; }
-    label, input, textarea, select, button {
-      display: block;
-      width: 100%;
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      font-size: 16px;
-    }
+    body { font-family: 'Cairo', sans-serif; background: #f1f1f1; padding: 20px; }
+    .section { background: white; border-radius: 12px; padding: 20px; margin-bottom: 30px; }
+    label, input, button, select { display: block; width: 100%; margin: 10px 0; padding: 10px; border-radius: 5px; }
     button { background: #222; color: white; cursor: pointer; }
-    button:hover { background: #444; }
-    .section { margin-bottom: 40px; }
-    .item { background: #eee; margin-top: 10px; padding: 10px; border-radius: 5px; }
+    h2 { margin-bottom: 10px; }
+    ul { list-style: none; padding: 0; }
+    li { background: #eee; margin: 10px 0; padding: 10px; border-radius: 8px; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>لوحة تحكم الادمن</h2><div class="section">
-  <h3>إضافة أو خصم رصيد / نقاط</h3>
-  <label>UID المستخدم</label>
-  <input type="text" id="userUid">
-  <label>نوع العملية</label>
-  <select id="operationType">
-    <option value="addBalance">إضافة رصيد</option>
-    <option value="removeBalance">خصم رصيد</option>
-    <option value="addPoints">إضافة نقاط</option>
-    <option value="removePoints">خصم نقاط</option>
-  </select>
-  <label>القيمة</label>
-  <input type="number" id="amount">
-  <button onclick="updateUserData()">تنفيذ العملية</button>
-</div>
 
-<div class="section">
-  <h3>طلبات المستخدمين</h3>
-  <div id="ordersList"></div>
-</div>
+  <div class="section">
+    <h2>طلب تعديل رصيد أو نقاط</h2>
+    <label>UID المستخدم:</label>
+    <input type="text" id="targetUid" placeholder="اكتب UID هنا">
+    <label>الرصيد:</label>
+    <input type="number" id="amount" placeholder="أدخل القيمة">
+    <select id="action">
+      <option value="add_balance">إضافة رصيد</option>
+      <option value="subtract_balance">خصم رصيد</option>
+      <option value="add_points">إضافة نقاط</option>
+      <option value="subtract_points">خصم نقاط</option>
+    </select>
+    <button onclick="updateUser()">تنفيذ العملية</button>
+    <p id="adminMsg"></p>
+  </div>
 
-<div class="section">
-  <h3>طلبات إضافة الأموال</h3>
-  <div id="topupList"></div>
-</div>
+  <div class="section">
+    <h2>الطلبات الواردة</h2>
+    <ul id="ordersList">تحميل الطلبات...</ul>
+  </div>
 
-  </div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>  <script>
+  <div class="section">
+    <h2>إضافة مستخدم يدويًا</h2>
+    <label>UID المستخدم:</label>
+    <input type="text" id="manualUID" placeholder="مثلاً: abc123456">
+    <label>البريد الإلكتروني (اختياري):</label>
+    <input type="email" id="manualEmail" placeholder="example@email.com">
+    <label>الرصيد المبدئي:</label>
+    <input type="number" id="manualBalance" placeholder="مثلاً 0">
+    <label>النقاط المبدئية:</label>
+    <input type="number" id="manualPoints" placeholder="مثلاً 0">
+    <button onclick="addManualUser()">إضافة المستخدم</button>
+    <p id="manualUserMsg"></p>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -59,70 +63,83 @@
       messagingSenderId: "113892775847",
       appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    function updateUserData() {
-      const uid = document.getElementById("userUid").value.trim();
-      const type = document.getElementById("operationType").value;
+    // تنفيذ أوامر على المستخدم
+    function updateUser() {
+      const uid = document.getElementById("targetUid").value.trim();
       const amount = parseFloat(document.getElementById("amount").value);
+      const action = document.getElementById("action").value;
+      const msg = document.getElementById("adminMsg");
 
-      if (!uid || isNaN(amount)) return alert("يرجى إدخال UID وقيمة صحيحة");
+      if (!uid || isNaN(amount)) return msg.textContent = "يرجى ملء البيانات بشكل صحيح";
 
-      const field = type.includes("Balance") ? "balance" : "points";
-      const change = type.includes("remove") ? -amount : amount;
+      const field = action.includes("balance") ? "balance" : "points";
+      const change = action.includes("add") ? amount : -amount;
 
       db.collection("users").doc(uid).update({
         [field]: firebase.firestore.FieldValue.increment(change)
       }).then(() => {
-        alert("تمت العملية بنجاح");
+        msg.style.color = "green";
+        msg.textContent = "✅ تم التحديث بنجاح";
       }).catch(err => {
-        console.error(err);
-        alert("حدث خطأ. تأكد من UID");
+        msg.style.color = "red";
+        msg.textContent = "❌ خطأ: " + err.message;
       });
     }
 
-    function fetchOrders() {
-      db.collection("orders").orderBy("createdAt", "desc").onSnapshot(snapshot => {
-        const list = document.getElementById("ordersList");
-        list.innerHTML = "";
-        snapshot.forEach(doc => {
-          const d = doc.data();
-          const div = document.createElement("div");
-          div.className = "item";
-          div.innerHTML = `
-            <strong>UID:</strong> ${d.uid}<br>
-            <strong>الخدمة:</strong> ${d.service} - ${d.package}<br>
-            <strong>الحساب:</strong> ${d.account}<br>
-            <strong>الحالة:</strong> ${d.status}<br>
-            <strong>تاريخ:</strong> ${d.createdAt?.toDate().toLocaleString() || "-"}
-          `;
-          list.appendChild(div);
-        });
+    // تحميل الطلبات
+    db.collection("orders").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+      const ordersList = document.getElementById("ordersList");
+      ordersList.innerHTML = "";
+      if (snapshot.empty) {
+        ordersList.innerHTML = "<li>لا توجد طلبات حالياً</li>";
+        return;
+      }
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const item = document.createElement("li");
+        item.innerHTML = `
+          <strong>UID:</strong> ${data.uid}<br>
+          <strong>الخدمة:</strong> ${data.service}<br>
+          <strong>الباقة:</strong> ${data.package}<br>
+          <strong>الحساب:</strong> ${data.account}<br>
+          <strong>الحالة:</strong> ${data.status || "قيد التنفيذ"}<br>
+          <strong>التاريخ:</strong> ${data.createdAt?.toDate().toLocaleString() || "غير متوفر"}
+        `;
+        ordersList.appendChild(item);
+      });
+    });
+
+    // إضافة مستخدم يدويًا
+    function addManualUser() {
+      const uid = document.getElementById("manualUID").value.trim();
+      const email = document.getElementById("manualEmail").value.trim();
+      const balance = parseFloat(document.getElementById("manualBalance").value || "0");
+      const points = parseFloat(document.getElementById("manualPoints").value || "0");
+      const msg = document.getElementById("manualUserMsg");
+
+      if (!uid) {
+        msg.style.color = "red";
+        msg.textContent = "يرجى إدخال UID";
+        return;
+      }
+
+      db.collection("users").doc(uid).set({
+        email: email || "",
+        balance: balance,
+        points: points
+      }).then(() => {
+        msg.style.color = "green";
+        msg.textContent = "✅ تم إضافة المستخدم بنجاح!";
+      }).catch((error) => {
+        msg.style.color = "red";
+        msg.textContent = "❌ فشل في الإضافة: " + error.message;
       });
     }
-
-    function fetchTopups() {
-      db.collection("topupRequests").orderBy("timestamp", "desc").onSnapshot(snapshot => {
-        const list = document.getElementById("topupList");
-        list.innerHTML = "";
-        snapshot.forEach(doc => {
-          const d = doc.data();
-          const div = document.createElement("div");
-          div.className = "item";
-          div.innerHTML = `
-            <strong>UID:</strong> ${d.uid}<br>
-            <strong>الطريقة:</strong> ${d.method}<br>
-            <strong>رقم/رابط:</strong> ${d.fromNumber}<br>
-            <strong>المبلغ:</strong> ${d.amount} جنيه<br>
-            <strong>الوقت:</strong> ${d.timestamp?.toDate().toLocaleString() || "-"}
-          `;
-          list.appendChild(div);
-        });
-      });
-    }
-
-    fetchOrders();
-    fetchTopups();
-  </script></body>
+  </script>
+</body>
 </html>
