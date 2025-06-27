@@ -1,131 +1,151 @@
 <!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>لوحة تحكم المستخدم - Sheko Store</title>
+  <title>لوحة التحكم - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: 'Cairo', sans-serif; background: #f2f2f2; margin: 0; padding: 0; }
+    body { font-family: 'Cairo', sans-serif; margin: 0; background: #f1f1f1; }
     header { background: #222; color: #fff; padding: 15px; text-align: center; font-size: 20px; }
-    .nav { display: flex; justify-content: space-between; background: #333; color: white; padding: 10px; }
-    .nav button { background: #444; color: white; padding: 10px; border: none; cursor: pointer; }
-    .container { padding: 20px; max-width: 600px; margin: auto; background: white; margin-top: 20px; border-radius: 10px; }
-    select, input, button { width: 100%; padding: 10px; margin: 10px 0; font-size: 16px; }
-    .note { color: #b00; text-align: center; }
-    .service-section { display: none; margin-top: 10px; }
+    .dashboard { max-width: 800px; margin: auto; padding: 20px; background: white; border-radius: 12px; margin-top: 30px; }
+    label, select, input { display: block; width: 100%; margin: 10px 0; padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
+    button { background: #222; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 15px; }
+    button:hover { background: #444; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #333; color: #fff; }
+    .top-bar span { font-weight: bold; }
+    .note { margin-top: 10px; font-size: 14px; color: #666; }
   </style>
 </head>
-<body>
-  <header>لوحة تحكم المستخدم - Sheko Store</header>
-  <div class="nav">
-    <div>الرصيد: <span id="balance">0</span> جنيه</div>
-    <div>
-      <button onclick="goTo('account.html')">معلومات حسابك</button>
-      <button onclick="goTo('orders.html')">طلباتك</button>
-      <button onclick="logout()">تسجيل الخروج</button>
-    </div>
-  </div>
-  <div class="container">
-    <label>اختر نوع الخدمة:</label>
-    <select id="serviceType" onchange="updateServiceSection()">
-      <option value="">-- اختر --</option>
-      <option value="games">شحن ألعاب</option>
-      <option value="social">مواقع التواصل الاجتماعي</option>
-    </select><div id="gamesSection" class="service-section">
-  <label>اختر اللعبة:</label>
-  <select id="gameService" onchange="updateGamePackages()">
-    <option value="">-- اختر --</option>
-    <option value="pubg">ببجي موبايل</option>
-    <option value="cod">كود موبايل</option>
-    <option value="ff">فري فاير</option>
-    <option value="fifa">فيفا موبايل</option>
-  </select>
-  <div id="gamePackages"></div>
-  <input type="text" id="gameId" placeholder="أدخل الـ ID الخاص بك">
-</div>
+<body><div class="top-bar">
+  <span id="balance">رصيدك: ...</span>
+  <button onclick="logout()">تسجيل الخروج</button>
+</div><div class="dashboard">
+  <h2>إرسال طلب شحن</h2>
+  <label for="mainService">الخدمة:</label>
+  <select id="mainService">
+    <option value="">اختر الخدمة</option>
+    <option value="ألعاب">شحن ألعاب</option>
+    <option value="سوشيال">مواقع التواصل</option>
+  </select><label for="subService">الخدمة المحددة:</label> <select id="subService"></select>
 
-<div id="socialSection" class="service-section">
-  <label>اختر المنصة:</label>
-  <select id="socialService" onchange="updateSocialPackages()">
-    <option value="">-- اختر --</option>
-    <option value="tiktok">تيك توك</option>
-    <option value="youtube">يوتيوب</option>
-    <option value="instagram">إنستجرام</option>
-  </select>
-  <div id="socialPackages"></div>
-  <input type="text" id="username" placeholder="اسم الحساب">
-</div>
+<label for="package">الباقة:</label> <select id="package"></select>
 
-<button onclick="sendOrder()">إرسال الطلب</button>
-<p class="note">إذا واجهت مشكلة، راسلنا على الواتساب: 01099874914</p>
+<label for="accountInput" id="accountLabel">اسم الحساب / ID:</label> <input type="text" id="accountInput">
 
-  </div>  <script>
-    function goTo(page) {
-      window.location.href = page;
+<button onclick="submitOrder()">إرسال الطلب</button>
+
+  <p class="note">إذا واجهت مشكلة، تواصل معنا على واتساب: 01099874914</p>
+</div><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script><script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+  authDomain: "sheko-store.firebaseapp.com",
+  projectId: "sheko-store",
+  storageBucket: "sheko-store.firebasestorage.app",
+  messagingSenderId: "113892775847",
+  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let currentUser = null;
+let prices = {
+  "ألعاب": {
+    "ببجي موبايل": { "60 شدة": 50, "300 شدة": 250 },
+    "كود موبايل": { "220 CP": 250 },
+    "فري فاير": { "100 جوهرة": 70 },
+    "فيفا موبايل": { "20 كوينز": 40 }
+  },
+  "سوشيال": {
+    "تيك توك": { "1000 متابع": 50 },
+    "يوتيوب": { "1000 مشترك": 50 },
+    "انستجرام": { "1000 متابع": 50 }
+  }
+};
+
+const mainService = document.getElementById("mainService");
+const subService = document.getElementById("subService");
+const packageEl = document.getElementById("package");
+const accountInput = document.getElementById("accountInput");
+const accountLabel = document.getElementById("accountLabel");
+const balanceEl = document.getElementById("balance");
+
+mainService.addEventListener("change", () => {
+  subService.innerHTML = "";
+  packageEl.innerHTML = "";
+  if (!prices[mainService.value]) return;
+  Object.keys(prices[mainService.value]).forEach(service => {
+    let opt = document.createElement("option");
+    opt.value = service;
+    opt.textContent = service;
+    subService.appendChild(opt);
+  });
+  updatePackage();
+});
+
+subService.addEventListener("change", updatePackage);
+function updatePackage() {
+  packageEl.innerHTML = "";
+  let selected = prices[mainService.value]?.[subService.value];
+  if (!selected) return;
+  Object.keys(selected).forEach(p => {
+    let opt = document.createElement("option");
+    opt.value = p;
+    opt.textContent = `${p} - ${selected[p]} جنيه`;
+    packageEl.appendChild(opt);
+  });
+}
+
+auth.onAuthStateChanged(user => {
+  if (!user) return location.href = 'index.html';
+  currentUser = user;
+  db.collection("users").doc(user.uid).onSnapshot(doc => {
+    if (doc.exists) {
+      const data = doc.data();
+      balanceEl.textContent = `رصيدك: ${data.balance || 0} جنيه`;
+    }
+  });
+});
+
+function submitOrder() {
+  const service = mainService.value;
+  const sub = subService.value;
+  const pack = packageEl.value;
+  const account = accountInput.value;
+  if (!service || !sub || !pack || !account) return alert("يرجى ملء جميع الحقول");
+
+  const cost = prices[service]?.[sub]?.[pack] || 0;
+
+  db.collection("users").doc(currentUser.uid).get().then(doc => {
+    if (!doc.exists) return;
+    const data = doc.data();
+    const balance = data.balance || 0;
+
+    if (balance < cost) {
+      alert("رصيدك غير كافٍ لإتمام هذا الطلب");
+      return;
     }
 
-    function updateServiceSection() {
-      document.getElementById("gamesSection").style.display = "none";
-      document.getElementById("socialSection").style.display = "none";
-      const type = document.getElementById("serviceType").value;
-      if (type === "games") {
-        document.getElementById("gamesSection").style.display = "block";
-      } else if (type === "social") {
-        document.getElementById("socialSection").style.display = "block";
-      }
-    }
-
-    function updateGamePackages() {
-      const value = document.getElementById("gameService").value;
-      const container = document.getElementById("gamePackages");
-      let html = "";
-      if (value === "pubg") {
-        html = `<select id='selectedGamePackage'>
-          <option value='60-50'>60 شدة - 50 جنيه</option>
-          <option value='300-250'>300 شدة - 250 جنيه</option>
-        </select>`;
-      } else if (value === "cod") {
-        html = `<select id='selectedGamePackage'>
-          <option value='220-250'>220 CP - 250 جنيه</option>
-        </select>`;
-      } else if (value === "ff") {
-        html = `<select id='selectedGamePackage'>
-          <option value='100-70'>100 جوهرة - 70 جنيه</option>
-        </select>`;
-      } else if (value === "fifa") {
-        html = `<select id='selectedGamePackage'>
-          <option value='20-40'>20 كوينز - 40 جنيه</option>
-        </select>`;
-      }
-      container.innerHTML = html;
-    }
-
-    function updateSocialPackages() {
-      const value = document.getElementById("socialService").value;
-      const container = document.getElementById("socialPackages");
-      let html = "";
-      if (value === "tiktok") {
-        html = `<select id='selectedSocialPackage'>
-          <option value='1000-50'>1000 متابع - 50 جنيه</option>
-        </select>`;
-      } else if (value === "youtube") {
-        html = `<select id='selectedSocialPackage'>
-          <option value='1000-50'>1000 مشترك - 50 جنيه</option>
-        </select>`;
-      } else if (value === "instagram") {
-        html = `<select id='selectedSocialPackage'>
-          <option value='1000-50'>1000 متابع - 50 جنيه</option>
-        </select>`;
-      }
-      container.innerHTML = html;
-    }
-
-    function logout() {
-      alert("تسجيل الخروج"); // ربط لاحقًا بـ Firebase
-    }
-
-    function sendOrder() {
-      // هنا تكتب كود إرسال الطلب إلى Firebase
+    db.collection("orders").add({
+      uid: currentUser.uid,
+      service: sub,
+      package: pack,
+      account: account,
+      status: "pending",
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      db.collection("users").doc(currentUser.uid).update({
+        balance: balance - cost
+      });
       alert("تم إرسال الطلب بنجاح");
-    }
-  </script></body>
+    });
+  });
+}
+
+function logout() {
+  auth.signOut().then(() => {
+    location.href = 'index.html';
+  });
+}
+</script></body>
 </html>
