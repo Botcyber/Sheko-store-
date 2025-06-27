@@ -67,6 +67,7 @@
     <option value="">-- اختر --</option>
     <option value="games">شحن ألعاب</option>
     <option value="social">مواقع التواصل الاجتماعي</option>
+    <option value="custom">خدمات أخرى</option>
   </select>  <div id="gamesOptions" class="service-section">
     <label>اختر اللعبة:</label>
     <select id="gameOption">
@@ -76,11 +77,12 @@
       <option value="freefire">فري فاير</option>
       <option value="fifa">فيفا موبايل</option>
     </select>
-    <button class="price-button">ببجي: 60 شدة = 50 جنيه، 300 شدة = 250 جنيه</button>
+    <input type="text" placeholder="الـ ID الخاص بك" id="gameId">
+    <button class="price-button">ببجي: 60 شدة = 50 جنيه</button>
+    <button class="price-button">ببجي: 300 شدة = 250 جنيه</button>
     <button class="price-button">كود موبايل: 220 CP = 250 جنيه</button>
     <button class="price-button">فري فاير: 100 جوهرة = 70 جنيه</button>
     <button class="price-button">فيفا: 20 كوينز = 40 جنيه</button>
-    <input type="text" placeholder="الـ ID الخاص بك" id="gameId">
   </div>  <div id="socialOptions" class="service-section">
     <label>اختر الخدمة:</label>
     <select id="socialOption">
@@ -89,8 +91,22 @@
       <option value="youtube">مشتركين يوتيوب</option>
       <option value="instagram">متابعين انستجرام</option>
     </select>
-    <button class="price-button">١٠٠٠ متابع/مشترك = ٥٠ جنيه</button>
     <input type="text" placeholder="اسم الحساب" id="socialUsername">
+    <button class="price-button">تيك توك: 1000 متابع = 50 جنيه</button>
+    <button class="price-button">يوتيوب: 1000 مشترك = 50 جنيه</button>
+    <button class="price-button">انستجرام: 1000 متابع = 50 جنيه</button>
+  </div>  <div id="customOptions" class="service-section">
+    <label>اختر خدمة إضافية:</label>
+    <select id="customService">
+      <option value="">-- اختر الخدمة --</option>
+      <option value="custom1">تصميم غلاف قناة يوتيوب = 100 جنيه</option>
+      <option value="custom2">تصميم شعار احترافي = 150 جنيه</option>
+      <option value="custom3">مونتاج فيديو قصير = 200 جنيه</option>
+    </select>
+    <input type="text" placeholder="تفاصيل الطلب" id="customDetails">
+    <button class="price-button">تصميم غلاف قناة يوتيوب = 100 جنيه</button>
+    <button class="price-button">تصميم شعار احترافي = 150 جنيه</button>
+    <button class="price-button">مونتاج فيديو قصير = 200 جنيه</button>
   </div>  <div>
     <button onclick="submitRequest()">إرسال الطلب</button>
     <div class="note">إذا واجهت أي مشكلة، راسلنا على الواتساب: 01099874914</div>
@@ -136,9 +152,11 @@
   }
 
   function updateServiceOptions() {
-    const type = document.getElementById("serviceType").value;
-    document.getElementById("gamesOptions").style.display = type === "games" ? "block" : "none";
-    document.getElementById("socialOptions").style.display = type === "social" ? "block" : "none";
+    document.querySelectorAll('.service-section').forEach(el => el.style.display = 'none');
+    const selected = document.getElementById("serviceType").value;
+    if (selected === "games") document.getElementById("gamesOptions").style.display = "block";
+    else if (selected === "social") document.getElementById("socialOptions").style.display = "block";
+    else if (selected === "custom") document.getElementById("customOptions").style.display = "block";
   }
 
   async function submitRequest() {
@@ -147,7 +165,7 @@
 
     const uid = user.uid;
     const doc = await db.collection("users").doc(uid).get();
-    if (!doc.exists) return alert("مشكلة في حسابك");
+    if (!doc.exists) return alert("المستخدم غير موجود");
 
     const balance = doc.data().balance || 0;
     let cost = 0, service = "", detail = "";
@@ -156,21 +174,27 @@
     if (type === "games") {
       const game = document.getElementById("gameOption").value;
       detail = document.getElementById("gameId").value;
-      if (game === "pubg") cost = 50, service = "ببجي موبايل";
-      else if (game === "cod") cost = 250, service = "كود موبايل";
-      else if (game === "freefire") cost = 70, service = "فري فاير";
-      else if (game === "fifa") cost = 40, service = "فيفا موبايل";
+      if (game === "pubg") cost = 50, service = "ببجي موبايل 60 شدة";
+      else if (game === "cod") cost = 250, service = "كود موبايل 220 CP";
+      else if (game === "freefire") cost = 70, service = "فري فاير 100 جوهرة";
+      else if (game === "fifa") cost = 40, service = "فيفا 20 كوينز";
     } else if (type === "social") {
       const social = document.getElementById("socialOption").value;
       detail = document.getElementById("socialUsername").value;
       cost = 50;
-      if (social === "tiktok") service = "تيك توك";
-      else if (social === "youtube") service = "يوتيوب";
-      else if (social === "instagram") service = "انستجرام";
+      if (social === "tiktok") service = "تيك توك 1000 متابع";
+      else if (social === "youtube") service = "يوتيوب 1000 مشترك";
+      else if (social === "instagram") service = "انستجرام 1000 متابع";
+    } else if (type === "custom") {
+      const custom = document.getElementById("customService").value;
+      detail = document.getElementById("customDetails").value;
+      if (custom === "custom1") cost = 100, service = "غلاف قناة يوتيوب";
+      else if (custom === "custom2") cost = 150, service = "شعار احترافي";
+      else if (custom === "custom3") cost = 200, service = "مونتاج فيديو قصير";
     }
 
-    if (!service || !detail) return alert("يرجى إكمال جميع البيانات");
-    if (balance < cost) return alert("رصيدك غير كافٍ لإتمام الطلب");
+    if (!service || !detail) return alert("يرجى إكمال جميع الحقول");
+    if (balance < cost) return alert("رصيدك غير كافٍ");
 
     await db.collection("orders").add({
       uid,
@@ -186,7 +210,7 @@
       balance: firebase.firestore.FieldValue.increment(-cost)
     });
 
-    alert("تم إرسال الطلب بنجاح");
+    alert("تم إرسال الطلب");
     location.reload();
   }
 </script></body>
