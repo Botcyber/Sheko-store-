@@ -42,14 +42,6 @@
       color: red;
       margin-top: 10px;
     }
-    .price-button {
-      background-color: #28a745;
-      color: white;
-      border: none;
-      padding: 10px;
-      margin-top: 10px;
-      cursor: default;
-    }
   </style>
 </head>
 <body><header>
@@ -67,7 +59,7 @@
     <option value="">-- اختر --</option>
     <option value="games">شحن ألعاب</option>
     <option value="social">مواقع التواصل الاجتماعي</option>
-    <option value="custom">خدمات أخرى</option>
+    <option value="custom">تحديد السعر والطلب</option>
   </select>  <div id="gamesOptions" class="service-section">
     <label>اختر اللعبة:</label>
     <select id="gameOption">
@@ -78,11 +70,6 @@
       <option value="fifa">فيفا موبايل</option>
     </select>
     <input type="text" placeholder="الـ ID الخاص بك" id="gameId">
-    <button class="price-button">ببجي: 60 شدة = 50 جنيه</button>
-    <button class="price-button">ببجي: 300 شدة = 250 جنيه</button>
-    <button class="price-button">كود موبايل: 220 CP = 250 جنيه</button>
-    <button class="price-button">فري فاير: 100 جوهرة = 70 جنيه</button>
-    <button class="price-button">فيفا: 20 كوينز = 40 جنيه</button>
   </div>  <div id="socialOptions" class="service-section">
     <label>اختر الخدمة:</label>
     <select id="socialOption">
@@ -92,21 +79,10 @@
       <option value="instagram">متابعين انستجرام</option>
     </select>
     <input type="text" placeholder="اسم الحساب" id="socialUsername">
-    <button class="price-button">تيك توك: 1000 متابع = 50 جنيه</button>
-    <button class="price-button">يوتيوب: 1000 مشترك = 50 جنيه</button>
-    <button class="price-button">انستجرام: 1000 متابع = 50 جنيه</button>
   </div>  <div id="customOptions" class="service-section">
-    <label>اختر خدمة إضافية:</label>
-    <select id="customService">
-      <option value="">-- اختر الخدمة --</option>
-      <option value="custom1">تصميم غلاف قناة يوتيوب = 100 جنيه</option>
-      <option value="custom2">تصميم شعار احترافي = 150 جنيه</option>
-      <option value="custom3">مونتاج فيديو قصير = 200 جنيه</option>
-    </select>
-    <input type="text" placeholder="تفاصيل الطلب" id="customDetails">
-    <button class="price-button">تصميم غلاف قناة يوتيوب = 100 جنيه</button>
-    <button class="price-button">تصميم شعار احترافي = 150 جنيه</button>
-    <button class="price-button">مونتاج فيديو قصير = 200 جنيه</button>
+    <input type="text" id="customServiceName" placeholder="اسم الخدمة">
+    <input type="text" id="customServicePrice" placeholder="سعر الخدمة بالجنيه">
+    <textarea id="customServiceDetails" placeholder="وصف الطلب أو التفاصيل" rows="4"></textarea>
   </div>  <div>
     <button onclick="submitRequest()">إرسال الطلب</button>
     <div class="note">إذا واجهت أي مشكلة، راسلنا على الواتساب: 01099874914</div>
@@ -186,11 +162,9 @@
       else if (social === "youtube") service = "يوتيوب 1000 مشترك";
       else if (social === "instagram") service = "انستجرام 1000 متابع";
     } else if (type === "custom") {
-      const custom = document.getElementById("customService").value;
-      detail = document.getElementById("customDetails").value;
-      if (custom === "custom1") cost = 100, service = "غلاف قناة يوتيوب";
-      else if (custom === "custom2") cost = 150, service = "شعار احترافي";
-      else if (custom === "custom3") cost = 200, service = "مونتاج فيديو قصير";
+      service = document.getElementById("customServiceName").value;
+      cost = parseFloat(document.getElementById("customServicePrice").value) || 0;
+      detail = document.getElementById("customServiceDetails").value;
     }
 
     if (!service || !detail) return alert("يرجى إكمال جميع الحقول");
