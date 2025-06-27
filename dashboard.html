@@ -1,42 +1,83 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <title>لوحة التحكم - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: 'Cairo', sans-serif; margin: 0; background: #f1f1f1; }
-    header, .top-bar { background: #222; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
-    .dashboard { max-width: 800px; margin: auto; padding: 20px; background: white; border-radius: 12px; margin-top: 30px; }
-    label, select, input { display: block; width: 100%; margin: 10px 0; padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
-    button { background: #222; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 15px; }
+    header, .top-bar {
+      background: #222; color: white; padding: 15px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .dashboard {
+      max-width: 800px; margin: auto; padding: 20px;
+      background: white; border-radius: 12px; margin-top: 30px;
+    }
+    label, select, input {
+      display: block; width: 100%; margin: 10px 0;
+      padding: 8px; border-radius: 5px; border: 1px solid #ccc;
+    }
+    button {
+      background: #222; color: white; padding: 10px;
+      border: none; border-radius: 5px; cursor: pointer;
+      width: 100%; margin-top: 15px;
+    }
     button:hover { background: #444; }
-    .nav-links { display: flex; gap: 10px; }
-    .nav-links a { color: white; background: #444; padding: 8px 12px; border-radius: 5px; text-decoration: none; }
-    .note { font-size: 14px; color: #666; text-align: center; margin-top: 20px; }
+    .nav-links {
+      display: flex; gap: 10px;
+    }
+    .nav-links a {
+      color: white; background: #444;
+      padding: 8px 12px; border-radius: 5px;
+      text-decoration: none;
+    }
+    .note {
+      font-size: 14px; color: #666; text-align: center; margin-top: 20px;
+    }
   </style>
 </head>
-<body><div class="top-bar">
+<body>
+
+<div class="top-bar">
   <div class="nav-links">
     <a href="account.html">معلومات حسابك</a>
     <a href="orders.html">طلباتك</a>
+    <a href="add-funds.html">إضافة أموال</a>
   </div>
   <div>
     <span id="balance">رصيدك: ...</span>
     <button onclick="logout()">تسجيل الخروج</button>
   </div>
-</div><div class="dashboard">
-  <h2>إرسال طلب</h2><label for="mainService">نوع الخدمة:</label> <select id="mainService"> <option value="">اختر نوع الخدمة</option> <option value="ألعاب">شحن ألعاب</option> <option value="سوشيال">مواقع التواصل</option> </select>
+</div>
 
-<label for="subService">الخدمة:</label> <select id="subService"></select>
+<div class="dashboard">
+  <h2>إرسال طلب</h2>
 
-<label for="package">الباقة:</label> <select id="package"></select>
+  <label for="mainService">نوع الخدمة:</label>
+  <select id="mainService">
+    <option value="">اختر نوع الخدمة</option>
+    <option value="ألعاب">شحن ألعاب</option>
+    <option value="سوشيال">مواقع التواصل</option>
+  </select>
 
-<label for="accountInput">اسم الحساب / ID:</label> <input type="text" id="accountInput">
+  <label for="subService">الخدمة:</label>
+  <select id="subService"></select>
 
-<button onclick="submitOrder()">إرسال الطلب</button>
+  <label for="package">الباقة:</label>
+  <select id="package"></select>
 
+  <label for="accountInput">اسم الحساب / ID:</label>
+  <input type="text" id="accountInput">
+
+  <button onclick="submitOrder()">إرسال الطلب</button>
   <p class="note">إذا واجهت أي مشكلة، راسلنا على واتساب: 01099874914</p>
-</div><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script><script>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
   authDomain: "sheko-store.firebaseapp.com",
@@ -86,6 +127,7 @@ mainService.addEventListener("change", () => {
 });
 
 subService.addEventListener("change", updatePackage);
+
 function updatePackage() {
   packageEl.innerHTML = "";
   const selected = prices[mainService.value]?.[subService.value];
@@ -145,5 +187,7 @@ function logout() {
     location.href = "index.html";
   });
 }
-</script></body>
+</script>
+
+</body>
 </html>
