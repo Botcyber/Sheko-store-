@@ -1,107 +1,128 @@
-<!DOCTYPE html>
-<html lang="ar">
+<!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>لوحة تحكم الأدمن</title>
+  <title>لوحة تحكم الادمن - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: Arial; background-color: #f0f0f0; padding: 20px; direction: rtl; }
-    .container {
-      max-width: 600px; margin: auto; background: white;
-      padding: 20px; border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    h2 { text-align: center; margin-bottom: 20px; }
-    label { font-weight: bold; margin-top: 10px; display: block; }
-    input, select, button {
-      width: 100%; padding: 10px;
-      margin-top: 5px; border-radius: 5px;
+    body { font-family: 'Cairo', sans-serif; margin: 0; background: #f5f5f5; }
+    .container { max-width: 900px; margin: auto; padding: 20px; background: white; border-radius: 10px; margin-top: 30px; }
+    h2 { text-align: center; }
+    label, input, textarea, select, button {
+      display: block;
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 5px;
       border: 1px solid #ccc;
+      font-size: 16px;
     }
-    button {
-      background-color: #007bff; color: white;
-      font-weight: bold; cursor: pointer;
-      margin-top: 15px;
-    }
+    button { background: #222; color: white; cursor: pointer; }
+    button:hover { background: #444; }
+    .section { margin-bottom: 40px; }
+    .item { background: #eee; margin-top: 10px; padding: 10px; border-radius: 5px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>لوحة تحكم الأدمن - SHEKO STORE</h2>
+    <h2>لوحة تحكم الادمن</h2><div class="section">
+  <h3>إضافة أو خصم رصيد / نقاط</h3>
+  <label>UID المستخدم</label>
+  <input type="text" id="userUid">
+  <label>نوع العملية</label>
+  <select id="operationType">
+    <option value="addBalance">إضافة رصيد</option>
+    <option value="removeBalance">خصم رصيد</option>
+    <option value="addPoints">إضافة نقاط</option>
+    <option value="removePoints">خصم نقاط</option>
+  </select>
+  <label>القيمة</label>
+  <input type="number" id="amount">
+  <button onclick="updateUserData()">تنفيذ العملية</button>
+</div>
 
-    <label>UID المستخدم</label>
-    <input type="text" id="uidInput" placeholder="أدخل UID الخاص بالمستخدم">
+<div class="section">
+  <h3>طلبات المستخدمين</h3>
+  <div id="ordersList"></div>
+</div>
 
-    <label>الإجراء</label>
-    <select id="action">
-      <option value="addBalance">إضافة رصيد</option>
-      <option value="removeBalance">خصم رصيد</option>
-      <option value="addPoints">إضافة نقاط</option>
-      <option value="removePoints">خصم نقاط</option>
-    </select>
+<div class="section">
+  <h3>طلبات إضافة الأموال</h3>
+  <div id="topupList"></div>
+</div>
 
-    <label>القيمة</label>
-    <input type="number" id="amountInput" placeholder="مثال: 100">
+  </div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.firebasestorage.app",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    <button onclick="applyAction()">تنفيذ</button>
-  </div>
+    function updateUserData() {
+      const uid = document.getElementById("userUid").value.trim();
+      const type = document.getElementById("operationType").value;
+      const amount = parseFloat(document.getElementById("amount").value);
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+      if (!uid || isNaN(amount)) return alert("يرجى إدخال UID وقيمة صحيحة");
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-    authDomain: "sheko-store.firebaseapp.com",
-    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-    projectId: "sheko-store",
-    storageBucket: "sheko-store.appspot.com",
-    messagingSenderId: "113892775847",
-    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-  };
+      const field = type.includes("Balance") ? "balance" : "points";
+      const change = type.includes("remove") ? -amount : amount;
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-
-  window.applyAction = async () => {
-    const uid = document.getElementById("uidInput").value.trim();
-    const action = document.getElementById("action").value;
-    const amount = parseFloat(document.getElementById("amountInput").value);
-
-    if (!uid || isNaN(amount)) {
-      alert("❌ يرجى إدخال UID صحيح وقيمة رقمية.");
-      return;
+      db.collection("users").doc(uid).update({
+        [field]: firebase.firestore.FieldValue.increment(change)
+      }).then(() => {
+        alert("تمت العملية بنجاح");
+      }).catch(err => {
+        console.error(err);
+        alert("حدث خطأ. تأكد من UID");
+      });
     }
 
-    const userRef = ref(db, "users/" + uid);
-    const snapshot = await get(userRef);
-
-    if (!snapshot.exists()) {
-      alert("❌ هذا المستخدم غير مسجل في قاعدة البيانات.");
-      return;
+    function fetchOrders() {
+      db.collection("orders").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+        const list = document.getElementById("ordersList");
+        list.innerHTML = "";
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          const div = document.createElement("div");
+          div.className = "item";
+          div.innerHTML = `
+            <strong>UID:</strong> ${d.uid}<br>
+            <strong>الخدمة:</strong> ${d.service} - ${d.package}<br>
+            <strong>الحساب:</strong> ${d.account}<br>
+            <strong>الحالة:</strong> ${d.status}<br>
+            <strong>تاريخ:</strong> ${d.createdAt?.toDate().toLocaleString() || "-"}
+          `;
+          list.appendChild(div);
+        });
+      });
     }
 
-    const userData = snapshot.val();
-    let updates = {};
-
-    switch (action) {
-      case "addBalance":
-        updates.balance = (userData.balance || 0) + amount;
-        break;
-      case "removeBalance":
-        updates.balance = Math.max(0, (userData.balance || 0) - amount);
-        break;
-      case "addPoints":
-        updates.points = (userData.points || 0) + amount;
-        break;
-      case "removePoints":
-        updates.points = Math.max(0, (userData.points || 0) - amount);
-        break;
+    function fetchTopups() {
+      db.collection("topupRequests").orderBy("timestamp", "desc").onSnapshot(snapshot => {
+        const list = document.getElementById("topupList");
+        list.innerHTML = "";
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          const div = document.createElement("div");
+          div.className = "item";
+          div.innerHTML = `
+            <strong>UID:</strong> ${d.uid}<br>
+            <strong>الطريقة:</strong> ${d.method}<br>
+            <strong>رقم/رابط:</strong> ${d.fromNumber}<br>
+            <strong>المبلغ:</strong> ${d.amount} جنيه<br>
+            <strong>الوقت:</strong> ${d.timestamp?.toDate().toLocaleString() || "-"}
+          `;
+          list.appendChild(div);
+        });
+      });
     }
 
-    await update(userRef, updates);
-    alert("✅ تم تنفيذ العملية بنجاح.");
-  };
-</script>
-</body>
+    fetchOrders();
+    fetchTopups();
+  </script></body>
 </html>
