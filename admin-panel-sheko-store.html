@@ -1,124 +1,128 @@
-
-<!DOCTYPE html>
-<html lang="ar">
+<!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>لوحة تحكم الأدمن - Sheko Store</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>لوحة تحكم الادمن - Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: sans-serif;
-      background: #f4f4f4;
-      direction: rtl;
-      display: flex;
-      justify-content: center;
-      padding: 50px 20px;
-    }
-    .admin-panel {
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      max-width: 500px;
+    body { font-family: 'Cairo', sans-serif; margin: 0; background: #f5f5f5; }
+    .container { max-width: 900px; margin: auto; padding: 20px; background: white; border-radius: 10px; margin-top: 30px; }
+    h2 { text-align: center; }
+    label, input, textarea, select, button {
+      display: block;
       width: 100%;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    h2 {
-      text-align: center;
-      color: #333;
-    }
-    input, select {
-      width: 100%;
+      margin-top: 10px;
       padding: 10px;
-      margin: 10px 0;
-      border-radius: 6px;
+      border-radius: 5px;
       border: 1px solid #ccc;
+      font-size: 16px;
     }
-    button {
-      width: 100%;
-      padding: 10px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .status {
-      margin-top: 15px;
-      text-align: center;
-    }
+    button { background: #222; color: white; cursor: pointer; }
+    button:hover { background: #444; }
+    .section { margin-bottom: 40px; }
+    .item { background: #eee; margin-top: 10px; padding: 10px; border-radius: 5px; }
   </style>
 </head>
 <body>
-  <div class="admin-panel">
-    <h2>لوحة تحكم الأدمن</h2>
-    <input type="text" id="uid" placeholder="UID الخاص بالمستخدم" />
-    <select id="action">
-      <option value="addBalance">إضافة رصيد</option>
-      <option value="subtractBalance">خصم رصيد</option>
-      <option value="addPoints">إضافة نقاط</option>
-      <option value="subtractPoints">خصم نقاط</option>
-    </select>
-    <input type="number" id="amount" placeholder="المبلغ / النقاط" />
-    <button onclick="updateUser()">تنفيذ</button>
-    <div class="status" id="status"></div>
-  </div>
+  <div class="container">
+    <h2>لوحة تحكم الادمن</h2><div class="section">
+  <h3>إضافة أو خصم رصيد / نقاط</h3>
+  <label>UID المستخدم</label>
+  <input type="text" id="userUid">
+  <label>نوع العملية</label>
+  <select id="operationType">
+    <option value="addBalance">إضافة رصيد</option>
+    <option value="removeBalance">خصم رصيد</option>
+    <option value="addPoints">إضافة نقاط</option>
+    <option value="removePoints">خصم نقاط</option>
+  </select>
+  <label>القيمة</label>
+  <input type="number" id="amount">
+  <button onclick="updateUserData()">تنفيذ العملية</button>
+</div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+<div class="section">
+  <h3>طلبات المستخدمين</h3>
+  <div id="ordersList"></div>
+</div>
 
+<div class="section">
+  <h3>طلبات إضافة الأموال</h3>
+  <div id="topupList"></div>
+</div>
+
+  </div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
-      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
       projectId: "sheko-store",
-      storageBucket: "sheko-store.appspot.com",
+      storageBucket: "sheko-store.firebasestorage.app",
       messagingSenderId: "113892775847",
       appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    async function updateUser() {
-      const uid = document.getElementById("uid").value.trim();
-      const action = document.getElementById("action").value;
+    function updateUserData() {
+      const uid = document.getElementById("userUid").value.trim();
+      const type = document.getElementById("operationType").value;
       const amount = parseFloat(document.getElementById("amount").value);
-      const status = document.getElementById("status");
 
-      if (!uid || isNaN(amount)) {
-        status.textContent = "يرجى إدخال UID ومبلغ صالح.";
-        status.style.color = "red";
-        return;
-      }
+      if (!uid || isNaN(amount)) return alert("يرجى إدخال UID وقيمة صحيحة");
 
-      const userRef = ref(db, 'users/' + uid);
-      const snapshot = await get(userRef);
+      const field = type.includes("Balance") ? "balance" : "points";
+      const change = type.includes("remove") ? -amount : amount;
 
-      if (!snapshot.exists()) {
-        status.textContent = "❌ هذا المستخدم غير موجود.";
-        status.style.color = "red";
-        return;
-      }
-
-      const userData = snapshot.val();
-      let updates = {};
-
-      if (action === "addBalance") {
-        updates.balance = (userData.balance || 0) + amount;
-      } else if (action === "subtractBalance") {
-        updates.balance = Math.max(0, (userData.balance || 0) - amount);
-      } else if (action === "addPoints") {
-        updates.points = (userData.points || 0) + amount;
-      } else if (action === "subtractPoints") {
-        updates.points = Math.max(0, (userData.points || 0) - amount);
-      }
-
-      await update(userRef, updates);
-      status.textContent = "✅ تم التحديث بنجاح.";
-      status.style.color = "green";
+      db.collection("users").doc(uid).update({
+        [field]: firebase.firestore.FieldValue.increment(change)
+      }).then(() => {
+        alert("تمت العملية بنجاح");
+      }).catch(err => {
+        console.error(err);
+        alert("حدث خطأ. تأكد من UID");
+      });
     }
-  </script>
-</body>
+
+    function fetchOrders() {
+      db.collection("orders").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+        const list = document.getElementById("ordersList");
+        list.innerHTML = "";
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          const div = document.createElement("div");
+          div.className = "item";
+          div.innerHTML = `
+            <strong>UID:</strong> ${d.uid}<br>
+            <strong>الخدمة:</strong> ${d.service} - ${d.package}<br>
+            <strong>الحساب:</strong> ${d.account}<br>
+            <strong>الحالة:</strong> ${d.status}<br>
+            <strong>تاريخ:</strong> ${d.createdAt?.toDate().toLocaleString() || "-"}
+          `;
+          list.appendChild(div);
+        });
+      });
+    }
+
+    function fetchTopups() {
+      db.collection("topupRequests").orderBy("timestamp", "desc").onSnapshot(snapshot => {
+        const list = document.getElementById("topupList");
+        list.innerHTML = "";
+        snapshot.forEach(doc => {
+          const d = doc.data();
+          const div = document.createElement("div");
+          div.className = "item";
+          div.innerHTML = `
+            <strong>UID:</strong> ${d.uid}<br>
+            <strong>الطريقة:</strong> ${d.method}<br>
+            <strong>رقم/رابط:</strong> ${d.fromNumber}<br>
+            <strong>المبلغ:</strong> ${d.amount} جنيه<br>
+            <strong>الوقت:</strong> ${d.timestamp?.toDate().toLocaleString() || "-"}
+          `;
+          list.appendChild(div);
+        });
+      });
+    }
+
+    fetchOrders();
+    fetchTopups();
+  </script></body>
 </html>
