@@ -66,9 +66,7 @@
   <select id="serviceType" onchange="updateServiceOptions()">
     <option value="">-- اختر --</option>
     <option value="games">شحن ألعاب</option>
-    <option value="tiktok">تيك توك</option>
-    <option value="youtube">يوتيوب</option>
-    <option value="instagram">انستجرام</option>
+    <option value="social">مواقع التواصل الاجتماعي</option>
   </select>  <div id="gamesOptions" class="service-section">
     <label>اختر اللعبة:</label>
     <select id="gameOption">
@@ -84,15 +82,15 @@
     <button class="price-button">فيفا: 20 كوينز = 40 جنيه</button>
     <input type="text" placeholder="الـ ID الخاص بك" id="gameId">
   </div>  <div id="socialOptions" class="service-section">
-    <label>الخدمة:</label>
-    <select id="socialService">
+    <label>اختر الخدمة:</label>
+    <select id="socialOption">
       <option value="">-- اختر الخدمة --</option>
-      <option value="tiktok_1000">تيك توك</option>
-      <option value="youtube_1000">يوتيوب</option>
-      <option value="instagram_1000">انستجرام</option>
+      <option value="tiktok">متابعين تيك توك</option>
+      <option value="youtube">مشتركين يوتيوب</option>
+      <option value="instagram">متابعين انستجرام</option>
     </select>
     <button class="price-button">١٠٠٠ متابع/مشترك = ٥٠ جنيه</button>
-    <input type="text" placeholder="اسم الحساب" id="socialAccount">
+    <input type="text" placeholder="اسم الحساب" id="socialUsername">
   </div>  <div>
     <button onclick="submitRequest()">إرسال الطلب</button>
     <div class="note">إذا واجهت أي مشكلة، راسلنا على الواتساب: 01099874914</div>
@@ -140,7 +138,7 @@
   function updateServiceOptions() {
     const type = document.getElementById("serviceType").value;
     document.getElementById("gamesOptions").style.display = type === "games" ? "block" : "none";
-    document.getElementById("socialOptions").style.display = ["tiktok", "youtube", "instagram"].includes(type) ? "block" : "none";
+    document.getElementById("socialOptions").style.display = type === "social" ? "block" : "none";
   }
 
   async function submitRequest() {
@@ -153,26 +151,26 @@
 
     const balance = doc.data().balance || 0;
     let cost = 0, service = "", detail = "";
-
     const type = document.getElementById("serviceType").value;
 
     if (type === "games") {
       const game = document.getElementById("gameOption").value;
       detail = document.getElementById("gameId").value;
-      if (game === "pubg") cost = 50, service = "ببجي";
-      else if (game === "cod") cost = 250, service = "كود";
+      if (game === "pubg") cost = 50, service = "ببجي موبايل";
+      else if (game === "cod") cost = 250, service = "كود موبايل";
       else if (game === "freefire") cost = 70, service = "فري فاير";
-      else if (game === "fifa") cost = 40, service = "فيفا";
-    } else {
-      const option = document.getElementById("socialService").value;
-      detail = document.getElementById("socialAccount").value;
+      else if (game === "fifa") cost = 40, service = "فيفا موبايل";
+    } else if (type === "social") {
+      const social = document.getElementById("socialOption").value;
+      detail = document.getElementById("socialUsername").value;
       cost = 50;
-      if (option.includes("tiktok")) service = "تيك توك";
-      else if (option.includes("youtube")) service = "يوتيوب";
-      else if (option.includes("instagram")) service = "انستجرام";
+      if (social === "tiktok") service = "تيك توك";
+      else if (social === "youtube") service = "يوتيوب";
+      else if (social === "instagram") service = "انستجرام";
     }
 
-    if (balance < cost) return alert("رصيد غير كافٍ");
+    if (!service || !detail) return alert("يرجى إكمال جميع البيانات");
+    if (balance < cost) return alert("رصيدك غير كافٍ لإتمام الطلب");
 
     await db.collection("orders").add({
       uid,
