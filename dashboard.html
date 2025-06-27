@@ -1,181 +1,218 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>لوحة التحكم | SHEKO STORE</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>لوحة التحكم - SHEKO STORE</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <style>
-    body { font-family: Arial; background: #f2f2f2; margin: 0; padding: 0; }
-    header { background: #111; color: #fff; padding: 15px; text-align: center; position: sticky; top: 0; }
-    .content { padding: 20px; max-width: 600px; margin: auto; background: white; margin-top: 20px; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    select, input, button { width: 100%; padding: 10px; margin: 10px 0; border-radius: 8px; border: 1px solid #ccc; }
-    button { background: #2196f3; color: white; border: none; cursor: pointer; }
-    button:hover { background: #0b7dda; }
-    .hidden { display: none; }
-    footer { text-align: center; margin: 20px 0; font-size: 14px; }
-    .top-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .top-info a { color: #fff; background: #e91e63; padding: 5px 10px; border-radius: 8px; text-decoration: none; }
+    body {
+      font-family: Tahoma, sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #222;
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      background: #333;
+      color: #fff;
+    }
+    .container {
+      padding: 20px;
+    }
+    select, input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+    }
+    .service-section {
+      display: none;
+    }
+    .note {
+      color: red;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
-  <header>
-    <div class="top-info">
-      <span>رصيدك: <span id="userBalance">0 جنية</span></span>
-      <div>
-        <a href="account.html">معلومات حسابك</a>
-        <a href="index.html">تسجيل الخروج</a>
-      </div>
-    </div>
-    <h2>SHEKO STORE</h2>
-  </header>
 
-  <div class="content">
-    <h3>طلب شحن</h3>
-    <label>اختر الخدمة:</label>
-    <select id="mainService">
-      <option value="">-- اختر --</option>
-      <option value="games">شحن الألعاب</option>
-      <option value="social">مواقع التواصل الاجتماعي</option>
+<header>
+  <h1>لوحة التحكم - SHEKO STORE</h1>
+</header>
+
+<div class="top-bar">
+  <div>رصيدك: <span id="balance">0</span> جنيه</div>
+  <div>
+    <button onclick="logout()">تسجيل الخروج</button>
+    <button onclick="goToAccount()">معلومات حسابك</button>
+    <button onclick="goToOrders()">طلباتك</button>
+  </div>
+</div>
+
+<div class="container">
+  <label>اختر نوع الخدمة:</label>
+  <select id="serviceType" onchange="updateServiceOptions()">
+    <option value="">-- اختر --</option>
+    <option value="games">شحن ألعاب</option>
+    <option value="tiktok">تيك توك</option>
+    <option value="youtube">يوتيوب</option>
+    <option value="instagram">انستجرام</option>
+  </select>
+
+  <div id="gamesOptions" class="service-section">
+    <label>اختر اللعبة:</label>
+    <select id="gameOption" onchange="showGamePrices()">
+      <option value="">-- اختر اللعبة --</option>
+      <option value="pubg">ببجي موبايل</option>
+      <option value="cod">كود موبايل</option>
+      <option value="freefire">فري فاير</option>
+      <option value="fifa">فيفا موبايل</option>
     </select>
-
-    <div id="gamesSection" class="hidden">
-      <label>اختر اللعبة:</label>
-      <select id="gameOptions">
-        <option value="">-- اختر اللعبة --</option>
-        <option value="pubg">ببجي موبايل - 60 شدة (150ج) )</option>
-        <option value="cod">كول أوف ديوتي - 220CP (250ج)</option>
-        <option value="ff">فري فاير - 100 جوهرة (70ج)</option>
-        <option value="fifa">فيفا - 20 كوينز (40ج)</option>
-      </select>
-      <label>الآي دي الخاص بك:</label>
-      <input type="text" id="gameId" placeholder="ادخل ID اللعبة">
-    </div>
-
-    <div id="socialSection" class="hidden">
-      <label>اكتب اسم حسابك في الخدمة:</label>
-      <input type="text" id="socialAccount" placeholder="مثال: @username">
-    </div>
-
-    <button id="submitOrder">إرسال الطلب</button>
-
-    <p style="color: red; text-align:center;" id="errorText"></p>
-    <footer>
-      إذا واجهت أي مشكلة راسلنا على واتساب: <b>01099874914</b>
-    </footer>
+    <div id="gamePrices"></div>
+    <input type="text" placeholder="الـ ID الخاص بك" id="gameId">
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  <div id="socialOptions" class="service-section">
+    <label>الخدمة:</label>
+    <select id="socialService">
+      <option value="">-- اختر الخدمة --</option>
+      <option value="tiktok_1000">تيك توك - ١٠٠٠ متابع - ٥٠ جنيه</option>
+      <option value="youtube_1000">يوتيوب - ١٠٠٠ مشترك - ٥٠ جنيه</option>
+      <option value="instagram_1000">انستجرام - ١٠٠٠ متابع - ٥٠ جنيه</option>
+    </select>
+    <input type="text" placeholder="اسم الحساب" id="socialAccount">
+  </div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-      authDomain: "sheko-store.firebaseapp.com",
-      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-      projectId: "sheko-store",
-      storageBucket: "sheko-store.appspot.com",
-      messagingSenderId: "113892775847",
-      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-    };
+  <div>
+    <p>ارسل المال إلى رقم: <strong>01099874914</strong></p>
+    <input type="text" placeholder="رقم التحويل" id="transferCode">
+    <button onclick="submitRequest()">إرسال الطلب</button>
+    <div class="note">إذا واجهت أي مشكلة، راسلنا على الواتساب: 01099874914</div>
+  </div>
+</div>
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
+<script>
+  // إعداد Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+  authDomain: "sheko-store.firebaseapp.com",
+  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+  projectId: "sheko-store",
+  storageBucket: "sheko-store.firebasestorage.app",
+  messagingSenderId: "113892775847",
+  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882",
+  measurementId: "G-MQCQE3X077"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-    const mainService = document.getElementById("mainService");
-    const gameOptions = document.getElementById("gameOptions");
-    const gamesSection = document.getElementById("gamesSection");
-    const socialSection = document.getElementById("socialSection");
-    const submitOrder = document.getElementById("submitOrder");
-    const gameId = document.getElementById("gameId");
-    const socialAccount = document.getElementById("socialAccount");
-    const userBalance = document.getElementById("userBalance");
-    const errorText = document.getElementById("errorText");
+  // تحميل بيانات المستخدم
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      const doc = await db.collection("users").doc(user.uid).get();
+      if (doc.exists) {
+        document.getElementById("balance").innerText = doc.data().balance || 0;
+      }
+    } else {
+      location.href = "index.html";
+    }
+  });
 
-    let currentUID = null;
-    let balance = 0;
+  function logout() {
+    auth.signOut().then(() => {
+      location.href = "index.html";
+    });
+  }
 
+  function goToAccount() {
+    window.location.href = "account.html";
+  }
+
+  function goToOrders() {
+    window.location.href = "orders.html";
+  }
+
+  function updateServiceOptions() {
+    const type = document.getElementById("serviceType").value;
+    document.getElementById("gamesOptions").style.display = type === "games" ? "block" : "none";
+    document.getElementById("socialOptions").style.display = ["tiktok", "youtube", "instagram"].includes(type) ? "block" : "none";
+  }
+
+  function showGamePrices() {
+    const game = document.getElementById("gameOption").value;
     const prices = {
-      pubg: 150,
-      cod: 250,
-      ff: 70,
-      fifa: 40
+      pubg: "60 شدة = 50 جنيه، 300 شدة = 250 جنيه",
+      cod: "220 CP = 250 جنيه",
+      freefire: "100 جوهرة = 70 جنيه",
+      fifa: "20 كوينز = 40 جنيه"
     };
+    document.getElementById("gamePrices").innerText = prices[game] || "";
+  }
 
-    mainService.addEventListener("change", () => {
-      gamesSection.classList.add("hidden");
-      socialSection.classList.add("hidden");
-      if (mainService.value === "games") {
-        gamesSection.classList.remove("hidden");
-      } else if (mainService.value === "social") {
-        socialSection.classList.remove("hidden");
-      }
+  async function submitRequest() {
+    const user = auth.currentUser;
+    if (!user) return alert("يجب تسجيل الدخول");
+
+    const uid = user.uid;
+    const doc = await db.collection("users").doc(uid).get();
+    if (!doc.exists) return alert("مشكلة في حسابك");
+
+    const balance = doc.data().balance || 0;
+    let cost = 0, service = "", detail = "";
+
+    const type = document.getElementById("serviceType").value;
+
+    if (type === "games") {
+      const game = document.getElementById("gameOption").value;
+      detail = document.getElementById("gameId").value;
+      if (game === "pubg") cost = 50, service = "ببجي";
+      else if (game === "cod") cost = 250, service = "كود";
+      else if (game === "freefire") cost = 70, service = "فري فاير";
+      else if (game === "fifa") cost = 40, service = "فيفا";
+    } else {
+      const option = document.getElementById("socialService").value;
+      detail = document.getElementById("socialAccount").value;
+      cost = 50;
+      if (option.includes("tiktok")) service = "تيك توك";
+      else if (option.includes("youtube")) service = "يوتيوب";
+      else if (option.includes("instagram")) service = "انستجرام";
+    }
+
+    if (balance < cost) return alert("رصيد غير كافٍ");
+    const transferCode = document.getElementById("transferCode").value;
+    if (!transferCode) return alert("يجب كتابة رقم التحويل");
+
+    await db.collection("orders").add({
+      uid,
+      email: user.email,
+      service,
+      detail,
+      amount: cost,
+      transferCode,
+      status: "قيد التنفيذ",
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        currentUID = user.uid;
-        const userRef = ref(db, 'users/' + currentUID);
-        onValue(userRef, (snapshot) => {
-          const data = snapshot.val();
-          balance = data?.balance || 0;
-          userBalance.textContent = balance + " جنيه";
-        });
-      } else {
-        window.location.href = "index.html";
-      }
+    await db.collection("users").doc(uid).update({
+      balance: firebase.firestore.FieldValue.increment(-cost)
     });
 
-    submitOrder.addEventListener("click", async () => {
-      errorText.textContent = "";
-      let type = mainService.value;
-      let service = "";
-      let cost = 0;
-      let idOrAccount = "";
+    alert("تم إرسال الطلب بنجاح");
+    location.reload();
+  }
+</script>
 
-      if (type === "games") {
-        service = gameOptions.value;
-        if (!service || !gameId.value) {
-          errorText.textContent = "يرجى ملء جميع الحقول.";
-          return;
-        }
-        cost = prices[service];
-        idOrAccount = gameId.value;
-      } else if (type === "social") {
-        if (!socialAccount.value) {
-          errorText.textContent = "يرجى كتابة اسم الحساب.";
-          return;
-        }
-        service = "خدمة تواصل";
-        cost = 50; // سعر افتراضي
-        idOrAccount = socialAccount.value;
-      } else {
-        errorText.textContent = "يرجى اختيار نوع الخدمة.";
-        return;
-      }
-
-      if (cost > balance) {
-        errorText.textContent = "رصيدك لا يكفي لإتمام الطلب.";
-        return;
-      }
-
-      const orderRef = ref(db, `orders/${currentUID}_${Date.now()}`);
-      await set(orderRef, {
-        uid: currentUID,
-        type,
-        service,
-        account: idOrAccount,
-        cost,
-        status: "قيد التنفيذ",
-        createdAt: new Date().toISOString()
-      });
-
-      await set(ref(db, `users/${currentUID}/balance`), balance - cost);
-
-      alert("تم إرسال طلبك بنجاح!");
-      location.reload();
-    });
-  </script>
 </body>
 </html>
