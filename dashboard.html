@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: 'Cairo', sans-serif; margin: 0; background: #f1f1f1; }
-    header, .top-bar { background: #222; color: white; padding: 15px; text-align: center; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
+    header, .top-bar { background: #222; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
     .dashboard { max-width: 800px; margin: auto; padding: 20px; background: white; border-radius: 12px; margin-top: 30px; }
     label, select, input { display: block; width: 100%; margin: 10px 0; padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
     button { background: #222; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 15px; }
     button:hover { background: #444; }
-    .note { margin-top: 10px; font-size: 14px; color: #666; }
     .nav-links { display: flex; gap: 10px; }
     .nav-links a { color: white; background: #444; padding: 8px 12px; border-radius: 5px; text-decoration: none; }
+    .note { font-size: 14px; color: #666; text-align: center; margin-top: 20px; }
   </style>
 </head>
 <body><div class="top-bar">
@@ -25,21 +25,17 @@
     <button onclick="logout()">تسجيل الخروج</button>
   </div>
 </div><div class="dashboard">
-  <h2>إرسال طلب شحن</h2>
-  <label for="mainService">الخدمة:</label>
-  <select id="mainService">
-    <option value="">اختر الخدمة</option>
-    <option value="ألعاب">شحن ألعاب</option>
-    <option value="سوشيال">مواقع التواصل</option>
-  </select><label for="subService">الخدمة المحددة:</label> <select id="subService"></select>
+  <h2>إرسال طلب</h2><label for="mainService">نوع الخدمة:</label> <select id="mainService"> <option value="">اختر نوع الخدمة</option> <option value="ألعاب">شحن ألعاب</option> <option value="سوشيال">مواقع التواصل</option> </select>
+
+<label for="subService">الخدمة:</label> <select id="subService"></select>
 
 <label for="package">الباقة:</label> <select id="package"></select>
 
-<label for="accountInput" id="accountLabel">اسم الحساب / ID:</label> <input type="text" id="accountInput">
+<label for="accountInput">اسم الحساب / ID:</label> <input type="text" id="accountInput">
 
 <button onclick="submitOrder()">إرسال الطلب</button>
 
-  <p class="note">إذا واجهت مشكلة، تواصل معنا على واتساب: 01099874914</p>
+  <p class="note">إذا واجهت أي مشكلة، راسلنا على واتساب: 01099874914</p>
 </div><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script><script>
 const firebaseConfig = {
   apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
@@ -57,15 +53,15 @@ const db = firebase.firestore();
 let currentUser = null;
 let prices = {
   "ألعاب": {
-    "ببجي موبايل": { "60 شدة": 50, "300 شدة": 250 },
-    "كود موبايل": { "220 CP": 250 },
-    "فري فاير": { "100 جوهرة": 70 },
-    "فيفا موبايل": { "20 كوينز": 40 }
+    "ببجي موبايل": {"60 شدة": 50, "300 شدة": 250},
+    "كود موبايل": {"220 CP": 250},
+    "فري فاير": {"100 جوهرة": 70},
+    "فيفا موبايل": {"20 كوينز": 40}
   },
   "سوشيال": {
-    "تيك توك": { "1000 متابع": 50 },
-    "يوتيوب": { "1000 مشترك": 50 },
-    "انستجرام": { "1000 متابع": 50 }
+    "تيك توك": {"1000 متابع": 50},
+    "يوتيوب": {"1000 مشترك": 50},
+    "انستجرام": {"1000 متابع": 50}
   }
 };
 
@@ -73,42 +69,41 @@ const mainService = document.getElementById("mainService");
 const subService = document.getElementById("subService");
 const packageEl = document.getElementById("package");
 const accountInput = document.getElementById("accountInput");
-const accountLabel = document.getElementById("accountLabel");
 const balanceEl = document.getElementById("balance");
 
 mainService.addEventListener("change", () => {
   subService.innerHTML = "";
   packageEl.innerHTML = "";
-  if (!prices[mainService.value]) return;
-  Object.keys(prices[mainService.value]).forEach(service => {
+  const selectedMain = prices[mainService.value];
+  if (!selectedMain) return;
+  for (let sub in selectedMain) {
     let opt = document.createElement("option");
-    opt.value = service;
-    opt.textContent = service;
+    opt.value = sub;
+    opt.textContent = sub;
     subService.appendChild(opt);
-  });
+  }
   updatePackage();
 });
 
 subService.addEventListener("change", updatePackage);
 function updatePackage() {
   packageEl.innerHTML = "";
-  let selected = prices[mainService.value]?.[subService.value];
+  const selected = prices[mainService.value]?.[subService.value];
   if (!selected) return;
-  Object.keys(selected).forEach(p => {
+  for (let pkg in selected) {
     let opt = document.createElement("option");
-    opt.value = p;
-    opt.textContent = `${p} - ${selected[p]} جنيه`;
+    opt.value = pkg;
+    opt.textContent = `${pkg} - ${selected[pkg]} جنيه`;
     packageEl.appendChild(opt);
-  });
+  }
 }
 
 auth.onAuthStateChanged(user => {
-  if (!user) return location.href = 'index.html';
+  if (!user) return location.href = "index.html";
   currentUser = user;
   db.collection("users").doc(user.uid).onSnapshot(doc => {
     if (doc.exists) {
-      const data = doc.data();
-      balanceEl.textContent = `رصيدك: ${data.balance || 0} جنيه`;
+      balanceEl.textContent = `رصيدك: ${doc.data().balance || 0} جنيه`;
     }
   });
 });
@@ -117,40 +112,37 @@ function submitOrder() {
   const service = mainService.value;
   const sub = subService.value;
   const pack = packageEl.value;
-  const account = accountInput.value;
-  if (!service || !sub || !pack || !account) return alert("يرجى ملء جميع الحقول");
+  const account = accountInput.value.trim();
+  const cost = prices[service]?.[sub]?.[pack];
 
-  const cost = prices[service]?.[sub]?.[pack] || 0;
+  if (!service || !sub || !pack || !account) return alert("يرجى ملء جميع الحقول");
+  if (cost === undefined) return alert("لا يمكن تحديد تكلفة الخدمة");
 
   db.collection("users").doc(currentUser.uid).get().then(doc => {
-    if (!doc.exists) return alert("لم يتم العثور على المستخدم في قاعدة البيانات");
-    const data = doc.data();
-    const balance = data.balance || 0;
-
-    if (balance < cost) {
-      alert("رصيدك غير كافٍ لإتمام هذا الطلب");
-      return;
-    }
+    if (!doc.exists) return alert("الحساب غير موجود في قاعدة البيانات");
+    const userData = doc.data();
+    if ((userData.balance || 0) < cost) return alert("رصيدك لا يكفي لإتمام هذا الطلب");
 
     db.collection("orders").add({
       uid: currentUser.uid,
+      type: service,
       service: sub,
       package: pack,
       account: account,
-      status: "pending",
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      status: "قيد التنفيذ",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }).then(() => {
       db.collection("users").doc(currentUser.uid).update({
-        balance: balance - cost
+        balance: firebase.firestore.FieldValue.increment(-cost)
       });
-      alert("تم إرسال الطلب بنجاح وتم خصم الرصيد");
-    }).catch(err => alert("فشل في إرسال الطلب"));
+      alert("تم إرسال الطلب وخصم الرصيد بنجاح");
+    });
   });
 }
 
 function logout() {
   auth.signOut().then(() => {
-    location.href = 'index.html';
+    location.href = "index.html";
   });
 }
 </script></body>
