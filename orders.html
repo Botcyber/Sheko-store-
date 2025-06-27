@@ -1,0 +1,90 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>طلباتك - Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: 'Cairo', sans-serif; background: #f8f8f8; padding: 0; margin: 0; }
+    header { background: #222; color: white; padding: 15px; text-align: center; font-size: 20px; }
+    .container { padding: 20px; max-width: 800px; margin: auto; background: white; border-radius: 10px; margin-top: 20px; }
+    .order { border-bottom: 1px solid #ccc; padding: 10px 0; }
+    .order:last-child { border: none; }
+    .status { font-weight: bold; }
+    .status.pending { color: orange; }
+    .status.completed { color: green; }
+    .status.cancelled { color: red; }
+    .back-btn { margin-top: 20px; text-align: center; }
+    .back-btn button { padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #222; color: white; border: none; border-radius: 5px; margin: 5px; }
+  </style>
+</head>
+<body>
+
+<header>طلباتك السابقة</header>
+<div class="container" id="ordersContainer">
+  <p>جاري تحميل الطلبات...</p>
+</div>
+<div class="back-btn">
+  <button onclick="goBack()">الرجوع إلى لوحة التحكم</button>
+  <button onclick="loadOrders()">تحديث الطلبات</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+    authDomain: "sheko-store.firebaseapp.com",
+    projectId: "sheko-store",
+    storageBucket: "sheko-store.firebasestorage.app",
+    messagingSenderId: "113892775847",
+    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const auth = firebase.auth();
+
+  const ordersContainer = document.getElementById("ordersContainer");
+  let currentUser = null;
+
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      currentUser = user;
+      loadOrders();
+    } else {
+      ordersContainer.innerHTML = "<p>يجب تسجيل الدخول لعرض الطلبات.</p>";
+    }
+  });
+
+  function loadOrders() {
+    if (!currentUser) return;
+    ordersContainer.innerHTML = "<p>جاري تحميل الطلبات...</p>";
+    db.collection("orders").where("uid", "==", currentUser.uid).orderBy("timestamp", "desc").get()
+      .then(snapshot => {
+        if (snapshot.empty) {
+          ordersContainer.innerHTML = "<p>لا يوجد طلبات حتى الآن.</p>";
+          return;
+        }
+        let html = "";
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          html += `<div class='order'>
+            <p><strong>الخدمة:</strong> ${data.service}</p>
+            <p><strong>الباقة:</strong> ${data.package}</p>
+            <p><strong>الاسم أو ID:</strong> ${data.account}</p>
+            <p class='status ${data.status}'>${data.status === 'pending' ? 'قيد التنفيذ' : data.status === 'completed' ? 'تم' : 'تم الإلغاء'}</p>
+          </div>`;
+        });
+        ordersContainer.innerHTML = html;
+      });
+  }
+
+  function goBack() {
+    window.location.href = 'dashboard.html';
+  }
+</script>
+
+</body>
+</html>
