@@ -1,104 +1,71 @@
 <!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>لوحة تحكم الأدمن</title>
+  <title>لوحة تحكم الأدمن - إضافة مستخدم</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: 'Cairo', sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
-    .container { max-width: 800px; margin: 30px auto; background: #fff; padding: 20px; border-radius: 10px; }
-    h2 { text-align: center; color: #222; }
-    label, input, textarea, button, select { width: 100%; margin: 10px 0; padding: 10px; font-size: 16px; }
-    button { background: #333; color: white; border: none; border-radius: 5px; cursor: pointer; }
-    button:hover { background: #555; }
-    .section { margin-top: 30px; }
+    body { font-family: 'Cairo', sans-serif; margin: 0; padding: 0; background: #f0f0f0; }
+    .container { max-width: 600px; margin: 50px auto; background: white; padding: 30px; border-radius: 12px; }
+    h2 { text-align: center; }
+    label, input, button { display: block; width: 100%; margin-bottom: 15px; }
+    input, button {
+      padding: 10px; border-radius: 6px; border: 1px solid #ccc;
+    }
+    button {
+      background-color: #222; color: white; cursor: pointer;
+    }
+    button:hover { background-color: #444; }
   </style>
 </head>
-<body>
-  <div class="container">
-    <h2>لوحة تحكم الأدمن</h2><div class="section">
-  <h3>تعديل رصيد المستخدم</h3>
-  <label>UID المستخدم</label>
-  <input type="text" id="uid">
-  <label>المبلغ</label>
-  <input type="number" id="amount">
-  <select id="action">
-    <option value="add">إضافة رصيد</option>
-    <option value="remove">خصم رصيد</option>
-  </select>
-  <button onclick="updateBalance()">تنفيذ</button>
-</div>
+<body><div class="container">
+  <h2>إضافة مستخدم جديد</h2><label for="email">البريد الإلكتروني:</label> <input type="email" id="email" placeholder="example@example.com">
 
-<div class="section">
-  <h3>الطلبات</h3>
-  <ul id="orders"></ul>
-</div>
+<label for="password">كلمة المرور:</label> <input type="password" id="password" placeholder="كلمة المرور">
 
-<div class="section">
-  <h3>طلبات تحويل الأموال</h3>
-  <ul id="payments"></ul>
-</div>
+<label for="balance">الرصيد الابتدائي:</label> <input type="number" id="balance" placeholder="مثال: 100">
 
-  </div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-      authDomain: "sheko-store.firebaseapp.com",
-      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-      projectId: "sheko-store",
-      storageBucket: "sheko-store.appspot.com",
-      messagingSenderId: "113892775847",
-      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-    };
+<button onclick="createUser()">إضافة المستخدم</button>
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+</div><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script><script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+  authDomain: "sheko-store.firebaseapp.com",
+  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+  projectId: "sheko-store",
+  storageBucket: "sheko-store.firebasestorage.app",
+  messagingSenderId: "113892775847",
+  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+};
 
-    function updateBalance() {
-      const uid = document.getElementById('uid').value;
-      const amount = parseFloat(document.getElementById('amount').value);
-      const action = document.getElementById('action').value;
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
 
-      if (!uid || isNaN(amount)) return alert("يرجى إدخال UID والمبلغ");
+function createUser() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const balance = parseFloat(document.getElementById("balance").value);
 
-      const userRef = db.ref("users/" + uid);
-      userRef.once('value').then(snapshot => {
-        if (!snapshot.exists()) return alert("المستخدم غير موجود");
-        const userData = snapshot.val();
-        let newBalance = userData.balance || 0;
-        if (action === "add") newBalance += amount;
-        else newBalance -= amount;
+  if (!email || !password || isNaN(balance)) {
+    alert("يرجى ملء جميع الحقول بشكل صحيح");
+    return;
+  }
 
-        userRef.update({ balance: newBalance });
-        alert("تم تحديث الرصيد بنجاح");
-      }).catch(err => alert("فشل التحديث"));
-    }
-
-    function loadOrders() {
-      const ordersList = document.getElementById('orders');
-      db.ref("orders").on('value', snapshot => {
-        ordersList.innerHTML = "";
-        snapshot.forEach(orderSnap => {
-          const data = orderSnap.val();
-          const li = document.createElement("li");
-          li.textContent = `طلب من ${data.account} | ${data.service} - ${data.package} | الحالة: ${data.status}`;
-          ordersList.appendChild(li);
-        });
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(userCredential => {
+      const uid = userCredential.user.uid;
+      return db.ref("users/" + uid).set({
+        email: email,
+        balance: balance
       });
-    }
-
-    function loadPayments() {
-      const paymentsList = document.getElementById('payments');
-      db.ref("payments").on('value', snapshot => {
-        paymentsList.innerHTML = "";
-        snapshot.forEach(paymentSnap => {
-          const data = paymentSnap.val();
-          const li = document.createElement("li");
-          li.textContent = `من: ${data.from} | المبلغ: ${data.amount}`;
-          paymentsList.appendChild(li);
-        });
-      });
-    }
-
-    loadOrders();
-    loadPayments();
-  </script></body>
+    })
+    .then(() => {
+      alert("تم إنشاء المستخدم بنجاح");
+    })
+    .catch(error => {
+      console.error(error);
+      alert("حدث خطأ: " + error.message);
+    });
+}
+</script></body>
 </html>
