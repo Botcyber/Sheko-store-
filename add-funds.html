@@ -1,95 +1,103 @@
-
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <title>إضافة أموال - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: 'Cairo', sans-serif; background: #f4f4f4; margin: 0; padding: 0; direction: rtl; }
-    .container { max-width: 600px; margin: 30px auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-    h2 { text-align: center; color: #333; }
-    label { margin-top: 10px; display: block; font-weight: bold; }
-    select, input, button { width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; }
-    button { background: #333; color: white; border: none; cursor: pointer; margin-top: 20px; }
-    button:hover { background: #555; }
-    .info-box { margin-top: 15px; padding: 10px; background: #eee; border-radius: 5px; }
-    .note { margin-top: 15px; font-size: 14px; color: #666; text-align: center; }
-    .whatsapp { display: block; margin-top: 10px; text-align: center; color: green; font-weight: bold; }
+    body { font-family: 'Cairo', sans-serif; background: #f1f1f1; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 12px; margin-top: 40px; }
+    h2 { text-align: center; }
+    label, select, input { display: block; width: 100%; margin-top: 10px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+    button { margin-top: 20px; width: 100%; padding: 12px; background: #222; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #444; }
+    .info { margin-top: 15px; font-size: 14px; color: #555; text-align: center; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>إضافة أموال لحسابك</h2>
-    <label for="method">اختر طريقة الدفع:</label>
-    <select id="method" onchange="updatePaymentDetails()">
-      <option value="">-- اختر --</option>
-      <option value="vodafone">فودافون كاش</option>
-      <option value="instapay">إنستا باي</option>
-      <option value="fawry">فوري</option>
-    </select>
+<div class="container">
+  <h2>إضافة أموال</h2>
+  <label for="method">اختر طريقة الدفع:</label>
+  <select id="method">
+    <option value="">اختر</option>
+    <option value="vodafone">فودافون كاش</option>
+    <option value="instapay">انستا باي</option>
+    <option value="fawry">فوري</option>
+  </select>  <div id="details" class="info"></div><label for="sender">رقم/رابط التحويل:</label> <input type="text" id="sender" placeholder="مثال: رقم فودافون أو رابط إنستا باي">
 
-    <div class="info-box" id="detailsBox"></div>
+<label for="amount">المبلغ المرسل (جنيه):</label> <input type="number" id="amount" min="1" placeholder="مثال: 50">
 
-    <label for="senderInfo">رقم التحويل / رابط:</label>
-    <input type="text" id="senderInfo" placeholder="أدخل الرقم أو الرابط الذي أرسلت منه المال">
+<button onclick="submitTopup()">تحقق</button>
 
-    <label for="amount">المبلغ:</label>
-    <input type="number" id="amount" placeholder="أدخل المبلغ بالجنيه">
+  <p class="info">إضافة الأموال لحسابك تستغرق من 1 - 3 ساعات</p>
+  <p class="info">إذا واجهت مشكلة، راسلنا على <a href="https://wa.me/201099874914" target="_blank">واتساب: 01099874914</a></p>
+</div><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script><script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+  authDomain: "sheko-store.firebaseapp.com",
+  projectId: "sheko-store",
+  storageBucket: "sheko-store.firebasestorage.app",
+  messagingSenderId: "113892775847",
+  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-    <button onclick="submitPayment()">تحقق</button>
+const methodEl = document.getElementById("method");
+const detailsEl = document.getElementById("details");
+const senderEl = document.getElementById("sender");
+const amountEl = document.getElementById("amount");
 
-    <p class="note">إضافة الأموال تستغرق من 1 إلى 3 ساعات.</p>
-    <a class="whatsapp" href="https://wa.me/201099874914" target="_blank">راسلنا على الواتساب: 01099874914</a>
-  </div>
+methodEl.addEventListener("change", () => {
+  const value = methodEl.value;
+  if (value === "vodafone" || value === "fawry") {
+    detailsEl.innerHTML = `رقم التحويل: <strong>01099874914</strong>`;
+  } else if (value === "instapay") {
+    detailsEl.innerHTML = `رابط الحساب: <strong>shehabhossnyshawky@instapay</strong>`;
+  } else {
+    detailsEl.innerHTML = "";
+  }
+});
 
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-      authDomain: "sheko-store.firebaseapp.com",
-      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-      projectId: "sheko-store",
-      storageBucket: "sheko-store.firebasestorage.app",
-      messagingSenderId: "113892775847",
-      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-    };
+let currentUser = null;
+auth.onAuthStateChanged(user => {
+  if (!user) return location.href = 'index.html';
+  currentUser = user;
+});
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+function submitTopup() {
+  const method = methodEl.value;
+  const sender = senderEl.value.trim();
+  const amount = parseFloat(amountEl.value);
 
-    function updatePaymentDetails() {
-      const method = document.getElementById('method').value;
-      const box = document.getElementById('detailsBox');
-      if (method === 'vodafone') box.innerHTML = "رقم التحويل: <strong>01099874914</strong>";
-      else if (method === 'instapay') box.innerHTML = "رابط الحساب: <strong>shehabhossnyshawky@instapay</strong>";
-      else if (method === 'fawry') box.innerHTML = "رقم التحويل: <strong>01099874914</strong>";
-      else box.innerHTML = "";
-    }
+  if (!method || !sender || isNaN(amount) || amount <= 0) {
+    alert("يرجى ملء جميع الحقول بشكل صحيح");
+    return;
+  }
 
-    function submitPayment() {
-      const method = document.getElementById('method').value;
-      const senderInfo = document.getElementById('senderInfo').value;
-      const amount = parseFloat(document.getElementById('amount').value);
-      if (!method || !senderInfo || !amount) return alert("يرجى ملء جميع البيانات");
+  if (!currentUser) {
+    alert("يجب تسجيل الدخول أولاً");
+    return;
+  }
 
-      auth.onAuthStateChanged(user => {
-        if (!user) return alert("يرجى تسجيل الدخول أولاً");
-        db.collection("payments").add({
-          uid: user.uid,
-          method: method,
-          senderInfo: senderInfo,
-          amount: amount,
-          status: "قيد المراجعة",
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(() => {
-          alert("تم إرسال الطلب بنجاح، سيتم التحقق من العملية قريباً");
-        }).catch(err => alert("حدث خطأ أثناء الإرسال"));
-      });
-    }
-  </script>
-</body>
+  db.collection("topupRequests").add({
+    uid: currentUser.uid,
+    method,
+    senderInfo: sender,
+    amount,
+    status: "قيد المراجعة",
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    alert("تم إرسال طلب إضافة الأموال بنجاح");
+    senderEl.value = "";
+    amountEl.value = "";
+    methodEl.value = "";
+    detailsEl.innerHTML = "";
+  }).catch((error) => {
+    console.error("خطأ في الإرسال:", error);
+    alert("حدث خطأ أثناء الإرسال: " + error.message);
+  });
+}
+</script></body>
 </html>
