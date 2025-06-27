@@ -1,109 +1,104 @@
 <!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>لوحة الأدمن - Sheko Store</title>
+  <title>لوحة تحكم الأدمن</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: 'Cairo', sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
-    .container { max-width: 800px; margin: auto; background: white; padding: 20px; margin-top: 30px; border-radius: 10px; }
-    h1 { text-align: center; margin-bottom: 30px; }
-    label, input, select, button { display: block; width: 100%; margin: 10px 0; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
-    button { background: #222; color: white; cursor: pointer; border: none; }
-    button:hover { background: #444; }
-    .section { margin-top: 40px; }
+    .container { max-width: 800px; margin: 30px auto; background: #fff; padding: 20px; border-radius: 10px; }
+    h2 { text-align: center; color: #222; }
+    label, input, textarea, button, select { width: 100%; margin: 10px 0; padding: 10px; font-size: 16px; }
+    button { background: #333; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #555; }
+    .section { margin-top: 30px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>لوحة تحكم الأدمن</h1><div class="section">
-  <h3>إضافة/خصم رصيد أو نقاط</h3>
-  <label>UID المستخدم:</label>
-  <input type="text" id="uidInput">
-
-  <label>اختيار العملية:</label>
-  <select id="operation">
-    <option value="addBalance">إضافة رصيد</option>
-    <option value="removeBalance">خصم رصيد</option>
-    <option value="addPoints">إضافة نقاط</option>
-    <option value="removePoints">خصم نقاط</option>
+    <h2>لوحة تحكم الأدمن</h2><div class="section">
+  <h3>تعديل رصيد المستخدم</h3>
+  <label>UID المستخدم</label>
+  <input type="text" id="uid">
+  <label>المبلغ</label>
+  <input type="number" id="amount">
+  <select id="action">
+    <option value="add">إضافة رصيد</option>
+    <option value="remove">خصم رصيد</option>
   </select>
-
-  <label>المبلغ:</label>
-  <input type="number" id="amountInput">
-
-  <button onclick="submitAction()">تنفيذ</button>
+  <button onclick="updateBalance()">تنفيذ</button>
 </div>
 
 <div class="section">
-  <h3>جميع الطلبات:</h3>
-  <ul id="ordersList"></ul>
+  <h3>الطلبات</h3>
+  <ul id="orders"></ul>
 </div>
 
 <div class="section">
-  <h3>تحويلات إضافة الرصيد:</h3>
-  <ul id="depositsList"></ul>
+  <h3>طلبات تحويل الأموال</h3>
+  <ul id="payments"></ul>
 </div>
 
-  </div><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script><script>
-const firebaseConfig = {
-  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-  authDomain: "sheko-store.firebaseapp.com",
-  projectId: "sheko-store",
-  storageBucket: "sheko-store.appspot.com",
-  messagingSenderId: "113892775847",
-  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-};
+  </div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-function submitAction() {
-  const uid = document.getElementById('uidInput').value.trim();
-  const operation = document.getElementById('operation').value;
-  const amount = parseFloat(document.getElementById('amountInput').value);
+    function updateBalance() {
+      const uid = document.getElementById('uid').value;
+      const amount = parseFloat(document.getElementById('amount').value);
+      const action = document.getElementById('action').value;
 
-  if (!uid || isNaN(amount)) return alert("يرجى تعبئة جميع الحقول");
+      if (!uid || isNaN(amount)) return alert("يرجى إدخال UID والمبلغ");
 
-  const ref = db.collection("users").doc(uid);
-  ref.get().then(doc => {
-    if (!doc.exists) return alert("المستخدم غير موجود في قاعدة البيانات");
+      const userRef = db.ref("users/" + uid);
+      userRef.once('value').then(snapshot => {
+        if (!snapshot.exists()) return alert("المستخدم غير موجود");
+        const userData = snapshot.val();
+        let newBalance = userData.balance || 0;
+        if (action === "add") newBalance += amount;
+        else newBalance -= amount;
 
-    let updates = {};
-    let field = operation.includes("Balance") ? "balance" : "points";
-    let current = doc.data()[field] || 0;
-    updates[field] = operation.includes("add") ? current + amount : current - amount;
+        userRef.update({ balance: newBalance });
+        alert("تم تحديث الرصيد بنجاح");
+      }).catch(err => alert("فشل التحديث"));
+    }
 
-    ref.update(updates).then(() => alert("تم تحديث الحساب بنجاح"));
-  }).catch(err => alert("فشل في التحديث: " + err.message));
-}
+    function loadOrders() {
+      const ordersList = document.getElementById('orders');
+      db.ref("orders").on('value', snapshot => {
+        ordersList.innerHTML = "";
+        snapshot.forEach(orderSnap => {
+          const data = orderSnap.val();
+          const li = document.createElement("li");
+          li.textContent = `طلب من ${data.account} | ${data.service} - ${data.package} | الحالة: ${data.status}`;
+          ordersList.appendChild(li);
+        });
+      });
+    }
 
-function loadOrders() {
-  const ordersList = document.getElementById('ordersList');
-  db.collection("orders").orderBy("createdAt", "desc").limit(10).onSnapshot(snapshot => {
-    ordersList.innerHTML = "";
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      const item = document.createElement("li");
-      item.textContent = `${d.service} - ${d.package} - ${d.account} - ${d.status}`;
-      ordersList.appendChild(item);
-    });
-  });
-}
+    function loadPayments() {
+      const paymentsList = document.getElementById('payments');
+      db.ref("payments").on('value', snapshot => {
+        paymentsList.innerHTML = "";
+        snapshot.forEach(paymentSnap => {
+          const data = paymentSnap.val();
+          const li = document.createElement("li");
+          li.textContent = `من: ${data.from} | المبلغ: ${data.amount}`;
+          paymentsList.appendChild(li);
+        });
+      });
+    }
 
-function loadDeposits() {
-  const depositsList = document.getElementById('depositsList');
-  db.collection("deposits").orderBy("timestamp", "desc").limit(10).onSnapshot(snapshot => {
-    depositsList.innerHTML = "";
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      const item = document.createElement("li");
-      item.textContent = `من: ${d.method} - رقم/رابط: ${d.sender} - مبلغ: ${d.amount}`;
-      depositsList.appendChild(item);
-    });
-  });
-}
-
-loadOrders();
-loadDeposits();
-</script></body>
+    loadOrders();
+    loadPayments();
+  </script></body>
 </html>
