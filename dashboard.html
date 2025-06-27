@@ -10,6 +10,11 @@
       background: #222; color: white; padding: 15px;
       display: flex; justify-content: space-between; align-items: center;
     }
+    .nav-links { display: flex; gap: 10px; }
+    .nav-links a {
+      color: white; background: #444; padding: 8px 12px;
+      border-radius: 5px; text-decoration: none;
+    }
     .dashboard {
       max-width: 800px; margin: auto; padding: 20px;
       background: white; border-radius: 12px; margin-top: 30px;
@@ -24,17 +29,7 @@
       width: 100%; margin-top: 15px;
     }
     button:hover { background: #444; }
-    .nav-links {
-      display: flex; gap: 10px;
-    }
-    .nav-links a {
-      color: white; background: #444;
-      padding: 8px 12px; border-radius: 5px;
-      text-decoration: none;
-    }
-    .note {
-      font-size: 14px; color: #666; text-align: center; margin-top: 20px;
-    }
+    .note { font-size: 14px; color: #666; text-align: center; margin-top: 20px; }
   </style>
 </head>
 <body>
@@ -43,7 +38,7 @@
   <div class="nav-links">
     <a href="account.html">معلومات حسابك</a>
     <a href="orders.html">طلباتك</a>
-    <a href="add-funds.html">إضافة أموال</a>
+    <a href="add-money.html">إضافة أموال</a>
   </div>
   <div>
     <span id="balance">رصيدك: ...</span>
@@ -53,7 +48,6 @@
 
 <div class="dashboard">
   <h2>إرسال طلب</h2>
-
   <label for="mainService">نوع الخدمة:</label>
   <select id="mainService">
     <option value="">اختر نوع الخدمة</option>
@@ -74,13 +68,17 @@
   <p class="note">إذا واجهت أي مشكلة، راسلنا على واتساب: 01099874914</p>
 </div>
 
+<!-- Firebase Scripts -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
   authDomain: "sheko-store.firebaseapp.com",
+  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
   projectId: "sheko-store",
   storageBucket: "sheko-store.firebasestorage.app",
   messagingSenderId: "113892775847",
@@ -89,10 +87,10 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const db = firebase.firestore();
+const db = firebase.database();
 
 let currentUser = null;
-let prices = {
+const prices = {
   "ألعاب": {
     "ببجي موبايل": {"60 شدة": 50, "300 شدة": 250},
     "كود موبايل": {"220 CP": 250},
@@ -127,7 +125,6 @@ mainService.addEventListener("change", () => {
 });
 
 subService.addEventListener("change", updatePackage);
-
 function updatePackage() {
   packageEl.innerHTML = "";
   const selected = prices[mainService.value]?.[subService.value];
@@ -140,13 +137,14 @@ function updatePackage() {
   }
 }
 
+// ✅ تحديث الرصيد من Realtime Database
 auth.onAuthStateChanged(user => {
   if (!user) return location.href = "index.html";
   currentUser = user;
-  db.collection("users").doc(user.uid).onSnapshot(doc => {
-    if (doc.exists) {
-      balanceEl.textContent = `رصيدك: ${doc.data().balance || 0} جنيه`;
-    }
+
+  db.ref("users/" + user.uid + "/balance").on("value", snapshot => {
+    const balance = snapshot.val();
+    balanceEl.textContent = `رصيدك: ${balance !== null ? balance : 0} جنيه`;
   });
 });
 
@@ -160,24 +158,29 @@ function submitOrder() {
   if (!service || !sub || !pack || !account) return alert("يرجى ملء جميع الحقول");
   if (cost === undefined) return alert("لا يمكن تحديد تكلفة الخدمة");
 
-  db.collection("users").doc(currentUser.uid).get().then(doc => {
-    if (!doc.exists) return alert("الحساب غير موجود في قاعدة البيانات");
-    const userData = doc.data();
-    if ((userData.balance || 0) < cost) return alert("رصيدك لا يكفي لإتمام هذا الطلب");
+  db.ref("users/" + currentUser.uid + "/balance").once("value").then(snapshot => {
+    const balance = snapshot.val() || 0;
+    if (balance < cost) return alert("رصيدك لا يكفي لإتمام هذا الطلب");
 
-    db.collection("orders").add({
+    const order = {
       uid: currentUser.uid,
       type: service,
       service: sub,
       package: pack,
       account: account,
       status: "قيد التنفيذ",
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => {
-      db.collection("users").doc(currentUser.uid).update({
-        balance: firebase.firestore.FieldValue.increment(-cost)
+      createdAt: new Date().toISOString()
+    };
+
+    // أضف الطلب
+    firebase.firestore().collection("orders").add(order).then(() => {
+      db.ref("users/" + currentUser.uid).update({
+        balance: balance - cost
       });
       alert("تم إرسال الطلب وخصم الرصيد بنجاح");
+    }).catch(err => {
+      console.error(err);
+      alert("حدث خطأ أثناء إرسال الطلب");
     });
   });
 }
@@ -188,6 +191,5 @@ function logout() {
   });
 }
 </script>
-
 </body>
 </html>
