@@ -59,30 +59,49 @@
     <option value="">-- اختر --</option>
     <option value="games">شحن ألعاب</option>
     <option value="social">مواقع التواصل الاجتماعي</option>
-    <option value="custom">تحديد السعر والطلب</option>
   </select>  <div id="gamesOptions" class="service-section">
     <label>اختر اللعبة:</label>
     <select id="gameOption">
       <option value="">-- اختر اللعبة --</option>
-      <option value="pubg">ببجي موبايل</option>
-      <option value="cod">كود موبايل</option>
-      <option value="freefire">فري فاير</option>
-      <option value="fifa">فيفا موبايل</option>
+      <option value="pubg">ببجي موبايل - 60 شدة (50 جنيه)</option>
+      <option value="cod">كود موبايل - 220 CP (250 جنيه)</option>
+      <option value="freefire">فري فاير - 100 جوهرة (70 جنيه)</option>
+      <option value="fifa">فيفا موبايل - 20 كوينز (40 جنيه)</option>
     </select>
     <input type="text" placeholder="الـ ID الخاص بك" id="gameId">
   </div>  <div id="socialOptions" class="service-section">
     <label>اختر الخدمة:</label>
     <select id="socialOption">
       <option value="">-- اختر الخدمة --</option>
-      <option value="tiktok">متابعين تيك توك</option>
-      <option value="youtube">مشتركين يوتيوب</option>
-      <option value="instagram">متابعين انستجرام</option>
-    </select>
-    <input type="text" placeholder="اسم الحساب" id="socialUsername">
-  </div>  <div id="customOptions" class="service-section">
-    <input type="text" id="customServiceName" placeholder="اسم الخدمة">
-    <input type="text" id="customServicePrice" placeholder="سعر الخدمة بالجنيه">
-    <textarea id="customServiceDetails" placeholder="وصف الطلب أو التفاصيل" rows="4"></textarea>
+      <option value="tiktok">تيك توك</option>
+      <option value="youtube">يوتيوب</option>
+      <option value="instagram">انستجرام</option>
+    </select><div id="tiktokPackages" class="service-section">
+  <label>اختر الباقة:</label>
+  <select id="tiktokOption">
+    <option value="tiktok_1000">1000 متابع (50 جنيه)</option>
+    <option value="tiktok_2000">2000 متابع (90 جنيه)</option>
+  </select>
+</div>
+
+<div id="youtubePackages" class="service-section">
+  <label>اختر الباقة:</label>
+  <select id="youtubeOption">
+    <option value="youtube_1000">1000 مشترك (50 جنيه)</option>
+    <option value="youtube_2000">2000 مشترك (90 جنيه)</option>
+  </select>
+</div>
+
+<div id="instagramPackages" class="service-section">
+  <label>اختر الباقة:</label>
+  <select id="instagramOption">
+    <option value="instagram_1000">1000 متابع (50 جنيه)</option>
+    <option value="instagram_2000">2000 متابع (90 جنيه)</option>
+  </select>
+</div>
+
+<input type="text" placeholder="اسم الحساب" id="socialUsername">
+
   </div>  <div>
     <button onclick="submitRequest()">إرسال الطلب</button>
     <div class="note">إذا واجهت أي مشكلة، راسلنا على الواتساب: 01099874914</div>
@@ -131,9 +150,19 @@
     document.querySelectorAll('.service-section').forEach(el => el.style.display = 'none');
     const selected = document.getElementById("serviceType").value;
     if (selected === "games") document.getElementById("gamesOptions").style.display = "block";
-    else if (selected === "social") document.getElementById("socialOptions").style.display = "block";
-    else if (selected === "custom") document.getElementById("customOptions").style.display = "block";
+    else if (selected === "social") {
+      document.getElementById("socialOptions").style.display = "block";
+    }
   }
+
+  document.getElementById("socialOption").addEventListener("change", function() {
+    document.getElementById("tiktokPackages").style.display = "none";
+    document.getElementById("youtubePackages").style.display = "none";
+    document.getElementById("instagramPackages").style.display = "none";
+    if (this.value === "tiktok") document.getElementById("tiktokPackages").style.display = "block";
+    else if (this.value === "youtube") document.getElementById("youtubePackages").style.display = "block";
+    else if (this.value === "instagram") document.getElementById("instagramPackages").style.display = "block";
+  });
 
   async function submitRequest() {
     const user = auth.currentUser;
@@ -157,14 +186,10 @@
     } else if (type === "social") {
       const social = document.getElementById("socialOption").value;
       detail = document.getElementById("socialUsername").value;
-      cost = 50;
-      if (social === "tiktok") service = "تيك توك 1000 متابع";
-      else if (social === "youtube") service = "يوتيوب 1000 مشترك";
-      else if (social === "instagram") service = "انستجرام 1000 متابع";
-    } else if (type === "custom") {
-      service = document.getElementById("customServiceName").value;
-      cost = parseFloat(document.getElementById("customServicePrice").value) || 0;
-      detail = document.getElementById("customServiceDetails").value;
+      const option = document.getElementById(social + "Option").value;
+      if (option.includes("1000")) cost = 50;
+      else if (option.includes("2000")) cost = 90;
+      service = option.replace("_", " ").replace("tiktok", "تيك توك").replace("youtube", "يوتيوب").replace("instagram", "انستجرام");
     }
 
     if (!service || !detail) return alert("يرجى إكمال جميع الحقول");
