@@ -5,19 +5,25 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: 'Cairo', sans-serif; margin: 0; background: #f1f1f1; }
-    header { background: #222; color: #fff; padding: 15px; text-align: center; font-size: 20px; }
+    header, .top-bar { background: #222; color: white; padding: 15px; text-align: center; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
     .dashboard { max-width: 800px; margin: auto; padding: 20px; background: white; border-radius: 12px; margin-top: 30px; }
     label, select, input { display: block; width: 100%; margin: 10px 0; padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
     button { background: #222; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 15px; }
     button:hover { background: #444; }
-    .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #333; color: #fff; }
-    .top-bar span { font-weight: bold; }
     .note { margin-top: 10px; font-size: 14px; color: #666; }
+    .nav-links { display: flex; gap: 10px; }
+    .nav-links a { color: white; background: #444; padding: 8px 12px; border-radius: 5px; text-decoration: none; }
   </style>
 </head>
 <body><div class="top-bar">
-  <span id="balance">رصيدك: ...</span>
-  <button onclick="logout()">تسجيل الخروج</button>
+  <div class="nav-links">
+    <a href="account.html">معلومات حسابك</a>
+    <a href="orders.html">طلباتك</a>
+  </div>
+  <div>
+    <span id="balance">رصيدك: ...</span>
+    <button onclick="logout()">تسجيل الخروج</button>
+  </div>
 </div><div class="dashboard">
   <h2>إرسال طلب شحن</h2>
   <label for="mainService">الخدمة:</label>
@@ -117,7 +123,7 @@ function submitOrder() {
   const cost = prices[service]?.[sub]?.[pack] || 0;
 
   db.collection("users").doc(currentUser.uid).get().then(doc => {
-    if (!doc.exists) return;
+    if (!doc.exists) return alert("لم يتم العثور على المستخدم في قاعدة البيانات");
     const data = doc.data();
     const balance = data.balance || 0;
 
@@ -137,8 +143,8 @@ function submitOrder() {
       db.collection("users").doc(currentUser.uid).update({
         balance: balance - cost
       });
-      alert("تم إرسال الطلب بنجاح");
-    });
+      alert("تم إرسال الطلب بنجاح وتم خصم الرصيد");
+    }).catch(err => alert("فشل في إرسال الطلب"));
   });
 }
 
