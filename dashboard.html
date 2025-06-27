@@ -1,149 +1,131 @@
 <!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>لوحة التحكم - SHEKO STORE</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <meta charset="UTF-8">
+  <title>لوحة تحكم المستخدم - Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: Tahoma, sans-serif;
-      background-color: #f0f0f0;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background-color: #222;
-      color: white;
-      padding: 15px;
-      text-align: center;
-    }
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px;
-      background: #333;
-      color: #fff;
-    }
-    .container {
-      padding: 20px;
-    }
-    select, input, button {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      font-size: 16px;
-    }
-    .service-section {
-      display: none;
-    }
-    .note {
-      color: red;
-      margin-top: 10px;
-    }
+    body { font-family: 'Cairo', sans-serif; background: #f2f2f2; margin: 0; padding: 0; }
+    header { background: #222; color: #fff; padding: 15px; text-align: center; font-size: 20px; }
+    .nav { display: flex; justify-content: space-between; background: #333; color: white; padding: 10px; }
+    .nav button { background: #444; color: white; padding: 10px; border: none; cursor: pointer; }
+    .container { padding: 20px; max-width: 600px; margin: auto; background: white; margin-top: 20px; border-radius: 10px; }
+    select, input, button { width: 100%; padding: 10px; margin: 10px 0; font-size: 16px; }
+    .note { color: #b00; text-align: center; }
+    .service-section { display: none; margin-top: 10px; }
   </style>
 </head>
-<body><header>
-  <h1>لوحة التحكم - SHEKO STORE</h1>
-</header><div class="top-bar">
-  <div>رصيدك: <span id="balance">0</span> جنيه</div>
-  <div>
-    <button onclick="logout()">تسجيل الخروج</button>
-    <button onclick="goToAccount()">معلومات حسابك</button>
-    <button onclick="goToOrders()">طلباتك</button>
+<body>
+  <header>لوحة تحكم المستخدم - Sheko Store</header>
+  <div class="nav">
+    <div>الرصيد: <span id="balance">0</span> جنيه</div>
+    <div>
+      <button onclick="goTo('account.html')">معلومات حسابك</button>
+      <button onclick="goTo('orders.html')">طلباتك</button>
+      <button onclick="logout()">تسجيل الخروج</button>
+    </div>
   </div>
-</div><div class="container">
-  <label>اختر نوع الخدمة:</label>
-  <select id="serviceType" onchange="updateServiceOptions()">
+  <div class="container">
+    <label>اختر نوع الخدمة:</label>
+    <select id="serviceType" onchange="updateServiceSection()">
+      <option value="">-- اختر --</option>
+      <option value="games">شحن ألعاب</option>
+      <option value="social">مواقع التواصل الاجتماعي</option>
+    </select><div id="gamesSection" class="service-section">
+  <label>اختر اللعبة:</label>
+  <select id="gameService" onchange="updateGamePackages()">
     <option value="">-- اختر --</option>
-    <option value="games">شحن ألعاب</option>
-    <option value="social">مواقع التواصل الاجتماعي</option>
-  </select>  <div id="gamesOptions" class="service-section">
-    <label>اختر اللعبة:</label>
-    <select id="gameOption" onchange="updateGamePackages()">
-      <option value="">-- اختر اللعبة --</option>
-      <option value="pubg">ببجي موبايل</option>
-      <option value="cod">كود موبايل</option>
-      <option value="freefire">فري فاير</option>
-      <option value="fifa">فيفا موبايل</option>
-    </select><div id="pubgPackages" class="service-section">
-  <label>اختر الباقة:</label>
-  <select id="pubgOption">
-    <option value="pubg_60">60 شدة (50 جنيه)</option>
-    <option value="pubg_300">300 شدة (250 جنيه)</option>
+    <option value="pubg">ببجي موبايل</option>
+    <option value="cod">كود موبايل</option>
+    <option value="ff">فري فاير</option>
+    <option value="fifa">فيفا موبايل</option>
   </select>
-</div>
-<div id="codPackages" class="service-section">
-  <label>اختر الباقة:</label>
-  <select id="codOption">
-    <option value="cod_220">220 CP (250 جنيه)</option>
-  </select>
-</div>
-<div id="freefirePackages" class="service-section">
-  <label>اختر الباقة:</label>
-  <select id="freefireOption">
-    <option value="ff_100">100 جوهرة (70 جنيه)</option>
-  </select>
-</div>
-<div id="fifaPackages" class="service-section">
-  <label>اختر الباقة:</label>
-  <select id="fifaOption">
-    <option value="fifa_20">20 كوينز (40 جنيه)</option>
-  </select>
+  <div id="gamePackages"></div>
+  <input type="text" id="gameId" placeholder="أدخل الـ ID الخاص بك">
 </div>
 
-<input type="text" placeholder="الـ ID الخاص بك" id="gameId">
-
-  </div>  <div id="socialOptions" class="service-section">
-    <label>اختر الخدمة:</label>
-    <select id="socialOption">
-      <option value="">-- اختر الخدمة --</option>
-      <option value="tiktok">تيك توك</option>
-      <option value="youtube">يوتيوب</option>
-      <option value="instagram">انستجرام</option>
-    </select><div id="tiktokPackages" class="service-section">
-  <label>اختر الباقة:</label>
-  <select id="tiktokOption">
-    <option value="tiktok_1000">1000 متابع (50 جنيه)</option>
-    <option value="tiktok_2000">2000 متابع (90 جنيه)</option>
+<div id="socialSection" class="service-section">
+  <label>اختر المنصة:</label>
+  <select id="socialService" onchange="updateSocialPackages()">
+    <option value="">-- اختر --</option>
+    <option value="tiktok">تيك توك</option>
+    <option value="youtube">يوتيوب</option>
+    <option value="instagram">إنستجرام</option>
   </select>
+  <div id="socialPackages"></div>
+  <input type="text" id="username" placeholder="اسم الحساب">
 </div>
 
-<div id="youtubePackages" class="service-section">
-  <label>اختر الباقة:</label>
-  <select id="youtubeOption">
-    <option value="youtube_1000">1000 مشترك (50 جنيه)</option>
-    <option value="youtube_2000">2000 مشترك (90 جنيه)</option>
-  </select>
-</div>
+<button onclick="sendOrder()">إرسال الطلب</button>
+<p class="note">إذا واجهت مشكلة، راسلنا على الواتساب: 01099874914</p>
 
-<div id="instagramPackages" class="service-section">
-  <label>اختر الباقة:</label>
-  <select id="instagramOption">
-    <option value="instagram_1000">1000 متابع (50 جنيه)</option>
-    <option value="instagram_2000">2000 متابع (90 جنيه)</option>
-  </select>
-</div>
+  </div>  <script>
+    function goTo(page) {
+      window.location.href = page;
+    }
 
-<input type="text" placeholder="اسم الحساب" id="socialUsername">
+    function updateServiceSection() {
+      document.getElementById("gamesSection").style.display = "none";
+      document.getElementById("socialSection").style.display = "none";
+      const type = document.getElementById("serviceType").value;
+      if (type === "games") {
+        document.getElementById("gamesSection").style.display = "block";
+      } else if (type === "social") {
+        document.getElementById("socialSection").style.display = "block";
+      }
+    }
 
-  </div>  <div>
-    <button onclick="submitRequest()">إرسال الطلب</button>
-    <div class="note">إذا واجهت أي مشكلة، راسلنا على الواتساب: 01099874914</div>
-  </div>
-</div><script>
-  function updateGamePackages() {
-    document.getElementById("pubgPackages").style.display = "none";
-    document.getElementById("codPackages").style.display = "none";
-    document.getElementById("freefirePackages").style.display = "none";
-    document.getElementById("fifaPackages").style.display = "none";
+    function updateGamePackages() {
+      const value = document.getElementById("gameService").value;
+      const container = document.getElementById("gamePackages");
+      let html = "";
+      if (value === "pubg") {
+        html = `<select id='selectedGamePackage'>
+          <option value='60-50'>60 شدة - 50 جنيه</option>
+          <option value='300-250'>300 شدة - 250 جنيه</option>
+        </select>`;
+      } else if (value === "cod") {
+        html = `<select id='selectedGamePackage'>
+          <option value='220-250'>220 CP - 250 جنيه</option>
+        </select>`;
+      } else if (value === "ff") {
+        html = `<select id='selectedGamePackage'>
+          <option value='100-70'>100 جوهرة - 70 جنيه</option>
+        </select>`;
+      } else if (value === "fifa") {
+        html = `<select id='selectedGamePackage'>
+          <option value='20-40'>20 كوينز - 40 جنيه</option>
+        </select>`;
+      }
+      container.innerHTML = html;
+    }
 
-    const selected = document.getElementById("gameOption").value;
-    if (selected === "pubg") document.getElementById("pubgPackages").style.display = "block";
-    else if (selected === "cod") document.getElementById("codPackages").style.display = "block";
-    else if (selected === "freefire") document.getElementById("freefirePackages").style.display = "block";
-    else if (selected === "fifa") document.getElementById("fifaPackages").style.display = "block";
-  }
-</script></body>
+    function updateSocialPackages() {
+      const value = document.getElementById("socialService").value;
+      const container = document.getElementById("socialPackages");
+      let html = "";
+      if (value === "tiktok") {
+        html = `<select id='selectedSocialPackage'>
+          <option value='1000-50'>1000 متابع - 50 جنيه</option>
+        </select>`;
+      } else if (value === "youtube") {
+        html = `<select id='selectedSocialPackage'>
+          <option value='1000-50'>1000 مشترك - 50 جنيه</option>
+        </select>`;
+      } else if (value === "instagram") {
+        html = `<select id='selectedSocialPackage'>
+          <option value='1000-50'>1000 متابع - 50 جنيه</option>
+        </select>`;
+      }
+      container.innerHTML = html;
+    }
+
+    function logout() {
+      alert("تسجيل الخروج"); // ربط لاحقًا بـ Firebase
+    }
+
+    function sendOrder() {
+      // هنا تكتب كود إرسال الطلب إلى Firebase
+      alert("تم إرسال الطلب بنجاح");
+    }
+  </script></body>
 </html>
