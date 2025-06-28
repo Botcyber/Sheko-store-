@@ -4,49 +4,43 @@
   <title>لوحة تحكم الأدمن - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: 'Cairo', sans-serif; background: #f7f7f7; margin: 0; padding: 20px; }
+    body { font-family: 'Cairo', sans-serif; background: #f1f1f1; margin: 0; padding: 20px; }
+    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
     h2 { text-align: center; }
-    .admin-panel { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    label, input, button, select { display: block; width: 100%; margin: 10px 0; padding: 10px; border-radius: 6px; border: 1px solid #ccc; }
-    button { background: #333; color: white; cursor: pointer; }
-    button:hover { background: #555; }
-    .section { margin-top: 30px; }
+    label, input, textarea, button { width: 100%; margin: 10px 0; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+    button { background: #222; color: white; border: none; cursor: pointer; }
+    button:hover { background: #444; }
   </style>
 </head>
 <body>
-  <div class="admin-panel">
-    <h2>لوحة تحكم الأدمن</h2><div class="section">
-  <h3>إضافة مستخدم جديد</h3>
-  <label for="email">البريد الإلكتروني</label>
-  <input type="email" id="email" placeholder="example@email.com">
-  <button onclick="addUserManually()">إضافة المستخدم</button>
-</div>
+  <div class="container">
+    <h2>لوحة تحكم الأدمن</h2><label>UID المستخدم:</label>
+<input type="text" id="uid">
 
-<div class="section">
-  <h3>إدارة الرصيد</h3>
-  <label for="userEmail">البريد الإلكتروني للمستخدم</label>
-  <input type="email" id="userEmail">
+<label>البريد الإلكتروني:</label>
+<input type="email" id="email">
 
-  <label for="amount">المبلغ</label>
-  <input type="number" id="amount">
+<label>الرصيد (جنيه):</label>
+<input type="number" id="balance">
 
-  <button onclick="updateBalance(true)">إضافة رصيد</button>
-  <button onclick="updateBalance(false)">خصم رصيد</button>
-</div>
+<label>النقاط:</label>
+<input type="number" id="points">
 
-<div class="section">
-  <h3>عرض الطلبات</h3>
-  <button onclick="fetchOrders()">تحميل الطلبات</button>
-  <ul id="ordersList"></ul>
-</div>
+<button onclick="addUserData()">إضافة المستخدم</button>
 
-<div class="section">
-  <h3>رسائل تحويل الأموال</h3>
-  <button onclick="fetchTransfers()">تحميل التحويلات</button>
-  <ul id="transfersList"></ul>
-</div>
+<hr>
 
-  </div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script>
+<label>UID المستخدم:</label>
+<input type="text" id="targetUid">
+
+<label>إضافة رصيد:</label>
+<input type="number" id="addAmount">
+
+<button onclick="addBalance()">إرسال الرصيد</button>
+
+<p id="status"></p>
+
+  </div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -56,57 +50,44 @@
       messagingSenderId: "113892775847",
       appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
-    
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    function addUserManually() {
-      const email = document.getElementById("email").value;
-      if (!email) return alert("يرجى إدخال بريد إلكتروني صحيح");
-      const uid = email.replace(/\W+/g, "_");
-      db.ref("users/" + uid).set({ email: email, balance: 0 }).then(() => {
-        alert("تمت إضافة المستخدم بنجاح");
-      }).catch(() => alert("حدث خطأ أثناء الإضافة"));
-    }
+    function addUserData() {
+      const uid = document.getElementById("uid").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const balance = parseFloat(document.getElementById("balance").value);
+      const points = parseInt(document.getElementById("points").value);
 
-    function updateBalance(isAdd) {
-      const email = document.getElementById("userEmail").value;
-      const amount = parseFloat(document.getElementById("amount").value);
-      if (!email || isNaN(amount)) return alert("يرجى إدخال بيانات صحيحة");
-      const uid = email.replace(/\W+/g, "_");
-      const ref = db.ref("users/" + uid + "/balance");
-      ref.once("value").then(snapshot => {
-        const current = snapshot.val() || 0;
-        const newBalance = isAdd ? current + amount : current - amount;
-        if (newBalance < 0) return alert("الرصيد لا يمكن أن يكون سالبًا");
-        ref.set(newBalance).then(() => alert("تم التحديث بنجاح"));
-      }).catch(() => alert("حدث خطأ أثناء تحديث الرصيد"));
-    }
+      if (!uid || !email) {
+        return alert("يرجى إدخال UID والبريد الإلكتروني.");
+      }
 
-    function fetchOrders() {
-      db.ref("orders").once("value").then(snapshot => {
-        const list = document.getElementById("ordersList");
-        list.innerHTML = "";
-        snapshot.forEach(child => {
-          const data = child.val();
-          const li = document.createElement("li");
-          li.textContent = `${data.uid} - ${data.service} - ${data.package} - ${data.status}`;
-          list.appendChild(li);
-        });
+      db.ref("users/" + uid).set({
+        email: email,
+        balance: balance || 0,
+        points: points || 0
+      }, error => {
+        if (error) {
+          alert("حدث خطأ في إضافة المستخدم.");
+        } else {
+          alert("تم إضافة المستخدم بنجاح.");
+        }
       });
     }
 
-    function fetchTransfers() {
-      db.ref("transfers").once("value").then(snapshot => {
-        const list = document.getElementById("transfersList");
-        list.innerHTML = "";
-        snapshot.forEach(child => {
-          const data = child.val();
-          const li = document.createElement("li");
-          li.textContent = `${data.method} - ${data.phoneOrLink} - ${data.amount}`;
-          list.appendChild(li);
-        });
-      });
+    function addBalance() {
+      const uid = document.getElementById("targetUid").value.trim();
+      const amount = parseFloat(document.getElementById("addAmount").value);
+      if (!uid || isNaN(amount)) return alert("يرجى إدخال UID والمبلغ الصحيح.");
+
+      const userRef = db.ref("users/" + uid + "/balance");
+      userRef.get().then(snapshot => {
+        const current = snapshot.exists() ? parseFloat(snapshot.val()) : 0;
+        userRef.set(current + amount);
+        alert("تم إضافة الرصيد بنجاح.");
+      }).catch(() => alert("فشل في العثور على المستخدم."));
     }
   </script></body>
 </html>
