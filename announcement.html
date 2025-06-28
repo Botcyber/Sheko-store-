@@ -1,117 +1,168 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>إرسال إعلان</title>
+  <title>إرسال إعلان - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background-color: #f8f9fa;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      background: #f5f5f5;
+      padding: 20px;
     }
-    .form-container {
-      background: white;
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
       padding: 30px;
       border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 500px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
     }
+
     h2 {
-      margin-bottom: 20px;
-      color: #333;
       text-align: center;
+      color: #333;
+      margin-bottom: 25px;
     }
+
     label {
-      display: block;
-      margin-top: 15px;
       font-weight: bold;
+      margin-top: 10px;
+      display: block;
       color: #444;
     }
+
     input[type="text"], textarea {
       width: 100%;
       padding: 10px;
-      margin-top: 7px;
       border: 1px solid #ccc;
+      margin-top: 8px;
       border-radius: 6px;
       font-family: 'Cairo', sans-serif;
     }
-    textarea {
-      resize: vertical;
-      height: 100px;
+
+    input[type="file"] {
+      margin-top: 10px;
     }
+
     button {
-      margin-top: 20px;
       width: 100%;
+      padding: 12px;
       background-color: #007bff;
       color: white;
-      padding: 12px;
+      font-weight: bold;
       border: none;
       border-radius: 8px;
-      font-size: 16px;
+      margin-top: 20px;
       cursor: pointer;
-      font-weight: bold;
     }
+
     button:hover {
       background-color: #0056b3;
     }
-  </style>  <!-- Firebase -->  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>  <script>
+
+    #preview {
+      margin-top: 10px;
+      max-width: 100%;
+      border-radius: 10px;
+      display: none;
+    }
+  </style>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
       databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
       projectId: "sheko-store",
-      storageBucket: "sheko-store.appspot.com",
+      storageBucket: "sheko-store.firebasestorage.app",
       messagingSenderId: "113892775847",
       appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const storage = firebase.storage();
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h2>إنشاء إعلان للمستخدمين</h2>
+
+    <label>عنوان الإعلان:</label>
+    <input type="text" id="title" placeholder="أدخل عنواناً للإعلان" />
+
+    <label>نص الإعلان:</label>
+    <textarea id="message" placeholder="أدخل محتوى الإعلان..." rows="4"></textarea>
+
+    <label>صورة الخلفية (اختياري):</label>
+    <input type="file" id="imageInput" accept="image/*" />
+    <img id="preview" />
+
+    <button onclick="sendAnnouncement()">إرسال الإعلان</button>
+  </div>
+
+  <script>
+    const imageInput = document.getElementById("imageInput");
+    const preview = document.getElementById("preview");
+    let uploadedImageUrl = "";
+
+    imageInput.addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          preview.src = reader.result;
+          preview.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
+    });
 
     function sendAnnouncement() {
-      const title = document.getElementById("adTitle").value.trim();
-      const text = document.getElementById("adText").value.trim();
-      const image = document.getElementById("adImage").value.trim();
+      const title = document.getElementById("title").value.trim();
+      const message = document.getElementById("message").value.trim();
+      const imageFile = imageInput.files[0];
 
-      if (!title || !text) {
-        alert("يرجى ملء عنوان الإعلان والنص.");
+      if (!title || !message) {
+        alert("يرجى ملء عنوان الإعلان ومحتواه.");
         return;
       }
 
-      const ad = {
+      if (imageFile) {
+        const storageRef = storage.ref("announcements/" + Date.now() + "_" + imageFile.name);
+        storageRef.put(imageFile).then(snapshot => {
+          return snapshot.ref.getDownloadURL();
+        }).then(url => {
+          uploadedImageUrl = url;
+          return saveToDatabase(title, message, uploadedImageUrl);
+        });
+      } else {
+        saveToDatabase(title, message, "");
+      }
+    }
+
+    function saveToDatabase(title, message, imageUrl) {
+      const announcement = {
         title,
-        text,
-        image: image || ""
+        message,
+        image: imageUrl,
+        timestamp: Date.now()
       };
 
-      db.ref("announcement").set(ad).then(() => {
-        alert("✅ تم إرسال الإعلان بنجاح!");
-        document.getElementById("adTitle").value = "";
-        document.getElementById("adText").value = "";
-        document.getElementById("adImage").value = "";
-      }).catch(err => {
-        console.error(err);
-        alert("❌ حدث خطأ أثناء الإرسال.");
+      return db.ref("global_announcement").set(announcement).then(() => {
+        alert("✅ تم إرسال الإعلان بنجاح");
+        document.getElementById("title").value = "";
+        document.getElementById("message").value = "";
+        imageInput.value = "";
+        preview.style.display = "none";
       });
     }
-  </script></head>
-<body>
-  <div class="form-container">
-    <h2>إرسال إعلان</h2>
-    <label for="adTitle">عنوان الإعلان:</label>
-    <input type="text" id="adTitle" placeholder="مثال: خصم لفترة محدودة!" /><label for="adText">نص الإعلان:</label>
-<textarea id="adText" placeholder="مثال: احصل على 20% خصم عند شحن أي لعبة..."></textarea>
-
-<label for="adImage">رابط صورة (اختياري):</label>
-<input type="text" id="adImage" placeholder="https://example.com/image.jpg" />
-
-<button onclick="sendAnnouncement()">📢 إرسال الإعلان</button>
-
-  </div>
+  </script>
 </body>
 </html>
