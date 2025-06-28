@@ -1,8 +1,8 @@
 <!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>إضافة أموال - Sheko Store</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body { font-family: 'Cairo', sans-serif; background: #f1f1f1; margin: 0; padding: 0; }
     .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 12px; margin-top: 40px; }
@@ -23,26 +23,38 @@
     <option value="vodafone">فودافون كاش</option>
     <option value="instapay">انستا باي</option>
     <option value="fawry">فوري</option>
-  </select>  <div id="details" class="info"></div><label for="sender">رقم/رابط التحويل:</label> <input type="text" id="sender" placeholder="مثال: رقم فودافون أو رابط إنستا باي">
+  </select>
+  <div id="details" class="info"></div>
+  <label for="sender">رقم/رابط التحويل:</label>
+  <input type="text" id="sender" placeholder="مثال: رقم فودافون أو رابط إنستا باي" />
 
-<label for="amount">المبلغ المرسل (جنيه):</label> <input type="number" id="amount" min="1" placeholder="مثال: 50">
+  <label for="amount">المبلغ المرسل (جنيه):</label>
+  <input type="number" id="amount" min="1" placeholder="مثال: 50" />
 
-<button onclick="submitTopup()">تحقق</button>
+  <button onclick="submitTopup()">تحقق</button>
 
   <p class="info">إضافة الأموال لحسابك تستغرق من 1 - 3 ساعات</p>
   <p class="info">إذا واجهت مشكلة، راسلنا على <a href="https://wa.me/201099874914" target="_blank">واتساب: 01099874914</a></p>
-</div><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script><script>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
   authDomain: "sheko-store.firebaseapp.com",
+  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
   projectId: "sheko-store",
   storageBucket: "sheko-store.firebasestorage.app",
   messagingSenderId: "113892775847",
   appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
 };
 firebase.initializeApp(firebaseConfig);
+
 const auth = firebase.auth();
-const db = firebase.firestore();
+const db = firebase.database();
 
 const methodEl = document.getElementById("method");
 const detailsEl = document.getElementById("details");
@@ -81,14 +93,21 @@ function submitTopup() {
     return;
   }
 
-  db.collection("topupRequests").add({
+  const newTopupKey = db.ref().child('transactions').push().key;
+
+  const topupData = {
     uid: currentUser.uid,
     method,
     senderInfo: sender,
     amount,
     status: "قيد المراجعة",
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(() => {
+    timestamp: new Date().toISOString()
+  };
+
+  const updates = {};
+  updates['/transactions/' + newTopupKey] = topupData;
+
+  db.ref().update(updates).then(() => {
     alert("تم إرسال طلب إضافة الأموال بنجاح");
     senderEl.value = "";
     amountEl.value = "";
@@ -99,5 +118,6 @@ function submitTopup() {
     alert("حدث خطأ أثناء الإرسال: " + error.message);
   });
 }
-</script></body>
+</script>
+</body>
 </html>
