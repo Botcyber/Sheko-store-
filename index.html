@@ -72,7 +72,8 @@
       getDatabase,
       ref,
       set,
-      get
+      get,
+      push
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
@@ -156,7 +157,20 @@
       const userEmail = email.value.trim();
       if (!userEmail) return alert("يرجى إدخال بريدك أولاً.");
       sendPasswordResetEmail(auth, userEmail)
-        .then(() => alert("📩 تم إرسال رابط إعادة تعيين كلمة المرور"))
+        .then(() => {
+          alert("📩 تم إرسال رابط إعادة تعيين كلمة المرور");
+
+          // إرسال إشعار إلى الأدمن
+          const adminUID = "mlifDgEAkKMaOeuUq63cs5NAkV93";
+          const notifRef = ref(db, `notifications/${adminUID}`);
+          const newNotif = push(notifRef);
+          newNotif.set({
+            title: "طلب إعادة تعيين كلمة المرور",
+            message: `تم طلب استعادة كلمة المرور للبريد: ${userEmail}`,
+            createdAt: Date.now(),
+            read: false
+          });
+        })
         .catch(error => alert("❌ " + error.message));
     };
   </script>
