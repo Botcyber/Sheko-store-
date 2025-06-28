@@ -1,11 +1,12 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>التقييمات والشكاوى - Sheko Store</title>
   <style>
     body { font-family: 'Cairo', sans-serif; background: #f1f1f1; margin: 0; padding: 0; }
-    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 12px; margin-top: 30px; position: relative; }
+    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 12px; margin-top: 30px; }
     h2 { text-align: center; color: #222; }
     label, input, textarea, button { display: block; width: 100%; margin-top: 10px; padding: 10px; border-radius: 6px; font-family: 'Cairo', sans-serif; }
     input, textarea { border: 1px solid #ccc; }
@@ -15,18 +16,28 @@
     .stars span { font-size: 25px; cursor: pointer; color: #ccc; }
     .stars span.active { color: #ffb700; }
     .review, .complaint {
-      background: #f9f9f9; padding: 10px; border-radius: 8px; margin-top: 15px;
-      border-right: 4px solid #222; position: relative;
+      background: #f9f9f9;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 15px;
+      border-right: 4px solid #222;
+      position: relative;
     }
     .section { margin-top: 40px; }
-    .meta { font-size: 12px; color: #888; margin-top: 5px; }
+    .meta { font-size: 12px; color: #888; }
     .delete-btn {
-      position: absolute; top: 8px; left: 8px;
-      background-color: #ff4d4d; border: none;
-      color: white; padding: 4px 10px; border-radius: 50px;
-      font-size: 12px; cursor: pointer; transition: 0.2s ease;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      cursor: pointer;
     }
-    .delete-btn:hover { background-color: #d93636; }
+    .delete-btn:hover { background: #c0392b; }
   </style>
 </head>
 <body>
@@ -34,27 +45,39 @@
   <h2>💬 التقييمات</h2>
   <label>اختر عدد النجوم:</label>
   <div class="stars" id="starRating">
-    <span data-value="1">★</span>
-    <span data-value="2">★</span>
-    <span data-value="3">★</span>
-    <span data-value="4">★</span>
-    <span data-value="5">★</span>
-    <span data-value="6">★</span>
+    <span data-value="1">&#9733;</span>
+    <span data-value="2">&#9733;</span>
+    <span data-value="3">&#9733;</span>
+    <span data-value="4">&#9733;</span>
+    <span data-value="5">&#9733;</span>
+    <span data-value="6">&#9733;</span>
   </div>
   <input type="text" id="reviewerName" placeholder="اسمك (اختياري)" />
   <textarea id="reviewText" placeholder="اكتب تعليقك هنا..."></textarea>
-  <button onclick="submitReview()">إرسال التقييم</button>  <div class="section">
+  <button onclick="submitReview()">إرسال التقييم</button>
+
+  <div class="section">
     <h2>📋 الشكاوى</h2>
     <textarea id="complaintText" placeholder="اكتب شكواك هنا..."></textarea>
     <button onclick="submitComplaint()">إرسال الشكوى</button>
-  </div>  <div class="section">
+  </div>
+
+  <div class="section">
     <h2>⭐ تقييمات المستخدمين</h2>
     <div id="reviewsList">جار التحميل...</div>
-  </div>  <div class="section">
-    <h2>🚩 الشكاوى</h2>
+  </div>
+
+  <div class="section">
+    <h2>🛑 الشكاوى</h2>
     <div id="complaintsList">جار التحميل...</div>
   </div>
-</div><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script><script>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
   authDomain: "sheko-store.firebaseapp.com",
@@ -69,6 +92,15 @@ const db = firebase.database();
 const auth = firebase.auth();
 
 let selectedStars = 0;
+let currentUser = null;
+
+auth.onAuthStateChanged(user => {
+  if (!user) return;
+  currentUser = user;
+  loadReviews();
+  loadComplaints();
+});
+
 document.querySelectorAll("#starRating span").forEach(star => {
   star.addEventListener("click", () => {
     selectedStars = parseInt(star.dataset.value);
@@ -79,24 +111,15 @@ document.querySelectorAll("#starRating span").forEach(star => {
   });
 });
 
-let currentUser = null;
-auth.onAuthStateChanged(user => {
-  if (user) {
-    currentUser = user;
-    loadReviews();
-    loadComplaints();
-  }
-});
-
 function submitReview() {
   const name = document.getElementById("reviewerName").value.trim() || "مستخدم";
   const text = document.getElementById("reviewText").value.trim();
-  if (!selectedStars || !text) return alert("يرجى اختيار عدد النجوم وكتابة تعليقك.");
+  if (!selectedStars || !text || !currentUser) return alert("يرجى اختيار عدد النجوم وكتابة تعليقك.");
   const data = {
     name,
     stars: selectedStars,
     text,
-    uid: currentUser?.uid || null,
+    uid: currentUser.uid,
     timestamp: new Date().toISOString()
   };
   const key = db.ref().child("reviews").push().key;
@@ -111,10 +134,10 @@ function submitReview() {
 
 function submitComplaint() {
   const text = document.getElementById("complaintText").value.trim();
-  if (!text) return alert("يرجى كتابة الشكوى.");
+  if (!text || !currentUser) return alert("يرجى كتابة الشكوى.");
   const data = {
     text,
-    uid: currentUser?.uid || null,
+    uid: currentUser.uid,
     timestamp: new Date().toISOString()
   };
   const key = db.ref().child("complaints").push().key;
@@ -129,21 +152,21 @@ function loadReviews() {
   db.ref("reviews").on("value", snapshot => {
     container.innerHTML = "";
     if (!snapshot.exists()) return container.innerHTML = "<p>لا توجد تقييمات بعد.</p>";
-    const list = snapshot.val();
-    Object.entries(list).sort((a,b) => new Date(b[1].timestamp) - new Date(a[1].timestamp)).forEach(([key, r]) => {
+    const list = Object.entries(snapshot.val()).sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp));
+    list.forEach(([key, r]) => {
       const div = document.createElement("div");
       div.className = "review";
-      div.innerHTML = `⭐ ${"★".repeat(r.stars)} - ${r.name}<br>${r.text}<div class="meta">${new Date(r.timestamp).toLocaleString("ar-EG")}</div>`;
-      if (currentUser && currentUser.uid === r.uid) {
-        const btn = document.createElement("button");
-        btn.textContent = "🗑 حذف";
-        btn.className = "delete-btn";
-        btn.onclick = () => {
-          if (confirm("هل تريد حذف هذا التقييم؟")) {
+      div.innerHTML = `⭐ ${"★".repeat(r.stars)} - ${r.name}<br>${r.text}<br><div class="meta">${new Date(r.timestamp).toLocaleString("ar-EG")}</div>`;
+      if (currentUser && (currentUser.uid === "mlifDgEAkKMaOeuUq63cs5NAkV93" || currentUser.uid === r.uid)) {
+        const del = document.createElement("button");
+        del.textContent = "حذف";
+        del.className = "delete-btn";
+        del.onclick = () => {
+          if (confirm("هل أنت متأكد من حذف هذا التقييم؟")) {
             db.ref("reviews/" + key).remove();
           }
         };
-        div.appendChild(btn);
+        div.prepend(del);
       }
       container.appendChild(div);
     });
@@ -155,25 +178,26 @@ function loadComplaints() {
   db.ref("complaints").on("value", snapshot => {
     container.innerHTML = "";
     if (!snapshot.exists()) return container.innerHTML = "<p>لا توجد شكاوى بعد.</p>";
-    const list = snapshot.val();
-    Object.entries(list).sort((a,b) => new Date(b[1].timestamp) - new Date(a[1].timestamp)).forEach(([key, c]) => {
+    const list = Object.entries(snapshot.val()).sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp));
+    list.forEach(([key, c]) => {
       const div = document.createElement("div");
       div.className = "complaint";
       div.innerHTML = `${c.text}<div class="meta">${new Date(c.timestamp).toLocaleString("ar-EG")}</div>`;
-      if (currentUser && currentUser.uid === c.uid) {
-        const btn = document.createElement("button");
-        btn.textContent = "🗑 حذف";
-        btn.className = "delete-btn";
-        btn.onclick = () => {
-          if (confirm("هل تريد حذف هذه الشكوى؟")) {
+      if (currentUser && (currentUser.uid === "mlifDgEAkKMaOeuUq63cs5NAkV93" || currentUser.uid === c.uid)) {
+        const del = document.createElement("button");
+        del.textContent = "حذف";
+        del.className = "delete-btn";
+        del.onclick = () => {
+          if (confirm("هل أنت متأكد من حذف هذه الشكوى؟")) {
             db.ref("complaints/" + key).remove();
           }
         };
-        div.appendChild(btn);
+        div.prepend(del);
       }
       container.appendChild(div);
     });
   });
 }
-</script></body>
+</script>
+</body>
 </html>
