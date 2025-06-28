@@ -204,7 +204,7 @@
       });
     });
 
-    // عرض طلبات تحويل الأموال (transactions) مع أزرار قبول/رفض فقط (لا تختفي الطلبات)
+    // عرض طلبات تحويل الأموال (transactions) مع أزرار قبول/رفض + زر إشعار
     const transactionsDiv = document.getElementById("transactions");
     onValue(ref(db, 'transactions'), async snapshot => {
       transactionsDiv.innerHTML = "";
@@ -217,7 +217,6 @@
         const data = child.val();
         const transactionKey = child.key;
 
-        // لا نحذف الطلبات، نظهرهم حتى لو الحالة "تم" أو "مرفوض"
         const userSnap = await get(ref(db, 'users/' + data.uid));
         const email = userSnap.exists() ? userSnap.val().email : 'غير معروف';
         const time = data.timestamp ? new Date(data.timestamp).toLocaleString('ar-EG') : 'غير معروف';
@@ -231,6 +230,11 @@
           <strong>الحالة:</strong> <span class="status-text">${data.status || 'قيد التنفيذ'}</span><br>
           <strong>رقم التحويل:</strong> ${data.senderInfo || 'غير معروف'}<br>
           <strong>الوقت:</strong> ${time}
+          <hr>
+          <label>عنوان الإشعار:</label>
+          <input type="text" class="notif-title" placeholder="عنوان الإشعار هنا" />
+          <label>محتوى الإشعار:</label>
+          <textarea class="notif-message" rows="3" placeholder="محتوى الإشعار هنا"></textarea>
         `;
 
         const btnGroup = document.createElement("div");
@@ -258,8 +262,24 @@
             alert("✅ تم رفض الطلب.");
           });
 
+        const notify = document.createElement("button");
+        notify.className = "notify-btn";
+        notify.textContent = "📢 إرسال إشعار";
+        notify.onclick = () => {
+          const titleInput = div.querySelector(".notif-title");
+          const messageInput = div.querySelector(".notif-message");
+          const title = titleInput.value.trim();
+          const message = messageInput.value.trim();
+
+          if (!title) return alert("يرجى إدخال عنوان الإشعار.");
+          if (!message) return alert("يرجى إدخال محتوى الإشعار.");
+
+          sendNotificationToUser(data.uid, title, message);
+        };
+
         btnGroup.appendChild(accept);
         btnGroup.appendChild(reject);
+        btnGroup.appendChild(notify);
         div.appendChild(btnGroup);
         transactionsDiv.appendChild(div);
       });
