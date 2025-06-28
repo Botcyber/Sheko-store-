@@ -5,197 +5,50 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      margin: 0;
-      background: #f1f1f1;
-    }
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #222;
-      padding: 10px 20px;
-      color: white;
-      flex-wrap: wrap;
-    }
-    .nav-icons {
-      display: flex;
-      gap: 25px;
-    }
-    .nav-icons a {
-      color: white;
-      text-decoration: none;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      font-size: 14px;
-      position: relative;
-      transition: color 0.3s ease;
-    }
-    .nav-icons a i {
-      font-size: 20px;
-      margin-bottom: 4px;
-    }
-    .nav-icons a:hover {
-      color: #ffb700;
-    }
-    #notifBadge {
-      position: absolute;
-      top: 0;
-      left: 5px;
-      background: red;
-      color: white;
-      font-size: 12px;
-      font-weight: bold;
-      border-radius: 50%;
-      padding: 2px 6px;
-      display: none;
-      transform: translate(-50%, 50%);
-      user-select: none;
-      pointer-events: none;
-    }
-    .user-area {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      font-size: 15px;
-    }
-    #balance {
-      font-weight: bold;
-    }
-    button {
-      background: #444;
-      border: none;
-      color: white;
-      padding: 8px 15px;
-      border-radius: 5px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: bold;
-      transition: background 0.3s ease;
-      font-size: 14px;
-    }
-    button i {
-      font-size: 16px;
-    }
-    button:hover {
-      background: #ffb700;
-      color: #222;
-    }
-    .dashboard {
-      max-width: 800px;
-      margin: auto;
-      padding: 20px;
-      background: white;
-      border-radius: 12px;
-      margin-top: 30px;
-    }
-    label, select, input {
-      display: block;
-      width: 100%;
-      margin: 10px 0;
-      padding: 8px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    button.order-btn {
-      background: #222;
-      color: white;
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-    button.order-btn:hover {
-      background: #444;
-    }
-    .note {
-      font-size: 14px;
-      color: #666;
-      text-align: center;
-      margin-top: 20px;
-    }
-    .footer-contact {
-      max-width: 800px;
-      margin: 30px auto 20px;
-      text-align: center;
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
-    .btn-share, .btn-copy {
-      background: #222;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      min-width: 180px;
-    }
-    .btn-share:hover, .btn-copy:hover {
-      background: #ffb700;
-      color: #222;
-    }
-    @media (max-width: 600px) {
-      .nav-icons {
-        gap: 15px;
-      }
-      .nav-icons a span {
-        font-size: 12px;
-      }
-      .nav-icons a i {
-        font-size: 18px;
-      }
-      button, button.order-btn, .btn-share, .btn-copy {
-        padding: 8px 12px;
-        font-size: 13px;
-        min-width: 140px;
-      }
-      .footer-contact {
-        flex-direction: column;
-        gap: 10px;
-      }
-    }
+    body { font-family: 'Cairo', sans-serif; margin: 0; background: #f1f1f1; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; background: #222; padding: 10px 20px; color: white; flex-wrap: wrap; }
+    .nav-icons { display: flex; gap: 25px; }
+    .nav-icons a { color: white; text-decoration: none; display: flex; flex-direction: column; align-items: center; font-size: 14px; position: relative; transition: color 0.3s ease; }
+    .nav-icons a i { font-size: 20px; margin-bottom: 4px; }
+    .nav-icons a:hover { color: #ffb700; }
+    #notifBadge { position: absolute; top: 0; left: 5px; background: red; color: white; font-size: 12px; font-weight: bold; border-radius: 50%; padding: 2px 6px; display: none; transform: translate(-50%, 50%); user-select: none; pointer-events: none; }
+    .user-area { display: flex; align-items: center; gap: 15px; font-size: 15px; }
+    #balance { font-weight: bold; }
+    button { background: #444; border: none; color: white; padding: 8px 15px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: bold; transition: background 0.3s ease; font-size: 14px; }
+    button:hover { background: #ffb700; color: #222; }
+    .dashboard { max-width: 800px; margin: auto; padding: 20px; background: white; border-radius: 12px; margin-top: 30px; }
+    label, select, input { display: block; width: 100%; margin: 10px 0; padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
+    button.order-btn { background: #222; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }
+    button.order-btn:hover { background: #444; }
+    .note { font-size: 14px; color: #666; text-align: center; margin-top: 20px; }
+    .footer-contact { max-width: 800px; margin: 30px auto 20px; text-align: center; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+    .btn-share, .btn-copy { background: #222; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.3s ease; min-width: 180px; }
+    .btn-share:hover, .btn-copy:hover { background: #ffb700; color: #222; }
+    #announcementPopup { display: none; position: fixed; top: 0; right: 0; left: 0; background: rgba(0, 0, 0, 0.6); z-index: 9999; height: 100vh; align-items: center; justify-content: center; }
+    #announcementPopup .content { background: white; padding: 20px; border-radius: 10px; max-width: 90%; max-height: 90%; overflow: auto; position: relative; }
+    #announcementPopup button.close-btn { position: absolute; top: 10px; left: 10px; background: red; color: white; border: none; padding: 6px 10px; border-radius: 50%; cursor: pointer; }
+    #announcementPopup img { max-width: 100%; border-radius: 8px; margin-top: 15px; display: none; }
   </style>
 </head>
-<body><div class="top-bar">
+<body>
+<div class="top-bar">
   <nav class="nav-icons">
-    <a href="account.html" title="معلومات حسابك">
-      <i class="fa fa-user"></i>
-      <span>حسابك</span>
-    </a>
-    <a href="orders.html" title="طلباتك">
-      <i class="fa fa-box"></i>
-      <span>طلباتك</span>
-    </a>
-    <a href="add-money.html" title="إضافة أموال">
-      <i class="fa fa-wallet"></i>
-      <span>إضافة أموال</span>
-    </a>
-    <a href="reviews_complaints.html" title="التقييمات والشكاوي">
-      <i class="fa fa-comments"></i>
-      <span>التقييمات والشكاوي</span>
-    </a>
-    <a href="notifications.html" title="الإشعارات" style="position: relative;">
-      <i class="fa fa-bell"></i>
-      <span>الإشعارات</span>
-      <span id="notifBadge">0</span>
-    </a>
+    <a href="account.html"><i class="fa fa-user"></i><span>حسابك</span></a>
+    <a href="orders.html"><i class="fa fa-box"></i><span>طلباتك</span></a>
+    <a href="add-money.html"><i class="fa fa-wallet"></i><span>إضافة أموال</span></a>
+    <a href="reviews_complaints.html"><i class="fa fa-comments"></i><span>التقييمات والشكاوي</span></a>
+    <a href="notifications.html" style="position: relative;"><i class="fa fa-bell"></i><span>الإشعارات</span><span id="notifBadge">0</span></a>
   </nav>
   <div class="user-area">
     <span id="balance">رصيدك: ...</span>
-    <button onclick="logout()" title="تسجيل الخروج">
-      <i class="fa fa-sign-out-alt"></i> خروج
-    </button>
+    <button onclick="logout()"><i class="fa fa-sign-out-alt"></i> خروج</button>
+  </div>
+</div><div id="announcementPopup">
+  <div class="content">
+    <button class="close-btn" onclick="closeAnnouncement()">❌</button>
+    <h3 id="announcementTitle"></h3>
+    <p id="announcementText"></p>
+    <img id="announcementImage" />
   </div>
 </div><div class="dashboard">
   <h2>إرسال طلب</h2>
@@ -204,19 +57,24 @@
     <option value="">اختر نوع الخدمة</option>
     <option value="ألعاب">شحن ألعاب</option>
     <option value="سوشيال">مواقع التواصل</option>
-  </select><label for="subService">الخدمة:</label> <select id="subService"></select>
-
-<label for="package">الباقة:</label> <select id="package"></select>
-
-<label for="accountInput">اسم الحساب / ID:</label> <input type="text" id="accountInput" />
-
-<button class="order-btn" onclick="submitOrder()">إرسال الطلب</button>
-
+  </select>
+  <label for="subService">الخدمة:</label>
+  <select id="subService"></select>
+  <label for="package">الباقة:</label>
+  <select id="package"></select>
+  <label for="accountInput">اسم الحساب / ID:</label>
+  <input type="text" id="accountInput" />
+  <button class="order-btn" onclick="submitOrder()">إرسال الطلب</button>
   <p class="note">إذا واجهت أي مشكلة، راسلنا على واتساب: 01099874914</p>
-</div><div class="footer-contact">
+</div>
+<div class="footer-contact">
   <button class="btn-share" onclick="shareSite()">مشاركة الموقع مع أصدقائك</button>
   <button class="btn-copy" onclick="copyLink()">نسخ رابط الموقع</button>
-</div><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script><script>
+</div>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
   authDomain: "sheko-store.firebaseapp.com",
@@ -226,124 +84,120 @@ const firebaseConfig = {
   messagingSenderId: "113892775847",
   appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
 };
-
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
-
 let currentUser = null;
-
-function showAnnouncementOnce(uid) {
-  const shownKey = "announcement_shown_" + uid;
-  if (localStorage.getItem(shownKey)) return;
-
-  db.ref("announcements/latest").once("value").then(snapshot => {
-    const data = snapshot.val();
-    if (!data || !data.title || !data.message) return;
-
-    const box = document.createElement("div");
-    box.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; justify-content: center; align-items: center;`;
-    box.innerHTML = `
-      <div style="background: white; border-radius: 12px; padding: 20px; max-width: 400px; text-align: center; position: relative;">
-        <button onclick="this.parentElement.parentElement.remove()" style="position:absolute; top:10px; left:10px; background:red; color:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer;">&times;</button>
-        ${data.image ? `<img src="${data.image}" style="max-width:100%; border-radius:8px; margin-bottom:10px;">` : ""}
-        <h3 style="color:#333">${data.title}</h3>
-        <p style="color:#555">${data.message}</p>
-      </div>
-    `;
-    document.body.appendChild(box);
-
-    localStorage.setItem(shownKey, "true");
-  });
+const prices = {
+  "ألعاب": {"ببجي موبايل": {"60 شدة": 50, "300 شدة": 250},"كود موبايل": {"220 CP": 250},"فري فاير": {"100 جوهرة": 70},"فيفا موبايل": {"20 كوينز": 40}},
+  "سوشيال": {"تيك توك": {"1000 متابع": 50},"يوتيوب": {"1000 مشترك": 50},"انستجرام": {"1000 متابع": 50}}
+};
+const mainService = document.getElementById("mainService");
+const subService = document.getElementById("subService");
+const packageEl = document.getElementById("package");
+const accountInput = document.getElementById("accountInput");
+const balanceEl = document.getElementById("balance");
+const notifBadge = document.getElementById("notifBadge");
+mainService.addEventListener("change", () => {
+  subService.innerHTML = "";
+  packageEl.innerHTML = "";
+  const selectedMain = prices[mainService.value];
+  if (!selectedMain) return;
+  for (let sub in selectedMain) {
+    let opt = document.createElement("option");
+    opt.value = sub;
+    opt.textContent = sub;
+    subService.appendChild(opt);
+  }
+  updatePackage();
+});
+subService.addEventListener("change", updatePackage);
+function updatePackage() {
+  packageEl.innerHTML = "";
+  const selected = prices[mainService.value]?.[subService.value];
+  if (!selected) return;
+  for (let pkg in selected) {
+    let opt = document.createElement("option");
+    opt.value = pkg;
+    opt.textContent = `${pkg} - ${selected[pkg]} جنيه`;
+    packageEl.appendChild(opt);
+  }
 }
-
 auth.onAuthStateChanged(user => {
   if (!user) return location.href = "index.html";
   currentUser = user;
-
-  showAnnouncementOnce(user.uid);
-
   db.ref("users/" + user.uid + "/balance").on("value", snapshot => {
     const balance = snapshot.val();
-    document.getElementById("balance").textContent = `رصيدك: ${balance !== null ? balance : 0} جنيه`;
+    balanceEl.textContent = `رصيدك: ${balance !== null ? balance : 0} جنيه`;
   });
-
-  db.ref("notifications/" + user.uid).on("value", snapshot => {
+  const notifRef = db.ref("notifications/" + currentUser.uid);
+  notifRef.on("value", snapshot => {
     const notifications = snapshot.val() || {};
     const unreadCount = Object.values(notifications).filter(n => !n.read).length;
-
-    const badge = document.getElementById("notifBadge");
-    if (unreadCount > 0) {
-      badge.style.display = "inline-block";
-      badge.textContent = unreadCount > 99 ? "99+" : unreadCount;
-    } else {
-      badge.style.display = "none";
-    }
+    notifBadge.style.display = unreadCount > 0 ? "inline-block" : "none";
+    notifBadge.textContent = unreadCount > 99 ? "99+" : unreadCount;
   });
+  loadAnnouncement();
 });
-
 function submitOrder() {
   const service = mainService.value;
   const sub = subService.value;
   const pack = packageEl.value;
   const account = accountInput.value.trim();
   const cost = prices[service]?.[sub]?.[pack];
-
   if (!service || !sub || !pack || !account) return alert("يرجى ملء جميع الحقول");
   if (cost === undefined) return alert("لا يمكن تحديد تكلفة الخدمة");
-
   db.ref("users/" + currentUser.uid + "/balance").once("value").then(snapshot => {
     const balance = snapshot.val() || 0;
     if (balance < cost) return alert("رصيدك لا يكفي لإتمام هذا الطلب");
-
-    const order = {
-      uid: currentUser.uid,
-      type: service,
-      service: sub,
-      package: pack,
-      account: account,
-      status: "قيد التنفيذ",
-      createdAt: new Date().toISOString()
-    };
-
+    const order = { uid: currentUser.uid, type: service, service: sub, package: pack, account: account, status: "قيد التنفيذ", createdAt: new Date().toISOString() };
     const newOrderRef = db.ref("orders").push();
-    newOrderRef.set(order).then(() => {
-      return db.ref("users/" + currentUser.uid).update({ balance: balance - cost });
-    }).then(() => {
-      alert("تم إرسال الطلب وخصم الرصيد بنجاح");
-      mainService.value = "";
-      subService.innerHTML = "";
-      packageEl.innerHTML = "";
-      accountInput.value = "";
-    }).catch(err => {
-      console.error(err);
-      alert("حدث خطأ أثناء إرسال الطلب");
+    return newOrderRef.set(order).then(() => db.ref("users/" + currentUser.uid).update({ balance: balance - cost }));
+  }).then(() => {
+    alert("تم إرسال الطلب وخصم الرصيد بنجاح");
+    mainService.value = "";
+    subService.innerHTML = "";
+    packageEl.innerHTML = "";
+    accountInput.value = "";
+  }).catch(err => alert("حدث خطأ أثناء إرسال الطلب"));
+}
+function logout() {
+  auth.signOut().then(() => location.href = "index.html");
+}
+function shareSite() {
+  const url = "https://botcyber.github.io/Sheko-store-/";
+  if (navigator.share) navigator.share({ title: "Sheko Store", text: "تفضلوا بزيارة موقع Sheko Store لشحن الألعاب والخدمات", url });
+  else alert("ميزة المشاركة غير مدعومة في متصفحك");
+}
+function copyLink() {
+  const url = "https://botcyber.github.io/Sheko-store-/";
+  navigator.clipboard.writeText(url).then(() => alert("تم نسخ رابط الموقع!"));
+}
+function loadAnnouncement() {
+  if (!currentUser) return;
+  const uid = currentUser.uid;
+  db.ref("users/" + uid + "/announcementShown").once("value").then(shownSnap => {
+    if (shownSnap.val()) return;
+    db.ref("announcement").once("value").then(snapshot => {
+      const data = snapshot.val();
+      if (!data) return;
+      document.getElementById("announcementTitle").textContent = data.title || "";
+      document.getElementById("announcementText").textContent = data.text || "";
+      const img = document.getElementById("announcementImage");
+      if (data.imageURL) {
+        img.src = data.imageURL;
+        img.style.display = "block";
+      } else {
+        img.style.display = "none";
+      }
+      document.getElementById("announcementPopup").style.display = "flex";
     });
   });
 }
-
-function logout() {
-  auth.signOut().then(() => {
-    location.href = "index.html";
-  });
+function closeAnnouncement() {
+  document.getElementById("announcementPopup").style.display = "none";
+  if (currentUser) db.ref("users/" + currentUser.uid + "/announcementShown").set(true);
 }
-
-function shareSite() {
-  const url = "https://botcyber.github.io/Sheko-store-/";
-  if (navigator.share) {
-    navigator.share({ title: "Sheko Store", text: "تفضلوا بزيارة موقع Sheko Store لشحن الألعاب والخدمات", url }).catch(console.error);
-  } else {
-    alert("ميزة المشاركة غير مدعومة في متصفحك، يمكنك نسخ الرابط ومشاركته يدوياً.");
-  }
-}
-
-function copyLink() {
-  const url = "https://botcyber.github.io/Sheko-store-/";
-  navigator.clipboard.writeText(url).then(() => {
-    alert("تم نسخ رابط الموقع!");
-  }).catch(() => {
-    alert("فشل في نسخ الرابط، يرجى نسخه يدوياً.");
-  });
-}
-</script></body>
+</script>
+</body>
 </html>
