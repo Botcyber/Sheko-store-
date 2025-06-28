@@ -9,14 +9,15 @@
     header { background: #222; color: white; padding: 20px; text-align: center; font-size: 22px; }
     .container { max-width: 1000px; margin: auto; padding: 20px; }
     h3 { margin-top: 40px; color: #333; }
-    label, input, select, button { display: block; width: 100%; margin-top: 10px; padding: 10px; border-radius: 6px; }
-    input, select { border: 1px solid #ccc; }
+    label, input, select, button, textarea { display: block; width: 100%; margin-top: 10px; padding: 10px; border-radius: 6px; }
+    input, select, textarea { border: 1px solid #ccc; }
     button { background-color: #222; color: white; border: none; cursor: pointer; }
     button:hover { background-color: #444; }
     .card { background: white; padding: 15px; margin-top: 15px; border-radius: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1); position: relative; }
-    .btns { display: flex; gap: 10px; margin-top: 10px; }
+    .btns { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
     .approve-btn { background: #28a745; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
     .reject-btn { background: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
+    .notify-btn { background: #007bff; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -49,7 +50,7 @@
   
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, set, get, update, onValue, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
@@ -117,7 +118,21 @@
       });
     });
 
-    // عرض طلبات الشحن مع أزرار قبول/رفض
+    // دالة إرسال إشعار للمستخدم
+    async function sendNotificationToUser(uid, title, message) {
+      if (!uid) return alert("UID غير صالح للإشعار.");
+      const notifRef = ref(db, `notifications/${uid}`);
+      const newNotifRef = push(notifRef);
+      await set(newNotifRef, {
+        title,
+        message,
+        timestamp: Date.now(),
+        read: false
+      });
+      alert("✅ تم إرسال الإشعار للمستخدم.");
+    }
+
+    // عرض طلبات الشحن مع أزرار قبول/رفض + زر إرسال إشعار
     const ordersDiv = document.getElementById("orders");
     onValue(ref(db, 'orders'), snapshot => {
       ordersDiv.innerHTML = "";
@@ -148,14 +163,26 @@
           }
         };
 
+        const notify = document.createElement("button");
+        notify.className = "notify-btn";
+        notify.textContent = "📢 إرسال إشعار";
+        notify.onclick = () => {
+          const title = prompt("عنوان الإشعار:");
+          if (!title) return alert("يجب إدخال عنوان.");
+          const message = prompt("محتوى الإشعار:");
+          if (!message) return alert("يجب إدخال محتوى.");
+          sendNotificationToUser(data.uid, title, message);
+        };
+
         btnGroup.appendChild(accept);
         btnGroup.appendChild(reject);
+        btnGroup.appendChild(notify);
         div.appendChild(btnGroup);
         ordersDiv.appendChild(div);
       });
     });
 
-    // عرض طلبات تحويل الأموال (transactions)
+    // عرض طلبات تحويل الأموال (transactions) مع أزرار قبول/رفض + زر إرسال إشعار
     const transactionsDiv = document.getElementById("transactions");
     onValue(ref(db, 'transactions'), async snapshot => {
       transactionsDiv.innerHTML = "";
@@ -211,8 +238,20 @@
             alert("✅ تم رفض الطلب.");
           });
 
+        const notify = document.createElement("button");
+        notify.className = "notify-btn";
+        notify.textContent = "📢 إرسال إشعار";
+        notify.onclick = () => {
+          const title = prompt("عنوان الإشعار:");
+          if (!title) return alert("يجب إدخال عنوان.");
+          const message = prompt("محتوى الإشعار:");
+          if (!message) return alert("يجب إدخال محتوى.");
+          sendNotificationToUser(data.uid, title, message);
+        };
+
         btnGroup.appendChild(accept);
         btnGroup.appendChild(reject);
+        btnGroup.appendChild(notify);
         div.appendChild(btnGroup);
         transactionsDiv.appendChild(div);
       });
