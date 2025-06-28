@@ -121,9 +121,9 @@
       ordersDiv.innerHTML = "";
       snapshot.forEach(child => {
         const data = child.val();
+        const dateStr = data.createdAt ? new Date(data.createdAt).toLocaleString('ar-EG') : 'غير معروف';
         const div = document.createElement("div");
         div.className = "card";
-        const dateStr = data.createdAt ? new Date(data.createdAt).toLocaleString('ar-EG') : 'غير معروف';
         div.innerHTML = `
           🎮 ${data.type} - ${data.service} (${data.package}) | ${data.account} <br>
           <strong>UID المستخدم:</strong> ${data.uid || 'غير معروف'} <br>
@@ -133,7 +133,7 @@
       });
     });
 
-    // عرض تحويلات الأموال مع uid، البريد الإلكتروني، والوقت
+    // عرض تحويلات الأموال مع uid، البريد الإلكتروني، الوقت، ورقم/رابط التحويل
     const transactionsDiv = document.getElementById("transactions");
     onValue(ref(db, 'transactions'), snapshot => {
       transactionsDiv.innerHTML = "";
@@ -159,6 +159,7 @@
           💵 من: ${data.sender || 'غير معروف'} | المبلغ: ${data.amount} جنيه | الطريقة: ${data.method} <br>
           <strong>UID المستخدم:</strong> ${data.uid || 'غير معروف'} <br>
           <strong>البريد الإلكتروني:</strong> ${email} <br>
+          <strong>رقم/رابط التحويل:</strong> ${data.sender || 'غير معروف'} <br>
           <strong>الوقت:</strong> ${dateStr}
         `;
         transactionsDiv.appendChild(div);
