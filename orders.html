@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <title>طلباتك - Sheko Store</title>
@@ -16,6 +15,12 @@
       font-weight: bold;
       color: #007bff;
     }
+    .status.done {
+      color: green;
+    }
+    .status.rejected {
+      color: red;
+    }
     .empty {
       text-align: center;
       color: #999;
@@ -24,9 +29,7 @@
     }
   </style>
 </head>
-<body>
-
-<div class="top-bar">
+<body><div class="top-bar">
   <div class="nav-links">
     <a href="dashboard.html">لوحة التحكم</a>
     <a href="account.html">معلومات حسابك</a>
@@ -35,19 +38,10 @@
     <span id="balance">رصيدك: ...</span>
     <button onclick="logout()">تسجيل الخروج</button>
   </div>
-</div>
-
-<div class="dashboard">
+</div><div class="dashboard">
   <h2>طلباتك السابقة</h2>
   <div id="ordersList">جاري التحميل...</div>
-</div>
-
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
-<script>
+</div><!-- Firebase SDKs --><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script><script>
 const firebaseConfig = {
   apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
   authDomain: "sheko-store.firebaseapp.com",
@@ -88,19 +82,19 @@ auth.onAuthStateChanged(user => {
     }
     ordersList.innerHTML = ""; // مسح المحتوى القديم
 
-    // الطلبات تكون كـ كائنات، نحولها لمصفوفة للعرض
     const orders = snapshot.val();
     const ordersArray = Object.values(orders).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     ordersArray.forEach(order => {
       const div = document.createElement("div");
       div.className = "order";
+      const statusClass = order.status === 'تم' ? 'done' : order.status === 'مرفوض' ? 'rejected' : '';
       div.innerHTML = `
         <strong>نوع الخدمة:</strong> ${order.type}<br>
         <strong>الخدمة:</strong> ${order.service}<br>
         <strong>الباقة:</strong> ${order.package}<br>
         <strong>الحساب:</strong> ${order.account}<br>
-        <strong>الحالة:</strong> <span class="status">${order.status || "قيد التنفيذ"}</span><br>
+        <strong>الحالة:</strong> <span class="status ${statusClass}">${order.status || "قيد التنفيذ"}</span><br>
         <small>تاريخ الطلب: ${new Date(order.createdAt).toLocaleString("ar-EG")}</small>
       `;
       ordersList.appendChild(div);
@@ -113,7 +107,5 @@ function logout() {
     location.href = 'index.html';
   });
 }
-</script>
-
-</body>
+</script></body>
 </html>
