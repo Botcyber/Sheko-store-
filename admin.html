@@ -45,9 +45,8 @@
 
     <h3>تحويلات الأموال (transactions)</h3>
     <div id="transactions"></div>
-
   </div>  
-
+  
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, set, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -137,10 +136,17 @@
         const reject = document.createElement("button");
         reject.className = "reject-btn";
         reject.textContent = "❌ رفض";
-        // تعديل هنا: حذف الطلب عند الضغط رفض
         reject.onclick = () => {
-          if (confirm("هل أنت متأكد من حذف الطلب؟")) {
-            remove(ref(db, `orders/${orderKey}`));
+          if (confirm("هل أنت متأكد من رفض الطلب؟")) {
+            update(ref(db, `orders/${orderKey}`), { status: "مرفوض" })
+              .then(() => {
+                div.remove(); // إزالة العنصر من صفحة الأدمن فقط
+                alert("✅ تم رفض الطلب. سيظهر للمستخدم أن الطلب مرفوض.");
+              })
+              .catch(err => {
+                alert("حدث خطأ أثناء رفض الطلب.");
+                console.error(err);
+              });
           }
         };
 
@@ -156,7 +162,7 @@
       transactionsDiv.innerHTML = "";
       snapshot.forEach(async child => {
         const data = child.val();
-        const transKey = child.key;
+        const transactionKey = child.key;
         const userSnap = await get(ref(db, 'users/' + data.uid));
         const email = userSnap.exists() ? userSnap.val().email : 'غير معروف';
         const time = data.timestamp ? new Date(data.timestamp).toLocaleString('ar-EG') : 'غير معروف';
@@ -170,23 +176,20 @@
 
         const accept = document.createElement("button");
         accept.className = "approve-btn";
-        accept.textContent = "✔️ تم";
-        // تعديل هنا: إضافة الرصيد وتغيير حالة التحويل
+        accept.textContent = "✔️ قبول";
         accept.onclick = async () => {
           const userRef = ref(db, 'users/' + data.uid);
           const snap = await get(userRef);
-          const currentBalance = snap.exists() ? snap.val().balance || 0 : 0;
-          // إضافة الرصيد
-          await update(userRef, { balance: currentBalance + data.amount });
-          // تحديث حالة التحويل
-          await update(ref(db, 'transactions/' + transKey), { status: "تم" });
-          alert("✅ تم إضافة الرصيد وتحديث حالة التحويل.");
+          const current = snap.exists() ? snap.val().balance || 0 : 0;
+          await update(userRef, { balance: current + data.amount });
+          await update(ref(db, 'transactions/' + transactionKey), { status: "تم" });
+          alert("✅ تم إضافة المبلغ إلى رصيد المستخدم.");
         };
 
         const reject = document.createElement("button");
         reject.className = "reject-btn";
         reject.textContent = "❌ رفض";
-        reject.onclick = () => update(ref(db, 'transactions/' + transKey), { status: "مرفوض" });
+        reject.onclick = () => update(ref(db, 'transactions/' + transactionKey), { status: "مرفوض" });
 
         btnGroup.appendChild(accept);
         btnGroup.appendChild(reject);
