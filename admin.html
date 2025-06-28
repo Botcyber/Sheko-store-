@@ -100,15 +100,16 @@
       alert("✅ تم التحديث.");
     };
 
-    // عرض المستخدمين
+    // عرض المستخدمين مع UID
     const userListDiv = document.getElementById("userList");
     onValue(ref(db, 'users'), snapshot => {
       userListDiv.innerHTML = "";
       snapshot.forEach(child => {
+        const uid = child.key;
         const data = child.val();
         const div = document.createElement("div");
         div.className = "card";
-        div.textContent = `📌 ${data.email} | 💰 ${data.balance} جنيه | ⭐ ${data.points}`;
+        div.textContent = `UID: ${uid} | 📌 ${data.email} | 💰 ${data.balance} جنيه | ⭐ ${data.points}`;
         userListDiv.appendChild(div);
       });
     });
