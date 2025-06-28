@@ -9,8 +9,9 @@
     header { background: #222; color: white; padding: 20px; text-align: center; font-size: 22px; }
     .container { max-width: 1000px; margin: auto; padding: 20px; }
     h3 { margin-top: 40px; color: #333; }
-    label, input, select, button, textarea { display: block; width: 100%; margin-top: 10px; padding: 10px; border-radius: 6px; }
+    label, input, select, textarea, button { display: block; width: 100%; margin-top: 10px; padding: 10px; border-radius: 6px; box-sizing: border-box; }
     input, select, textarea { border: 1px solid #ccc; }
+    textarea { resize: vertical; }
     button { background-color: #222; color: white; border: none; cursor: pointer; }
     button:hover { background-color: #444; }
     .card { background: white; padding: 15px; margin-top: 15px; border-radius: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1); position: relative; }
@@ -18,6 +19,7 @@
     .approve-btn { background: #28a745; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
     .reject-btn { background: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
     .notify-btn { background: #007bff; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
+    label { font-weight: bold; margin-top: 15px; }
   </style>
 </head>
 <body>
@@ -118,21 +120,7 @@
       });
     });
 
-    // دالة إرسال إشعار للمستخدم
-    async function sendNotificationToUser(uid, title, message) {
-      if (!uid) return alert("UID غير صالح للإشعار.");
-      const notifRef = ref(db, `notifications/${uid}`);
-      const newNotifRef = push(notifRef);
-      await set(newNotifRef, {
-        title,
-        message,
-        timestamp: Date.now(),
-        read: false
-      });
-      alert("✅ تم إرسال الإشعار للمستخدم.");
-    }
-
-    // عرض طلبات الشحن مع أزرار قبول/رفض + زر إرسال إشعار
+    // عرض طلبات الشحن مع أزرار قبول/رفض
     const ordersDiv = document.getElementById("orders");
     onValue(ref(db, 'orders'), snapshot => {
       ordersDiv.innerHTML = "";
@@ -163,26 +151,14 @@
           }
         };
 
-        const notify = document.createElement("button");
-        notify.className = "notify-btn";
-        notify.textContent = "📢 إرسال إشعار";
-        notify.onclick = () => {
-          const title = prompt("عنوان الإشعار:");
-          if (!title) return alert("يجب إدخال عنوان.");
-          const message = prompt("محتوى الإشعار:");
-          if (!message) return alert("يجب إدخال محتوى.");
-          sendNotificationToUser(data.uid, title, message);
-        };
-
         btnGroup.appendChild(accept);
         btnGroup.appendChild(reject);
-        btnGroup.appendChild(notify);
         div.appendChild(btnGroup);
         ordersDiv.appendChild(div);
       });
     });
 
-    // عرض طلبات تحويل الأموال (transactions) مع أزرار قبول/رفض + زر إرسال إشعار
+    // عرض طلبات تحويل الأموال (transactions)
     const transactionsDiv = document.getElementById("transactions");
     onValue(ref(db, 'transactions'), async snapshot => {
       transactionsDiv.innerHTML = "";
@@ -195,22 +171,25 @@
         const data = child.val();
         const transactionKey = child.key;
 
-        // تجاهل المعاملات التي تمت معالجتها
-        if (data.status === "تم" || data.status === "مرفوض") return;
-
         const userSnap = await get(ref(db, 'users/' + data.uid));
         const email = userSnap.exists() ? userSnap.val().email : 'غير معروف';
         const time = data.timestamp ? new Date(data.timestamp).toLocaleString('ar-EG') : 'غير معروف';
 
         const div = document.createElement("div");
         div.className = "card";
+
         div.innerHTML = `
           💵 ${data.amount} جنيه | الطريقة: ${data.method}<br>
           <strong>UID:</strong> ${data.uid}<br>
           <strong>البريد الإلكتروني:</strong> ${email}<br>
-          <strong>الحالة:</strong> ${data.status || 'قيد التنفيذ'}<br>
+          <strong>الحالة:</strong> <span class="status-text">${data.status || 'قيد التنفيذ'}</span><br>
           <strong>رقم التحويل:</strong> ${data.senderInfo || 'غير معروف'}<br>
           <strong>الوقت:</strong> ${time}
+          <hr>
+          <label>عنوان الإشعار:</label>
+          <input type="text" class="notif-title" placeholder="عنوان الإشعار هنا" />
+          <label>محتوى الإشعار:</label>
+          <textarea class="notif-message" rows="3" placeholder="محتوى الإشعار هنا"></textarea>
         `;
 
         const btnGroup = document.createElement("div");
@@ -225,28 +204,35 @@
           const currentBalance = snap.exists() ? snap.val().balance || 0 : 0;
           await update(userRef, { balance: currentBalance + data.amount });
           await update(ref(db, 'transactions/' + transactionKey), { status: "تم" });
-          div.remove();
+          div.querySelector(".status-text").textContent = "تم";
           alert("✅ تم إضافة المبلغ إلى رصيد المستخدم.");
         };
 
         const reject = document.createElement("button");
         reject.className = "reject-btn";
         reject.textContent = "❌ رفض";
-        reject.onclick = () => update(ref(db, 'transactions/' + transactionKey), { status: "مرفوض" })
-          .then(() => {
-            div.remove();
-            alert("✅ تم رفض الطلب.");
-          });
+        reject.onclick = async () => {
+          await update(ref(db, 'transactions/' + transactionKey), { status: "مرفوض" });
+          div.querySelector(".status-text").textContent = "مرفوض";
+          alert("✅ تم رفض الطلب.");
+        };
 
         const notify = document.createElement("button");
         notify.className = "notify-btn";
         notify.textContent = "📢 إرسال إشعار";
         notify.onclick = () => {
-          const title = prompt("عنوان الإشعار:");
-          if (!title) return alert("يجب إدخال عنوان.");
-          const message = prompt("محتوى الإشعار:");
-          if (!message) return alert("يجب إدخال محتوى.");
+          const titleInput = div.querySelector(".notif-title");
+          const messageInput = div.querySelector(".notif-message");
+          const title = titleInput.value.trim();
+          const message = messageInput.value.trim();
+
+          if (!title) return alert("يرجى إدخال عنوان الإشعار.");
+          if (!message) return alert("يرجى إدخال محتوى الإشعار.");
+
           sendNotificationToUser(data.uid, title, message);
+          // يمكنك تفريغ الحقول بعد الإرسال لو تريد
+          // titleInput.value = "";
+          // messageInput.value = "";
         };
 
         btnGroup.appendChild(accept);
@@ -256,6 +242,20 @@
         transactionsDiv.appendChild(div);
       });
     });
+
+    // دالة إرسال إشعار للمستخدم
+    async function sendNotificationToUser(uid, title, message) {
+      if (!uid) return alert("UID غير صالح للإشعار.");
+      const notifRef = ref(db, `notifications/${uid}`);
+      const newNotifRef = push(notifRef);
+      await set(newNotifRef, {
+        title,
+        message,
+        timestamp: Date.now(),
+        read: false
+      });
+      alert("✅ تم إرسال الإشعار للمستخدم.");
+    }
   </script>
 </body>
 </html>
