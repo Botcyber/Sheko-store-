@@ -70,6 +70,18 @@
     .btn-red:hover {
       background-color: #b02a37;
     }
+    .profile-container {
+      text-align: center;
+      margin-top: 30px;
+    }
+    #profileImage {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      cursor: pointer;
+      border: 3px solid #007bff;
+    }
   </style>
 
   <!-- Firebase -->
@@ -81,8 +93,9 @@
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
       projectId: "sheko-store",
-      storageBucket: "sheko-store.firebasestorage.app",
+      storageBucket: "sheko-store.appspot.com",
       messagingSenderId: "113892775847",
       appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
@@ -90,6 +103,15 @@
   </script>
 </head>
 <body>
+
+  <!-- صورة الحساب -->
+  <div class="profile-container">
+    <label for="profileImageInput">
+      <img id="profileImage" src="https://via.placeholder.com/100?text=صورة" alt="صورة الحساب" />
+    </label>
+    <input type="file" id="profileImageInput" accept="image/*" style="display: none;" />
+  </div>
+
   <div class="container">
     <h2>معلومات حسابك</h2>
 
@@ -114,11 +136,20 @@
     const auth = firebase.auth();
     const db = firebase.database();
 
+    // تحميل بيانات المستخدم عند تسجيل الدخول
     auth.onAuthStateChanged(user => {
       if (user) {
-        document.getElementById("email").textContent = user.email;
         const uid = user.uid;
+        document.getElementById("email").textContent = user.email;
 
+        // تحميل صورة الحساب من القاعدة
+        db.ref("users/" + uid + "/profileImage").once("value").then(snap => {
+          if (snap.exists()) {
+            document.getElementById("profileImage").src = snap.val();
+          }
+        });
+
+        // تحميل بيانات الحساب
         db.ref("users/" + uid + "/username").once("value").then(snap => {
           document.getElementById("username").textContent = snap.val() || "لم يتم التعيين بعد";
         });
@@ -132,10 +163,11 @@
         });
 
       } else {
-        window.location.href = "index.html";
+        location.href = "index.html";
       }
     });
 
+    // تغيير اسم المستخدم
     function setUsername() {
       const username = document.getElementById("newUsername").value.trim();
       const uid = auth.currentUser.uid;
@@ -147,12 +179,12 @@
       });
     }
 
+    // حذف الحساب
     function deleteAccount() {
       if (confirm("هل أنت متأكد أنك تريد حذف الحساب نهائيًا؟")) {
         const user = auth.currentUser;
         const uid = user.uid;
 
-        // حذف بيانات المستخدم
         db.ref("users/" + uid).remove().then(() => {
           return user.delete();
         }).then(() => {
@@ -163,6 +195,26 @@
         });
       }
     }
+
+    // رفع الصورة وتحديثها في القاعدة
+    document.getElementById("profileImageInput").addEventListener("change", function (event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        const base64Image = e.target.result;
+        document.getElementById("profileImage").src = base64Image;
+
+        const user = auth.currentUser;
+        if (user) {
+          db.ref("users/" + user.uid + "/profileImage").set(base64Image)
+            .then(() => console.log("✅ تم حفظ الصورة"))
+            .catch((err) => alert("❌ فشل حفظ الصورة: " + err.message));
+        }
+      };
+      reader.readAsDataURL(file);
+    });
   </script>
 </body>
 </html>
