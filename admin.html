@@ -4,41 +4,61 @@
   <title>لوحة تحكم الأدمن - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: 'Cairo', sans-serif; background: #f1f1f1; margin: 0; padding: 20px; }
-    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
-    h2 { text-align: center; }
-    label, input, textarea, button { width: 100%; margin: 10px 0; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
-    button { background: #222; color: white; border: none; cursor: pointer; }
-    button:hover { background: #444; }
+    body { font-family: 'Cairo', sans-serif; margin: 0; background: #f4f4f4; }
+    .container { max-width: 800px; margin: 20px auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    h2 { text-align: center; margin-bottom: 20px; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input, button, select { width: 100%; padding: 8px; margin-top: 5px; border-radius: 5px; border: 1px solid #ccc; }
+    button { background-color: #222; color: white; border: none; margin-top: 15px; cursor: pointer; }
+    button:hover { background-color: #444; }
+    .section { margin-top: 30px; }
+    .log, .requests { background: #f9f9f9; padding: 10px; border-radius: 5px; max-height: 300px; overflow-y: auto; }
+    .log-entry, .request-entry { margin-bottom: 10px; font-size: 14px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>لوحة تحكم الأدمن</h2><label>UID المستخدم:</label>
-<input type="text" id="uid">
+    <h2>لوحة تحكم الأدمن</h2><div class="section">
+  <h3>إضافة مستخدم</h3>
+  <label>UID</label>
+  <input type="text" id="uid">
+  <label>البريد الإلكتروني</label>
+  <input type="email" id="email">
+  <label>الرصيد</label>
+  <input type="number" id="balance">
+  <label>النقاط</label>
+  <input type="number" id="points">
+  <button onclick="addUser()">إضافة المستخدم</button>
+</div>
 
-<label>البريد الإلكتروني:</label>
-<input type="email" id="email">
+<div class="section">
+  <h3>إدارة الرصيد والنقاط</h3>
+  <label>UID</label>
+  <input type="text" id="targetUid">
+  <label>رصيد</label>
+  <input type="number" id="amount">
+  <button onclick="updateBalance(true)">إضافة رصيد</button>
+  <button onclick="updateBalance(false)">خصم رصيد</button>
+  <label>نقاط</label>
+  <input type="number" id="pointsAmount">
+  <button onclick="updatePoints(true)">إضافة نقاط</button>
+  <button onclick="updatePoints(false)">خصم نقاط</button>
+</div>
 
-<label>الرصيد (جنيه):</label>
-<input type="number" id="balance">
+<div class="section">
+  <h3>المستخدمون الجدد</h3>
+  <div class="log" id="newUsers"></div>
+</div>
 
-<label>النقاط:</label>
-<input type="number" id="points">
+<div class="section">
+  <h3>طلبات المستخدمين</h3>
+  <div class="requests" id="ordersList"></div>
+</div>
 
-<button onclick="addUserData()">إضافة المستخدم</button>
-
-<hr>
-
-<label>UID المستخدم:</label>
-<input type="text" id="targetUid">
-
-<label>إضافة رصيد:</label>
-<input type="number" id="addAmount">
-
-<button onclick="addBalance()">إرسال الرصيد</button>
-
-<p id="status"></p>
+<div class="section">
+  <h3>تحويلات الأموال</h3>
+  <div class="requests" id="paymentsList"></div>
+</div>
 
   </div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script>
     const firebaseConfig = {
@@ -54,40 +74,60 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    function addUserData() {
-      const uid = document.getElementById("uid").value.trim();
-      const email = document.getElementById("email").value.trim();
+    function addUser() {
+      const uid = document.getElementById("uid").value;
+      const email = document.getElementById("email").value;
       const balance = parseFloat(document.getElementById("balance").value);
       const points = parseInt(document.getElementById("points").value);
 
-      if (!uid || !email) {
-        return alert("يرجى إدخال UID والبريد الإلكتروني.");
-      }
+      if (!uid || !email) return alert("يرجى إدخال UID والبريد الإلكتروني");
 
       db.ref("users/" + uid).set({
-        email: email,
-        balance: balance || 0,
-        points: points || 0
-      }, error => {
-        if (error) {
-          alert("حدث خطأ في إضافة المستخدم.");
-        } else {
-          alert("تم إضافة المستخدم بنجاح.");
-        }
+        email, balance, points
+      }).then(() => alert("تمت الإضافة"))
+        .catch(() => alert("فشل في الإضافة"));
+    }
+
+    function updateBalance(add) {
+      const uid = document.getElementById("targetUid").value;
+      const amount = parseFloat(document.getElementById("amount").value);
+      if (!uid || isNaN(amount)) return alert("يرجى تعبئة الحقول");
+      db.ref("users/" + uid + "/balance").once("value").then(snapshot => {
+        let current = snapshot.val() || 0;
+        let newVal = add ? current + amount : current - amount;
+        db.ref("users/" + uid + "/balance").set(newVal);
+        alert("تم التحديث");
       });
     }
 
-    function addBalance() {
-      const uid = document.getElementById("targetUid").value.trim();
-      const amount = parseFloat(document.getElementById("addAmount").value);
-      if (!uid || isNaN(amount)) return alert("يرجى إدخال UID والمبلغ الصحيح.");
-
-      const userRef = db.ref("users/" + uid + "/balance");
-      userRef.get().then(snapshot => {
-        const current = snapshot.exists() ? parseFloat(snapshot.val()) : 0;
-        userRef.set(current + amount);
-        alert("تم إضافة الرصيد بنجاح.");
-      }).catch(() => alert("فشل في العثور على المستخدم."));
+    function updatePoints(add) {
+      const uid = document.getElementById("targetUid").value;
+      const amount = parseInt(document.getElementById("pointsAmount").value);
+      if (!uid || isNaN(amount)) return alert("يرجى تعبئة الحقول");
+      db.ref("users/" + uid + "/points").once("value").then(snapshot => {
+        let current = snapshot.val() || 0;
+        let newVal = add ? current + amount : current - amount;
+        db.ref("users/" + uid + "/points").set(newVal);
+        alert("تم التحديث");
+      });
     }
+
+    // عرض المستخدمين الجدد
+    db.ref("users").on("child_added", snap => {
+      const user = snap.val();
+      document.getElementById("newUsers").innerHTML += `<div class="log-entry">بريد: ${user.email} | UID: ${snap.key}</div>`;
+    });
+
+    // عرض الطلبات
+    db.ref("orders").on("child_added", snap => {
+      const o = snap.val();
+      document.getElementById("ordersList").innerHTML += `<div class="request-entry">${o.service} - ${o.package} - ${o.account}</div>`;
+    });
+
+    // عرض تحويلات الأموال
+    db.ref("payments").on("child_added", snap => {
+      const p = snap.val();
+      document.getElementById("paymentsList").innerHTML += `<div class="request-entry">${p.method} - ${p.amount} جنيه من ${p.from}</div>`;
+    });
   </script></body>
 </html>
