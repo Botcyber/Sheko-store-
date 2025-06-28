@@ -65,6 +65,49 @@
       margin-top: 50px;
       font-size: 18px;
     }
+
+    /* ستايل النافذة المنبثقة */
+    .modal {
+      display: none; /* مخفية افتراضياً */
+      position: fixed;
+      z-index: 1000;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.5);
+      direction: rtl;
+      padding: 50px 20px;
+      box-sizing: border-box;
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: auto;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 500px;
+      position: relative;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      font-size: 16px;
+      color: #222;
+    }
+    .modal-content h3 {
+      margin-top: 0;
+      color: #007bff;
+      font-weight: bold;
+    }
+    .modal-close {
+      position: absolute;
+      top: 10px;
+      left: 15px;
+      font-size: 24px;
+      font-weight: bold;
+      color: #888;
+      cursor: pointer;
+      user-select: none;
+    }
+    .modal-close:hover {
+      color: #000;
+    }
   </style>
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -77,6 +120,15 @@
     <button id="deleteAllBtn">حذف جميع الإشعارات</button>
     <div id="notificationsList">
       جاري تحميل الإشعارات...
+    </div>
+  </div>
+
+  <!-- النافذة المنبثقة -->
+  <div id="modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <span id="modalClose" class="modal-close" title="إغلاق">&times;</span>
+      <h3 id="modalTitle">عنوان الإشعار</h3>
+      <p id="modalMessage">محتوى الإشعار</p>
     </div>
   </div>
 
@@ -97,6 +149,11 @@
 
     const notificationsList = document.getElementById("notificationsList");
     const deleteAllBtn = document.getElementById("deleteAllBtn");
+
+    const modal = document.getElementById("modal");
+    const modalClose = document.getElementById("modalClose");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalMessage = document.getElementById("modalMessage");
 
     let currentUid = null;
 
@@ -124,15 +181,28 @@
         // ترتيب الإشعارات حسب التوقيت الأحدث أولاً (لو فيه createdAt)
         const notificationsArray = Object.entries(data)
           .map(([key, val]) => ({ key, ...val }))
-          .sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+          .sort((a,b) => {
+            if (a.createdAt && b.createdAt) {
+              return new Date(b.createdAt) - new Date(a.createdAt);
+            }
+            return 0;
+          });
 
         notificationsArray.forEach(notif => {
           const div = document.createElement("div");
           div.className = "notification " + (notif.read ? "read" : "unread");
-          div.textContent = notif.message || "إشعار جديد";
+          // نعرض موضوع الإشعار
+          div.textContent = notif.title || "إشعار جديد";
           div.title = notif.read ? "مقروء" : "غير مقروء";
 
           div.onclick = () => {
+            // فتح النافذة المنبثقة مع بيانات الإشعار
+            modalTitle.textContent = notif.title || "لا يوجد عنوان";
+            modalMessage.textContent = notif.content || notif.message || "لا يوجد محتوى";
+            modal.style.display = "block";
+            modal.setAttribute("aria-hidden", "false");
+
+            // تحديث حالة القراءة في قاعدة البيانات
             if (!notif.read) {
               db.ref(`notifications/${currentUid}/${notif.key}`).update({ read: true });
             }
@@ -143,6 +213,21 @@
       });
     }
 
+    // إغلاق النافذة المنبثقة
+    modalClose.onclick = () => {
+      modal.style.display = "none";
+      modal.setAttribute("aria-hidden", "true");
+    };
+
+    // إغلاق النافذة عند الضغط خارجه
+    window.onclick = (event) => {
+      if (event.target === modal) {
+        modal.style.display = "none";
+        modal.setAttribute("aria-hidden", "true");
+      }
+    };
+
+    // حذف جميع الإشعارات
     deleteAllBtn.onclick = () => {
       if (!currentUid) return;
       if (confirm("هل أنت متأكد أنك تريد حذف جميع الإشعارات؟ لا يمكن التراجع.")) {
