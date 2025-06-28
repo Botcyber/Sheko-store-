@@ -130,7 +130,7 @@
       });
     });
 
-    // عرض تحويلات الأموال
+    // عرض تحويلات الأموال مع uid والوقت
     const transactionsDiv = document.getElementById("transactions");
     onValue(ref(db, 'transactions'), snapshot => {
       transactionsDiv.innerHTML = "";
@@ -138,7 +138,12 @@
         const data = child.val();
         const div = document.createElement("div");
         div.className = "card";
-        div.textContent = `💵 من: ${data.sender} | المبلغ: ${data.amount} جنيه | الطريقة: ${data.method}`;
+        const dateStr = data.timestamp ? new Date(data.timestamp).toLocaleString('ar-EG') : 'غير معروف';
+        div.innerHTML = `
+          💵 من: ${data.sender || 'غير معروف'} | المبلغ: ${data.amount} جنيه | الطريقة: ${data.method} <br>
+          <strong>UID المستخدم:</strong> ${data.uid || 'غير معروف'} <br>
+          <strong>الوقت:</strong> ${dateStr}
+        `;
         transactionsDiv.appendChild(div);
       });
     });
