@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <title>لوحة تحكم الأدمن - Sheko Store</title>
@@ -26,24 +27,28 @@
     <input id="email" placeholder="البريد الإلكتروني" />
     <input id="balance" placeholder="الرصيد" type="number" />
     <input id="points" placeholder="النقاط" type="number" />
-    <button onclick="addUserManually()">إضافة المستخدم</button><h3>إدارة الرصيد والنقاط</h3>
-<input id="manageUid" placeholder="UID المستخدم" />
-<input id="addBalance" placeholder="إضافة رصيد" type="number" />
-<input id="removeBalance" placeholder="خصم رصيد" type="number" />
-<input id="addPoints" placeholder="إضافة نقاط" type="number" />
-<input id="removePoints" placeholder="خصم نقاط" type="number" />
-<button onclick="updateUserData()">تحديث</button>
+    <button onclick="addUserManually()">إضافة المستخدم</button>
+    
+    <h3>إدارة الرصيد والنقاط</h3>
+    <input id="manageUid" placeholder="UID المستخدم" />
+    <input id="addBalance" placeholder="إضافة رصيد" type="number" />
+    <input id="removeBalance" placeholder="خصم رصيد" type="number" />
+    <input id="addPoints" placeholder="إضافة نقاط" type="number" />
+    <input id="removePoints" placeholder="خصم نقاط" type="number" />
+    <button onclick="updateUserData()">تحديث</button>
 
-<h3>المستخدمين المسجلين</h3>
-<div id="userList"></div>
+    <h3>المستخدمين المسجلين</h3>
+    <div id="userList"></div>
 
-<h3>طلبات الشحن</h3>
-<div id="orders"></div>
+    <h3>طلبات الشحن</h3>
+    <div id="orders"></div>
 
-<h3>تحويلات الأموال (transactions)</h3>
-<div id="transactions"></div>
+    <h3>تحويلات الأموال (transactions)</h3>
+    <div id="transactions"></div>
 
-  </div>  <script type="module">
+  </div>  
+
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, set, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -115,6 +120,7 @@
       ordersDiv.innerHTML = "";
       snapshot.forEach(child => {
         const data = child.val();
+        const orderKey = child.key;
         const div = document.createElement("div");
         div.className = "card";
         const time = data.createdAt ? new Date(data.createdAt).toLocaleString('ar-EG') : 'غير معروف';
@@ -126,12 +132,17 @@
         const accept = document.createElement("button");
         accept.className = "approve-btn";
         accept.textContent = "✔️ قبول";
-        accept.onclick = () => update(ref(db, `orders/${child.key}`), { status: "تم" });
+        accept.onclick = () => update(ref(db, `orders/${orderKey}`), { status: "تم" });
 
         const reject = document.createElement("button");
         reject.className = "reject-btn";
         reject.textContent = "❌ رفض";
-        reject.onclick = () => update(ref(db, `orders/${child.key}`), { status: "مرفوض" });
+        // تعديل هنا: حذف الطلب عند الضغط رفض
+        reject.onclick = () => {
+          if (confirm("هل أنت متأكد من حذف الطلب؟")) {
+            remove(ref(db, `orders/${orderKey}`));
+          }
+        };
 
         btnGroup.appendChild(accept);
         btnGroup.appendChild(reject);
@@ -145,6 +156,7 @@
       transactionsDiv.innerHTML = "";
       snapshot.forEach(async child => {
         const data = child.val();
+        const transKey = child.key;
         const userSnap = await get(ref(db, 'users/' + data.uid));
         const email = userSnap.exists() ? userSnap.val().email : 'غير معروف';
         const time = data.timestamp ? new Date(data.timestamp).toLocaleString('ar-EG') : 'غير معروف';
@@ -158,19 +170,23 @@
 
         const accept = document.createElement("button");
         accept.className = "approve-btn";
-        accept.textContent = "✔️ قبول";
+        accept.textContent = "✔️ تم";
+        // تعديل هنا: إضافة الرصيد وتغيير حالة التحويل
         accept.onclick = async () => {
           const userRef = ref(db, 'users/' + data.uid);
           const snap = await get(userRef);
-          const current = snap.exists() ? snap.val().balance || 0 : 0;
-          await update(userRef, { balance: current + data.amount });
-          await update(ref(db, 'transactions/' + child.key), { status: "تم" });
+          const currentBalance = snap.exists() ? snap.val().balance || 0 : 0;
+          // إضافة الرصيد
+          await update(userRef, { balance: currentBalance + data.amount });
+          // تحديث حالة التحويل
+          await update(ref(db, 'transactions/' + transKey), { status: "تم" });
+          alert("✅ تم إضافة الرصيد وتحديث حالة التحويل.");
         };
 
         const reject = document.createElement("button");
         reject.className = "reject-btn";
         reject.textContent = "❌ رفض";
-        reject.onclick = () => update(ref(db, 'transactions/' + child.key), { status: "مرفوض" });
+        reject.onclick = () => update(ref(db, 'transactions/' + transKey), { status: "مرفوض" });
 
         btnGroup.appendChild(accept);
         btnGroup.appendChild(reject);
@@ -178,5 +194,6 @@
         transactionsDiv.appendChild(div);
       });
     });
-  </script></body>
+  </script>
+</body>
 </html>
