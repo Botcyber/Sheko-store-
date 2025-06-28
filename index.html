@@ -72,8 +72,7 @@
       getDatabase,
       ref,
       set,
-      get,
-      child
+      get
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
@@ -121,8 +120,8 @@
         createUserWithEmailAndPassword(auth, userEmail, userPass)
           .then((userCredential) => {
             const user = userCredential.user;
-            // أضف المستخدم في قاعدة البيانات
             set(ref(db, 'users/' + user.uid), {
+              uid: user.uid,
               email: user.email,
               balance: 0,
               points: 0
@@ -136,17 +135,16 @@
         signInWithEmailAndPassword(auth, userEmail, userPass)
           .then(async (userCredential) => {
             const user = userCredential.user;
-
-            // تحقق هل المستخدم موجود في قاعدة البيانات
-            const snapshot = await get(ref(db, 'users/' + user.uid));
+            const userRef = ref(db, 'users/' + user.uid);
+            const snapshot = await get(userRef);
             if (!snapshot.exists()) {
-              await set(ref(db, 'users/' + user.uid), {
+              await set(userRef, {
+                uid: user.uid,
                 email: user.email,
                 balance: 0,
                 points: 0
               });
             }
-
             alert("✅ تم تسجيل الدخول!");
             window.location.href = "dashboard.html";
           })
