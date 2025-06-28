@@ -13,7 +13,9 @@
     input, select { border: 1px solid #ccc; }
     button { background-color: #222; color: white; border: none; cursor: pointer; }
     button:hover { background-color: #444; }
-    .card { background: white; padding: 15px; margin-top: 15px; border-radius: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+    .card { background: white; padding: 15px; margin-top: 15px; border-radius: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1); position: relative; }
+    .approve-btn { position: absolute; top: 15px; right: 15px; background: #28a745; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; color: white; }
+    .approved { background: #d4edda; }
   </style>
 </head>
 <body>
@@ -47,7 +49,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, set, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
@@ -135,37 +137,93 @@
       });
     });
 
-    // عرض طلبات إضافة الأموال (topupRequests) مع UID والبريد الإلكتروني ورقم التحويل والوقت
+    // تنسيق التاريخ
+    function formatTimestamp(timestamp) {
+      if (!timestamp) return 'غير معروف';
+      const date = new Date(timestamp);
+      return date.toLocaleString('ar-EG');
+    }
+
+    // دالة قبول طلب إضافة أموال وتحديث الرصيد
+    async function approveTopupRequest(requestKey, uid, amount) {
+      if (!confirm(`هل تريد قبول طلب إضافة مبلغ ${amount} جنيه للمستخدم ${uid}؟`)) return;
+
+      try {
+        // جلب بيانات المستخدم
+        const userRef = ref(db, `users/${uid}`);
+        const userSnap = await get(userRef);
+        if (!userSnap.exists()) {
+          alert("المستخدم غير موجود.");
+          return;
+        }
+
+        const userData = userSnap.val();
+        const currentBalance = userData.balance || 0;
+        const newBalance = currentBalance + amount;
+
+        // تحديث الرصيد
+        await update(userRef, { balance: newBalance });
+
+        // حذف طلب إضافة الأموال من قاعدة البيانات
+        await remove(ref(db, `topupRequests/${requestKey}`));
+
+        alert("تمت الموافقة وتحديث الرصيد بنجاح.");
+      } catch (error) {
+        console.error(error);
+        alert("حدث خطأ أثناء عملية الموافقة.");
+      }
+    }
+
+    // عرض طلبات إضافة الأموال مع زر قبول
     const transactionsDiv = document.getElementById("transactions");
-    onValue(ref(db, 'topupRequests'), snapshot => {
+    onValue(ref(db, 'topupRequests'), async snapshot => {
       transactionsDiv.innerHTML = "";
-      snapshot.forEach(async child => {
-        const data = child.val();
+
+      if (!snapshot.exists()) {
+        transactionsDiv.innerHTML = "لا توجد طلبات إضافة أموال حتى الآن.";
+        return;
+      }
+
+      const requests = [];
+      snapshot.forEach(child => {
+        requests.push({ key: child.key, ...child.val() });
+      });
+
+      // جلب بيانات المستخدمين دفعة واحدة
+      const uids = [...new Set(requests.map(r => r.uid).filter(Boolean))];
+      const usersData = {};
+
+      await Promise.all(uids.map(async uid => {
+        try {
+          const userSnap = await get(ref(db, 'users/' + uid));
+          if (userSnap.exists()) {
+            usersData[uid] = userSnap.val();
+          }
+        } catch {}
+      }));
+
+      // عرض الطلبات
+      requests.forEach(req => {
+        const email = usersData[req.uid]?.email || 'غير معروف';
+        const time = req.timestamp ? formatTimestamp(req.timestamp) : 'غير معروف';
+
         const div = document.createElement("div");
         div.className = "card";
 
-        const time = data.timestamp ? new Date(data.timestamp).toLocaleString('ar-EG') : 'غير معروف';
-
-        // جلب البريد الإلكتروني للمستخدم إذا موجود
-        let email = 'غير معروف';
-        if (data.uid) {
-          try {
-            const userSnap = await get(ref(db, 'users/' + data.uid));
-            if (userSnap.exists()) {
-              email = userSnap.val().email || 'غير معروف';
-            }
-          } catch {
-            email = 'غير معروف';
-          }
-        }
-
         div.innerHTML = `
-          💵 المبلغ: ${data.amount} جنيه | الطريقة: ${data.method} <br>
-          <strong>UID المستخدم:</strong> ${data.uid || 'غير معروف'} <br>
+          💵 المبلغ: ${req.amount} جنيه | الطريقة: ${req.method} <br>
+          <strong>UID المستخدم:</strong> ${req.uid || 'غير معروف'} <br>
           <strong>البريد الإلكتروني:</strong> ${email} <br>
-          <strong>رقم/رابط التحويل:</strong> ${data.senderInfo || 'غير معروف'} <br>
+          <strong>رقم/رابط التحويل:</strong> ${req.senderInfo || 'غير معروف'} <br>
           <strong>الوقت:</strong> ${time}
         `;
+
+        const approveBtn = document.createElement("button");
+        approveBtn.className = "approve-btn";
+        approveBtn.textContent = "قبول";
+        approveBtn.onclick = () => approveTopupRequest(req.key, req.uid, req.amount);
+
+        div.appendChild(approveBtn);
         transactionsDiv.appendChild(div);
       });
     });
