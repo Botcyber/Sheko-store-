@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>الإشعارات - Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 20px;
+      direction: rtl;
+      color: #333;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 15px;
+      color: #007bff;
+    }
+    #deleteAllBtn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      width: 100%;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+    #deleteAllBtn:hover {
+      background-color: #b02a37;
+    }
+    .notification {
+      padding: 15px 20px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    .notification.unread {
+      background-color: #e1f0ff;
+      font-weight: 600;
+    }
+    .notification.read {
+      background-color: #f9f9f9;
+      color: #666;
+      font-weight: normal;
+    }
+    .empty {
+      text-align: center;
+      color: #aaa;
+      margin-top: 50px;
+      font-size: 18px;
+    }
+  </style>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h2>الإشعارات الخاصة بك</h2>
+    <button id="deleteAllBtn">حذف جميع الإشعارات</button>
+    <div id="notificationsList">
+      جاري تحميل الإشعارات...
+    </div>
+  </div>
+
+  <script>
+    // إعدادات Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    const notificationsList = document.getElementById("notificationsList");
+    const deleteAllBtn = document.getElementById("deleteAllBtn");
+
+    let currentUid = null;
+
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+      currentUid = user.uid;
+      loadNotifications();
+    });
+
+    function loadNotifications() {
+      const userNotificationsRef = db.ref("notifications/" + currentUid);
+
+      userNotificationsRef.on("value", snapshot => {
+        notificationsList.innerHTML = "";
+        const data = snapshot.val();
+
+        if (!data) {
+          notificationsList.innerHTML = `<p class="empty">لا توجد إشعارات حالياً</p>`;
+          return;
+        }
+
+        // ترتيب الإشعارات حسب التوقيت الأحدث أولاً (لو فيه createdAt)
+        const notificationsArray = Object.entries(data)
+          .map(([key, val]) => ({ key, ...val }))
+          .sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+        notificationsArray.forEach(notif => {
+          const div = document.createElement("div");
+          div.className = "notification " + (notif.read ? "read" : "unread");
+          div.textContent = notif.message || "إشعار جديد";
+          div.title = notif.read ? "مقروء" : "غير مقروء";
+
+          div.onclick = () => {
+            if (!notif.read) {
+              db.ref(`notifications/${currentUid}/${notif.key}`).update({ read: true });
+            }
+          };
+
+          notificationsList.appendChild(div);
+        });
+      });
+    }
+
+    deleteAllBtn.onclick = () => {
+      if (!currentUid) return;
+      if (confirm("هل أنت متأكد أنك تريد حذف جميع الإشعارات؟ لا يمكن التراجع.")) {
+        db.ref("notifications/" + currentUid).remove()
+          .then(() => {
+            alert("✅ تم حذف جميع الإشعارات.");
+            notificationsList.innerHTML = `<p class="empty">لا توجد إشعارات حالياً</p>`;
+          })
+          .catch(err => {
+            alert("❌ حدث خطأ أثناء الحذف: " + err.message);
+            console.error(err);
+          });
+      }
+    };
+  </script>
+</body>
+</html>
