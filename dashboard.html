@@ -37,6 +37,7 @@
       flex-direction: column;
       align-items: center;
       font-size: 14px;
+      position: relative;
       transition: color 0.3s ease;
     }
     .nav-icons a i {
@@ -45,6 +46,22 @@
     }
     .nav-icons a:hover {
       color: #ffb700;
+    }
+    /* badge الإشعارات */
+    #notifBadge {
+      position: absolute;
+      top: 0;
+      left: 5px; /* لأن الصفحة rtl */
+      background: red;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 50%;
+      padding: 2px 6px;
+      display: none;
+      transform: translate(-50%, 50%);
+      user-select: none;
+      pointer-events: none;
     }
     .user-area {
       display: flex;
@@ -149,10 +166,11 @@
       <i class="fa fa-comments"></i>
       <span>التقييمات والشكاوي</span>
     </a>
-    <!-- زر الاشعارات -->
-    <a href="notifications.html" title="الإشعارات">
+    <!-- زر الاشعارات مع badge -->
+    <a href="notifications.html" title="الإشعارات" style="position: relative;">
       <i class="fa fa-bell"></i>
       <span>الإشعارات</span>
+      <span id="notifBadge">0</span>
     </a>
   </nav>
 
@@ -227,6 +245,7 @@ const subService = document.getElementById("subService");
 const packageEl = document.getElementById("package");
 const accountInput = document.getElementById("accountInput");
 const balanceEl = document.getElementById("balance");
+const notifBadge = document.getElementById("notifBadge");
 
 mainService.addEventListener("change", () => {
   subService.innerHTML = "";
@@ -259,9 +278,24 @@ auth.onAuthStateChanged(user => {
   if (!user) return location.href = "index.html";
   currentUser = user;
 
+  // تحديث الرصيد
   db.ref("users/" + user.uid + "/balance").on("value", snapshot => {
     const balance = snapshot.val();
     balanceEl.textContent = `رصيدك: ${balance !== null ? balance : 0} جنيه`;
+  });
+
+  // تحديث badge الإشعارات غير المقروءة
+  const notifRef = db.ref("notifications/" + currentUser.uid);
+  notifRef.on("value", snapshot => {
+    const notifications = snapshot.val() || {};
+    const unreadCount = Object.values(notifications).filter(n => !n.read).length;
+
+    if (unreadCount > 0) {
+      notifBadge.style.display = "inline-block";
+      notifBadge.textContent = unreadCount > 99 ? "99+" : unreadCount;
+    } else {
+      notifBadge.style.display = "none";
+    }
   });
 });
 
