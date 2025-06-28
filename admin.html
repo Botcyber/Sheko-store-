@@ -183,6 +183,15 @@
           const current = snap.exists() ? snap.val().balance || 0 : 0;
           await update(userRef, { balance: current + data.amount });
           await update(ref(db, 'transactions/' + transactionKey), { status: "تم" });
+
+          // تعديل الزر إلى نص ثابت و تغير اللون وإخفاء زر الرفض
+          accept.textContent = "تمت الإضافة ✅";
+          accept.style.backgroundColor = "#000";
+          accept.disabled = true;
+
+          const reject = btnGroup.querySelector(".reject-btn");
+          if (reject) reject.style.display = "none";
+
           alert("✅ تم إضافة المبلغ إلى رصيد المستخدم.");
         };
 
