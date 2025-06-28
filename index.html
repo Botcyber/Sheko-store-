@@ -47,6 +47,16 @@
       color: #0069d9;
       cursor: pointer;
     }
+    .whatsapp {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 15px;
+    }
+    .whatsapp a {
+      color: #25D366;
+      font-weight: bold;
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
@@ -57,7 +67,10 @@
     <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور" style="display: none;" />
     <button id="actionBtn">دخول</button>
     <div class="switch" id="toggleForm">ليس لديك حساب؟ أنشئ الآن</div>
-    <div class="switch" onclick="resetPassword()">نسيت كلمة المرور؟</div>
+    <div class="whatsapp">
+      إذا نسيت الباسورد كلم الأدمن على
+      <a href="https://wa.me/201099874914" target="_blank">واتساب 01099874914</a>
+    </div>
   </div>
 
   <script type="module">
@@ -65,15 +78,13 @@
     import {
       getAuth,
       createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      sendPasswordResetEmail
+      signInWithEmailAndPassword
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import {
       getDatabase,
       ref,
       set,
-      get,
-      push
+      get
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
@@ -151,27 +162,6 @@
           })
           .catch(error => alert("❌ " + error.message));
       }
-    };
-
-    window.resetPassword = () => {
-      const userEmail = email.value.trim();
-      if (!userEmail) return alert("يرجى إدخال بريدك أولاً.");
-      sendPasswordResetEmail(auth, userEmail)
-        .then(() => {
-          alert("📩 تم إرسال رابط إعادة تعيين كلمة المرور");
-
-          // إرسال إشعار إلى الأدمن
-          const adminUID = "mlifDgEAkKMaOeuUq63cs5NAkV93";
-          const notifRef = ref(db, `notifications/${adminUID}`);
-          const newNotif = push(notifRef);
-          newNotif.set({
-            title: "طلب إعادة تعيين كلمة المرور",
-            message: `تم طلب استعادة كلمة المرور للبريد: ${userEmail}`,
-            createdAt: Date.now(),
-            read: false
-          });
-        })
-        .catch(error => alert("❌ " + error.message));
     };
   </script>
 </body>
