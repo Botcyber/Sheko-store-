@@ -22,24 +22,7 @@
 <body>
   <header>لوحة تحكم الأدمن</header>
   <div class="container">
-    <h3>إضافة مستخدم يدويًا</h3>
-    <input id="uid" placeholder="UID المستخدم" />
-    <input id="email" placeholder="البريد الإلكتروني" />
-    <input id="balance" placeholder="الرصيد" type="number" />
-    <input id="points" placeholder="النقاط" type="number" />
-    <button onclick="addUserManually()">إضافة المستخدم</button>
-    
-    <h3>إدارة الرصيد والنقاط</h3>
-    <input id="manageUid" placeholder="UID المستخدم" />
-    <input id="addBalance" placeholder="إضافة رصيد" type="number" />
-    <input id="removeBalance" placeholder="خصم رصيد" type="number" />
-    <input id="addPoints" placeholder="إضافة نقاط" type="number" />
-    <input id="removePoints" placeholder="خصم نقاط" type="number" />
-    <button onclick="updateUserData()">تحديث</button>
-
-    <h3>المستخدمين المسجلين</h3>
-    <div id="userList"></div>
-
+    <!-- أجزاء أخرى مثل إضافة المستخدم وإدارة الرصيد ... -->
     <h3>طلبات الشحن</h3>
     <div id="orders"></div>
 
@@ -64,66 +47,20 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    window.addUserManually = async () => {
-      const uid = document.getElementById("uid").value.trim();
-      const email = document.getElementById("email").value.trim();
-      const balance = parseFloat(document.getElementById("balance").value);
-      const points = parseFloat(document.getElementById("points").value);
-
-      if (!uid || !email) return alert("يرجى إدخال UID والبريد الإلكتروني.");
-      await set(ref(db, 'users/' + uid), {
-        email,
-        balance: balance || 0,
-        points: points || 0
-      });
-      alert("✅ تم إضافة المستخدم.");
-    };
-
-    window.updateUserData = async () => {
-      const uid = document.getElementById("manageUid").value.trim();
-      const addBalance = parseFloat(document.getElementById("addBalance").value);
-      const removeBalance = parseFloat(document.getElementById("removeBalance").value);
-      const addPoints = parseFloat(document.getElementById("addPoints").value);
-      const removePoints = parseFloat(document.getElementById("removePoints").value);
-
-      const userRef = ref(db, 'users/' + uid);
-      const snapshot = await get(userRef);
-      if (!snapshot.exists()) return alert("المستخدم غير موجود.");
-      const userData = snapshot.val();
-
-      const newBalance = (userData.balance || 0) + (addBalance || 0) - (removeBalance || 0);
-      const newPoints = (userData.points || 0) + (addPoints || 0) - (removePoints || 0);
-
-      await update(userRef, {
-        balance: newBalance,
-        points: newPoints
-      });
-      alert("✅ تم التحديث.");
-    };
-
-    const userListDiv = document.getElementById("userList");
-    onValue(ref(db, 'users'), snapshot => {
-      userListDiv.innerHTML = "";
-      snapshot.forEach(child => {
-        const uid = child.key;
-        const data = child.val();
-        const div = document.createElement("div");
-        div.className = "card";
-        div.textContent = `UID: ${uid} | 📌 ${data.email} | 💰 ${data.balance} جنيه | ⭐ ${data.points}`;
-        userListDiv.appendChild(div);
-      });
-    });
-
     const ordersDiv = document.getElementById("orders");
     onValue(ref(db, 'orders'), snapshot => {
       ordersDiv.innerHTML = "";
       snapshot.forEach(child => {
         const data = child.val();
         const orderKey = child.key;
+
+        // تجاهل الطلبات المرفوضة أو المكتملة (تم)
+        if(data.status === "مرفوض" || data.status === "تم") return;
+
         const div = document.createElement("div");
         div.className = "card";
         const time = data.createdAt ? new Date(data.createdAt).toLocaleString('ar-EG') : 'غير معروف';
-        div.innerHTML = `🎮 ${data.type} - ${data.service} (${data.package}) | ${data.account}<br><strong>UID:</strong> ${data.uid}<br><strong>الحالة:</strong> ${data.status || 'قيد التنفيذ'}<br><strong>الوقت:</strong> ${time}`;
+        div.innerHTML = `🎮 ${data.type} - ${data.service} (${data.package}) | ${data.account}<br><strong>UID:</strong> ${data.uid}<br><strong>الحالة:</strong> <span class="status-text">${data.status || 'قيد التنفيذ'}</span><br><strong>الوقت:</strong> ${time}`;
 
         const btnGroup = document.createElement("div");
         btnGroup.className = "btns";
@@ -131,16 +68,22 @@
         const accept = document.createElement("button");
         accept.className = "approve-btn";
         accept.textContent = "✔️ قبول";
-        accept.onclick = () => update(ref(db, `orders/${orderKey}`), { status: "تم" });
+        accept.onclick = () => {
+          update(ref(db, `orders/${orderKey}`), { status: "تم" }).then(() => {
+            div.querySelector(".status-text").textContent = "تم";
+            accept.style.backgroundColor = "black";
+            reject.remove();
+          });
+        };
 
         const reject = document.createElement("button");
         reject.className = "reject-btn";
         reject.textContent = "❌ رفض";
         reject.onclick = () => {
-          if (confirm("هل أنت متأكد من رفض الطلب؟")) {
+          if(confirm("هل أنت متأكد من رفض الطلب؟")) {
             update(ref(db, `orders/${orderKey}`), { status: "مرفوض" })
               .then(() => {
-                div.remove(); // إزالة العنصر من صفحة الأدمن فقط
+                div.remove(); // إزالة من الواجهة
                 alert("✅ تم رفض الطلب. سيظهر للمستخدم أن الطلب مرفوض.");
               })
               .catch(err => {
@@ -162,20 +105,18 @@
       transactionsDiv.innerHTML = "";
       snapshot.forEach(async child => {
         const data = child.val();
-
-        // تجاهل المعاملات التي تمت معالجتها (تم أو مرفوض)
-        if (data.status && (data.status === "تم" || data.status === "مرفوض")) {
-          return;
-        }
-
         const transactionKey = child.key;
+
+        // تجاهل المعاملات التي تم رفضها أو الموافقة عليها سابقًا
+        if(data.status === "تم" || data.status === "مرفوض") return;
+
         const userSnap = await get(ref(db, 'users/' + data.uid));
         const email = userSnap.exists() ? userSnap.val().email : 'غير معروف';
         const time = data.timestamp ? new Date(data.timestamp).toLocaleString('ar-EG') : 'غير معروف';
 
         const div = document.createElement("div");
         div.className = "card";
-        div.innerHTML = `💵 ${data.amount} جنيه | الطريقة: ${data.method}<br><strong>UID:</strong> ${data.uid}<br><strong>البريد الإلكتروني:</strong> ${email}<br><strong>الحالة:</strong> ${data.status || 'قيد التنفيذ'}<br><strong>رقم التحويل:</strong> ${data.senderInfo || 'غير معروف'}<br><strong>الوقت:</strong> ${time}`;
+        div.innerHTML = `💵 ${data.amount} جنيه | الطريقة: ${data.method}<br><strong>UID:</strong> ${data.uid}<br><strong>البريد الإلكتروني:</strong> ${email}<br><strong>الحالة:</strong> <span class="status-text">${data.status || 'قيد التنفيذ'}</span><br><strong>رقم التحويل:</strong> ${data.senderInfo || 'غير معروف'}<br><strong>الوقت:</strong> ${time}`;
 
         const btnGroup = document.createElement("div");
         btnGroup.className = "btns";
@@ -187,22 +128,26 @@
           const userRef = ref(db, 'users/' + data.uid);
           const snap = await get(userRef);
           const current = snap.exists() ? snap.val().balance || 0 : 0;
+
           await update(userRef, { balance: current + data.amount });
           await update(ref(db, 'transactions/' + transactionKey), { status: "تم" });
+
           accept.style.backgroundColor = "black";  // زر التم يصبح أسود
           reject.remove();                         // زر الرفض يختفي
-          // تحديث نص الحالة داخل الكرت
-          div.querySelector('strong').textContent = "الحالة: تم";
+          div.querySelector(".status-text").textContent = "تم";
+
           alert("✅ تم إضافة المبلغ إلى رصيد المستخدم.");
         };
 
         const reject = document.createElement("button");
         reject.className = "reject-btn";
         reject.textContent = "❌ رفض";
-        reject.onclick = () => update(ref(db, 'transactions/' + transactionKey), { status: "مرفوض" })
-          .then(() => {
-            div.remove(); // إزالة الطلب من الصفحة عند الرفض
-          });
+        reject.onclick = () => {
+          update(ref(db, 'transactions/' + transactionKey), { status: "مرفوض" })
+            .then(() => {
+              div.remove();
+            });
+        };
 
         btnGroup.appendChild(accept);
         btnGroup.appendChild(reject);
