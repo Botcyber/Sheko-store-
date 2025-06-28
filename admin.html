@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <title>لوحة تحكم الأدمن - Sheko Store</title>
@@ -14,8 +13,9 @@
     button { background-color: #222; color: white; border: none; cursor: pointer; }
     button:hover { background-color: #444; }
     .card { background: white; padding: 15px; margin-top: 15px; border-radius: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1); position: relative; }
-    .approve-btn { position: absolute; top: 15px; right: 15px; background: #28a745; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; color: white; }
-    .approved { background: #d4edda; }
+    .btns { display: flex; gap: 10px; margin-top: 10px; }
+    .approve-btn { background: #28a745; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
+    .reject-btn { background: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -26,28 +26,24 @@
     <input id="email" placeholder="البريد الإلكتروني" />
     <input id="balance" placeholder="الرصيد" type="number" />
     <input id="points" placeholder="النقاط" type="number" />
-    <button onclick="addUserManually()">إضافة المستخدم</button>
-    
-    <h3>إدارة الرصيد والنقاط</h3>
-    <input id="manageUid" placeholder="UID المستخدم" />
-    <input id="addBalance" placeholder="إضافة رصيد" type="number" />
-    <input id="removeBalance" placeholder="خصم رصيد" type="number" />
-    <input id="addPoints" placeholder="إضافة نقاط" type="number" />
-    <input id="removePoints" placeholder="خصم نقاط" type="number" />
-    <button onclick="updateUserData()">تحديث</button>
+    <button onclick="addUserManually()">إضافة المستخدم</button><h3>إدارة الرصيد والنقاط</h3>
+<input id="manageUid" placeholder="UID المستخدم" />
+<input id="addBalance" placeholder="إضافة رصيد" type="number" />
+<input id="removeBalance" placeholder="خصم رصيد" type="number" />
+<input id="addPoints" placeholder="إضافة نقاط" type="number" />
+<input id="removePoints" placeholder="خصم نقاط" type="number" />
+<button onclick="updateUserData()">تحديث</button>
 
-    <h3>المستخدمين المسجلين</h3>
-    <div id="userList"></div>
+<h3>المستخدمين المسجلين</h3>
+<div id="userList"></div>
 
-    <h3>طلبات الشحن</h3>
-    <div id="orders"></div>
+<h3>طلبات الشحن</h3>
+<div id="orders"></div>
 
-    <h3>تحويلات الأموال (transactions)</h3>
-    <div id="transactions"></div>
+<h3>تحويلات الأموال (transactions)</h3>
+<div id="transactions"></div>
 
-  </div>  
-
-  <script type="module">
+  </div>  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, set, get, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -64,7 +60,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // إضافة مستخدم يدويًا
     window.addUserManually = async () => {
       const uid = document.getElementById("uid").value.trim();
       const email = document.getElementById("email").value.trim();
@@ -80,7 +75,6 @@
       alert("✅ تم إضافة المستخدم.");
     };
 
-    // تحديث الرصيد والنقاط
     window.updateUserData = async () => {
       const uid = document.getElementById("manageUid").value.trim();
       const addBalance = parseFloat(document.getElementById("addBalance").value);
@@ -103,7 +97,6 @@
       alert("✅ تم التحديث.");
     };
 
-    // عرض المستخدمين
     const userListDiv = document.getElementById("userList");
     onValue(ref(db, 'users'), snapshot => {
       userListDiv.innerHTML = "";
@@ -117,7 +110,6 @@
       });
     });
 
-    // عرض الطلبات
     const ordersDiv = document.getElementById("orders");
     onValue(ref(db, 'orders'), snapshot => {
       ordersDiv.innerHTML = "";
@@ -126,79 +118,65 @@
         const div = document.createElement("div");
         div.className = "card";
         const time = data.createdAt ? new Date(data.createdAt).toLocaleString('ar-EG') : 'غير معروف';
-        div.innerHTML = `
-          🎮 ${data.type} - ${data.service} (${data.package}) | ${data.account} <br>
-          <strong>UID المستخدم:</strong> ${data.uid || 'غير معروف'} <br>
-          <strong>الوقت:</strong> ${time}
-        `;
+        div.innerHTML = `🎮 ${data.type} - ${data.service} (${data.package}) | ${data.account}<br><strong>UID:</strong> ${data.uid}<br><strong>الحالة:</strong> ${data.status || 'قيد التنفيذ'}<br><strong>الوقت:</strong> ${time}`;
+
+        const btnGroup = document.createElement("div");
+        btnGroup.className = "btns";
+
+        const accept = document.createElement("button");
+        accept.className = "approve-btn";
+        accept.textContent = "✔️ قبول";
+        accept.onclick = () => update(ref(db, `orders/${child.key}`), { status: "تم" });
+
+        const reject = document.createElement("button");
+        reject.className = "reject-btn";
+        reject.textContent = "❌ رفض";
+        reject.onclick = () => update(ref(db, `orders/${child.key}`), { status: "مرفوض" });
+
+        btnGroup.appendChild(accept);
+        btnGroup.appendChild(reject);
+        div.appendChild(btnGroup);
         ordersDiv.appendChild(div);
       });
     });
 
-    // قبول الطلب
-    async function approveTopupRequest(requestKey, uid, amount) {
-      if (!confirm(`هل تريد قبول إضافة ${amount} جنيه؟`)) return;
-      const userRef = ref(db, `users/${uid}`);
-      const userSnap = await get(userRef);
-      if (!userSnap.exists()) {
-        alert("المستخدم غير موجود.");
-        return;
-      }
-
-      const current = userSnap.val().balance || 0;
-      await update(userRef, { balance: current + amount });
-      await remove(ref(db, `transactions/${requestKey}`));
-      alert("✅ تمت إضافة الرصيد.");
-    }
-
-    // عرض تحويلات الأموال
     const transactionsDiv = document.getElementById("transactions");
     onValue(ref(db, 'transactions'), async snapshot => {
       transactionsDiv.innerHTML = "";
-      if (!snapshot.exists()) {
-        transactionsDiv.innerHTML = "لا توجد تحويلات حالياً.";
-        return;
-      }
-
-      const requests = [];
-      snapshot.forEach(child => {
-        requests.push({ key: child.key, ...child.val() });
-      });
-
-      const uids = [...new Set(requests.map(r => r.uid).filter(Boolean))];
-      const usersData = {};
-
-      await Promise.all(uids.map(async uid => {
-        try {
-          const userSnap = await get(ref(db, 'users/' + uid));
-          if (userSnap.exists()) usersData[uid] = userSnap.val();
-        } catch {}
-      }));
-
-      requests.forEach(req => {
-        const email = usersData[req.uid]?.email || 'غير معروف';
-        const time = req.timestamp ? new Date(req.timestamp).toLocaleString('ar-EG') : 'غير معروف';
-        const senderInfo = req.senderInfo || 'غير معروف';
+      snapshot.forEach(async child => {
+        const data = child.val();
+        const userSnap = await get(ref(db, 'users/' + data.uid));
+        const email = userSnap.exists() ? userSnap.val().email : 'غير معروف';
+        const time = data.timestamp ? new Date(data.timestamp).toLocaleString('ar-EG') : 'غير معروف';
 
         const div = document.createElement("div");
         div.className = "card";
-        div.innerHTML = `
-          💵 المبلغ: ${req.amount} جنيه | الطريقة: ${req.method} <br>
-          <strong>UID المستخدم:</strong> ${req.uid || 'غير معروف'} <br>
-          <strong>البريد الإلكتروني:</strong> ${email} <br>
-          <strong>رقم/رابط التحويل:</strong> ${senderInfo} <br>
-          <strong>الوقت:</strong> ${time}
-        `;
+        div.innerHTML = `💵 ${data.amount} جنيه | الطريقة: ${data.method}<br><strong>UID:</strong> ${data.uid}<br><strong>البريد الإلكتروني:</strong> ${email}<br><strong>الحالة:</strong> ${data.status || 'قيد التنفيذ'}<br><strong>رقم التحويل:</strong> ${data.senderInfo || 'غير معروف'}<br><strong>الوقت:</strong> ${time}`;
 
-        const btn = document.createElement("button");
-        btn.className = "approve-btn";
-        btn.textContent = "قبول";
-        btn.onclick = () => approveTopupRequest(req.key, req.uid, req.amount);
-        div.appendChild(btn);
+        const btnGroup = document.createElement("div");
+        btnGroup.className = "btns";
 
+        const accept = document.createElement("button");
+        accept.className = "approve-btn";
+        accept.textContent = "✔️ قبول";
+        accept.onclick = async () => {
+          const userRef = ref(db, 'users/' + data.uid);
+          const snap = await get(userRef);
+          const current = snap.exists() ? snap.val().balance || 0 : 0;
+          await update(userRef, { balance: current + data.amount });
+          await update(ref(db, 'transactions/' + child.key), { status: "تم" });
+        };
+
+        const reject = document.createElement("button");
+        reject.className = "reject-btn";
+        reject.textContent = "❌ رفض";
+        reject.onclick = () => update(ref(db, 'transactions/' + child.key), { status: "مرفوض" });
+
+        btnGroup.appendChild(accept);
+        btnGroup.appendChild(reject);
+        div.appendChild(btnGroup);
         transactionsDiv.appendChild(div);
       });
     });
-  </script>
-</body>
+  </script></body>
 </html>
