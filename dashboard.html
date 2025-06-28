@@ -1,9 +1,16 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <title>لوحة التحكم - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- ربط Font Awesome للأيقونات -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
   <style>
     body {
       font-family: 'Cairo', sans-serif;
@@ -31,6 +38,7 @@
       align-items: center;
       font-size: 14px;
       position: relative;
+      transition: color 0.3s ease;
     }
     .nav-icons a i {
       font-size: 20px;
@@ -39,10 +47,11 @@
     .nav-icons a:hover {
       color: #ffb700;
     }
+    /* badge الإشعارات */
     #notifBadge {
       position: absolute;
       top: 0;
-      left: 5px;
+      left: 5px; /* لأن الصفحة rtl */
       background: red;
       color: white;
       font-size: 12px;
@@ -63,6 +72,27 @@
     #balance {
       font-weight: bold;
     }
+    button {
+      background: #444;
+      border: none;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: bold;
+      transition: background 0.3s ease;
+      font-size: 14px;
+    }
+    button i {
+      font-size: 16px;
+    }
+    button:hover {
+      background: #ffb700;
+      color: #222;
+    }
     .dashboard {
       max-width: 800px;
       margin: auto;
@@ -70,6 +100,7 @@
       background: white;
       border-radius: 12px;
       margin-top: 30px;
+      position: relative;
     }
     label, select, input {
       display: block;
@@ -79,7 +110,7 @@
       border-radius: 5px;
       border: 1px solid #ccc;
     }
-    .order-btn {
+    button.order-btn {
       background: #222;
       color: white;
       padding: 10px;
@@ -89,6 +120,15 @@
       width: 100%;
       margin-top: 15px;
       font-weight: bold;
+    }
+    button.order-btn:hover {
+      background: #444;
+    }
+    .note {
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+      margin-top: 20px;
     }
     .footer-contact {
       max-width: 800px;
@@ -107,96 +147,343 @@
       border-radius: 6px;
       font-weight: bold;
       cursor: pointer;
+      transition: background 0.3s ease;
+      min-width: 180px;
     }
-    .announcement-overlay {
+    .btn-share:hover, .btn-copy:hover {
+      background: #ffb700;
+      color: #222;
+    }
+
+    /* صندوق الإعلان */
+    #announcementBox {
       position: fixed;
-      top: 0; right: 0; bottom: 0; left: 0;
-      background: rgba(0,0,0,0.7);
-      z-index: 999;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .announcement-box {
-      background: #fff;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
       max-width: 90%;
-      width: 400px;
-      padding: 20px;
-      border-radius: 15px;
-      position: relative;
-      text-align: center;
-    }
-    .announcement-box img {
-      max-width: 100%;
+      max-height: 250px;
+      background-color: #fff;
       border-radius: 12px;
-      margin-bottom: 15px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+      padding: 20px;
+      z-index: 9999;
+      display: none;
+      overflow: hidden;
+      color: #222;
+      text-align: right;
+      direction: rtl;
     }
-    .announcement-box h3 {
-      margin: 0 0 10px;
+    #announcementBox.show {
+      display: block;
     }
-    .announcement-box button {
-      background: red;
-      color: white;
+    #announcementClose {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: #ff4d4d;
       border: none;
       border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      cursor: pointer;
+      width: 28px;
+      height: 28px;
+      color: white;
+      font-weight: bold;
       font-size: 18px;
+      cursor: pointer;
+      line-height: 28px;
+      text-align: center;
+    }
+    #announcementTitle {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    #announcementText {
+      font-size: 16px;
     }
   </style>
 </head>
 <body>
+
 <div class="top-bar">
   <nav class="nav-icons">
-    <a href="account.html"><i class="fa fa-user"></i><span>حسابك</span></a>
-    <a href="orders.html"><i class="fa fa-box"></i><span>طلباتك</span></a>
-    <a href="add-money.html"><i class="fa fa-wallet"></i><span>إضافة أموال</span></a>
-    <a href="reviews_complaints.html"><i class="fa fa-comments"></i><span>الشكاوي</span></a>
-    <a href="notifications.html" style="position: relative;"><i class="fa fa-bell"></i><span>الإشعارات</span><span id="notifBadge">0</span></a>
+    <a href="account.html" title="معلومات حسابك">
+      <i class="fa fa-user"></i>
+      <span>حسابك</span>
+    </a>
+    <a href="orders.html" title="طلباتك">
+      <i class="fa fa-box"></i>
+      <span>طلباتك</span>
+    </a>
+    <a href="add-money.html" title="إضافة أموال">
+      <i class="fa fa-wallet"></i>
+      <span>إضافة أموال</span>
+    </a>
+    <a href="reviews_complaints.html" title="التقييمات والشكاوي">
+      <i class="fa fa-comments"></i>
+      <span>التقييمات والشكاوي</span>
+    </a>
+    <!-- زر الاشعارات مع badge -->
+    <a href="notifications.html" title="الإشعارات" style="position: relative;">
+      <i class="fa fa-bell"></i>
+      <span>الإشعارات</span>
+      <span id="notifBadge">0</span>
+    </a>
   </nav>
+
   <div class="user-area">
     <span id="balance">رصيدك: ...</span>
-    <button onclick="logout()"><i class="fa fa-sign-out-alt"></i> خروج</button>
+    <button onclick="logout()" title="تسجيل الخروج">
+      <i class="fa fa-sign-out-alt"></i> خروج
+    </button>
   </div>
 </div>
+
+<div id="announcementBox">
+  <button id="announcementClose" title="إغلاق الإعلان">&times;</button>
+  <div id="announcementTitle"></div>
+  <div id="announcementText"></div>
+</div>
+
 <div class="dashboard">
   <h2>إرسال طلب</h2>
-  <label>نوع الخدمة:</label>
-  <select id="mainService"></select>
-  <label>الخدمة:</label>
+  <label for="mainService">نوع الخدمة:</label>
+  <select id="mainService">
+    <option value="">اختر نوع الخدمة</option>
+    <option value="ألعاب">شحن ألعاب</option>
+    <option value="سوشيال">مواقع التواصل</option>
+  </select>
+
+  <label for="subService">الخدمة:</label>
   <select id="subService"></select>
-  <label>الباقة:</label>
+
+  <label for="package">الباقة:</label>
   <select id="package"></select>
-  <label>اسم الحساب / ID:</label>
-  <input type="text" id="accountInput">
+
+  <label for="accountInput">اسم الحساب / ID:</label>
+  <input type="text" id="accountInput" />
+
   <button class="order-btn" onclick="submitOrder()">إرسال الطلب</button>
+  <p class="note">إذا واجهت أي مشكلة، راسلنا على واتساب: 01099874914</p>
 </div>
+
+<!-- القسم الإضافي أسفل الصفحة -->
 <div class="footer-contact">
-  <button class="btn-share" onclick="shareSite()">مشاركة الموقع</button>
+  <button class="btn-share" onclick="shareSite()">مشاركة الموقع مع أصدقائك</button>
   <button class="btn-copy" onclick="copyLink()">نسخ رابط الموقع</button>
 </div>
-<div id="announcement"></div>
+
+<!-- Firebase Scripts -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
 <script>
-const firebaseConfig = { /* بياناتك */ };
+const firebaseConfig = {
+  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+  authDomain: "sheko-store.firebaseapp.com",
+  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+  projectId: "sheko-store",
+  storageBucket: "sheko-store.firebasestorage.app",
+  messagingSenderId: "113892775847",
+  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+};
+
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
 const auth = firebase.auth();
-let currentUser = null;// عرض الإعلان مره واحدة function showAnnouncement(announcement) { if (!announcement || !announcement.title) return; const container = document.getElementById("announcement"); const imgHTML = announcement.imageURL ? <img src="${announcement.imageURL}" alt=""> : ""; container.innerHTML = <div class="announcement-overlay"> <div class="announcement-box"> <button onclick="dismissAnnouncement()">&times;</button> ${imgHTML} <h3>${announcement.title}</h3> <p>${announcement.body}</p> </div> </div>; }
+const db = firebase.database();
 
-function dismissAnnouncement() { document.getElementById("announcement").innerHTML = ""; db.ref("users/" + currentUser.uid + "/announcementSeen").set(true); }
+let currentUser = null;
+const prices = {
+  "ألعاب": {
+    "ببجي موبايل": {"60 شدة": 50, "300 شدة": 250},
+    "كود موبايل": {"220 CP": 250},
+    "فري فاير": {"100 جوهرة": 70},
+    "فيفا موبايل": {"20 كوينز": 40}
+  },
+  "سوشيال": {
+    "تيك توك": {"1000 متابع": 50},
+    "يوتيوب": {"1000 مشترك": 50},
+    "انستجرام": {"1000 متابع": 50}
+  }
+};
 
-auth.onAuthStateChanged(user => { if (!user) return location.href = "index.html"; currentUser = user;
+const mainService = document.getElementById("mainService");
+const subService = document.getElementById("subService");
+const packageEl = document.getElementById("package");
+const accountInput = document.getElementById("accountInput");
+const balanceEl = document.getElementById("balance");
+const notifBadge = document.getElementById("notifBadge");
+const announcementBox = document.getElementById("announcementBox");
+const announcementTitle = document.getElementById("announcementTitle");
+const announcementText = document.getElementById("announcementText");
+const announcementClose = document.getElementById("announcementClose");
 
-db.ref("users/" + user.uid + "/balance").on("value", snap => { document.getElementById("balance").textContent = رصيدك: ${snap.val() || 0} جنيه; });
+mainService.addEventListener("change", () => {
+  subService.innerHTML = "";
+  packageEl.innerHTML = "";
+  const selectedMain = prices[mainService.value];
+  if (!selectedMain) return;
+  for (let sub in selectedMain) {
+    let opt = document.createElement("option");
+    opt.value = sub;
+    opt.textContent = sub;
+    subService.appendChild(opt);
+  }
+  updatePackage();
+});
 
-db.ref("users/" + user.uid + "/announcementSeen").once("value").then(snap => { const seen = snap.val(); if (!seen) { db.ref("global_announcement").once("value").then(snap2 => { showAnnouncement(snap2.val()); }); } }); }); </script>
+subService.addEventListener("change", updatePackage);
+function updatePackage() {
+  packageEl.innerHTML = "";
+  const selected = prices[mainService.value]?.[subService.value];
+  if (!selected) return;
+  for (let pkg in selected) {
+    let opt = document.createElement("option");
+    opt.value = pkg;
+    opt.textContent = `${pkg} - ${selected[pkg]} جنيه`;
+    packageEl.appendChild(opt);
+  }
+}
+
+auth.onAuthStateChanged(user => {
+  if (!user) return location.href = "index.html";
+  currentUser = user;
+
+  // تحديث الرصيد
+  db.ref("users/" + user.uid + "/balance").on("value", snapshot => {
+    const balance = snapshot.val();
+    balanceEl.textContent = `رصيدك: ${balance !== null ? balance : 0} جنيه`;
+  });
+
+  // تحديث badge الإشعارات غير المقروءة
+  const notifRef = db.ref("notifications/" + currentUser.uid);
+  notifRef.on("value", snapshot => {
+    const notifications = snapshot.val() || {};
+    const unreadCount = Object.values(notifications).filter(n => !n.read).length;
+
+    if (unreadCount > 0) {
+      notifBadge.style.display = "inline-block";
+      notifBadge.textContent = unreadCount > 99 ? "99+" : unreadCount;
+    } else {
+      notifBadge.style.display = "none";
+    }
+  });
+
+  // عرض الإعلان إذا لم يتم إغلاقه من قبل
+  const seenAnnouncement = localStorage.getItem('seenAnnouncementId');
+  db.ref("announcement").once("value").then(snap => {
+    const announcement = snap.val();
+    if (!announcement) return; // لا يوجد إعلان
+
+    // تحقق إذا المستخدم لم يغلق الإعلان بعد (بتخزين معرف الإعلان في localStorage)
+    if (announcement.id !== seenAnnouncement) {
+      announcementBox.classList.add("show");
+      announcementTitle.textContent = announcement.title || "";
+      announcementText.textContent = announcement.text || "";
+
+      // إذا كانت هناك صورة خلفية، ضعها
+      if (announcement.imageUrl) {
+        announcementBox.style.backgroundImage = `url(${announcement.imageUrl})`;
+        announcementBox.style.backgroundSize = "cover";
+        announcementBox.style.backgroundPosition = "center";
+        announcementBox.style.color = "#fff"; // إذا الخلفية مظلمة
+      } else {
+        // إعادة تعيين إذا لا توجد صورة
+        announcementBox.style.backgroundImage = "none";
+        announcementBox.style.color = "#222";
+      }
+    }
+  });
+});
+
+// إغلاق الإعلان عند الضغط على زر X
+announcementClose.addEventListener("click", () => {
+  announcementBox.classList.remove("show");
+  // حفظ معرف الإعلان في localStorage حتى لا يظهر مرة ثانية
+  db.ref("announcement").once("value").then(snap => {
+    const announcement = snap.val();
+    if (announcement && announcement.id) {
+      localStorage.setItem('seenAnnouncementId', announcement.id);
+    }
+  });
+});
+
+function submitOrder() {
+  const service = mainService.value;
+  const sub = subService.value;
+  const pack = packageEl.value;
+  const account = accountInput.value.trim();
+  const cost = prices[service]?.[sub]?.[pack];
+
+  if (!service || !sub || !pack || !account) return alert("يرجى ملء جميع الحقول");
+  if (cost === undefined) return alert("لا يمكن تحديد تكلفة الخدمة");
+
+  db.ref("users/" + currentUser.uid + "/balance").once("value").then(snapshot => {
+    const balance = snapshot.val() || 0;
+    if (balance < cost) return alert("رصيدك لا يكفي لإتمام هذا الطلب");
+
+    const order = {
+      uid: currentUser.uid,
+      type: service,
+      service: sub,
+      package: pack,
+      account: account,
+      status: "قيد التنفيذ",
+      createdAt: new Date().toISOString()
+    };
+
+    const ordersRef = db.ref("orders");
+    const newOrderRef = ordersRef.push();
+
+    newOrderRef.set(order).then(() => {
+      return db.ref("users/" + currentUser.uid).update({
+        balance: balance - cost
+      });
+    }).then(() => {
+      alert("تم إرسال الطلب وخصم الرصيد بنجاح");
+      mainService.value = "";
+      subService.innerHTML = "";
+      packageEl.innerHTML = "";
+      accountInput.value = "";
+    }).catch(err => {
+      console.error(err);
+      alert("حدث خطأ أثناء إرسال الطلب");
+    });
+  });
+}
+
+function logout() {
+  auth.signOut().then(() => {
+    location.href = "index.html";
+  });
+}
+
+// مشاركة الموقع
+function shareSite() {
+  const url = "https://botcyber.github.io/Sheko-store-/";
+  if (navigator.share) {
+    navigator.share({
+      title: "Sheko Store",
+      text: "تفضلوا بزيارة موقع Sheko Store لشحن الألعاب والخدمات",
+      url: url,
+    }).catch(console.error);
+  } else {
+    alert("ميزة المشاركة غير مدعومة في متصفحك، يمكنك نسخ الرابط ومشاركته يدوياً.");
+  }
+}
+
+// نسخ الرابط
+function copyLink() {
+  const url = "https://botcyber.github.io/Sheko-store-/";
+  navigator.clipboard.writeText(url).then(() => {
+    alert("تم نسخ رابط الموقع!");
+  }).catch(() => {
+    alert("فشل في نسخ الرابط، يرجى نسخه يدوياً.");
+  });
+}
+</script>
 
 </body>
 </html>
