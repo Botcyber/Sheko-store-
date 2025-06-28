@@ -9,8 +9,8 @@
     header { background: #222; color: white; padding: 20px; text-align: center; font-size: 22px; }
     .container { max-width: 1000px; margin: auto; padding: 20px; }
     h3 { margin-top: 40px; color: #333; }
-    label, input, select, button { display: block; width: 100%; margin-top: 10px; padding: 10px; border-radius: 6px; }
-    input, select { border: 1px solid #ccc; }
+    label, input, select, button, textarea { display: block; width: 100%; margin-top: 10px; padding: 10px; border-radius: 6px; }
+    input, select, textarea { border: 1px solid #ccc; }
     button { background-color: #222; color: white; border: none; cursor: pointer; }
     button:hover { background-color: #444; }
     .card { background: white; padding: 15px; margin-top: 15px; border-radius: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1); position: relative; }
@@ -49,9 +49,9 @@
     <div id="transactions"></div>
 
     <h3>إرسال إشعار للمستخدم</h3>
-    <input id="notifUid" placeholder="UID المستخدم (اتركه فارغ لإرسال للجميع)" />
+    <input id="notifUid" placeholder="UID المستخدم" />
     <input id="notifTitle" placeholder="عنوان الإشعار" />
-    <textarea id="notifMessage" placeholder="نص الرسالة" style="width:100%; height:80px; margin-top:10px; border-radius:6px; border:1px solid #ccc; padding:8px;"></textarea>
+    <textarea id="notifMessage" placeholder="نص الرسالة" style="height:80px;"></textarea>
     <button onclick="sendNotification()">إرسال إشعار</button>
   </div>  
   
@@ -202,10 +202,8 @@
       div.appendChild(btnGroup);
       ordersDiv.appendChild(div);
 
-      // تخزين العنصر للمتابعة في التحديث
       ordersMap.set(orderKey, div);
 
-      // تلوين الحالة
       const statusSpan = div.querySelector(".status-text");
       updateStatusColor(statusSpan, data.status);
     });
@@ -221,7 +219,7 @@
       }
     });
 
-    // عرض طلبات تحويل الأموال مع أزرار قبول/رفض/إشعار (لا تحذف الطلبات، تظهر كلها)
+    // عرض طلبات تحويل الأموال مع أزرار قبول/رفض/إشعار
     const transactionsDiv = document.getElementById("transactions");
     const transactionsRef = ref(db, 'transactions');
     const transactionsMap = new Map();
@@ -287,7 +285,6 @@
 
       transactionsMap.set(transactionKey, div);
 
-      // تلوين الحالة
       const statusSpan = div.querySelector(".status-text");
       updateStatusColor(statusSpan, data.status);
     });
@@ -303,69 +300,34 @@
       }
     });
 
-    // دالة إرسال إشعار لمستخدم (تعيد Promise)
-    function sendNotificationToUser(uid, title, message) {
+    // دالة إرسال إشعار لمستخدم
+    async function sendNotificationToUser(uid, title, message) {
       if (!uid || !title || !message) {
         alert("يرجى ملء جميع الحقول لإرسال الإشعار.");
-        return Promise.reject("بيانات غير كاملة");
-      }
-      const notifRef = ref(db, 'notifications/' + uid);
-      const newNotifRef = push(notifRef);
-      return newNotifRef.set({
-        title,
-        message,
-        read: false,
-        createdAt: Date.now()
-      });
-    }
-
-    // زر إرسال إشعار عام أو لمستخدم محدد
-    window.sendNotification = async () => {
-      const uidInput = document.getElementById("notifUid").value.trim();
-      const title = document.getElementById("notifTitle").value.trim();
-      const message = document.getElementById("notifMessage").value.trim();
-
-      if (!title || !message) {
-        alert("يرجى إدخال عنوان الإشعار ونص الرسالة.");
         return;
       }
-
-      if (uidInput) {
-        // إرسال إشعار لمستخدم محدد فقط
-        try {
-          await sendNotificationToUser(uidInput, title, message);
-          alert("✅ تم إرسال الإشعار بنجاح للمستخدم المحدد.");
-        } catch (err) {
-          alert("❌ حدث خطأ أثناء إرسال الإشعار: " + err);
-        }
-      } else {
-        // إرسال إشعار لكل المستخدمين
-        const usersRef = ref(db, 'users');
-        const snapshot = await get(usersRef);
-        if (!snapshot.exists()) {
-          alert("لا يوجد مستخدمين لإرسال الإشعار لهم.");
-          return;
-        }
-
-        const users = snapshot.val();
-        const uids = Object.keys(users);
-
-        if (uids.length === 0) {
-          alert("لا يوجد مستخدمين لإرسال الإشعار لهم.");
-          return;
-        }
-
-        let successCount = 0;
-        for (const uid of uids) {
-          try {
-            await sendNotificationToUser(uid, title, message);
-            successCount++;
-          } catch (err) {
-            console.error("خطأ في إرسال الإشعار للمستخدم:", uid, err);
-          }
-        }
-        alert(`✅ تم إرسال الإشعارات لـ ${successCount} مستخدم(ين).`);
+      try {
+        const notifRef = ref(db, 'notifications/' + uid);
+        const newNotifRef = push(notifRef);
+        await set(newNotifRef, {
+          title,
+          message,
+          read: false,
+          createdAt: Date.now()
+        });
+        alert("✅ تم إرسال الإشعار بنجاح.");
+      } catch (err) {
+        console.error("خطأ أثناء إرسال الإشعار:", err);
+        alert("❌ حدث خطأ أثناء إرسال الإشعار: " + err.message);
       }
+    }
+
+    // زر إرسال إشعار عام
+    window.sendNotification = async () => {
+      const uid = document.getElementById("notifUid").value.trim();
+      const title = document.getElementById("notifTitle").value.trim();
+      const message = document.getElementById("notifMessage").value.trim();
+      await sendNotificationToUser(uid, title, message);
     };
   </script>
 </body>
