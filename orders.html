@@ -1,8 +1,9 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>طلباتك - Sheko Store</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body { font-family: 'Cairo', sans-serif; margin: 0; background: #f1f1f1; }
     header, .top-bar { background: #222; color: white; padding: 15px; text-align: center; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
@@ -11,9 +12,21 @@
     .order:last-child { border-bottom: none; }
     .nav-links { display: flex; gap: 10px; }
     .nav-links a { color: white; background: #444; padding: 8px 12px; border-radius: 5px; text-decoration: none; }
+    .status {
+      font-weight: bold;
+      color: #007bff;
+    }
+    .empty {
+      text-align: center;
+      color: #999;
+      margin-top: 30px;
+      font-size: 1.2em;
+    }
   </style>
 </head>
-<body><div class="top-bar">
+<body>
+
+<div class="top-bar">
   <div class="nav-links">
     <a href="dashboard.html">لوحة التحكم</a>
     <a href="account.html">معلومات حسابك</a>
@@ -22,13 +35,23 @@
     <span id="balance">رصيدك: ...</span>
     <button onclick="logout()">تسجيل الخروج</button>
   </div>
-</div><div class="dashboard">
+</div>
+
+<div class="dashboard">
   <h2>طلباتك السابقة</h2>
   <div id="ordersList">جاري التحميل...</div>
-</div><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script><script>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+<script>
 const firebaseConfig = {
   apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
   authDomain: "sheko-store.firebaseapp.com",
+  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
   projectId: "sheko-store",
   storageBucket: "sheko-store.firebasestorage.app",
   messagingSenderId: "113892775847",
@@ -37,49 +60,60 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
-const db = firebase.firestore();
+const db = firebase.database();
+
 const ordersList = document.getElementById("ordersList");
 const balanceEl = document.getElementById("balance");
 
 let currentUser = null;
 
 auth.onAuthStateChanged(user => {
-  if (!user) return location.href = 'index.html';
+  if (!user) {
+    location.href = 'index.html';
+    return;
+  }
   currentUser = user;
 
-  db.collection("users").doc(user.uid).onSnapshot(doc => {
-    if (doc.exists) {
-      const data = doc.data();
-      balanceEl.textContent = `رصيدك: ${data.balance || 0} جنيه`;
-    }
+  // عرض الرصيد من Realtime Database
+  db.ref("users/" + user.uid + "/balance").on("value", snapshot => {
+    const balance = snapshot.val();
+    balanceEl.textContent = `رصيدك: ${balance !== null ? balance : 0} جنيه`;
   });
 
-  db.collection("orders")
-    .where("uid", "==", user.uid)
-    .orderBy("timestamp", "desc")
-    .onSnapshot(snapshot => {
-      if (snapshot.empty) {
-        ordersList.innerHTML = "لا يوجد طلبات حتى الآن.";
-        return;
-      }
-      ordersList.innerHTML = "";
-      snapshot.forEach(doc => {
-        const order = doc.data();
-        const div = document.createElement("div");
-        div.className = "order";
-        div.innerHTML = `
-          <strong>الخدمة:</strong> ${order.service}<br>
-          <strong>الباقة:</strong> ${order.package}<br>
-          <strong>الحساب:</strong> ${order.account}<br>
-          <strong>الحالة:</strong> ${order.status || "جارٍ التنفيذ"}<br>
-        `;
-        ordersList.appendChild(div);
-      });
+  // جلب الطلبات من Realtime Database (orders) للمستخدم الحالي
+  db.ref("orders").orderByChild("uid").equalTo(user.uid).on("value", snapshot => {
+    if (!snapshot.exists()) {
+      ordersList.innerHTML = `<p class="empty">لا يوجد طلبات حتى الآن.</p>`;
+      return;
+    }
+    ordersList.innerHTML = ""; // مسح المحتوى القديم
+
+    // الطلبات تكون كـ كائنات، نحولها لمصفوفة للعرض
+    const orders = snapshot.val();
+    const ordersArray = Object.values(orders).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    ordersArray.forEach(order => {
+      const div = document.createElement("div");
+      div.className = "order";
+      div.innerHTML = `
+        <strong>نوع الخدمة:</strong> ${order.type}<br>
+        <strong>الخدمة:</strong> ${order.service}<br>
+        <strong>الباقة:</strong> ${order.package}<br>
+        <strong>الحساب:</strong> ${order.account}<br>
+        <strong>الحالة:</strong> <span class="status">${order.status || "قيد التنفيذ"}</span><br>
+        <small>تاريخ الطلب: ${new Date(order.createdAt).toLocaleString("ar-EG")}</small>
+      `;
+      ordersList.appendChild(div);
     });
+  });
 });
 
 function logout() {
-  auth.signOut().then(() => location.href = 'index.html');
+  auth.signOut().then(() => {
+    location.href = 'index.html';
+  });
 }
-</script></body>
+</script>
+
+</body>
 </html>
