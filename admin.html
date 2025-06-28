@@ -4,42 +4,53 @@
   <title>لوحة تحكم الأدمن - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: 'Cairo', sans-serif; background: #f1f1f1; margin: 0; padding: 0; }
-    header { background: #222; color: white; padding: 15px; text-align: center; font-size: 20px; }
-    .container { max-width: 1000px; margin: auto; padding: 20px; background: white; border-radius: 12px; margin-top: 20px; }
-    h2 { color: #222; margin-top: 30px; }
-    label, input, select, button { display: block; width: 100%; margin: 10px 0; padding: 10px; font-size: 16px; border-radius: 5px; }
-    input, select { border: 1px solid #ccc; }
-    button { background: #222; color: white; cursor: pointer; border: none; }
-    button:hover { background: #444; }
-    .section { border-top: 1px solid #ccc; padding-top: 20px; margin-top: 20px; }
-    .entry { background: #f9f9f9; padding: 10px; margin: 5px 0; border-radius: 5px; font-size: 14px; }
+    body { font-family: 'Cairo', sans-serif; background: #f7f7f7; margin: 0; padding: 20px; direction: rtl; }
+    h2 { text-align: center; margin-bottom: 20px; }
+    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    input, select, button { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; }
+    button { background: #007bff; color: white; font-weight: bold; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    .section { margin-top: 30px; }
+    .user-box { background: #f0f0f0; margin: 10px 0; padding: 10px; border-radius: 6px; }
+    .logout-btn { background: #dc3545; margin-top: 20px; }
   </style>
 </head>
 <body>
-  <header>لوحة تحكم الأدمن - Sheko Store</header>
-  <div class="container">
-    <h2>إضافة/تحديث مستخدم</h2>
-    <input id="uid" placeholder="UID المستخدم">
-    <input id="email" placeholder="البريد الإلكتروني">
-    <input id="balance" placeholder="الرصيد">
-    <input id="points" placeholder="النقاط">
-    <button onclick="saveUser()">حفظ المستخدم</button><div class="section">
-  <h2>طلبات المستخدمين</h2>
-  <div id="orders"></div>
-</div>
+<div class="container">
+  <h2>لوحة تحكم الأدمن - Sheko Store</h2>  <div class="section">
+    <h3>إضافة مستخدم</h3>
+    <input type="text" id="uid" placeholder="UID الخاص بالمستخدم">
+    <input type="email" id="email" placeholder="البريد الإلكتروني">
+    <input type="number" id="balance" placeholder="الرصيد">
+    <input type="number" id="points" placeholder="النقاط">
+    <button onclick="addUser()">إضافة مستخدم</button>
+  </div>  <div class="section">
+    <h3>إضافة / خصم رصيد أو نقاط</h3>
+    <input type="text" id="targetUid" placeholder="UID المستخدم">
+    <input type="number" id="amount" placeholder="المبلغ">
+    <select id="operation">
+      <option value="add_balance">إضافة رصيد</option>
+      <option value="subtract_balance">خصم رصيد</option>
+      <option value="add_points">إضافة نقاط</option>
+      <option value="subtract_points">خصم نقاط</option>
+    </select>
+    <button onclick="updateUser()">تنفيذ</button>
+  </div>  <div class="section">
+    <h3>جميع المستخدمين</h3>
+    <div id="userList"></div>
+  </div>  <div class="section">
+    <h3>طلبات المستخدمين</h3>
+    <div id="ordersList"></div>
+  </div>  <div class="section">
+    <h3>طلبات إضافة الأموال</h3>
+    <div id="paymentsList"></div>
+  </div><button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
 
-<div class="section">
-  <h2>تحويلات الأموال</h2>
-  <div id="payments"></div>
-</div>
+</div><script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { getDatabase, ref, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-<div class="section">
-  <h2>المستخدمون الجدد</h2>
-  <div id="newUsers"></div>
-</div>
-
-  </div><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script><script>
   const firebaseConfig = {
     apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
     authDomain: "sheko-store.firebaseapp.com",
@@ -49,51 +60,80 @@
     messagingSenderId: "113892775847",
     appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
   };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
 
-  function saveUser() {
-    const uid = document.getElementById("uid").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const balance = parseFloat(document.getElementById("balance").value);
-    const points = parseFloat(document.getElementById("points").value);
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
 
-    if (!uid || !email) return alert("الرجاء إدخال UID والبريد الإلكتروني");
-
-    db.ref("users/" + uid).set({ email, balance, points })
-      .then(() => alert("تم حفظ المستخدم"))
-      .catch(err => alert("خطأ: " + err.message));
+  function addUser() {
+    const uid = document.getElementById("uid").value;
+    const email = document.getElementById("email").value;
+    const balance = parseFloat(document.getElementById("balance").value) || 0;
+    const points = parseFloat(document.getElementById("points").value) || 0;
+    set(ref(db, 'users/' + uid), { email, balance, points })
+      .then(() => alert("✅ تم إضافة المستخدم"))
+      .catch(err => alert("❌ خطأ: " + err.message));
   }
 
-  function loadData() {
-    db.ref("orders").on("value", snapshot => {
-      const ordersDiv = document.getElementById("orders");
-      ordersDiv.innerHTML = "";
-      snapshot.forEach(order => {
-        const data = order.val();
-        ordersDiv.innerHTML += `<div class="entry">طلب من ${data.account} - ${data.service} - ${data.package} (${data.status})</div>`;
-      });
-    });
+  function updateUser() {
+    const uid = document.getElementById("targetUid").value;
+    const amount = parseFloat(document.getElementById("amount").value);
+    const operation = document.getElementById("operation").value;
+    const userRef = ref(db, 'users/' + uid);
 
-    db.ref("payments").on("value", snapshot => {
-      const paymentsDiv = document.getElementById("payments");
-      paymentsDiv.innerHTML = "";
-      snapshot.forEach(p => {
-        const d = p.val();
-        paymentsDiv.innerHTML += `<div class="entry">${d.method}: ${d.amount} جنيه من ${d.number}</div>`;
-      });
-    });
-
-    db.ref("users").on("value", snapshot => {
-      const newUsersDiv = document.getElementById("newUsers");
-      newUsersDiv.innerHTML = "";
-      snapshot.forEach(user => {
-        const u = user.val();
-        newUsersDiv.innerHTML += `<div class="entry">${u.email} | UID: ${user.key}</div>`;
-      });
+    get(userRef).then(snapshot => {
+      if (!snapshot.exists()) return alert("❌ المستخدم غير موجود");
+      const user = snapshot.val();
+      if (operation === "add_balance") user.balance += amount;
+      if (operation === "subtract_balance") user.balance -= amount;
+      if (operation === "add_points") user.points += amount;
+      if (operation === "subtract_points") user.points -= amount;
+      update(userRef, user).then(() => alert("✅ تم التحديث"));
     });
   }
 
-  loadData();
+  function loadUsers() {
+    const usersRef = ref(db, 'users');
+    const userList = document.getElementById("userList");
+    onValue(usersRef, snapshot => {
+      userList.innerHTML = "";
+      snapshot.forEach(child => {
+        const user = child.val();
+        userList.innerHTML += `<div class='user-box'><b>UID:</b> ${child.key}<br><b>Email:</b> ${user.email}<br><b>رصيد:</b> ${user.balance} جنيه<br><b>نقاط:</b> ${user.points}</div>`;
+      });
+    });
+  }
+
+  function loadOrders() {
+    const ordersRef = ref(db, 'orders');
+    const ordersList = document.getElementById("ordersList");
+    onValue(ordersRef, snapshot => {
+      ordersList.innerHTML = "";
+      snapshot.forEach(child => {
+        const data = child.val();
+        ordersList.innerHTML += `<div class='user-box'><b>UID:</b> ${data.uid}<br><b>الخدمة:</b> ${data.service}<br><b>الباقة:</b> ${data.package}<br><b>الحساب:</b> ${data.account}</div>`;
+      });
+    });
+  }
+
+  function loadPayments() {
+    const payRef = ref(db, 'payments');
+    const payList = document.getElementById("paymentsList");
+    onValue(payRef, snapshot => {
+      payList.innerHTML = "";
+      snapshot.forEach(child => {
+        const data = child.val();
+        payList.innerHTML += `<div class='user-box'><b>UID:</b> ${data.uid}<br><b>الطريقة:</b> ${data.method}<br><b>المبلغ:</b> ${data.amount}<br><b>المرسل:</b> ${data.sender}</div>`;
+      });
+    });
+  }
+
+  function logout() {
+    signOut(auth).then(() => location.href = "index.html");
+  }
+
+  loadUsers();
+  loadOrders();
+  loadPayments();
 </script></body>
 </html>
