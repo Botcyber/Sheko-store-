@@ -1,40 +1,57 @@
-<!-- صفحة admin-ad.html - لإنشاء إعلان --><!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>إرسال إعلان - Sheko Store</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>إرسال إعلان</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background-color: #f4f4f4;
-      padding: 40px;
-      text-align: center;
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
-    .container {
+    .form-container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+      width: 100%;
       max-width: 500px;
-      margin: auto;
-      background: #fff;
-      padding: 25px;
-      border-radius: 15px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     }
     h2 {
       margin-bottom: 20px;
+      color: #333;
+      text-align: center;
     }
-    input, textarea {
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+      color: #444;
+    }
+    input[type="text"], textarea {
       width: 100%;
       padding: 10px;
-      margin: 10px 0;
-      border-radius: 6px;
+      margin-top: 7px;
       border: 1px solid #ccc;
+      border-radius: 6px;
       font-family: 'Cairo', sans-serif;
     }
+    textarea {
+      resize: vertical;
+      height: 100px;
+    }
     button {
+      margin-top: 20px;
+      width: 100%;
       background-color: #007bff;
       color: white;
-      border: none;
       padding: 12px;
-      width: 100%;
+      border: none;
       border-radius: 8px;
       font-size: 16px;
       cursor: pointer;
@@ -43,10 +60,7 @@
     button:hover {
       background-color: #0056b3;
     }
-  </style>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <script>
+  </style>  <!-- Firebase -->  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -57,47 +71,47 @@
       appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();function sendAd() {
-  const title = document.getElementById("adTitle").value.trim();
-  const text = document.getElementById("adText").value.trim();
-  const image = document.getElementById("adImage").files[0];
+    const db = firebase.database();
 
-  if (!title || !text) return alert("يرجى إدخال العنوان والمحتوى");
+    function sendAnnouncement() {
+      const title = document.getElementById("adTitle").value.trim();
+      const text = document.getElementById("adText").value.trim();
+      const image = document.getElementById("adImage").value.trim();
 
-  if (image) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      const base64 = e.target.result;
-      saveAd(title, text, base64);
-    };
-    reader.readAsDataURL(image);
-  } else {
-    saveAd(title, text, null);
-  }
-}
+      if (!title || !text) {
+        alert("يرجى ملء عنوان الإعلان والنص.");
+        return;
+      }
 
-function saveAd(title, text, image) {
-  const adData = {
-    title,
-    text,
-    image,
-    createdAt: new Date().toISOString()
-  };
-  db.ref("announcement").set(adData)
-    .then(() => alert("✅ تم إرسال الإعلان"))
-    .catch(err => alert("❌ حدث خطأ: " + err.message));
-}
+      const ad = {
+        title,
+        text,
+        image: image || ""
+      };
 
-  </script>
-</head>
+      db.ref("announcement").set(ad).then(() => {
+        alert("✅ تم إرسال الإعلان بنجاح!");
+        document.getElementById("adTitle").value = "";
+        document.getElementById("adText").value = "";
+        document.getElementById("adImage").value = "";
+      }).catch(err => {
+        console.error(err);
+        alert("❌ حدث خطأ أثناء الإرسال.");
+      });
+    }
+  </script></head>
 <body>
-  <div class="container">
-    <h2>📝 إرسال إعلان للمستخدمين</h2>
-    <input type="text" id="adTitle" placeholder="عنوان الإعلان">
-    <textarea id="adText" rows="5" placeholder="نص الإعلان"></textarea>
-    <label>صورة خلفية (اختياري):</label>
-    <input type="file" id="adImage" accept="image/*">
-    <button onclick="sendAd()">📢 إرسال الإعلان</button>
+  <div class="form-container">
+    <h2>إرسال إعلان</h2>
+    <label for="adTitle">عنوان الإعلان:</label>
+    <input type="text" id="adTitle" placeholder="مثال: خصم لفترة محدودة!" /><label for="adText">نص الإعلان:</label>
+<textarea id="adText" placeholder="مثال: احصل على 20% خصم عند شحن أي لعبة..."></textarea>
+
+<label for="adImage">رابط صورة (اختياري):</label>
+<input type="text" id="adImage" placeholder="https://example.com/image.jpg" />
+
+<button onclick="sendAnnouncement()">📢 إرسال الإعلان</button>
+
   </div>
 </body>
 </html>
