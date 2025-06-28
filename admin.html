@@ -9,29 +9,28 @@
     header { background: #222; color: white; padding: 20px; text-align: center; font-size: 22px; }
     .container { max-width: 1000px; margin: auto; padding: 20px; }
     h3 { margin-top: 40px; color: #333; }
-    label, input, select, button, textarea { display: block; width: 100%; margin-top: 10px; padding: 10px; border-radius: 6px; box-sizing: border-box; }
-    input, select, textarea { border: 1px solid #ccc; }
-    button { background-color: #222; color: white; border: none; cursor: pointer; font-weight: bold; }
+    label, input, select, button { display: block; width: 100%; margin-top: 10px; padding: 10px; border-radius: 6px; }
+    input, select { border: 1px solid #ccc; }
+    button { background-color: #222; color: white; border: none; cursor: pointer; }
     button:hover { background-color: #444; }
     .card { background: white; padding: 15px; margin-top: 15px; border-radius: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1); position: relative; }
     .btns { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
-    .approve-btn { background: #28a745; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; flex: 1; min-width: 80px; }
-    .reject-btn { background: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; flex: 1; min-width: 80px; }
-    .notify-btn { background: #007bff; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; flex: 2; min-width: 100px; }
-    textarea { resize: vertical; }
+    .approve-btn { background: #28a745; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
+    .reject-btn { background: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
+    .notify-btn { background: #007bff; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
+    .status-text { font-weight: bold; }
   </style>
 </head>
 <body>
   <header>لوحة تحكم الأدمن</header>
   <div class="container">
-
     <h3>إضافة مستخدم يدويًا</h3>
     <input id="uid" placeholder="UID المستخدم" />
     <input id="email" placeholder="البريد الإلكتروني" />
     <input id="balance" placeholder="الرصيد" type="number" />
     <input id="points" placeholder="النقاط" type="number" />
     <button onclick="addUserManually()">إضافة المستخدم</button>
-
+    
     <h3>إدارة الرصيد والنقاط</h3>
     <input id="manageUid" placeholder="UID المستخدم" />
     <input id="addBalance" placeholder="إضافة رصيد" type="number" />
@@ -41,19 +40,24 @@
     <button onclick="updateUserData()">تحديث</button>
 
     <h3>المستخدمين المسجلين</h3>
-    <div id="userList">جارٍ التحميل...</div>
+    <div id="userList"></div>
 
     <h3>طلبات الشحن</h3>
-    <div id="orders">جارٍ التحميل...</div>
+    <div id="orders"></div>
 
     <h3>طلبات تحويل الأموال</h3>
-    <div id="transactions">جارٍ التحميل...</div>
+    <div id="transactions"></div>
 
+    <h3>إرسال إشعار للمستخدم</h3>
+    <input id="notifUid" placeholder="UID المستخدم" />
+    <input id="notifTitle" placeholder="عنوان الإشعار" />
+    <textarea id="notifMessage" placeholder="نص الرسالة" style="width:100%; height:80px; margin-top:10px; border-radius:6px; border:1px solid #ccc; padding:8px;"></textarea>
+    <button onclick="sendNotification()">إرسال إشعار</button>
   </div>  
-
+  
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, set, get, update, onChildAdded, onChildChanged, onChildRemoved } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, set, get, update, onChildAdded, onChildChanged, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
@@ -75,17 +79,14 @@
       const balance = parseFloat(document.getElementById("balance").value);
       const points = parseFloat(document.getElementById("points").value);
 
-      if (!uid || !email) {
-        alert("يرجى إدخال UID والبريد الإلكتروني.");
-        return;
-      }
-
+      if (!uid || !email) return alert("يرجى إدخال UID والبريد الإلكتروني.");
       await set(ref(db, 'users/' + uid), {
         email,
         balance: balance || 0,
         points: points || 0
       });
       alert("✅ تم إضافة المستخدم.");
+      loadUsers();
     };
 
     // تحديث رصيد ونقاط المستخدم
@@ -96,17 +97,9 @@
       const addPoints = parseFloat(document.getElementById("addPoints").value);
       const removePoints = parseFloat(document.getElementById("removePoints").value);
 
-      if (!uid) {
-        alert("يرجى إدخال UID المستخدم.");
-        return;
-      }
-
       const userRef = ref(db, 'users/' + uid);
       const snapshot = await get(userRef);
-      if (!snapshot.exists()) {
-        alert("المستخدم غير موجود.");
-        return;
-      }
+      if (!snapshot.exists()) return alert("المستخدم غير موجود.");
       const userData = snapshot.val();
 
       const newBalance = (userData.balance || 0) + (addBalance || 0) - (removeBalance || 0);
@@ -117,129 +110,104 @@
         points: newPoints
       });
       alert("✅ تم التحديث.");
+      loadUsers();
     };
 
-    // عرض المستخدمين
+    // تحميل وعرض المستخدمين
     const userListDiv = document.getElementById("userList");
-    const usersRef = ref(db, 'users');
-    userListDiv.textContent = "جارٍ تحميل المستخدمين...";
-    onChildAdded(usersRef, (snapshot) => {
-      const uid = snapshot.key;
-      const data = snapshot.val();
+    function loadUsers() {
+      const usersRef = ref(db, 'users');
+      userListDiv.innerHTML = "جاري تحميل المستخدمين...";
+      get(usersRef).then(snapshot => {
+        userListDiv.innerHTML = "";
+        if (!snapshot.exists()) {
+          userListDiv.textContent = "لا يوجد مستخدمين مسجلين";
+          return;
+        }
+        snapshot.forEach(child => {
+          const uid = child.key;
+          const data = child.val();
+          const div = document.createElement("div");
+          div.className = "card";
+          div.textContent = `UID: ${uid} | 📌 ${data.email || 'بدون بريد'} | 💰 ${data.balance || 0} جنيه | ⭐ ${data.points || 0}`;
+          userListDiv.appendChild(div);
+        });
+      });
+    }
+    loadUsers();
 
-      const div = document.createElement("div");
-      div.className = "card";
-      div.id = `user-${uid}`;
-      div.textContent = `UID: ${uid} | 📌 ${data.email} | 💰 ${data.balance} جنيه | ⭐ ${data.points}`;
-      userListDiv.appendChild(div);
-    });
-
-    onChildChanged(usersRef, (snapshot) => {
-      const uid = snapshot.key;
-      const data = snapshot.val();
-      const div = document.getElementById(`user-${uid}`);
-      if (div) {
-        div.textContent = `UID: ${uid} | 📌 ${data.email} | 💰 ${data.balance} جنيه | ⭐ ${data.points}`;
+    // دالة تلوين الحالة
+    function updateStatusColor(span, status) {
+      if (status === "تم") {
+        span.style.color = "green";
+      } else if (status === "مرفوض") {
+        span.style.color = "red";
+      } else {
+        span.style.color = "black";
       }
-    });
-
-    onChildRemoved(usersRef, (snapshot) => {
-      const uid = snapshot.key;
-      const div = document.getElementById(`user-${uid}`);
-      if (div) div.remove();
-    });
-
-    // إرسال إشعار لمستخدم معين
-    async function sendNotificationToUser(uid, title, message) {
-      const notifRef = ref(db, `notifications/${uid}`);
-      const newNotifKey = (await get(ref(db, `notifications/${uid}`))).exists()
-        ? Date.now()
-        : Date.now();
-
-      const notifData = {
-        title,
-        message,
-        read: false,
-        createdAt: Date.now()
-      };
-      // استخدم push لاضافة الاشعار
-      await set(ref(db, `notifications/${uid}/${newNotifKey}`), notifData);
-      alert("✅ تم إرسال الإشعار.");
     }
 
-    // عرض طلبات الشحن
+    // عرض طلبات الشحن مع أزرار قبول/رفض/إشعار
     const ordersDiv = document.getElementById("orders");
     const ordersRef = ref(db, 'orders');
-
-    ordersDiv.textContent = "جارٍ تحميل طلبات الشحن...";
     const ordersMap = new Map();
 
-    onChildAdded(ordersRef, async (snapshot) => {
+    onChildAdded(ordersRef, (snapshot) => {
       const data = snapshot.val();
       const orderKey = snapshot.key;
-
-      const userSnap = await get(ref(db, 'users/' + data.uid));
-      const email = userSnap.exists() ? userSnap.val().email : 'غير معروف';
+      if (ordersMap.has(orderKey)) return; // منع التكرار
 
       const div = document.createElement("div");
       div.className = "card";
-      div.id = `order-${orderKey}`;
       const time = data.createdAt ? new Date(data.createdAt).toLocaleString('ar-EG') : 'غير معروف';
-
       div.innerHTML = `
         🎮 ${data.type} - ${data.service} (${data.package}) | ${data.account}<br>
         <strong>UID:</strong> ${data.uid}<br>
-        <strong>البريد الإلكتروني:</strong> ${email}<br>
-        <strong>الحالة:</strong> <span class="status-text">${data.status || 'قيد التنفيذ'}</span><br>
+        <strong>الحالة: </strong><span class="status-text">${data.status || 'قيد التنفيذ'}</span><br>
         <strong>الوقت:</strong> ${time}
-        <hr>
-        <label>عنوان الإشعار:</label>
-        <input type="text" class="notif-title" placeholder="عنوان الإشعار هنا" />
-        <label>محتوى الإشعار:</label>
-        <textarea class="notif-message" rows="3" placeholder="محتوى الإشعار هنا"></textarea>
       `;
 
       const btnGroup = document.createElement("div");
       btnGroup.className = "btns";
 
-      const accept = document.createElement("button");
-      accept.className = "approve-btn";
-      accept.textContent = "✔️ قبول";
-      accept.onclick = () => update(ref(db, `orders/${orderKey}`), { status: "تم" })
-        .then(() => div.querySelector(".status-text").textContent = "تم");
+      const acceptBtn = document.createElement("button");
+      acceptBtn.className = "approve-btn";
+      acceptBtn.textContent = "✔️ قبول";
+      acceptBtn.onclick = () => update(ref(db, `orders/${orderKey}`), { status: "تم" });
 
-      const reject = document.createElement("button");
-      reject.className = "reject-btn";
-      reject.textContent = "❌ رفض";
-      reject.onclick = () => {
+      const rejectBtn = document.createElement("button");
+      rejectBtn.className = "reject-btn";
+      rejectBtn.textContent = "❌ رفض";
+      rejectBtn.onclick = () => {
         if (confirm("هل أنت متأكد من رفض الطلب؟")) {
-          update(ref(db, `orders/${orderKey}`), { status: "مرفوض" })
-            .then(() => div.querySelector(".status-text").textContent = "مرفوض");
+          update(ref(db, `orders/${orderKey}`), { status: "مرفوض" });
         }
       };
 
-      const notify = document.createElement("button");
-      notify.className = "notify-btn";
-      notify.textContent = "📢 إرسال إشعار";
-      notify.onclick = () => {
-        const titleInput = div.querySelector(".notif-title");
-        const messageInput = div.querySelector(".notif-message");
-        const title = titleInput.value.trim();
-        const message = messageInput.value.trim();
-
+      const notifyBtn = document.createElement("button");
+      notifyBtn.className = "notify-btn";
+      notifyBtn.textContent = "📣 إشعار";
+      notifyBtn.onclick = () => {
+        const title = prompt("عنوان الإشعار:");
         if (!title) return alert("يرجى إدخال عنوان الإشعار.");
-        if (!message) return alert("يرجى إدخال محتوى الإشعار.");
-
+        const message = prompt("نص الرسالة:");
+        if (!message) return alert("يرجى إدخال نص الرسالة.");
         sendNotificationToUser(data.uid, title, message);
       };
 
-      btnGroup.appendChild(accept);
-      btnGroup.appendChild(reject);
-      btnGroup.appendChild(notify);
+      btnGroup.appendChild(acceptBtn);
+      btnGroup.appendChild(rejectBtn);
+      btnGroup.appendChild(notifyBtn);
+
       div.appendChild(btnGroup);
       ordersDiv.appendChild(div);
 
+      // تخزين العنصر للمتابعة في التحديث
       ordersMap.set(orderKey, div);
+
+      // تلوين الحالة
+      const statusSpan = div.querySelector(".status-text");
+      updateStatusColor(statusSpan, data.status);
     });
 
     onChildChanged(ordersRef, (snapshot) => {
@@ -247,29 +215,21 @@
       const orderKey = snapshot.key;
       const div = ordersMap.get(orderKey);
       if (div) {
-        div.querySelector(".status-text").textContent = data.status || 'قيد التنفيذ';
+        const statusSpan = div.querySelector(".status-text");
+        statusSpan.textContent = data.status || 'قيد التنفيذ';
+        updateStatusColor(statusSpan, data.status);
       }
     });
 
-    onChildRemoved(ordersRef, (snapshot) => {
-      const orderKey = snapshot.key;
-      const div = ordersMap.get(orderKey);
-      if (div) {
-        div.remove();
-        ordersMap.delete(orderKey);
-      }
-    });
-
-    // عرض طلبات تحويل الأموال
+    // عرض طلبات تحويل الأموال مع أزرار قبول/رفض/إشعار (لا تحذف الطلبات، تظهر كلها)
     const transactionsDiv = document.getElementById("transactions");
     const transactionsRef = ref(db, 'transactions');
-
-    transactionsDiv.textContent = "جارٍ تحميل طلبات تحويل الأموال...";
     const transactionsMap = new Map();
 
     onChildAdded(transactionsRef, async (snapshot) => {
       const data = snapshot.val();
       const transactionKey = snapshot.key;
+      if (transactionsMap.has(transactionKey)) return; // منع التكرار
 
       const userSnap = await get(ref(db, 'users/' + data.uid));
       const email = userSnap.exists() ? userSnap.val().email : 'غير معروف';
@@ -277,68 +237,59 @@
 
       const div = document.createElement("div");
       div.className = "card";
-      div.id = `transaction-${transactionKey}`;
       div.innerHTML = `
         💵 ${data.amount} جنيه | الطريقة: ${data.method}<br>
         <strong>UID:</strong> ${data.uid}<br>
         <strong>البريد الإلكتروني:</strong> ${email}<br>
-        <strong>الحالة:</strong> <span class="status-text">${data.status || 'قيد التنفيذ'}</span><br>
+        <strong>الحالة: </strong><span class="status-text">${data.status || 'قيد التنفيذ'}</span><br>
         <strong>رقم التحويل:</strong> ${data.senderInfo || 'غير معروف'}<br>
         <strong>الوقت:</strong> ${time}
-        <hr>
-        <label>عنوان الإشعار:</label>
-        <input type="text" class="notif-title" placeholder="عنوان الإشعار هنا" />
-        <label>محتوى الإشعار:</label>
-        <textarea class="notif-message" rows="3" placeholder="محتوى الإشعار هنا"></textarea>
       `;
 
       const btnGroup = document.createElement("div");
       btnGroup.className = "btns";
 
-      const accept = document.createElement("button");
-      accept.className = "approve-btn";
-      accept.textContent = "✔️ قبول";
-      accept.onclick = async () => {
+      const acceptBtn = document.createElement("button");
+      acceptBtn.className = "approve-btn";
+      acceptBtn.textContent = "✔️ قبول";
+      acceptBtn.onclick = async () => {
         const userRef = ref(db, 'users/' + data.uid);
         const snap = await get(userRef);
         const currentBalance = snap.exists() ? snap.val().balance || 0 : 0;
         await update(userRef, { balance: currentBalance + data.amount });
         await update(ref(db, 'transactions/' + transactionKey), { status: "تم" });
-        div.querySelector(".status-text").textContent = "تم";
         alert("✅ تم إضافة المبلغ إلى رصيد المستخدم.");
       };
 
-      const reject = document.createElement("button");
-      reject.className = "reject-btn";
-      reject.textContent = "❌ رفض";
-      reject.onclick = () => update(ref(db, 'transactions/' + transactionKey), { status: "مرفوض" })
-        .then(() => {
-          div.querySelector(".status-text").textContent = "مرفوض";
-          alert("✅ تم رفض الطلب.");
-        });
+      const rejectBtn = document.createElement("button");
+      rejectBtn.className = "reject-btn";
+      rejectBtn.textContent = "❌ رفض";
+      rejectBtn.onclick = () => update(ref(db, 'transactions/' + transactionKey), { status: "مرفوض" })
+        .then(() => alert("✅ تم رفض الطلب."));
 
-      const notify = document.createElement("button");
-      notify.className = "notify-btn";
-      notify.textContent = "📢 إرسال إشعار";
-      notify.onclick = () => {
-        const titleInput = div.querySelector(".notif-title");
-        const messageInput = div.querySelector(".notif-message");
-        const title = titleInput.value.trim();
-        const message = messageInput.value.trim();
-
+      const notifyBtn = document.createElement("button");
+      notifyBtn.className = "notify-btn";
+      notifyBtn.textContent = "📣 إشعار";
+      notifyBtn.onclick = () => {
+        const title = prompt("عنوان الإشعار:");
         if (!title) return alert("يرجى إدخال عنوان الإشعار.");
-        if (!message) return alert("يرجى إدخال محتوى الإشعار.");
-
+        const message = prompt("نص الرسالة:");
+        if (!message) return alert("يرجى إدخال نص الرسالة.");
         sendNotificationToUser(data.uid, title, message);
       };
 
-      btnGroup.appendChild(accept);
-      btnGroup.appendChild(reject);
-      btnGroup.appendChild(notify);
+      btnGroup.appendChild(acceptBtn);
+      btnGroup.appendChild(rejectBtn);
+      btnGroup.appendChild(notifyBtn);
+
       div.appendChild(btnGroup);
       transactionsDiv.appendChild(div);
 
       transactionsMap.set(transactionKey, div);
+
+      // تلوين الحالة
+      const statusSpan = div.querySelector(".status-text");
+      updateStatusColor(statusSpan, data.status);
     });
 
     onChildChanged(transactionsRef, (snapshot) => {
@@ -346,19 +297,39 @@
       const transactionKey = snapshot.key;
       const div = transactionsMap.get(transactionKey);
       if (div) {
-        div.querySelector(".status-text").textContent = data.status || 'قيد التنفيذ';
+        const statusSpan = div.querySelector(".status-text");
+        statusSpan.textContent = data.status || 'قيد التنفيذ';
+        updateStatusColor(statusSpan, data.status);
       }
     });
 
-    onChildRemoved(transactionsRef, (snapshot) => {
-      const transactionKey = snapshot.key;
-      const div = transactionsMap.get(transactionKey);
-      if (div) {
-        div.remove();
-        transactionsMap.delete(transactionKey);
+    // دالة إرسال إشعار لمستخدم
+    function sendNotificationToUser(uid, title, message) {
+      if (!uid || !title || !message) {
+        alert("يرجى ملء جميع الحقول لإرسال الإشعار.");
+        return;
       }
-    });
+      const notifRef = ref(db, 'notifications/' + uid);
+      const newNotifRef = push(notifRef);
+      newNotifRef.set({
+        title,
+        message,
+        read: false,
+        createdAt: Date.now()
+      }).then(() => {
+        alert("✅ تم إرسال الإشعار بنجاح.");
+      }).catch(err => {
+        alert("❌ حدث خطأ أثناء إرسال الإشعار: " + err.message);
+      });
+    }
 
+    // زر إرسال إشعار عام
+    window.sendNotification = () => {
+      const uid = document.getElementById("notifUid").value.trim();
+      const title = document.getElementById("notifTitle").value.trim();
+      const message = document.getElementById("notifMessage").value.trim();
+      sendNotificationToUser(uid, title, message);
+    };
   </script>
 </body>
 </html>
