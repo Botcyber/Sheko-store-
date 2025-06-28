@@ -23,26 +23,30 @@
     <input id="email" placeholder="البريد الإلكتروني" />
     <input id="balance" placeholder="الرصيد" type="number" />
     <input id="points" placeholder="النقاط" type="number" />
-    <button onclick="addUserManually()">إضافة المستخدم</button><h3>إدارة الرصيد والنقاط</h3>
-<input id="manageUid" placeholder="UID المستخدم" />
-<input id="addBalance" placeholder="إضافة رصيد" type="number" />
-<input id="removeBalance" placeholder="خصم رصيد" type="number" />
-<input id="addPoints" placeholder="إضافة نقاط" type="number" />
-<input id="removePoints" placeholder="خصم نقاط" type="number" />
-<button onclick="updateUserData()">تحديث</button>
+    <button onclick="addUserManually()">إضافة المستخدم</button>
+    
+    <h3>إدارة الرصيد والنقاط</h3>
+    <input id="manageUid" placeholder="UID المستخدم" />
+    <input id="addBalance" placeholder="إضافة رصيد" type="number" />
+    <input id="removeBalance" placeholder="خصم رصيد" type="number" />
+    <input id="addPoints" placeholder="إضافة نقاط" type="number" />
+    <input id="removePoints" placeholder="خصم نقاط" type="number" />
+    <button onclick="updateUserData()">تحديث</button>
 
-<h3>المستخدمين المسجلين</h3>
-<div id="userList"></div>
+    <h3>المستخدمين المسجلين</h3>
+    <div id="userList"></div>
 
-<h3>طلبات الشحن</h3>
-<div id="orders"></div>
+    <h3>طلبات الشحن</h3>
+    <div id="orders"></div>
 
-<h3>تحويلات الأموال</h3>
-<div id="transactions"></div>
+    <h3>تحويلات الأموال</h3>
+    <div id="transactions"></div>
 
-  </div>  <script type="module">
+  </div>  
+
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, set, get, child, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
@@ -109,7 +113,7 @@
       });
     });
 
-    // عرض الطلبات
+    // عرض الطلبات مع UID المستخدم
     const ordersDiv = document.getElementById("orders");
     onValue(ref(db, 'orders'), snapshot => {
       ordersDiv.innerHTML = "";
@@ -117,7 +121,10 @@
         const data = child.val();
         const div = document.createElement("div");
         div.className = "card";
-        div.textContent = `🎮 ${data.type} - ${data.service} (${data.package}) | ${data.account}`;
+        div.innerHTML = `
+          🎮 ${data.type} - ${data.service} (${data.package}) | ${data.account} <br>
+          <strong>UID المستخدم:</strong> ${data.uid || 'غير معروف'}
+        `;
         ordersDiv.appendChild(div);
       });
     });
@@ -134,5 +141,6 @@
         transactionsDiv.appendChild(div);
       });
     });
-  </script></body>
+  </script>
+</body>
 </html>
