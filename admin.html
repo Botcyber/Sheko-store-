@@ -40,7 +40,7 @@
     <h3>طلبات الشحن</h3>
     <div id="orders"></div>
 
-    <h3>تحويلات الأموال</h3>
+    <h3>تحويلات الأموال (طلبات إضافة الأموال)</h3>
     <div id="transactions"></div>
 
   </div>  
@@ -64,8 +64,8 @@
 
     // إضافة مستخدم يدويًا
     window.addUserManually = async () => {
-      const uid = document.getElementById("uid").value;
-      const email = document.getElementById("email").value;
+      const uid = document.getElementById("uid").value.trim();
+      const email = document.getElementById("email").value.trim();
       const balance = parseFloat(document.getElementById("balance").value);
       const points = parseFloat(document.getElementById("points").value);
 
@@ -80,7 +80,7 @@
 
     // تحديث الرصيد والنقاط
     window.updateUserData = async () => {
-      const uid = document.getElementById("manageUid").value;
+      const uid = document.getElementById("manageUid").value.trim();
       const addBalance = parseFloat(document.getElementById("addBalance").value);
       const removeBalance = parseFloat(document.getElementById("removeBalance").value);
       const addPoints = parseFloat(document.getElementById("addPoints").value);
@@ -121,46 +121,50 @@
       ordersDiv.innerHTML = "";
       snapshot.forEach(child => {
         const data = child.val();
-        const dateStr = data.createdAt ? new Date(data.createdAt).toLocaleString('ar-EG') : 'غير معروف';
         const div = document.createElement("div");
         div.className = "card";
+
+        const time = data.createdAt ? new Date(data.createdAt).toLocaleString('ar-EG') : 'غير معروف';
+
         div.innerHTML = `
           🎮 ${data.type} - ${data.service} (${data.package}) | ${data.account} <br>
           <strong>UID المستخدم:</strong> ${data.uid || 'غير معروف'} <br>
-          <strong>الوقت:</strong> ${dateStr}
+          <strong>الوقت:</strong> ${time}
         `;
         ordersDiv.appendChild(div);
       });
     });
 
-    // عرض تحويلات الأموال مع uid، البريد الإلكتروني، الوقت، ورقم/رابط التحويل
+    // عرض طلبات إضافة الأموال (topupRequests) مع UID والبريد الإلكتروني ورقم التحويل والوقت
     const transactionsDiv = document.getElementById("transactions");
-    onValue(ref(db, 'transactions'), snapshot => {
+    onValue(ref(db, 'topupRequests'), snapshot => {
       transactionsDiv.innerHTML = "";
       snapshot.forEach(async child => {
         const data = child.val();
         const div = document.createElement("div");
         div.className = "card";
-        const dateStr = data.timestamp ? new Date(data.timestamp).toLocaleString('ar-EG') : 'غير معروف';
 
-        let email = 'جارٍ التحميل...';
+        const time = data.timestamp ? new Date(data.timestamp).toLocaleString('ar-EG') : 'غير معروف';
+
+        // جلب البريد الإلكتروني للمستخدم إذا موجود
+        let email = 'غير معروف';
         if (data.uid) {
-          const userSnap = await get(ref(db, 'users/' + data.uid));
-          if (userSnap.exists()) {
-            email = userSnap.val().email || 'غير معروف';
-          } else {
-            email = 'غير موجود';
+          try {
+            const userSnap = await get(ref(db, 'users/' + data.uid));
+            if (userSnap.exists()) {
+              email = userSnap.val().email || 'غير معروف';
+            }
+          } catch {
+            email = 'غير معروف';
           }
-        } else {
-          email = 'غير معروف';
         }
 
         div.innerHTML = `
-          💵 من: ${data.sender || 'غير معروف'} | المبلغ: ${data.amount} جنيه | الطريقة: ${data.method} <br>
+          💵 المبلغ: ${data.amount} جنيه | الطريقة: ${data.method} <br>
           <strong>UID المستخدم:</strong> ${data.uid || 'غير معروف'} <br>
           <strong>البريد الإلكتروني:</strong> ${email} <br>
-          <strong>رقم/رابط التحويل:</strong> ${data.sender || 'غير معروف'} <br>
-          <strong>الوقت:</strong> ${dateStr}
+          <strong>رقم/رابط التحويل:</strong> ${data.senderInfo || 'غير معروف'} <br>
+          <strong>الوقت:</strong> ${time}
         `;
         transactionsDiv.appendChild(div);
       });
