@@ -129,6 +129,30 @@
       text-align: center;
       margin-top: 20px;
     }
+    .footer-contact {
+      max-width: 800px;
+      margin: 30px auto 20px;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .btn-share, .btn-copy {
+      background: #222;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      min-width: 180px;
+    }
+    .btn-share:hover, .btn-copy:hover {
+      background: #ffb700;
+      color: #222;
+    }
     @media (max-width: 600px) {
       .nav-icons {
         gap: 15px;
@@ -139,9 +163,14 @@
       .nav-icons a i {
         font-size: 18px;
       }
-      button, button.order-btn {
-        padding: 6px 10px;
+      button, button.order-btn, .btn-share, .btn-copy {
+        padding: 8px 12px;
         font-size: 13px;
+        min-width: 140px;
+      }
+      .footer-contact {
+        flex-direction: column;
+        gap: 10px;
       }
     }
   </style>
@@ -202,6 +231,12 @@
 
   <button class="order-btn" onclick="submitOrder()">إرسال الطلب</button>
   <p class="note">إذا واجهت أي مشكلة، راسلنا على واتساب: 01099874914</p>
+</div>
+
+<!-- القسم الإضافي أسفل الصفحة -->
+<div class="footer-contact">
+  <button class="btn-share" onclick="shareSite()">مشاركة الموقع مع أصدقائك</button>
+  <button class="btn-copy" onclick="copyLink()">نسخ رابط الموقع</button>
 </div>
 
 <!-- Firebase Scripts -->
@@ -346,6 +381,30 @@ function submitOrder() {
 function logout() {
   auth.signOut().then(() => {
     location.href = "index.html";
+  });
+}
+
+// مشاركة الموقع
+function shareSite() {
+  const url = "https://botcyber.github.io/Sheko-store-/";
+  if (navigator.share) {
+    navigator.share({
+      title: "Sheko Store",
+      text: "تفضلوا بزيارة موقع Sheko Store لشحن الألعاب والخدمات",
+      url: url,
+    }).catch(console.error);
+  } else {
+    alert("ميزة المشاركة غير مدعومة في متصفحك، يمكنك نسخ الرابط ومشاركته يدوياً.");
+  }
+}
+
+// نسخ الرابط
+function copyLink() {
+  const url = "https://botcyber.github.io/Sheko-store-/";
+  navigator.clipboard.writeText(url).then(() => {
+    alert("تم نسخ رابط الموقع!");
+  }).catch(() => {
+    alert("فشل في نسخ الرابط، يرجى نسخه يدوياً.");
   });
 }
 </script>
