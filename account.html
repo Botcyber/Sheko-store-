@@ -5,60 +5,78 @@
   <title>حسابي - Sheko Store</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Cairo', sans-serif;
       direction: rtl;
-      background-color: #f0f0f0;
-      padding: 20px;
+      background-color: #f0f2f5;
+      margin: 0;
+      padding: 0;
     }
     .container {
-      background-color: white;
       max-width: 600px;
-      margin: auto;
-      padding: 25px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin: 40px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     }
     h2 {
       text-align: center;
-      margin-bottom: 20px;
-    }
-    .info {
-      margin-bottom: 20px;
-    }
-    label {
-      font-weight: bold;
-      display: block;
-      margin-top: 10px;
-    }
-    input {
-      width: 100%;
-      padding: 8px;
-      margin-top: 5px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      background-color: #dc3545;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-top: 20px;
+      color: #333;
+      margin-bottom: 25px;
     }
     .data-box {
       background-color: #f9f9f9;
       border: 1px solid #ddd;
-      border-radius: 5px;
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-top: 5px;
+      color: #333;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+      color: #444;
+    }
+    input {
+      width: 100%;
       padding: 10px;
-      margin-bottom: 10px;
+      margin-top: 7px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-family: 'Cairo', sans-serif;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .btn-blue {
+      background-color: #007bff;
+      color: white;
+    }
+    .btn-blue:hover {
+      background-color: #0056b3;
+    }
+    .btn-red {
+      background-color: #dc3545;
+      color: white;
+    }
+    .btn-red:hover {
+      background-color: #b02a37;
     }
   </style>
+
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
@@ -66,8 +84,7 @@
       projectId: "sheko-store",
       storageBucket: "sheko-store.firebasestorage.app",
       messagingSenderId: "113892775847",
-      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882",
-      measurementId: "G-MQCQE3X077"
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
     firebase.initializeApp(firebaseConfig);
   </script>
@@ -75,26 +92,22 @@
 <body>
   <div class="container">
     <h2>معلومات حسابك</h2>
-    <div class="info">
-      <label>البريد الإلكتروني:</label>
-      <div class="data-box" id="email">جاري التحميل...</div>
 
-      <label>اسم المستخدم:</label>
-      <div class="data-box" id="username">لم يتم التعيين بعد</div>
-      <input type="text" id="newUsername" placeholder="أدخل اسم مستخدم جديد">
-      <button onclick="setUsername()" style="background-color:#007bff; margin-top:10px;">تعيين اسم مستخدم</button>
+    <label>📧 البريد الإلكتروني:</label>
+    <div class="data-box" id="email">جاري التحميل...</div>
 
-      <label>رصيدك:</label>
-      <div class="data-box" id="balance">0 جنيه</div>
+    <label>👤 اسم المستخدم:</label>
+    <div class="data-box" id="username">لم يتم التعيين بعد</div>
+    <input type="text" id="newUsername" placeholder="أدخل اسم مستخدم جديد">
+    <button class="btn-blue" onclick="setUsername()">تأكيد اسم المستخدم</button>
 
-      <label>نقاط الهدايا:</label>
-      <div class="data-box" id="points">0 نقطة</div>
+    <label>💰 رصيدك:</label>
+    <div class="data-box" id="balance">0 جنيه</div>
 
-      <label>طلباتك السابقة:</label>
-      <div class="data-box" id="orders">لا توجد طلبات سابقة</div>
-    </div>
+    <label>🎁 نقاط الهدايا:</label>
+    <div class="data-box" id="points">0 نقطة</div>
 
-    <button onclick="deleteAccount()">🗑️ حذف الحساب نهائيًا</button>
+    <button class="btn-red" onclick="deleteAccount()">🗑️ حذف الحساب نهائيًا</button>
   </div>
 
   <script>
@@ -106,27 +119,16 @@
         document.getElementById("email").textContent = user.email;
         const uid = user.uid;
 
-        db.ref("usernames/" + uid).once("value").then(snap => {
+        db.ref("users/" + uid + "/username").once("value").then(snap => {
           document.getElementById("username").textContent = snap.val() || "لم يتم التعيين بعد";
         });
 
-        db.ref("balance/" + uid).once("value").then(snap => {
+        db.ref("users/" + uid + "/balance").on("value", snap => {
           document.getElementById("balance").textContent = `${snap.val() || 0} جنيه`;
         });
 
-        db.ref("points/" + uid).once("value").then(snap => {
+        db.ref("users/" + uid + "/points").on("value", snap => {
           document.getElementById("points").textContent = `${snap.val() || 0} نقطة`;
-        });
-
-        db.ref("orders/" + uid).once("value").then(snap => {
-          const orders = snap.val();
-          const box = document.getElementById("orders");
-          if (!orders) {
-            box.textContent = "لا توجد طلبات بعد";
-          } else {
-            let count = Object.keys(orders).length;
-            box.textContent = `عدد الطلبات: ${count}`;
-          }
         });
 
       } else {
@@ -137,30 +139,27 @@
     function setUsername() {
       const username = document.getElementById("newUsername").value.trim();
       const uid = auth.currentUser.uid;
-      if (username) {
-        db.ref("usernames/" + uid).set(username).then(() => {
-          alert("✅ تم حفظ اسم المستخدم");
-          document.getElementById("username").textContent = username;
-        });
-      } else {
-        alert("❌ أدخل اسم مستخدم صالح.");
-      }
+      if (username.length < 2) return alert("❌ أدخل اسم مستخدم صحيح");
+      db.ref("users/" + uid + "/username").set(username).then(() => {
+        document.getElementById("username").textContent = username;
+        alert("✅ تم تحديث اسم المستخدم");
+        document.getElementById("newUsername").value = "";
+      });
     }
 
     function deleteAccount() {
-      if (confirm("هل أنت متأكد أنك تريد حذف الحساب نهائيًا؟ لا يمكن التراجع.")) {
+      if (confirm("هل أنت متأكد أنك تريد حذف الحساب نهائيًا؟")) {
         const user = auth.currentUser;
         const uid = user.uid;
-        db.ref("usernames/" + uid).remove();
-        db.ref("balance/" + uid).remove();
-        db.ref("points/" + uid).remove();
-        db.ref("orders/" + uid).remove();
 
-        user.delete().then(() => {
+        // حذف بيانات المستخدم
+        db.ref("users/" + uid).remove().then(() => {
+          return user.delete();
+        }).then(() => {
           alert("✅ تم حذف الحساب نهائيًا.");
-          window.location.href = "index.html";
+          location.href = "index.html";
         }).catch(err => {
-          alert("❌ حدث خطأ: " + err.message);
+          alert("❌ حدث خطأ أثناء حذف الحساب: " + err.message);
         });
       }
     }
