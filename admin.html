@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <title>لوحة تحكم الأدمن - Sheko Store</title>
@@ -114,7 +115,7 @@
       });
     });
 
-    // عرض الطلبات مع UID المستخدم
+    // عرض الطلبات مع UID والوقت
     const ordersDiv = document.getElementById("orders");
     onValue(ref(db, 'orders'), snapshot => {
       ordersDiv.innerHTML = "";
@@ -122,26 +123,42 @@
         const data = child.val();
         const div = document.createElement("div");
         div.className = "card";
+        const dateStr = data.createdAt ? new Date(data.createdAt).toLocaleString('ar-EG') : 'غير معروف';
         div.innerHTML = `
           🎮 ${data.type} - ${data.service} (${data.package}) | ${data.account} <br>
-          <strong>UID المستخدم:</strong> ${data.uid || 'غير معروف'}
+          <strong>UID المستخدم:</strong> ${data.uid || 'غير معروف'} <br>
+          <strong>الوقت:</strong> ${dateStr}
         `;
         ordersDiv.appendChild(div);
       });
     });
 
-    // عرض تحويلات الأموال مع uid والوقت
+    // عرض تحويلات الأموال مع uid، البريد الإلكتروني، والوقت
     const transactionsDiv = document.getElementById("transactions");
     onValue(ref(db, 'transactions'), snapshot => {
       transactionsDiv.innerHTML = "";
-      snapshot.forEach(child => {
+      snapshot.forEach(async child => {
         const data = child.val();
         const div = document.createElement("div");
         div.className = "card";
         const dateStr = data.timestamp ? new Date(data.timestamp).toLocaleString('ar-EG') : 'غير معروف';
+
+        let email = 'جارٍ التحميل...';
+        if (data.uid) {
+          const userSnap = await get(ref(db, 'users/' + data.uid));
+          if (userSnap.exists()) {
+            email = userSnap.val().email || 'غير معروف';
+          } else {
+            email = 'غير موجود';
+          }
+        } else {
+          email = 'غير معروف';
+        }
+
         div.innerHTML = `
           💵 من: ${data.sender || 'غير معروف'} | المبلغ: ${data.amount} جنيه | الطريقة: ${data.method} <br>
           <strong>UID المستخدم:</strong> ${data.uid || 'غير معروف'} <br>
+          <strong>البريد الإلكتروني:</strong> ${email} <br>
           <strong>الوقت:</strong> ${dateStr}
         `;
         transactionsDiv.appendChild(div);
