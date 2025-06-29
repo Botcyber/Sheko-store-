@@ -6,308 +6,295 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
-      margin: 0;
       font-family: 'Cairo', sans-serif;
       background: #f9f9f9;
-      padding: 20px;
-      direction: rtl;
+      margin: 0; padding: 0;
     }
-    h1 {
+    header {
+      background: linear-gradient(to left, #111, #333);
+      color: white;
+      padding: 20px;
       text-align: center;
-      margin-bottom: 30px;
-      color: #007bff;
+      font-weight: bold;
+      font-size: 24px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
     .container {
-      max-width: 700px;
-      margin: auto;
+      max-width: 900px;
+      margin: 30px auto;
       background: white;
-      padding: 25px;
       border-radius: 12px;
+      padding: 20px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.1);
     }
     label {
-      display: block;
-      margin: 15px 0 8px;
       font-weight: bold;
-      color: #333;
+      margin-top: 15px;
+      display: block;
     }
-    input[type="text"], input[type="number"], input[type="datetime-local"] {
+    input[type=text], input[type=number], input[type=datetime-local], select {
       width: 100%;
-      padding: 10px;
-      border-radius: 6px;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 5px;
       border: 1px solid #ccc;
-      font-size: 16px;
       box-sizing: border-box;
     }
     button {
-      margin-top: 20px;
+      margin-top: 15px;
       padding: 12px 20px;
-      background: #007bff;
-      color: white;
       border: none;
       border-radius: 8px;
-      cursor: pointer;
+      background: #007bff;
+      color: white;
       font-weight: bold;
-      font-size: 16px;
+      cursor: pointer;
       transition: background 0.3s ease;
-      width: 100%;
     }
     button:hover {
       background: #0056b3;
     }
-    .participants-list {
-      margin-top: 30px;
-      border-top: 1px solid #ddd;
-      padding-top: 20px;
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
     }
-    .participant {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid #eee;
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
     }
-    .participant-info {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-    .participant-info img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid #007bff;
-    }
-    .participant-info div {
-      font-weight: 600;
-      font-size: 16px;
-      color: #444;
-    }
-    .btn-delete {
-      background: #ff4d4d;
-      border: none;
+    th {
+      background: #007bff;
       color: white;
-      border-radius: 6px;
-      padding: 6px 12px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background 0.3s ease;
     }
-    .btn-delete:hover {
-      background: #cc0000;
+    .btn-danger {
+      background: #dc3545;
+    }
+    .btn-danger:hover {
+      background: #b02a37;
     }
     .status {
-      margin-top: 20px;
       font-weight: bold;
-      font-size: 18px;
-      text-align: center;
-      color: green;
-    }
-    .status.closed {
-      color: red;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
 
-  <h1>إدارة فعالية التصويت</h1>
+<header>إدارة فعالية التصويت</header>
 
-  <div class="container">
+<div class="container">
 
-    <label for="uidInput">أضف مستخدم جديد للفعالية (UID):</label>
-    <input type="text" id="uidInput" placeholder="أدخل UID المستخدم" />
+  <label for="newUserUid">أضف مشارك للتصويت (UID):</label>
+  <input type="text" id="newUserUid" placeholder="اكتب UID المستخدم" />
+  <button id="addUserBtn">إضافة مشارك</button>
 
-    <label for="usernameInput">اسم المستخدم:</label>
-    <input type="text" id="usernameInput" placeholder="أدخل اسم المستخدم" />
+  <label for="voteStatus">حالة التصويت:</label>
+  <select id="voteStatus">
+    <option value="true">مفتوح</option>
+    <option value="false">مغلق</option>
+  </select>
 
-    <label for="photoURLInput">رابط صورة المستخدم (اختياري):</label>
-    <input type="text" id="photoURLInput" placeholder="رابط صورة" />
+  <label for="endTime">تحديد وقت انتهاء التصويت:</label>
+  <input type="datetime-local" id="endTime" />
 
-    <button id="addParticipantBtn">إضافة المستخدم</button>
+  <button id="setEndTimeBtn">حفظ وقت الانتهاء</button>
 
-    <label for="voteOpenCheckbox" style="margin-top:30px;">
-      <input type="checkbox" id="voteOpenCheckbox" />
-      فتح التصويت (يمكن للمستخدمين التصويت)
-    </label>
+  <div class="status" id="timeLeftStatus"></div>
 
-    <label for="endTimeInput">تحديد وقت انتهاء التصويت:</label>
-    <input type="datetime-local" id="endTimeInput" />
+  <h3>قائمة المشاركين في التصويت</h3>
+  <table id="participantsTable">
+    <thead>
+      <tr>
+        <th>UID</th>
+        <th>اسم المستخدم</th>
+        <th>عدد التصويتات</th>
+        <th>حذف</th>
+      </tr>
+    </thead>
+    <tbody>تحميل المشاركين...</tbody>
+  </table>
+</div>
 
-    <button id="setEndTimeBtn">تعيين وقت الانتهاء</button>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
-    <div class="status" id="voteStatus">جارٍ تحميل الحالة...</div>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+    authDomain: "sheko-store.firebaseapp.com",
+    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+    projectId: "sheko-store",
+    storageBucket: "sheko-store.appspot.com",
+    messagingSenderId: "113892775847",
+    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+  };
 
-    <div class="participants-list" id="participantsList">
-      <h3>قائمة المشاركين:</h3>
-      <div id="participantsContainer">جارٍ تحميل المشاركين...</div>
-    </div>
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const auth = firebase.auth();
 
-  </div>
+  const newUserUidInput = document.getElementById("newUserUid");
+  const addUserBtn = document.getElementById("addUserBtn");
+  const voteStatusSelect = document.getElementById("voteStatus");
+  const endTimeInput = document.getElementById("endTime");
+  const setEndTimeBtn = document.getElementById("setEndTimeBtn");
+  const participantsTableBody = document.querySelector("#participantsTable tbody");
+  const timeLeftStatus = document.getElementById("timeLeftStatus");
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  // تابع تحديث قائمة المشاركين
+  function loadParticipants() {
+    db.ref("voteParticipants").on("value", snapshot => {
+      const data = snapshot.val();
+      participantsTableBody.innerHTML = "";
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-      authDomain: "sheko-store.firebaseapp.com",
-      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-      projectId: "sheko-store",
-      storageBucket: "sheko-store.appspot.com",
-      messagingSenderId: "113892775847",
-      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const auth = firebase.auth();
-
-    const uidInput = document.getElementById('uidInput');
-    const usernameInput = document.getElementById('usernameInput');
-    const photoURLInput = document.getElementById('photoURLInput');
-    const addParticipantBtn = document.getElementById('addParticipantBtn');
-    const voteOpenCheckbox = document.getElementById('voteOpenCheckbox');
-    const endTimeInput = document.getElementById('endTimeInput');
-    const setEndTimeBtn = document.getElementById('setEndTimeBtn');
-    const voteStatus = document.getElementById('voteStatus');
-    const participantsContainer = document.getElementById('participantsContainer');
-
-    // تحميل حالة التصويت والإعدادات
-    function loadSettings() {
-      db.ref('voteSettings').on('value', snap => {
-        const settings = snap.val() || {};
-        voteOpenCheckbox.checked = !!settings.isOpen;
-
-        if (settings.endTime) {
-          const endTime = new Date(settings.endTime);
-          endTimeInput.value = endTime.toISOString().slice(0,16); // تنسيق datetime-local
-          checkVoteTime(endTime);
-        } else {
-          voteStatus.textContent = settings.isOpen ? "التصويت مفتوح" : "التصويت مغلق";
-          voteStatus.className = settings.isOpen ? 'status' : 'status closed';
-        }
-      });
-    }
-
-    // التحقق من وقت انتهاء التصويت وتحديث الحالة تلقائياً
-    function checkVoteTime(endTime) {
-      const now = new Date();
-      if (now >= endTime) {
-        // أغلق التصويت تلقائيًا
-        db.ref('voteSettings').update({ isOpen: false });
-        voteStatus.textContent = "انتهى وقت التصويت، التصويت مغلق";
-        voteStatus.className = 'status closed';
-      } else {
-        voteStatus.textContent = "التصويت مفتوح حتى " + endTime.toLocaleString();
-        voteStatus.className = 'status';
-
-        // اضبط مؤقت للتحقق كل ثانية
-        setTimeout(() => checkVoteTime(endTime), 1000);
-      }
-    }
-
-    // تحميل المشاركين وعرضهم
-    function loadParticipants() {
-      db.ref('voteParticipants').on('value', snap => {
-        const participants = snap.val();
-        participantsContainer.innerHTML = '';
-
-        if (!participants) {
-          participantsContainer.innerHTML = "<p>لا يوجد مشاركين حتى الآن.</p>";
-          return;
-        }
-
-        // تحويل إلى مصفوفة وترتيب حسب الاسم (أو عدد التصويتات)
-        const entries = Object.entries(participants).sort((a, b) => a[1].username.localeCompare(b[1].username));
-
-        entries.forEach(([uid, user]) => {
-          const div = document.createElement('div');
-          div.className = 'participant';
-
-          div.innerHTML = `
-            <div class="participant-info">
-              <img src="${user.photoURL || 'https://i.imgur.com/6VBx3io.png'}" alt="صورة المستخدم" />
-              <div>${user.username || 'بدون اسم'}</div>
-            </div>
-            <button class="btn-delete" data-uid="${uid}">حذف</button>
-          `;
-
-          participantsContainer.appendChild(div);
-        });
-
-        // ربط حدث الحذف لكل زر
-        participantsContainer.querySelectorAll('.btn-delete').forEach(btn => {
-          btn.onclick = () => {
-            const uid = btn.getAttribute('data-uid');
-            if (confirm('هل أنت متأكد من حذف المستخدم؟')) {
-              db.ref('voteParticipants/' + uid).remove();
-            }
-          };
-        });
-      });
-    }
-
-    // إضافة مستخدم جديد
-    addParticipantBtn.onclick = () => {
-      const uid = uidInput.value.trim();
-      const username = usernameInput.value.trim();
-      const photoURL = photoURLInput.value.trim();
-
-      if (!uid || !username) {
-        alert('يرجى ملء الـ UID واسم المستخدم');
+      if (!data) {
+        participantsTableBody.innerHTML = `<tr><td colspan="4">لا يوجد مشاركين</td></tr>`;
         return;
       }
 
-      // أضف المستخدم مع بيانات مبدئية (تصويت = 0)
-      db.ref('voteParticipants/' + uid).set({
-        username,
-        photoURL: photoURL || '',
-        votes: 0
-      }).then(() => {
-        alert('تمت إضافة المستخدم للفعالية');
-        uidInput.value = '';
-        usernameInput.value = '';
-        photoURLInput.value = '';
-      }).catch(err => {
-        alert('حدث خطأ: ' + err.message);
+      for (const uid in data) {
+        const user = data[uid];
+        const username = user.username || "بدون اسم";
+        const votes = user.votes || 0;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${uid}</td>
+          <td>${username}</td>
+          <td>${votes}</td>
+          <td><button class="btn-danger" data-uid="${uid}">حذف</button></td>
+        `;
+        participantsTableBody.appendChild(tr);
+      }
+
+      // ربط حدث الحذف للأزرار
+      const deleteButtons = participantsTableBody.querySelectorAll("button.btn-danger");
+      deleteButtons.forEach(btn => {
+        btn.onclick = () => {
+          const uidToDelete = btn.getAttribute("data-uid");
+          if(confirm("هل تريد حذف هذا المستخدم من التصويت؟")) {
+            db.ref("voteParticipants/" + uidToDelete).remove();
+          }
+        };
       });
-    };
+    });
+  }
 
-    // فتح وإغلاق التصويت
-    voteOpenCheckbox.onchange = () => {
-      db.ref('voteSettings').update({ isOpen: voteOpenCheckbox.checked });
-    };
+  // تحميل حالة التصويت
+  function loadVoteStatus() {
+    db.ref("voteSettings/isOpen").on("value", snap => {
+      const val = snap.val();
+      voteStatusSelect.value = val === true ? "true" : "false";
+    });
+  }
 
-    // تعيين وقت انتهاء التصويت
-    setEndTimeBtn.onclick = () => {
-      const val = endTimeInput.value;
-      if (!val) {
-        alert('يرجى اختيار وقت صحيح');
-        return;
-      }
-      const time = new Date(val);
-      if (time <= new Date()) {
-        alert('يرجى اختيار وقت مستقبلي');
-        return;
-      }
-      db.ref('voteSettings').update({ endTime: time.toISOString() });
-      alert('تم تعيين وقت انتهاء التصويت');
-    };
-
-    // تأكد من تسجيل دخول الأدمن (يمكنك تعديل هذه الطريقة حسب الحاجة)
-    auth.onAuthStateChanged(user => {
-      if (!user) {
-        alert('يرجى تسجيل الدخول أولاً.');
-        location.href = 'index.html';
-      } else {
-        loadSettings();
-        loadParticipants();
+  // تحميل وقت الانتهاء
+  function loadEndTime() {
+    db.ref("voteSettings/endTime").on("value", snap => {
+      const val = snap.val();
+      if(val) {
+        endTimeInput.value = new Date(val).toISOString().slice(0,16);
+        updateTimeLeft();
       }
     });
+  }
 
-  </script>
+  // تحديث عرض الوقت المتبقي
+  function updateTimeLeft() {
+    db.ref("voteSettings/endTime").once("value").then(snap => {
+      const val = snap.val();
+      if (!val) {
+        timeLeftStatus.textContent = "لم يتم تحديد وقت انتهاء التصويت.";
+        return;
+      }
+      const now = new Date();
+      const end = new Date(val);
+      const diffMs = end - now;
+
+      if(diffMs <= 0) {
+        timeLeftStatus.textContent = "انتهى وقت التصويت.";
+        // إغلاق التصويت تلقائياً عند انتهاء الوقت
+        db.ref("voteSettings").update({ isOpen: false });
+        return;
+      }
+
+      // حساب الوقت المتبقي بالساعات والدقائق والثواني
+      let totalSeconds = Math.floor(diffMs / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      totalSeconds %= 3600;
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+
+      timeLeftStatus.textContent = `الوقت المتبقي للتصويت: ${hours} ساعة ${minutes} دقيقة و ${seconds} ثانية`;
+
+      // تحديث مؤقت كل ثانية
+      setTimeout(updateTimeLeft, 1000);
+    });
+  }
+
+  // إضافة مشارك جديد
+  addUserBtn.onclick = () => {
+    const uid = newUserUidInput.value.trim();
+    if (!uid) {
+      alert("يرجى إدخال UID صحيح");
+      return;
+    }
+    // جلب معلومات المستخدم (مثلاً اسم المستخدم والصورة)
+    db.ref("users/" + uid).once("value").then(snap => {
+      const userData = snap.val();
+      if (!userData) {
+        alert("المستخدم غير موجود في قاعدة البيانات");
+        return;
+      }
+      const username = userData.username || "بدون اسم";
+      const photoURL = userData.photoURL || "";
+      // أضف للمشاركين مع تعيين عدد التصويتات صفر
+      db.ref("voteParticipants/" + uid).set({
+        username,
+        photoURL,
+        votes: 0
+      });
+      newUserUidInput.value = "";
+      alert("تمت إضافة المشارك للتصويت");
+    });
+  };
+
+  // تحديث حالة التصويت (فتح/إغلاق)
+  voteStatusSelect.onchange = () => {
+    const val = voteStatusSelect.value === "true";
+    db.ref("voteSettings").update({ isOpen: val });
+  };
+
+  // تعيين وقت الانتهاء
+  setEndTimeBtn.onclick = () => {
+    const val = endTimeInput.value;
+    if (!val) {
+      alert("يرجى اختيار وقت الانتهاء");
+      return;
+    }
+    const endTimeISO = new Date(val).toISOString();
+    db.ref("voteSettings").update({ endTime: endTimeISO });
+    alert("تم تعيين وقت انتهاء التصويت");
+    updateTimeLeft();
+  };
+
+  // تحميل البيانات عند بدء الصفحة
+  auth.onAuthStateChanged(user => {
+    if (!user) {
+      alert("يرجى تسجيل الدخول أولاً");
+      location.href = "index.html";
+    } else {
+      loadParticipants();
+      loadVoteStatus();
+      loadEndTime();
+      updateTimeLeft();
+    }
+  });
+</script>
+
 </body>
 </html>
