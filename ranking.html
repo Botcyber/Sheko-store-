@@ -5,118 +5,124 @@
   <title>التصنيف العالمي - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
-
     body {
       font-family: 'Cairo', sans-serif;
-      background: linear-gradient(to right, #f0f4f8, #e9eff5);
+      background: #f9f9f9;
       margin: 0;
       padding: 0;
-      overflow-x: hidden;
     }
-
     header {
-      background: linear-gradient(135deg, #007bff, #6610f2);
+      background: #222;
       color: #fff;
       text-align: center;
-      padding: 25px;
-      font-size: 26px;
+      padding: 20px;
+      font-size: 24px;
       font-weight: bold;
-      letter-spacing: 1px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      user-select: none;
     }
-
     .container {
       max-width: 1000px;
       margin: auto;
       padding: 20px;
     }
-
     .card {
       background: white;
-      border-radius: 15px;
-      padding: 18px;
-      margin-bottom: 15px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 10px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      transition: box-shadow 0.4s ease;
+      cursor: default;
     }
-
     .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+      box-shadow: 0 0 12px rgba(0,123,255,0.5);
     }
-
     .rank {
       font-weight: bold;
       color: #007bff;
-      font-size: 18px;
+      user-select: none;
     }
-
     .not-top {
       color: #777;
-      text-align: center;
-      margin-top: 20px;
     }
 
-    .top-1 {
-      background: linear-gradient(135deg, #FFD700, #FFC107);
-      animation: glow 2s infinite alternate;
+    /* تمييز المراكز الثلاثة الأولى */
+    .first-place {
+      background: linear-gradient(270deg, #FFD700, #FFA500, #FFD700);
+      background-size: 600% 600%;
+      animation: glowingGold 8s ease infinite;
       color: #222;
+      font-weight: bold;
+      box-shadow: 0 0 15px 3px gold;
     }
-
-    .top-2 {
-      background: linear-gradient(135deg, #C0C0C0, #b4b4b4);
-      animation: glow 2s infinite alternate;
+    .second-place {
+      background: linear-gradient(270deg, #C0C0C0, #A9A9A9, #C0C0C0);
+      background-size: 600% 600%;
+      animation: glowingSilver 8s ease infinite;
       color: #222;
+      font-weight: bold;
+      box-shadow: 0 0 15px 3px silver;
     }
-
-    .top-3 {
-      background: linear-gradient(135deg, #CD7F32, #b76e33);
-      animation: glow 2s infinite alternate;
+    .third-place {
+      background: linear-gradient(270deg, #CD7F32, #8B4513, #CD7F32);
+      background-size: 600% 600%;
+      animation: glowingBronze 8s ease infinite;
       color: #222;
+      font-weight: bold;
+      box-shadow: 0 0 15px 3px #CD7F32;
     }
 
-    @keyframes glow {
-      from { box-shadow: 0 0 10px rgba(255,255,255,0.4); }
-      to { box-shadow: 0 0 25px rgba(255,255,255,0.8); }
+    /* أنيميشن توهج للخلفية */
+    @keyframes glowingGold {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes glowingSilver {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes glowingBronze {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
 
-    /* تصميم صندوق ترتيب المستخدم */
+    /* تأثير توهج عند الضغط للتركيز على ترتيب المستخدم */
+    @keyframes highlightGlow {
+      0% {
+        box-shadow: 0 0 10px 3px #007bff;
+      }
+      50% {
+        box-shadow: 0 0 20px 6px #00d4ff;
+      }
+      100% {
+        box-shadow: 0 0 10px 3px #007bff;
+      }
+    }
+    .highlighted {
+      animation: highlightGlow 1.5s ease-in-out 3;
+      border-radius: 10px;
+    }
+
+    /* صندوق ترتيب المستخدم الخاص أسفل الصفحة */
     #yourRankBox {
       max-width: 1000px;
-      margin: 20px auto 40px;
-      padding: 15px 25px;
+      margin: 15px auto 40px;
       background: #007bff;
       color: white;
-      border-radius: 12px;
-      font-size: 18px;
       font-weight: bold;
+      padding: 12px 20px;
+      border-radius: 10px;
       text-align: center;
       cursor: pointer;
-      box-shadow: 0 5px 15px rgba(0,123,255,0.5);
       user-select: none;
-      transition: box-shadow 0.3s ease, background 0.3s ease;
-      display: none; /* مخفي بشكل افتراضي */
+      box-shadow: 0 0 15px rgba(0,123,255,0.8);
+      transition: background 0.3s ease;
     }
     #yourRankBox:hover {
       background: #0056b3;
-      box-shadow: 0 8px 20px rgba(0,86,179,0.7);
-    }
-
-    /* تأثير التوهج عند التحديد */
-    .highlight-glow {
-      animation: highlightGlow 2s ease forwards;
-    }
-
-    @keyframes highlightGlow {
-      0% {
-        box-shadow: 0 0 15px 5px rgba(40, 167, 69, 0.8);
-        background-color: #28a745;
-      }
-      100% {
-        box-shadow: none;
-        background-color: #007bff;
-      }
     }
   </style>
 </head>
@@ -126,8 +132,7 @@
     <div id="rankingList">جاري تحميل التصنيفات...</div>
   </div>
 
-  <!-- صندوق ترتيب المستخدم -->
-  <div id="yourRankBox" title="اضغط للذهاب إلى ترتيبك"></div>
+  <div id="yourRankBox" style="display:none;" title="اضغط للذهاب إلى ترتيبك"></div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -146,8 +151,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    let currentUserRankGlobal = null;
-
     async function loadRanking() {
       const ordersSnap = await get(ref(db, "orders"));
       const usersSnap = await get(ref(db, "users"));
@@ -160,7 +163,7 @@
         return;
       }
 
-      const spendMap = {};
+      const spendMap = {}; // uid => total spent
       ordersSnap.forEach(child => {
         const o = child.val();
         if (o.uid && o.amount && !isNaN(parseFloat(o.amount))) {
@@ -189,59 +192,57 @@
       let currentUserData = null;
 
       users.forEach((user, index) => {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.setAttribute("data-rank", index + 1);
-
-        if (index === 0) card.classList.add("top-1");
-        else if (index === 1) card.classList.add("top-2");
-        else if (index === 2) card.classList.add("top-3");
-
-        card.innerHTML = `
-          <div><span class="rank">#${index + 1}</span> - ${user.username}</div>
-          <div>💰 أنفق: ${user.totalSpent.toFixed(2)} جنيه</div>
-        `;
-        rankingDiv.appendChild(card);
-
         if (user.uid === currentUser) {
           currentUserRank = index + 1;
           currentUserData = user;
         }
+
+        if (index < 100) {
+          const card = document.createElement("div");
+          card.className = "card";
+
+          // تعيين فئات المراكز الثلاثة الأولى مع الخلفيات المتوهجة
+          if (index === 0) card.classList.add("first-place");
+          else if (index === 1) card.classList.add("second-place");
+          else if (index === 2) card.classList.add("third-place");
+
+          card.id = "userCard_" + user.uid;
+          card.innerHTML = `
+            <div><span class="rank">#${index + 1}</span> - ${user.username}</div>
+            <div>💰 أنفق: ${user.totalSpent.toFixed(2)} جنيه</div>
+          `;
+          rankingDiv.appendChild(card);
+        }
       });
 
-      currentUserRankGlobal = currentUserRank;
-
-      if (currentUserRank && currentUserRank <= 100) {
+      if (currentUserRank !== null && currentUserRank <= 100) {
         yourRankBox.style.display = "block";
-        yourRankBox.innerHTML = `
-          🚀 ترتيبك الحالي: المركز ${currentUserRank} - 💰 المبلغ المنفق: ${currentUserData.totalSpent.toFixed(2)} جنيه
-        `;
-      } else if (currentUser && currentUserRank > 100) {
-        yourRankBox.style.display = "none";
-        const user = users.find(u => u.uid === currentUser);
-        if (user) {
-          // يمكن إضافة عرض خارج الـ100 إذا أردت هنا (حسب طلبك حالياً لا تظهر)
-        }
+        yourRankBox.textContent = `🚀 ترتيبك الحالي: المركز ${currentUserRank} - 💰 المبلغ المنفق: ${currentUserData.totalSpent.toFixed(2)} جنيه`;
+
+        // عند الضغط على الصندوق يلمع ونتحرك للترتيب
+        yourRankBox.onclick = () => {
+          const targetCard = document.getElementById("userCard_" + currentUser);
+          if (!targetCard) return;
+
+          // تحريك الصفحة لمكان العنصر مع هامش
+          window.scrollTo({
+            top: targetCard.offsetTop - 20,
+            behavior: "smooth"
+          });
+
+          // إضافة تأثير التوهج
+          targetCard.classList.add("highlighted");
+          // إزالة التوهج بعد انتهاء الأنيميشن
+          setTimeout(() => {
+            targetCard.classList.remove("highlighted");
+          }, 4500); // مدة الأنيميشن (3 دورات × 1.5 ثانية)
+        };
       } else {
         yourRankBox.style.display = "none";
       }
     }
 
     loadRanking();
-
-    const yourRankBox = document.getElementById("yourRankBox");
-    yourRankBox.addEventListener("click", () => {
-      if (currentUserRankGlobal && currentUserRankGlobal <= 100) {
-        const card = document.querySelector(`[data-rank="${currentUserRankGlobal}"]`);
-        if (card) {
-          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          card.classList.add("highlight-glow");
-          setTimeout(() => card.classList.remove("highlight-glow"), 2000);
-        }
-      } else {
-        alert("أنت خارج أفضل 100 مستخدم حالياً.");
-      }
-    });
   </script>
 </body>
 </html>
