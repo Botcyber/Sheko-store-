@@ -7,175 +7,335 @@
   <style>
     body { font-family: 'Cairo', sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
     header { background: #222; color: white; padding: 20px; text-align: center; font-size: 22px; }
-    .container { max-width: 1000px; margin: auto; padding: 20px; }
+    .container { max-width: 1100px; margin: auto; padding: 20px; }
     h3 { margin-top: 40px; color: #333; }
     label, input, select, button, textarea { display: block; width: 100%; margin-top: 10px; padding: 10px; border-radius: 6px; }
     input, select, textarea { border: 1px solid #ccc; }
     button { background-color: #222; color: white; border: none; cursor: pointer; }
     button:hover { background-color: #444; }
-    .card { background: white; padding: 15px; margin-top: 15px; border-radius: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1); position: relative; display: flex; justify-content: space-between; align-items: center; }
+    .card { background: white; padding: 15px; margin-top: 15px; border-radius: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1); position: relative; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
     .btns { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
     .approve-btn { background: #28a745; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
     .reject-btn { background: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
+    .hide-btn { background: #6c757d; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
     .notify-btn { background: #007bff; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
     .delete-user-btn { background: #e63946; color: white; padding: 6px 10px; border: none; border-radius: 5px; cursor: pointer; }
-    .hide-btn { background: #6c757d; color: white; padding: 6px 10px; border: none; border-radius: 5px; cursor: pointer; }
-    .status-text { font-weight: bold; }
-    .details { max-width: 70%; }
+    .status-text { font-weight: bold; margin-left: 10px; }
+    .flex-column { display: flex; flex-direction: column; }
+    .flex-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    @media(max-width:600px){
+      .card { flex-direction: column; }
+      .btns { flex-direction: column; }
+    }
   </style>
 </head>
 <body>
   <header>لوحة تحكم الأدمن</header>
   <div class="container">
-    <!-- ... أقسام المستخدمين والرصيد والنقاط هنا ... -->
+    <!-- إضافة مستخدم يدويًا -->
+    <h3>إضافة مستخدم يدويًا</h3>
+    <input id="uid" placeholder="UID المستخدم" />
+    <input id="username" placeholder="اسم المستخدم" />
+    <input id="email" placeholder="البريد الإلكتروني" />
+    <input id="balance" placeholder="الرصيد" type="number" />
+    <input id="points" placeholder="النقاط" type="number" />
+    <button onclick="addUserManually()">إضافة المستخدم</button>
+    
+    <!-- إدارة الرصيد والنقاط -->
+    <h3>إدارة الرصيد والنقاط</h3>
+    <input id="manageUid" placeholder="UID المستخدم" />
+    <input id="addBalance" placeholder="إضافة رصيد" type="number" />
+    <input id="removeBalance" placeholder="خصم رصيد" type="number" />
+    <input id="addPoints" placeholder="إضافة نقاط" type="number" />
+    <input id="removePoints" placeholder="خصم نقاط" type="number" />
+    <button onclick="updateUserData()">تحديث</button>
 
+    <!-- معلومات مستخدم محدد -->
+    <h3>معلومات المستخدم</h3>
+    <input id="infoUid" placeholder="ادخل UID لعرض المعلومات" />
+    <div id="userInfo" style="background:#fff; padding:10px; margin-top:10px; border-radius:8px; box-shadow: 0 0 5px rgba(0,0,0,0.1);"></div>
+
+    <!-- قائمة المستخدمين -->
+    <h3>المستخدمين المسجلين</h3>
+    <div id="userList"></div>
+
+    <!-- طلبات الشحن -->
     <h3>طلبات الشحن</h3>
     <div id="orders"></div>
 
+    <!-- طلبات تحويل الأموال -->
     <h3>طلبات تحويل الأموال</h3>
     <div id="transactions"></div>
 
-    <!-- ... قسم الإشعارات هنا ... -->
-  </div>  
-  
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, get, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    <!-- إرسال إشعار -->
+    <h3>إرسال إشعار للمستخدم</h3>
+    <input id="notifUid" placeholder="UID المستخدم" />
+    <input id="notifTitle" placeholder="عنوان الإشعار" />
+    <textarea id="notifMessage" placeholder="نص الرسالة" style="height:80px;"></textarea>
+    <button onclick="sendNotification()">إرسال إشعار</button>
+  </div>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-      authDomain: "sheko-store.firebaseapp.com",
-      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-      projectId: "sheko-store",
-      storageBucket: "sheko-store.appspot.com",
-      messagingSenderId: "113892775847",
-      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-    };
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getDatabase, ref, set, get, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+  const firebaseConfig = {
+    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+    authDomain: "sheko-store.firebaseapp.com",
+    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+    projectId: "sheko-store",
+    storageBucket: "sheko-store.appspot.com",
+    messagingSenderId: "113892775847",
+    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+  };
 
-    // دالة مساعدة لتحويل بيانات الطلب لكلام HTML منسق
-    function formatOrderDetails(data) {
-      let html = '';
-      for (const [key, value] of Object.entries(data)) {
-        if (key === 'hidden') continue; // لا نعرض حقل الإخفاء
-        html += `<p><strong>${key}:</strong> ${value}</p>`;
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // إضافة مستخدم يدويًا
+  window.addUserManually = async () => {
+    const uid = document.getElementById("uid").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const username = document.getElementById("username").value.trim() || "بدون اسم";
+    const balance = parseFloat(document.getElementById("balance").value);
+    const points = parseFloat(document.getElementById("points").value);
+
+    if (!uid || !email) return alert("يرجى إدخال UID والبريد الإلكتروني.");
+    await set(ref(db, 'users/' + uid), {
+      email,
+      username,
+      balance: balance || 0,
+      points: points || 0
+    });
+    alert("✅ تم إضافة المستخدم.");
+    loadUsers();
+  };
+
+  // تحديث رصيد ونقاط المستخدم
+  window.updateUserData = async () => {
+    const uid = document.getElementById("manageUid").value.trim();
+    const addBalance = parseFloat(document.getElementById("addBalance").value);
+    const removeBalance = parseFloat(document.getElementById("removeBalance").value);
+    const addPoints = parseFloat(document.getElementById("addPoints").value);
+    const removePoints = parseFloat(document.getElementById("removePoints").value);
+
+    const userRef = ref(db, 'users/' + uid);
+    const snapshot = await get(userRef);
+    if (!snapshot.exists()) return alert("المستخدم غير موجود.");
+    const userData = snapshot.val();
+
+    const newBalance = (userData.balance || 0) + (addBalance || 0) - (removeBalance || 0);
+    const newPoints = (userData.points || 0) + (addPoints || 0) - (removePoints || 0);
+
+    await update(userRef, {
+      balance: newBalance,
+      points: newPoints
+    });
+    alert("✅ تم التحديث.");
+    loadUsers();
+  };
+
+  // تحميل وعرض المستخدمين مع زر حذف
+  const userListDiv = document.getElementById("userList");
+  function loadUsers() {
+    const usersRef = ref(db, 'users');
+    userListDiv.innerHTML = "جاري تحميل المستخدمين...";
+    get(usersRef).then(snapshot => {
+      userListDiv.innerHTML = "";
+      if (!snapshot.exists()) {
+        userListDiv.textContent = "لا يوجد مستخدمين مسجلين";
+        return;
       }
-      return html;
+      snapshot.forEach(child => {
+        const uid = child.key;
+        const data = child.val();
+        const div = document.createElement("div");
+        div.className = "card";
+
+        const infoSpan = document.createElement("span");
+        infoSpan.textContent = `UID: ${uid} | الاسم: ${data.username || "بدون اسم"} | 📌 ${data.email || 'بدون بريد'} | 💰 ${data.balance || 0} جنيه | ⭐ ${data.points || 0}`;
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "delete-user-btn";
+        deleteBtn.textContent = "حذف";
+        deleteBtn.onclick = async () => {
+          if (confirm(`هل أنت متأكد من حذف المستخدم ${uid} نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.`)) {
+            try {
+              await remove(ref(db, 'users/' + uid));
+              alert(`✅ تم حذف المستخدم ${uid} بنجاح.`);
+              loadUsers();
+            } catch (err) {
+              alert("حدث خطأ أثناء الحذف: " + err.message);
+            }
+          }
+        };
+
+        div.appendChild(infoSpan);
+        div.appendChild(deleteBtn);
+        userListDiv.appendChild(div);
+      });
+    });
+  }
+  loadUsers();
+
+  // عرض معلومات مستخدم محدد
+  async function loadUserInfo(uid) {
+    const userInfoDiv = document.getElementById("userInfo");
+    if (!uid) {
+      userInfoDiv.innerHTML = "<p>يرجى إدخال UID.</p>";
+      return;
     }
+    try {
+      const userRef = ref(db, "users/" + uid);
+      const snapshot = await get(userRef);
+      if (!snapshot.exists()) {
+        userInfoDiv.innerHTML = `<p>المستخدم بالـ UID (${uid}) غير موجود.</p>`;
+        return;
+      }
+      const data = snapshot.val();
+      userInfoDiv.innerHTML = `
+        <p><strong>البريد الإلكتروني:</strong> ${data.email || "غير موجود"}</p>
+        <p><strong>الاسم:</strong> ${data.username || "غير موجود"}</p>
+        <p><strong>الرصيد:</strong> ${data.balance || 0} جنيه</p>
+        <p><strong>النقاط:</strong> ${data.points || 0}</p>
+      `;
+    } catch (error) {
+      userInfoDiv.innerHTML = `<p>حدث خطأ أثناء جلب البيانات: ${error.message}</p>`;
+    }
+  }
+  document.getElementById("infoUid").addEventListener("input", (e) => {
+    const uid = e.target.value.trim();
+    loadUserInfo(uid);
+  });
 
-    // عرض طلبات الشحن
-    const ordersDiv = document.getElementById("orders");
-    function loadOrders() {
-      const ordersRef = ref(db, 'orders');
-      ordersDiv.innerHTML = "جاري تحميل طلبات الشحن...";
-      get(ordersRef).then(snapshot => {
-        ordersDiv.innerHTML = "";
-        if (!snapshot.exists()) {
-          ordersDiv.textContent = "لا يوجد طلبات شحن جديدة";
-          return;
-        }
-        snapshot.forEach(child => {
-          const orderId = child.key;
-          const orderData = child.val();
-          if (orderData.hidden) return; // تخطي الطلب المخفي
+  // تحميل طلبات الشحن مع زر إخفاء
+  const ordersDiv = document.getElementById("orders");
+  function loadOrders() {
+    ordersDiv.innerHTML = "جاري تحميل طلبات الشحن...";
+    const ordersRef = ref(db, "orders");
+    get(ordersRef).then(snapshot => {
+      ordersDiv.innerHTML = "";
+      if (!snapshot.exists()) {
+        ordersDiv.textContent = "لا توجد طلبات شحن.";
+        return;
+      }
+      snapshot.forEach(child => {
+        const orderId = child.key;
+        const order = child.val();
 
-          const orderCard = document.createElement("div");
-          orderCard.className = "card";
+        if (order.markedAsHidden) return; // تخطي المخفية
 
-          orderCard.innerHTML = `
-            <div class="details">
-              <strong>طلب شحن #${orderId}</strong>
-              ${formatOrderDetails(orderData)}
-            </div>
-            <div class="btns">
-              <button class="approve-btn">قبول</button>
-              <button class="reject-btn">رفض</button>
-              <button class="hide-btn">إخفاء</button>
-            </div>
-          `;
+        const div = document.createElement("div");
+        div.className = "card flex-column";
 
-          orderCard.querySelector(".approve-btn").onclick = async () => {
-            await update(ref(db, 'orders/' + orderId), { status: "تم" });
-            alert("✅ تم قبول الطلب.");
-            loadOrders();
-          };
+        div.innerHTML = `
+          <div><strong>رقم الطلب:</strong> ${orderId}</div>
+          <div><strong>UID المستخدم:</strong> ${order.uid || "غير متوفر"}</div>
+          <div><strong>البريد الإلكتروني:</strong> ${order.email || "غير متوفر"}</div>
+          <div><strong>الخدمة:</strong> ${order.service || "غير متوفر"}</div>
+          <div><strong>المبلغ:</strong> ${order.amount || "غير متوفر"}</div>
+          <div><strong>الحالة:</strong> ${order.status || "غير معروف"}</div>
+          <div><strong>تاريخ الطلب:</strong> ${order.date || "غير معروف"}</div>
+        `;
 
-          orderCard.querySelector(".reject-btn").onclick = async () => {
-            await update(ref(db, 'orders/' + orderId), { status: "مرفوض" });
-            alert("✅ تم رفض الطلب.");
-            loadOrders();
-          };
+        const btnsDiv = document.createElement("div");
+        btnsDiv.className = "btns";
 
-          orderCard.querySelector(".hide-btn").onclick = async () => {
-            await update(ref(db, 'orders/' + orderId), { hidden: true });
+        const hideBtn = document.createElement("button");
+        hideBtn.className = "hide-btn";
+        hideBtn.textContent = "إخفاء الطلب";
+        hideBtn.onclick = async () => {
+          if (confirm("هل أنت متأكد من إخفاء هذا الطلب؟ لن يظهر مجددًا.")) {
+            await update(ref(db, "orders/" + orderId), { markedAsHidden: true });
             alert("✅ تم إخفاء الطلب.");
             loadOrders();
-          };
+          }
+        };
 
-          ordersDiv.appendChild(orderCard);
-        });
+        btnsDiv.appendChild(hideBtn);
+        div.appendChild(btnsDiv);
+        ordersDiv.appendChild(div);
       });
-    }
-    loadOrders();
+    });
+  }
+  loadOrders();
 
-    // عرض طلبات تحويل الأموال
-    const transactionsDiv = document.getElementById("transactions");
-    function loadTransactions() {
-      const transactionsRef = ref(db, 'transactions');
-      transactionsDiv.innerHTML = "جاري تحميل طلبات تحويل الأموال...";
-      get(transactionsRef).then(snapshot => {
-        transactionsDiv.innerHTML = "";
-        if (!snapshot.exists()) {
-          transactionsDiv.textContent = "لا يوجد طلبات تحويل أموال جديدة";
-          return;
-        }
-        snapshot.forEach(child => {
-          const transId = child.key;
-          const transData = child.val();
-          if (transData.hidden) return; // تخطي الطلب المخفي
+  // تحميل طلبات تحويل الأموال مع زر إخفاء
+  const transactionsDiv = document.getElementById("transactions");
+  function loadTransactions() {
+    transactionsDiv.innerHTML = "جاري تحميل طلبات تحويل الأموال...";
+    const transRef = ref(db, "transactions");
+    get(transRef).then(snapshot => {
+      transactionsDiv.innerHTML = "";
+      if (!snapshot.exists()) {
+        transactionsDiv.textContent = "لا توجد طلبات تحويل أموال.";
+        return;
+      }
+      snapshot.forEach(child => {
+        const transId = child.key;
+        const trans = child.val();
 
-          const transCard = document.createElement("div");
-          transCard.className = "card";
+        if (trans.markedAsHidden) return; // تخطي المخفية
 
-          transCard.innerHTML = `
-            <div class="details">
-              <strong>طلب تحويل أموال #${transId}</strong>
-              ${formatOrderDetails(transData)}
-            </div>
-            <div class="btns">
-              <button class="approve-btn">قبول</button>
-              <button class="reject-btn">رفض</button>
-              <button class="hide-btn">إخفاء</button>
-            </div>
-          `;
+        const div = document.createElement("div");
+        div.className = "card flex-column";
 
-          transCard.querySelector(".approve-btn").onclick = async () => {
-            await update(ref(db, 'transactions/' + transId), { status: "تم" });
-            alert("✅ تم قبول طلب تحويل الأموال.");
+        div.innerHTML = `
+          <div><strong>رقم الطلب:</strong> ${transId}</div>
+          <div><strong>UID المستخدم:</strong> ${trans.uid || "غير متوفر"}</div>
+          <div><strong>البريد الإلكتروني:</strong> ${trans.email || "غير متوفر"}</div>
+          <div><strong>المبلغ:</strong> ${trans.amount || "غير متوفر"}</div>
+          <div><strong>الحالة:</strong> ${trans.status || "غير معروف"}</div>
+          <div><strong>تاريخ الطلب:</strong> ${trans.date || "غير معروف"}</div>
+          <div><strong>ملاحظات:</strong> ${trans.notes || "لا توجد"}</div>
+        `;
+
+        const btnsDiv = document.createElement("div");
+        btnsDiv.className = "btns";
+
+        const hideBtn = document.createElement("button");
+        hideBtn.className = "hide-btn";
+        hideBtn.textContent = "إخفاء الطلب";
+        hideBtn.onclick = async () => {
+          if (confirm("هل أنت متأكد من إخفاء هذا الطلب؟ لن يظهر مجددًا.")) {
+            await update(ref(db, "transactions/" + transId), { markedAsHidden: true });
+            alert("✅ تم إخفاء الطلب.");
             loadTransactions();
-          };
+          }
+        };
 
-          transCard.querySelector(".reject-btn").onclick = async () => {
-            await update(ref(db, 'transactions/' + transId), { status: "مرفوض" });
-            alert("✅ تم رفض طلب تحويل الأموال.");
-            loadTransactions();
-          };
-
-          transCard.querySelector(".hide-btn").onclick = async () => {
-            await update(ref(db, 'transactions/' + transId), { hidden: true });
-            alert("✅ تم إخفاء طلب تحويل الأموال.");
-            loadTransactions();
-          };
-
-          transactionsDiv.appendChild(transCard);
-        });
+        btnsDiv.appendChild(hideBtn);
+        div.appendChild(btnsDiv);
+        transactionsDiv.appendChild(div);
       });
-    }
-    loadTransactions();
+    });
+  }
+  loadTransactions();
 
-    // يمكنك هنا إضافة بقية الكود الخاص بإدارة المستخدمين، الرصيد، النقاط، الإشعارات، الخ.
-  </script>
+  // إرسال إشعار للمستخدم
+  window.sendNotification = async () => {
+    const notifUid = document.getElementById("notifUid").value.trim();
+    const notifTitle = document.getElementById("notifTitle").value.trim();
+    const notifMessage = document.getElementById("notifMessage").value.trim();
+
+    if (!notifUid || !notifTitle || !notifMessage) return alert("يرجى ملء جميع حقول الإشعار.");
+
+    try {
+      const notifRef = ref(db, "notifications/" + notifUid);
+      // هنا فقط نضيف إشعار جديد لكل UID في notifications
+      await set(ref(db, "notifications/" + notifUid + "/" + Date.now()), {
+        title: notifTitle,
+        message: notifMessage,
+        date: new Date().toISOString()
+      });
+      alert("✅ تم إرسال الإشعار.");
+      document.getElementById("notifUid").value = "";
+      document.getElementById("notifTitle").value = "";
+      document.getElementById("notifMessage").value = "";
+    } catch (error) {
+      alert("حدث خطأ أثناء إرسال الإشعار: " + error.message);
+    }
+  };
+</script>
 </body>
 </html>
