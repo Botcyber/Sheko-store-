@@ -20,11 +20,14 @@
     .notify-btn { background: #007bff; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
     .delete-user-btn { background: #e63946; color: white; padding: 6px 10px; border: none; border-radius: 5px; cursor: pointer; }
     .status-text { font-weight: bold; }
+    #emailResult { margin-top: 10px; font-weight: bold; color: #333; }
   </style>
 </head>
 <body>
   <header>لوحة تحكم الأدمن</header>
   <div class="container">
+
+    <!-- إضافة مستخدم يدويًا -->
     <h3>إضافة مستخدم يدويًا</h3>
     <input id="uid" placeholder="UID المستخدم" />
     <input id="email" placeholder="البريد الإلكتروني" />
@@ -32,6 +35,7 @@
     <input id="points" placeholder="النقاط" type="number" />
     <button onclick="addUserManually()">إضافة المستخدم</button>
     
+    <!-- تحديث الرصيد والنقاط -->
     <h3>إدارة الرصيد والنقاط</h3>
     <input id="manageUid" placeholder="UID المستخدم" />
     <input id="addBalance" placeholder="إضافة رصيد" type="number" />
@@ -40,20 +44,25 @@
     <input id="removePoints" placeholder="خصم نقاط" type="number" />
     <button onclick="updateUserData()">تحديث</button>
 
+    <!-- خدمة معرفة البريد الإلكتروني بواسطة UID -->
+    <h3>معرفة البريد الإلكتروني بواسطة UID</h3>
+    <input id="lookupUid" placeholder="أدخل UID هنا" />
+    <button onclick="lookupEmail()">اعرف البريد</button>
+    <div id="emailResult"></div>
+
+    <!-- المستخدمين المسجلين -->
     <h3>المستخدمين المسجلين</h3>
     <div id="userList"></div>
 
+    <!-- طلبات الشحن -->
     <h3>طلبات الشحن</h3>
     <div id="orders"></div>
 
+    <!-- طلبات تحويل الأموال -->
     <h3>طلبات تحويل الأموال</h3>
     <div id="transactions"></div>
 
-    <h3>معرفة البريد الإلكتروني من UID</h3>
-    <input id="lookupUid" placeholder="ادخل UID" />
-    <button onclick="lookupEmail()">اعرف البريد الإلكتروني</button>
-    <p id="emailResult" style="margin-top:10px; font-weight:bold;"></p>
-
+    <!-- إرسال إشعار -->
     <h3>إرسال إشعار للمستخدم</h3>
     <input id="notifUid" placeholder="UID المستخدم" />
     <input id="notifTitle" placeholder="عنوان الإشعار" />
@@ -63,7 +72,7 @@
   
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, set, get, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, set, get, update, onChildAdded, onChildChanged, push, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
@@ -77,6 +86,31 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+
+    // رابط دالة cloud function - غيرها بالرابط الخاص بدالتك
+    const cloudFuncURL = "https://YOUR_REGION-YOUR_PROJECT.cloudfunctions.net/getEmailByUid";
+
+    // دالة معرفة البريد من uid عبر الدالة السحابية
+    async function lookupEmail() {
+      const uid = document.getElementById("lookupUid").value.trim();
+      const emailResultDiv = document.getElementById("emailResult");
+      emailResultDiv.textContent = "جاري البحث...";
+      if (!uid) {
+        emailResultDiv.textContent = "يرجى إدخال UID.";
+        return;
+      }
+      try {
+        const res = await fetch(`${cloudFuncURL}?uid=${encodeURIComponent(uid)}`);
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        emailResultDiv.textContent = `البريد الإلكتروني: ${data.email}`;
+      } catch (err) {
+        emailResultDiv.textContent = "خطأ: " + err.message;
+      }
+    }
+    window.lookupEmail = lookupEmail;
+
+    // --- الأكواد السابقة لك (إضافة مستخدم، تحديث بيانات، تحميل المستخدمين، إدارة الطلبات، الإشعارات...) ---
 
     // إضافة مستخدم يدويًا
     window.addUserManually = async () => {
@@ -162,30 +196,7 @@
     }
     loadUsers();
 
-    // استدعاء Cloud Function لمعرفة البريد من UID
-    window.lookupEmail = async () => {
-      const uid = document.getElementById("lookupUid").value.trim();
-      const resultP = document.getElementById("emailResult");
-      resultP.textContent = "جاري البحث...";
-      if (!uid) {
-        resultP.textContent = "يرجى إدخال UID.";
-        return;
-      }
-      try {
-        const functionUrl = "https://us-central1-your-project.cloudfunctions.net/getEmailByUid"; // غيّر إلى رابط الوظيفة السحابية الخاصة بك
-        const response = await fetch(functionUrl + "?uid=" + encodeURIComponent(uid));
-        const data = await response.json();
-        if (response.ok) {
-          resultP.textContent = `البريد الإلكتروني للمستخدم ${uid} هو: ${data.email}`;
-        } else {
-          resultP.textContent = `خطأ: ${data.error}`;
-        }
-      } catch (error) {
-        resultP.textContent = `حدث خطأ: ${error.message}`;
-      }
-    };
-
-    // تابع باقي الكود الخاص بالطلبات والإشعارات كما في كودك الأصلي...
+    // باقي كود عرض الطلبات، تحويل الأموال، الإشعارات... (لم تتغير)
 
   </script>
 </body>
