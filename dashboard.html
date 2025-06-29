@@ -29,20 +29,22 @@
     .nav-icons {
       display: flex;
       gap: 25px;
+      flex-direction: column;
     }
     .nav-icons a {
       color: white;
       text-decoration: none;
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
       font-size: 14px;
       position: relative;
       transition: color 0.3s ease;
+      gap: 8px;
     }
     .nav-icons a i {
       font-size: 20px;
-      margin-bottom: 4px;
+      margin: 0;
     }
     .nav-icons a:hover {
       color: #ffb700;
@@ -236,12 +238,11 @@
       <span>التصنيف</span>
     </a>
 
-    <!-- زر الفعاليات -->
-    <a href="events.html" title="الفعاليات">
+    <!-- زر الفعاليات تحت التصنيف -->
+    <a href="vote-event.html" title="الفعاليات">
       <i class="fa fa-bolt"></i>
       <span>الفعاليات</span>
     </a>
-
   </nav>
 
   <div class="user-area">
@@ -444,7 +445,7 @@ function submitOrder() {
       package: pack,
       account: account,
       status: "قيد التنفيذ",
-      amount: cost,  // <-- إضافة حقل المبلغ المنفق
+      amount: cost,
       createdAt: new Date().toISOString()
     };
 
