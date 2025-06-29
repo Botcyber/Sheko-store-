@@ -5,111 +5,94 @@
   <title>التصنيف العالمي - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background: #f9f9f9;
-      margin: 0;
-      padding: 0;
+    body { 
+      font-family: 'Cairo', sans-serif; 
+      background: #f9f9f9; 
+      margin: 0; 
+      padding: 0; 
+      scroll-behavior: smooth;
     }
-    header {
-      background: #222;
-      color: #fff;
-      text-align: center;
-      padding: 20px;
-      font-size: 24px;
+    header { 
+      background: #222; 
+      color: #fff; 
+      text-align: center; 
+      padding: 20px; 
+      font-size: 24px; 
       font-weight: bold;
-      user-select: none;
+      letter-spacing: 1.5px;
+      text-shadow: 0 0 5px #000;
     }
-    .container {
-      max-width: 1000px;
-      margin: auto;
-      padding: 20px;
+    .container { 
+      max-width: 1000px; 
+      margin: auto; 
+      padding: 20px; 
     }
-    .card {
-      background: white;
-      border-radius: 10px;
-      padding: 15px;
-      margin-bottom: 10px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      transition: box-shadow 0.4s ease;
+    .card { 
+      background: white; 
+      border-radius: 10px; 
+      padding: 15px; 
+      margin-bottom: 10px; 
+      box-shadow: 0 0 8px rgba(0,0,0,0.1); 
+      transition: transform 0.3s ease;
       cursor: default;
     }
     .card:hover {
-      box-shadow: 0 0 12px rgba(0,123,255,0.5);
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0,123,255,0.3);
     }
-    .rank {
-      font-weight: bold;
-      color: #007bff;
-      user-select: none;
+    .rank { 
+      font-weight: bold; 
+      color: #007bff; 
+      font-size: 18px;
     }
-    .not-top {
-      color: #777;
+    .not-top { 
+      color: #777; 
+      font-style: italic;
     }
-
-    /* تمييز المراكز الثلاثة الأولى */
+    
+    /* تصميم المراتب الأولى */
     .first-place {
-      background: linear-gradient(270deg, #FFD700, #FFA500, #FFD700);
-      background-size: 600% 600%;
-      animation: glowingGold 8s ease infinite;
-      color: #222;
-      font-weight: bold;
-      box-shadow: 0 0 15px 3px gold;
+      background: linear-gradient(135deg, #FFD700, #FFC700, #FFB700);
+      color: #fff;
+      box-shadow: 0 0 15px #FFD700;
+      position: relative;
+      overflow: hidden;
+      animation: glow1 3s ease-in-out infinite alternate;
     }
+    @keyframes glow1 {
+      0% { box-shadow: 0 0 15px #FFD700, 0 0 30px #FFC700;}
+      100% { box-shadow: 0 0 25px #FFF700, 0 0 40px #FFC700;}
+    }
+    
     .second-place {
-      background: linear-gradient(270deg, #C0C0C0, #A9A9A9, #C0C0C0);
-      background-size: 600% 600%;
-      animation: glowingSilver 8s ease infinite;
+      background: linear-gradient(135deg, #C0C0C0, #B0B0B0, #A0A0A0);
       color: #222;
-      font-weight: bold;
-      box-shadow: 0 0 15px 3px silver;
+      box-shadow: 0 0 15px #C0C0C0;
+      animation: glow2 3s ease-in-out infinite alternate;
     }
+    @keyframes glow2 {
+      0% { box-shadow: 0 0 15px #C0C0C0, 0 0 30px #B0B0B0;}
+      100% { box-shadow: 0 0 25px #E0E0E0, 0 0 40px #B0B0B0;}
+    }
+    
     .third-place {
-      background: linear-gradient(270deg, #CD7F32, #8B4513, #CD7F32);
-      background-size: 600% 600%;
-      animation: glowingBronze 8s ease infinite;
-      color: #222;
-      font-weight: bold;
-      box-shadow: 0 0 15px 3px #CD7F32;
+      background: linear-gradient(135deg, #CD7F32, #B76E33, #A05E2B);
+      color: #fff;
+      box-shadow: 0 0 15px #CD7F32;
+      animation: glow3 3s ease-in-out infinite alternate;
     }
-
-    /* أنيميشن توهج للخلفية */
-    @keyframes glowingGold {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    @keyframes glow3 {
+      0% { box-shadow: 0 0 15px #CD7F32, 0 0 30px #B76E33;}
+      100% { box-shadow: 0 0 25px #E1A05D, 0 0 40px #B76E33;}
     }
-    @keyframes glowingSilver {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    @keyframes glowingBronze {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-
-    /* تأثير توهج عند الضغط للتركيز على ترتيب المستخدم */
-    @keyframes highlightGlow {
-      0% {
-        box-shadow: 0 0 10px 3px #007bff;
-      }
-      50% {
-        box-shadow: 0 0 20px 6px #00d4ff;
-      }
-      100% {
-        box-shadow: 0 0 10px 3px #007bff;
-      }
-    }
-    .highlighted {
-      animation: highlightGlow 1.5s ease-in-out 3;
-      border-radius: 10px;
-    }
-
-    /* صندوق ترتيب المستخدم الخاص أسفل الصفحة */
+    
+    /* صندوق ترتيبك أسفل الصفحة */
     #yourRankBox {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
       max-width: 1000px;
-      margin: 15px auto 40px;
       background: #007bff;
       color: white;
       font-weight: bold;
@@ -120,9 +103,18 @@
       user-select: none;
       box-shadow: 0 0 15px rgba(0,123,255,0.8);
       transition: background 0.3s ease;
+      z-index: 9999;
     }
     #yourRankBox:hover {
       background: #0056b3;
+    }
+    /* تأثير توهج عند الضغط على ترتيب المستخدم */
+    .highlight {
+      animation: highlightGlow 2s ease forwards;
+    }
+    @keyframes highlightGlow {
+      0% { box-shadow: 0 0 10px 5px #ffea00; }
+      100% { box-shadow: none; }
     }
   </style>
 </head>
@@ -159,7 +151,6 @@
 
       if (!ordersSnap.exists() || !usersSnap.exists()) {
         rankingDiv.textContent = "لا توجد بيانات كافية للتصنيف.";
-        yourRankBox.style.display = "none";
         return;
       }
 
@@ -189,24 +180,17 @@
 
       const currentUser = localStorage.getItem("uid");
       let currentUserRank = null;
-      let currentUserData = null;
 
       users.forEach((user, index) => {
-        if (user.uid === currentUser) {
-          currentUserRank = index + 1;
-          currentUserData = user;
-        }
+        if (user.uid === currentUser) currentUserRank = index + 1;
 
         if (index < 100) {
           const card = document.createElement("div");
           card.className = "card";
+          if(index === 0) card.classList.add("first-place");
+          else if(index === 1) card.classList.add("second-place");
+          else if(index === 2) card.classList.add("third-place");
 
-          // تعيين فئات المراكز الثلاثة الأولى مع الخلفيات المتوهجة
-          if (index === 0) card.classList.add("first-place");
-          else if (index === 1) card.classList.add("second-place");
-          else if (index === 2) card.classList.add("third-place");
-
-          card.id = "userCard_" + user.uid;
           card.innerHTML = `
             <div><span class="rank">#${index + 1}</span> - ${user.username}</div>
             <div>💰 أنفق: ${user.totalSpent.toFixed(2)} جنيه</div>
@@ -215,27 +199,24 @@
         }
       });
 
-      if (currentUserRank !== null && currentUserRank <= 100) {
+      // عرض صندوق ترتيب المستخدم أسفل الصفحة إن كان موجودًا ضمن الـ100
+      if (currentUser && currentUserRank && currentUserRank <= 100) {
+        const user = users.find(u => u.uid === currentUser);
         yourRankBox.style.display = "block";
-        yourRankBox.textContent = `🚀 ترتيبك الحالي: المركز ${currentUserRank} - 💰 المبلغ المنفق: ${currentUserData.totalSpent.toFixed(2)} جنيه`;
-
-        // عند الضغط على الصندوق يلمع ونتحرك للترتيب
+        yourRankBox.textContent = `🚀 ترتيبك الحالي: #${currentUserRank} - ${user.username} - 💰 أنفقت: ${user.totalSpent.toFixed(2)} جنيه`;
+        
         yourRankBox.onclick = () => {
-          const targetCard = document.getElementById("userCard_" + currentUser);
-          if (!targetCard) return;
-
-          // تحريك الصفحة لمكان العنصر مع هامش
-          window.scrollTo({
-            top: targetCard.offsetTop - 20,
-            behavior: "smooth"
-          });
-
-          // إضافة تأثير التوهج
-          targetCard.classList.add("highlighted");
-          // إزالة التوهج بعد انتهاء الأنيميشن
-          setTimeout(() => {
-            targetCard.classList.remove("highlighted");
-          }, 4500); // مدة الأنيميشن (3 دورات × 1.5 ثانية)
+          // إظهار تأثير التوهج على ترتيب المستخدم ثم التمرير إليه
+          const cards = rankingDiv.querySelectorAll('.card');
+          const targetCard = cards[currentUserRank - 1];
+          if (targetCard) {
+            // إزالة توهج من الكل أولاً
+            cards.forEach(c => c.classList.remove('highlight'));
+            targetCard.classList.add('highlight');
+            targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // إزالة التوهج بعد 2 ثواني
+            setTimeout(() => targetCard.classList.remove('highlight'), 2000);
+          }
         };
       } else {
         yourRankBox.style.display = "none";
