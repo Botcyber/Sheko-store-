@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>حسابي - Sheko Store</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- خط أنيق -->
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet" />
 
   <style>
     body {
@@ -14,6 +14,14 @@
       margin: 0;
       padding: 0;
       direction: rtl;
+      overflow-x: hidden;
+      animation: backgroundShift 15s ease-in-out infinite alternate;
+    }
+
+    /* تدرج لوني متغير للخلفية */
+    @keyframes backgroundShift {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 100% 50%; }
     }
 
     .container {
@@ -24,11 +32,40 @@
       border-radius: 20px;
       box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
       text-align: center;
+      animation: fadeInScale 1s ease forwards;
+      opacity: 0;
+      transform: scale(0.8);
+    }
+
+    @keyframes fadeInScale {
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
 
     .profile-img-wrapper {
       margin-top: -80px;
       margin-bottom: 15px;
+      animation: bounceIn 1.2s ease forwards;
+      opacity: 0;
+      transform-origin: center bottom;
+    }
+    @keyframes bounceIn {
+      0% {
+        opacity: 0;
+        transform: translateY(-100px) scale(0.5);
+      }
+      60% {
+        opacity: 1;
+        transform: translateY(20px) scale(1.1);
+      }
+      80% {
+        transform: translateY(-10px) scale(0.95);
+      }
+      100% {
+        transform: translateY(0) scale(1);
+      }
     }
 
     #profileImage {
@@ -39,6 +76,12 @@
       box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
       object-fit: cover;
       cursor: pointer;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    #profileImage:hover {
+      transform: scale(1.1) rotate(5deg);
+      box-shadow: 0 10px 30px rgba(0, 123, 255, 0.7);
+      filter: drop-shadow(0 0 5px #007bff);
     }
 
     input[type="file"] {
@@ -50,6 +93,18 @@
       margin-bottom: 25px;
       font-weight: bold;
       font-size: 24px;
+      animation: slideInFromRight 0.8s ease forwards;
+      opacity: 0;
+    }
+    @keyframes slideInFromRight {
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+      from {
+        opacity: 0;
+        transform: translateX(40px);
+      }
     }
 
     .info-card {
@@ -60,6 +115,22 @@
       margin-bottom: 15px;
       text-align: right;
       box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+      animation: fadeInUp 1s ease forwards;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    .info-card:nth-child(odd) {
+      animation-delay: 0.3s;
+    }
+    .info-card:nth-child(even) {
+      animation-delay: 0.5s;
+    }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .info-card label {
@@ -72,6 +143,7 @@
     .info-card .value {
       color: #333;
       margin-top: 5px;
+      font-size: 18px;
     }
 
     input[type="text"] {
@@ -81,6 +153,12 @@
       border: 1px solid #ccc;
       margin-top: 10px;
       font-family: 'Cairo', sans-serif;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 10px #007bffaa;
     }
 
     button {
@@ -91,27 +169,33 @@
       font-size: 16px;
       cursor: pointer;
       font-weight: bold;
-      transition: 0.3s ease;
+      transition: 0.3s ease, box-shadow 0.3s ease;
     }
 
     .btn-blue {
       background: #007bff;
       color: white;
       margin-top: 15px;
+      box-shadow: 0 6px 12px rgba(0, 123, 255, 0.5);
     }
 
     .btn-blue:hover {
       background: #0056b3;
+      box-shadow: 0 8px 25px rgba(0, 86, 179, 0.7);
+      transform: scale(1.05);
     }
 
     .btn-red {
       background: #dc3545;
       color: white;
       margin-top: 20px;
+      box-shadow: 0 6px 12px rgba(220, 53, 69, 0.5);
     }
 
     .btn-red:hover {
       background: #b02a37;
+      box-shadow: 0 8px 25px rgba(176, 42, 55, 0.7);
+      transform: scale(1.05);
     }
   </style>
 
@@ -119,19 +203,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-      authDomain: "sheko-store.firebaseapp.com",
-      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-      projectId: "sheko-store",
-      storageBucket: "sheko-store.appspot.com",
-      messagingSenderId: "113892775847",
-      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-    };
-    firebase.initializeApp(firebaseConfig);
-  </script>
 </head>
 <body>
 
@@ -153,7 +224,7 @@
     <div class="info-card">
       <label>👤 اسم المستخدم:</label>
       <div class="value" id="username">لم يتم التعيين بعد</div>
-      <input type="text" id="newUsername" placeholder="أدخل اسم مستخدم جديد">
+      <input type="text" id="newUsername" placeholder="أدخل اسم مستخدم جديد" />
       <button class="btn-blue" onclick="setUsername()">تأكيد اسم المستخدم</button>
     </div>
 
