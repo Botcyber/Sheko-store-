@@ -115,6 +115,20 @@
     </thead>
     <tbody>تحميل المشاركين...</tbody>
   </table>
+
+  <h3>أرشيف نتائج التصويت</h3>
+  <table id="archivesTable">
+    <thead>
+      <tr>
+        <th>تاريخ التصويت</th>
+        <th>عدد المشاركين</th>
+        <th>عرض النتائج</th>
+        <th>حذف الأرشيف</th>
+      </tr>
+    </thead>
+    <tbody>تحميل الأرشيف...</tbody>
+  </table>
+
 </div>
 
 <!-- Firebase -->
@@ -144,6 +158,7 @@
   const setEndTimeBtn = document.getElementById("setEndTimeBtn");
   const participantsTableBody = document.querySelector("#participantsTable tbody");
   const timeLeftStatus = document.getElementById("timeLeftStatus");
+  const archivesTableBody = document.querySelector("#archivesTable tbody");
 
   // تابع تحديث قائمة المشاركين
   function loadParticipants() {
@@ -263,9 +278,34 @@
     });
   };
 
-  // تحديث حالة التصويت (فتح/إغلاق)
+  // تحديث حالة التصويت (فتح/إغلاق) مع أرشفة النتائج عند الإغلاق
   voteStatusSelect.onchange = () => {
     const val = voteStatusSelect.value === "true";
+
+    if (!val) {
+      // إذا الإغلاق، نسخ نتائج التصويت إلى الأرشيف
+      db.ref("voteParticipants").once("value").then(snapshot => {
+        const participantsData = snapshot.val();
+        if (!participantsData) return;
+
+        const archiveKey = Date.now().toString();
+
+        const archiveData = {
+          timestamp: new Date().toISOString(),
+          participants: participantsData
+        };
+
+        // كتابة البيانات المؤرشفة
+        db.ref("voteArchives/" + archiveKey).set(archiveData)
+          .then(() => {
+            console.log("تم أرشفة نتائج التصويت");
+          })
+          .catch(err => {
+            console.error("خطأ في أرشفة التصويت:", err);
+          });
+      });
+    }
+
     db.ref("voteSettings").update({ isOpen: val });
   };
 
@@ -282,6 +322,72 @@
     updateTimeLeft();
   };
 
+  // تحميل وعرض الأرشيف
+  function loadArchives() {
+    db.ref("voteArchives").on("value", snap => {
+      const data = snap.val();
+      archivesTableBody.innerHTML = "";
+
+      if (!data) {
+        archivesTableBody.innerHTML = `<tr><td colspan="4">لا يوجد أرشيف نتائج</td></tr>`;
+        return;
+      }
+
+      // ترتيب حسب التاريخ تنازلياً (الأحدث أولاً)
+      const sortedArchives = Object.entries(data).sort((a, b) => b[1].timestamp.localeCompare(a[1].timestamp));
+
+      sortedArchives.forEach(([archiveId, archive]) => {
+        const date = new Date(archive.timestamp).toLocaleString("ar-EG", { hour12: false });
+        const participantsCount = archive.participants ? Object.keys(archive.participants).length : 0;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${date}</td>
+          <td>${participantsCount}</td>
+          <td><button class="btn-view" data-id="${archiveId}">عرض النتائج</button></td>
+          <td><button class="btn-danger" data-id="${archiveId}">حذف</button></td>
+        `;
+        archivesTableBody.appendChild(tr);
+      });
+
+      // أزرار العرض
+      archivesTableBody.querySelectorAll("button.btn-view").forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.getAttribute("data-id");
+          showArchiveDetails(id);
+        };
+      });
+
+      // أزرار الحذف
+      archivesTableBody.querySelectorAll("button.btn-danger").forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.getAttribute("data-id");
+          if(confirm("هل تريد حذف هذا الأرشيف؟")) {
+            db.ref("voteArchives/" + id).remove();
+          }
+        };
+      });
+    });
+  }
+
+  // عرض تفاصيل الأرشيف (نافذة منبثقة)
+  function showArchiveDetails(archiveId) {
+    db.ref("voteArchives/" + archiveId + "/participants").once("value").then(snap => {
+      const participants = snap.val();
+      if (!participants) {
+        alert("لا توجد بيانات لعرضها");
+        return;
+      }
+      let results = "نتائج التصويت:\n\n";
+      // ترتيب حسب الأصوات تنازلياً
+      const sorted = Object.entries(participants).sort((a,b) => (b[1].votes || 0) - (a[1].votes || 0));
+      sorted.forEach(([uid, user], index) => {
+        results += `${index + 1}. ${user.username || uid} - ${user.votes || 0} صوت\n`;
+      });
+      alert(results);
+    });
+  }
+
   // تحميل البيانات عند بدء الصفحة
   auth.onAuthStateChanged(user => {
     if (!user) {
@@ -292,6 +398,7 @@
       loadVoteStatus();
       loadEndTime();
       updateTimeLeft();
+      loadArchives();
     }
   });
 </script>
