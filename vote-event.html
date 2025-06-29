@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>فعالية التصويت - Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Cairo', sans-serif;
+      background: #f9f9f9;
+      padding: 0;
+    }
+
+    header {
+      background: linear-gradient(to left, #111, #333);
+      color: white;
+      text-align: center;
+      padding: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 30px auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      padding: 0 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 15px;
+      padding: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      text-align: center;
+      transition: transform 0.3s ease;
+      animation: fadeInUp 0.5s ease forwards;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 10px;
+      border: 3px solid #007bff;
+    }
+
+    .card h3 {
+      margin: 10px 0 5px;
+      font-size: 18px;
+      color: #333;
+    }
+
+    .card p {
+      margin: 5px 0;
+      font-size: 15px;
+      color: #777;
+    }
+
+    .card button {
+      margin-top: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .card button:hover {
+      background: #0056b3;
+    }
+
+    @keyframes fadeInUp {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <header>🎉 فعالية التصويت - اختر نجم الفعالية!</header>
+
+  <div class="container" id="voteContainer">جاري تحميل المشاركين...</div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    const container = document.getElementById("voteContainer");
+
+    function loadParticipants(currentUid) {
+      db.ref("voteParticipants").once("value", snap => {
+        const data = snap.val();
+        container.innerHTML = "";
+
+        if (!data) {
+          container.innerHTML = "لا يوجد مشاركين حتى الآن.";
+          return;
+        }
+
+        const sorted = Object.entries(data).sort((a, b) => b[1].votes - a[1].votes);
+
+        sorted.forEach(([uid, user]) => {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <img src="${user.photoURL || 'https://i.imgur.com/6VBx3io.png'}" alt="صورة">
+            <h3>${user.username || 'بدون اسم'}</h3>
+            <p>عدد التصويتات: <strong>${user.votes || 0}</strong></p>
+            <button ${currentUid === uid ? 'disabled' : ''}>تصويت</button>
+          `;
+          const btn = card.querySelector("button");
+          btn.onclick = () => {
+            db.ref("voteParticipants/" + uid + "/votes").transaction(v => (v || 0) + 1);
+            btn.disabled = true;
+          };
+          container.appendChild(card);
+        });
+      });
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        alert("يرجى تسجيل الدخول أولاً.");
+        location.href = "index.html";
+      } else {
+        loadParticipants(user.uid);
+      }
+    });
+  </script>
+</body>
+</html>
