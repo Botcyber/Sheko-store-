@@ -1,111 +1,334 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <title>طلباتك - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body { font-family: 'Cairo', sans-serif; margin: 0; background: #f1f1f1; }
-    header, .top-bar { background: #222; color: white; padding: 15px; text-align: center; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
-    .dashboard { max-width: 800px; margin: auto; padding: 20px; background: white; border-radius: 12px; margin-top: 30px; }
-    .order { padding: 10px; border-bottom: 1px solid #ccc; }
-    .order:last-child { border-bottom: none; }
-    .nav-links { display: flex; gap: 10px; }
-    .nav-links a { color: white; background: #444; padding: 8px 12px; border-radius: 5px; text-decoration: none; }
+    @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      margin: 0;
+      background: #f9faff;
+      color: #333;
+      overflow-x: hidden;
+      animation: fadeSlideIn 0.7s ease forwards;
+    }
+
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .top-bar {
+      background: #222;
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 18px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      user-select: none;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: white;
+      background: #444;
+      padding: 10px 16px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 700;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .nav-links a:hover {
+      background: #ffb700;
+      color: #222;
+      box-shadow: 0 4px 14px rgba(255,183,0,0.6);
+    }
+
+    #balance {
+      font-weight: 700;
+      min-width: 120px;
+      text-align: center;
+      user-select: text;
+      font-size: 17px;
+    }
+
+    button {
+      background: #ffb700;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 16px;
+      color: #222;
+      cursor: pointer;
+      box-shadow: 0 6px 16px rgba(255, 183, 0, 0.6);
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      user-select: none;
+    }
+    button:hover {
+      background: #e6a200;
+      transform: scale(1.05);
+    }
+
+    .dashboard {
+      max-width: 850px;
+      margin: 35px auto 60px;
+      padding: 25px 30px;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 12px 36px rgba(0,0,0,0.1);
+      animation: fadeSlideUp 0.7s ease forwards;
+    }
+
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h2 {
+      text-align: center;
+      color: #222;
+      font-weight: 900;
+      letter-spacing: 1.4px;
+      margin-bottom: 30px;
+      user-select: none;
+    }
+
+    .order {
+      display: flex;
+      align-items: center;
+      padding: 18px 20px;
+      border-bottom: 1.5px solid #e0e0e0;
+      transition: background-color 0.3s ease;
+      gap: 20px;
+      position: relative;
+      animation: slideFadeIn 0.5s ease forwards;
+      cursor: default;
+      border-radius: 10px;
+    }
+    .order:last-child {
+      border-bottom: none;
+    }
+    .order:hover {
+      background: #fff9e6;
+      box-shadow: 0 8px 16px rgba(255, 183, 0, 0.2);
+    }
+
+    @keyframes slideFadeIn {
+      from {
+        opacity: 0;
+        transform: translateX(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    /* أيقونة الطلب المتحركة */
+    .order-icon {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      animation: bounce 2s infinite ease-in-out;
+      fill: #ffb700;
+    }
+
+    @keyframes bounce {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-8px);
+      }
+    }
+
+    .order-details {
+      flex: 1;
+      font-size: 16px;
+      color: #444;
+      line-height: 1.5;
+    }
+
+    .order-details strong {
+      color: #222;
+      user-select: text;
+    }
+
     .status {
-      font-weight: bold;
-      color: #007bff;
+      font-weight: 900;
+      padding: 6px 14px;
+      border-radius: 18px;
+      min-width: 110px;
+      text-align: center;
+      user-select: none;
+      flex-shrink: 0;
+      font-size: 15px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .status.pending {
+      background: #cce5ff;
+      color: #004085;
+      box-shadow: 0 0 10px rgba(0,123,255,0.3);
     }
     .status.done {
-      color: green;
+      background: #d4edda;
+      color: #155724;
+      box-shadow: 0 0 10px rgba(40,167,69,0.3);
     }
     .status.rejected {
-      color: red;
+      background: #f8d7da;
+      color: #721c24;
+      box-shadow: 0 0 10px rgba(220,53,69,0.3);
     }
+
     .empty {
       text-align: center;
       color: #999;
-      margin-top: 30px;
-      font-size: 1.2em;
+      margin-top: 40px;
+      font-size: 1.3em;
+      user-select: none;
+    }
+
+    @media (max-width: 600px) {
+      .order {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 14px 16px;
+      }
+      .status {
+        min-width: auto;
+        width: 100%;
+        text-align: left;
+        padding: 8px 12px;
+      }
+      .order-icon {
+        align-self: center;
+      }
     }
   </style>
 </head>
-<body><div class="top-bar">
-  <div class="nav-links">
-    <a href="dashboard.html">لوحة التحكم</a>
-    <a href="account.html">معلومات حسابك</a>
+<body>
+  <div class="top-bar" role="banner">
+    <nav class="nav-links" role="navigation" aria-label="روابط لوحة التحكم">
+      <a href="dashboard.html" aria-current="page">لوحة التحكم</a>
+      <a href="account.html">معلومات حسابك</a>
+    </nav>
+    <div>
+      <span id="balance" aria-live="polite" aria-atomic="true">رصيدك: ...</span>
+      <button onclick="logout()" aria-label="تسجيل الخروج">تسجيل الخروج</button>
+    </div>
   </div>
-  <div>
-    <span id="balance">رصيدك: ...</span>
-    <button onclick="logout()">تسجيل الخروج</button>
-  </div>
-</div><div class="dashboard">
-  <h2>طلباتك السابقة</h2>
-  <div id="ordersList">جاري التحميل...</div>
-</div><!-- Firebase SDKs --><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script><script>
-const firebaseConfig = {
-  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-  authDomain: "sheko-store.firebaseapp.com",
-  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-  projectId: "sheko-store",
-  storageBucket: "sheko-store.firebasestorage.app",
-  messagingSenderId: "113892775847",
-  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-};
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
+  <main class="dashboard" role="main">
+    <h2>طلباتك السابقة</h2>
+    <div id="ordersList" aria-live="polite" aria-relevant="additions removals">جاري التحميل...</div>
+  </main>
 
-const ordersList = document.getElementById("ordersList");
-const balanceEl = document.getElementById("balance");
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.firebasestorage.app",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
 
-let currentUser = null;
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
 
-auth.onAuthStateChanged(user => {
-  if (!user) {
-    location.href = 'index.html';
-    return;
-  }
-  currentUser = user;
+    const ordersList = document.getElementById("ordersList");
+    const balanceEl = document.getElementById("balance");
 
-  // عرض الرصيد من Realtime Database
-  db.ref("users/" + user.uid + "/balance").on("value", snapshot => {
-    const balance = snapshot.val();
-    balanceEl.textContent = `رصيدك: ${balance !== null ? balance : 0} جنيه`;
-  });
+    let currentUser = null;
 
-  // جلب الطلبات من Realtime Database (orders) للمستخدم الحالي
-  db.ref("orders").orderByChild("uid").equalTo(user.uid).on("value", snapshot => {
-    if (!snapshot.exists()) {
-      ordersList.innerHTML = `<p class="empty">لا يوجد طلبات حتى الآن.</p>`;
-      return;
-    }
-    ordersList.innerHTML = ""; // مسح المحتوى القديم
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        location.href = 'index.html';
+        return;
+      }
+      currentUser = user;
 
-    const orders = snapshot.val();
-    const ordersArray = Object.values(orders).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+      // عرض الرصيد من Realtime Database
+      db.ref("users/" + user.uid + "/balance").on("value", snapshot => {
+        const balance = snapshot.val();
+        balanceEl.textContent = `رصيدك: ${balance !== null ? balance : 0} جنيه`;
+      });
 
-    ordersArray.forEach(order => {
-      const div = document.createElement("div");
-      div.className = "order";
-      const statusClass = order.status === 'تم' ? 'done' : order.status === 'مرفوض' ? 'rejected' : '';
-      div.innerHTML = `
-        <strong>نوع الخدمة:</strong> ${order.type}<br>
-        <strong>الخدمة:</strong> ${order.service}<br>
-        <strong>الباقة:</strong> ${order.package}<br>
-        <strong>الحساب:</strong> ${order.account}<br>
-        <strong>الحالة:</strong> <span class="status ${statusClass}">${order.status || "قيد التنفيذ"}</span><br>
-        <small>تاريخ الطلب: ${new Date(order.createdAt).toLocaleString("ar-EG")}</small>
-      `;
-      ordersList.appendChild(div);
+      // جلب الطلبات من Realtime Database (orders) للمستخدم الحالي
+      db.ref("orders").orderByChild("uid").equalTo(user.uid).on("value", snapshot => {
+        if (!snapshot.exists()) {
+          ordersList.innerHTML = `<p class="empty">لا يوجد طلبات حتى الآن.</p>`;
+          return;
+        }
+        ordersList.innerHTML = ""; // مسح المحتوى القديم
+
+        const orders = snapshot.val();
+        const ordersArray = Object.values(orders).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        ordersArray.forEach(order => {
+          const div = document.createElement("div");
+          div.className = "order";
+
+          const statusClass = order.status === 'تم' ? 'done' : order.status === 'مرفوض' ? 'rejected' : 'pending';
+
+          div.innerHTML = `
+            <svg class="order-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false" role="img">
+              <path d="M3 6h18v2H3V6zm2 5h14v2H5v-2zm-2 5h18v2H3v-2z"/>
+            </svg>
+            <div class="order-details" tabindex="0">
+              <strong>نوع الخدمة:</strong> ${order.type}<br>
+              <strong>الخدمة:</strong> ${order.service}<br>
+              <strong>الباقة:</strong> ${order.package}<br>
+              <strong>الحساب:</strong> ${order.account}<br>
+              <strong>الحالة:</strong> <span class="status ${statusClass}">${order.status || "قيد التنفيذ"}</span><br>
+              <small>تاريخ الطلب: ${new Date(order.createdAt).toLocaleString("ar-EG")}</small>
+            </div>
+          `;
+          ordersList.appendChild(div);
+        });
+      });
     });
-  });
-});
 
-function logout() {
-  auth.signOut().then(() => {
-    location.href = 'index.html';
-  });
-}
-</script></body>
+    function logout() {
+      auth.signOut().then(() => {
+        location.href = 'index.html';
+      });
+    }
+  </script>
+</body>
 </html>
