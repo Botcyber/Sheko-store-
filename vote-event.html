@@ -11,6 +11,7 @@
       background: #f9f9f9;
       padding: 0;
     }
+
     header {
       background: linear-gradient(to left, #111, #333);
       color: white;
@@ -20,6 +21,7 @@
       font-weight: bold;
       box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     }
+
     .container {
       max-width: 1100px;
       margin: 30px auto;
@@ -28,6 +30,7 @@
       gap: 20px;
       padding: 0 20px;
     }
+
     .card {
       background: white;
       border-radius: 15px;
@@ -37,9 +40,11 @@
       transition: transform 0.3s ease;
       animation: fadeInUp 0.5s ease forwards;
     }
+
     .card:hover {
       transform: translateY(-5px);
     }
+
     .card img {
       width: 80px;
       height: 80px;
@@ -48,16 +53,19 @@
       margin-bottom: 10px;
       border: 3px solid #007bff;
     }
+
     .card h3 {
       margin: 10px 0 5px;
       font-size: 18px;
       color: #333;
     }
+
     .card p {
       margin: 5px 0;
       font-size: 15px;
       color: #777;
     }
+
     .card button {
       margin-top: 10px;
       background: #007bff;
@@ -69,20 +77,16 @@
       cursor: pointer;
       transition: background 0.3s ease;
     }
+
     .card button:disabled {
-      background: #aaa;
+      background: #ccc;
       cursor: not-allowed;
     }
+
     .card button:hover:not(:disabled) {
       background: #0056b3;
     }
-    #closedMessage {
-      text-align: center;
-      color: #999;
-      font-size: 18px;
-      margin-top: 40px;
-      display: none;
-    }
+
     @keyframes fadeInUp {
       0% { opacity: 0; transform: translateY(20px); }
       100% { opacity: 1; transform: translateY(0); }
@@ -93,7 +97,6 @@
 
   <header>🎉 فعالية التصويت - اختر نجم الفعالية!</header>
 
-  <div id="closedMessage">التصويت مغلق حالياً.</div>
   <div class="container" id="voteContainer">جاري تحميل المشاركين...</div>
 
   <!-- Firebase -->
@@ -117,54 +120,88 @@
     const auth = firebase.auth();
 
     const container = document.getElementById("voteContainer");
-    const closedMessage = document.getElementById("closedMessage");
-    let voteOpen = false;
 
-    function listenVoteStatusAndParticipants(currentUid) {
-      // استمع لتغيير حالة التصويت
-      db.ref('voteSettings/isOpen').on('value', snap => {
-        voteOpen = snap.val() === true;
+    // المتغيرات لحالة التصويت ووقت الانتهاء
+    let isVotingOpen = false;
+    let votingEndTime = null;
+    let currentUserUid = null;
+    let userHasVoted = false;
 
-        if (!voteOpen) {
-          container.style.display = "none";
-          closedMessage.style.display = "block";
-        } else {
-          container.style.display = "grid";
-          closedMessage.style.display = "none";
+    // تحميل حالة التصويت والوقت
+    function loadVoteSettings() {
+      db.ref("voteSettings").on("value", snapshot => {
+        const settings = snapshot.val() || {};
+        isVotingOpen = settings.isOpen === true;
+        votingEndTime = settings.endTime ? new Date(settings.endTime) : null;
+
+        // تحقق اذا انتهى الوقت
+        if (votingEndTime && new Date() > votingEndTime) {
+          isVotingOpen = false; // إغلاق التصويت تلقائياً
         }
-      });
 
-      // استمع لتغييرات المشاركين وعدد تصويتاتهم
-      db.ref("voteParticipants").on("value", snap => {
+        renderParticipants(); // إعادة تحميل المشاركين عند تحديث الإعدادات
+      });
+    }
+
+    // تحميل قائمة الأصوات التي أدلى بها المستخدم
+    function loadUserVoteStatus(uid) {
+      db.ref(`userVotes/${uid}`).once("value").then(snap => {
+        userHasVoted = snap.exists();
+        renderParticipants();
+      });
+    }
+
+    // تحميل المشاركين وتصويرهم
+    function renderParticipants() {
+      db.ref("voteParticipants").once("value").then(snap => {
         const data = snap.val();
         container.innerHTML = "";
-
-        if (!voteOpen) return; // اذا التصويت مغلق لا تعرض المشاركين
 
         if (!data) {
           container.innerHTML = "لا يوجد مشاركين حتى الآن.";
           return;
         }
 
+        // ترتيب حسب الأصوات تنازليًا
         const sorted = Object.entries(data).sort((a, b) => (b[1].votes || 0) - (a[1].votes || 0));
 
         sorted.forEach(([uid, user]) => {
+          const disabled = !isVotingOpen || userHasVoted || (currentUserUid === uid);
           const card = document.createElement("div");
           card.className = "card";
           card.innerHTML = `
             <img src="${user.photoURL || 'https://i.imgur.com/6VBx3io.png'}" alt="صورة">
             <h3>${user.username || 'بدون اسم'}</h3>
             <p>عدد التصويتات: <strong>${user.votes || 0}</strong></p>
-            <button ${currentUid === uid ? 'disabled' : ''}>تصويت</button>
+            <button ${disabled ? 'disabled' : ''}>تصويت</button>
           `;
           const btn = card.querySelector("button");
           btn.onclick = () => {
-            if (!voteOpen) {
-              alert('التصويت مغلق حالياً');
+            if(!isVotingOpen) {
+              alert("التصويت مغلق حالياً.");
               return;
             }
-            db.ref("voteParticipants/" + uid + "/votes").transaction(v => (v || 0) + 1);
-            btn.disabled = true;
+            if(userHasVoted) {
+              alert("لقد قمت بالتصويت مسبقًا.");
+              return;
+            }
+            if(currentUserUid === uid) {
+              alert("لا يمكنك التصويت لنفسك.");
+              return;
+            }
+            // سجل التصويت
+            const updates = {};
+            updates[`voteParticipants/${uid}/votes`] = (user.votes || 0) + 1;
+            updates[`userVotes/${currentUserUid}`] = uid; // تخزين أن المستخدم صوت لهذا uid
+
+            db.ref().update(updates).then(() => {
+              userHasVoted = true;
+              alert("شكراً لتصويتك!");
+              renderParticipants();
+            }).catch(err => {
+              console.error(err);
+              alert("حدث خطأ أثناء التصويت.");
+            });
           };
           container.appendChild(card);
         });
@@ -176,7 +213,9 @@
         alert("يرجى تسجيل الدخول أولاً.");
         location.href = "index.html";
       } else {
-        listenVoteStatusAndParticipants(user.uid);
+        currentUserUid = user.uid;
+        loadVoteSettings();
+        loadUserVoteStatus(currentUserUid);
       }
     });
   </script>
