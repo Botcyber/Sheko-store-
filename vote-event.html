@@ -78,7 +78,12 @@
       transition: background 0.3s ease;
     }
 
-    .card button:hover {
+    .card button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+
+    .card button:hover:not(:disabled) {
       background: #0056b3;
     }
 
@@ -117,16 +122,17 @@
     const container = document.getElementById("voteContainer");
 
     function loadParticipants(currentUid) {
-      db.ref("voteParticipants").once("value", snap => {
+      db.ref("voteParticipants").on("value", snap => {
         const data = snap.val();
         container.innerHTML = "";
 
         if (!data) {
-          container.innerHTML = "لا يوجد مشاركين حتى الآن.";
+          container.innerHTML = "<p>لا يوجد مشاركين حتى الآن.</p>";
           return;
         }
 
-        const sorted = Object.entries(data).sort((a, b) => b[1].votes - a[1].votes);
+        // ترتيب المشاركين حسب عدد التصويتات تنازليًا
+        const sorted = Object.entries(data).sort((a, b) => (b[1].votes || 0) - (a[1].votes || 0));
 
         sorted.forEach(([uid, user]) => {
           const card = document.createElement("div");
@@ -137,13 +143,21 @@
             <p>عدد التصويتات: <strong>${user.votes || 0}</strong></p>
             <button ${currentUid === uid ? 'disabled' : ''}>تصويت</button>
           `;
+
           const btn = card.querySelector("button");
           btn.onclick = () => {
-            db.ref("voteParticipants/" + uid + "/votes").transaction(v => (v || 0) + 1);
             btn.disabled = true;
+            // زيادة عدد التصويتات باستخدام transaction لضمان السلامة عند التحديث المتزامن
+            db.ref("voteParticipants/" + uid + "/votes").transaction(currentVotes => {
+              return (currentVotes || 0) + 1;
+            });
           };
+
           container.appendChild(card);
         });
+      }, error => {
+        container.innerHTML = "<p>حدث خطأ أثناء تحميل المشاركين.</p>";
+        console.error("Firebase read error:", error);
       });
     }
 
