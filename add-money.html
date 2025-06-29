@@ -5,138 +5,44 @@
   <title>إضافة أموال - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background: #f1f1f1;
-      margin: 0;
-      padding: 0;
-      animation: fadeZoomIn 0.7s ease-out;
-      overflow-x: hidden;
-    }
-
-    @keyframes fadeZoomIn {
-      0% {
-        opacity: 0;
-        transform: scale(0.9);
-      }
-      100% {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    .container {
-      max-width: 650px;
-      margin: auto;
-      background: white;
-      padding: 25px;
-      border-radius: 15px;
-      margin-top: 40px;
-      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-    }
-
-    h2, h3 {
-      text-align: center;
-      color: #222;
-    }
-
-    label, select, input {
-      display: block;
-      width: 100%;
-      margin-top: 12px;
-      padding: 12px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 15px;
-    }
-
-    button {
-      margin-top: 20px;
-      width: 100%;
-      padding: 13px;
-      background: #222;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      font-size: 15px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-
-    button:hover {
-      background: #ffb700;
-      color: #000;
-    }
-
-    .info {
-      margin-top: 15px;
-      font-size: 14px;
-      color: #555;
-      text-align: center;
-    }
-
-    .history {
-      background: #fff;
-      margin-top: 40px;
-      padding: 25px;
-      border-radius: 15px;
-    }
-
-    .transaction {
-      padding: 15px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      background: #fdfdfd;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      transition: transform 0.3s ease;
-    }
-
-    .transaction:hover {
-      transform: scale(1.01);
-    }
-
-    .status {
-      font-weight: bold;
-    }
-
+    body { font-family: 'Cairo', sans-serif; background: #f1f1f1; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 12px; margin-top: 40px; }
+    h2 { text-align: center; }
+    label, select, input { display: block; width: 100%; margin-top: 10px; padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+    button { margin-top: 20px; width: 100%; padding: 12px; background: #222; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #444; }
+    .info { margin-top: 15px; font-size: 14px; color: #555; text-align: center; }
+    .hidden { display: none; }
+    .history { background: #fff; margin-top: 40px; padding: 20px; border-radius: 12px; }
+    .history h3 { margin-bottom: 10px; }
+    .transaction { padding: 10px; border-bottom: 1px solid #ccc; margin-bottom: 15px; border-radius: 10px; background: #f9f9f9; }
+    .transaction:last-child { border-bottom: none; }
+    .status { font-weight: bold; }
     .status.pending { color: #007bff; }
     .status.approved { color: #28a745; }
     .status.rejected { color: #dc3545; }
-
-    .info-box {
-      background: #fff3cd;
-      border: 1px solid #ffeeba;
-      padding: 10px 15px;
-      border-radius: 8px;
-      font-size: 16px;
+    .download-btn {
       margin-top: 10px;
-      color: #856404;
-      font-weight: bold;
-    }
-
-    .info-box.vodafone { background: #ffe6e6; border-color: #ffcccc; color: #b30000; }
-    .info-box.instapay { background: #e6f7ff; border-color: #b3e0ff; color: #004085; }
-
-    .print-btn {
-      background-color: #007bff;
+      padding: 10px 20px;
+      background-color: #28a745;
       color: white;
       border: none;
-      padding: 6px 12px;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 13px;
-      margin-top: 10px;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
     }
-
-    .print-btn:hover {
-      background-color: #0056b3;
+    .download-btn:hover {
+      background-color: #1e7e34;
     }
   </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 </head>
 <body>
-
 <div class="container">
   <h2>إضافة أموال</h2>
   <label for="method">اختر طريقة الدفع:</label>
@@ -146,15 +52,11 @@
     <option value="instapay">انستا باي</option>
     <option value="fawry">فوري</option>
   </select>
-
   <div id="details" class="info"></div>
-
   <label for="sender">رقم/رابط التحويل:</label>
   <input type="text" id="sender" placeholder="مثال: رقم فودافون أو رابط إنستا باي" />
-
   <label for="amount">المبلغ المرسل (جنيه):</label>
   <input type="number" id="amount" min="1" placeholder="مثال: 50" />
-
   <button onclick="submitTopup()">تحقق</button>
 
   <p class="info">إضافة الأموال لحسابك تستغرق من 1 - 3 ساعات</p>
@@ -166,10 +68,6 @@
   <div id="topupHistory">جاري التحميل...</div>
 </div>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
@@ -193,10 +91,10 @@ const historyEl = document.getElementById("topupHistory");
 
 methodEl.addEventListener("change", () => {
   const value = methodEl.value;
-  if (value === "vodafone") {
-    detailsEl.innerHTML = `<div class="info-box vodafone">رقم التحويل: 01099874914</div>`;
+  if (value === "vodafone" || value === "fawry") {
+    detailsEl.innerHTML = `<span style="color:#007bff; font-weight:bold; font-size:1.1em;">رقم التحويل: 01099874914</span>`;
   } else if (value === "instapay") {
-    detailsEl.innerHTML = `<div class="info-box instapay">رابط الحساب: shehabhossnyshawky@instapay</div>`;
+    detailsEl.innerHTML = `<span style="color:#007bff; font-weight:bold; font-size:1.1em;">رابط الحساب: shehabhossnyshawky@instapay</span>`;
   } else {
     detailsEl.innerHTML = "";
   }
@@ -219,7 +117,13 @@ function submitTopup() {
     return;
   }
 
+  if (!currentUser) {
+    alert("يجب تسجيل الدخول أولاً");
+    return;
+  }
+
   const newTopupKey = db.ref().child('transactions').push().key;
+
   const topupData = {
     uid: currentUser.uid,
     method,
@@ -229,66 +133,68 @@ function submitTopup() {
     timestamp: new Date().toISOString()
   };
 
-  db.ref("/transactions/" + newTopupKey).set(topupData).then(() => {
+  const updates = {};
+  updates['/transactions/' + newTopupKey] = topupData;
+
+  db.ref().update(updates).then(() => {
     alert("تم إرسال طلب إضافة الأموال بنجاح");
     senderEl.value = "";
     amountEl.value = "";
     methodEl.value = "";
     detailsEl.innerHTML = "";
     loadTopupHistory();
-  }).catch(err => {
-    alert("حدث خطأ: " + err.message);
+  }).catch((error) => {
+    console.error("خطأ في الإرسال:", error);
+    alert("حدث خطأ أثناء الإرسال: " + error.message);
   });
 }
 
 function loadTopupHistory() {
+  if (!currentUser) return;
   db.ref("transactions").orderByChild("uid").equalTo(currentUser.uid).on("value", snapshot => {
     if (!snapshot.exists()) {
       historyEl.innerHTML = `<p class="info">لا توجد تحويلات بعد.</p>`;
       return;
     }
+
+    historyEl.innerHTML = "";
     const data = snapshot.val();
     const sorted = Object.values(data).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-    historyEl.innerHTML = "";
-    sorted.forEach(item => {
+
+    sorted.forEach((item, index) => {
       const div = document.createElement("div");
       div.className = "transaction";
       const statusClass = item.status === "تم" ? "approved" : item.status === "مرفوض" ? "rejected" : "pending";
+
+      const uniqueId = `pdf-content-${index}`;
+
       div.innerHTML = `
-        <strong>المبلغ:</strong> ${item.amount} جنيه<br>
-        <strong>الطريقة:</strong> ${item.method}<br>
-        <strong>التحويل:</strong> ${item.senderInfo}<br>
-        <strong>الحالة:</strong> <span class="status ${statusClass}">${item.status}</span><br>
-        <small>التاريخ: ${new Date(item.timestamp).toLocaleString("ar-EG")}</small>
+        <div id="${uniqueId}" style="padding: 20px; border: 2px solid #007bff; border-radius: 12px; background: #fafafa; direction: rtl; text-align: right;">
+          <h2 style="text-align:center; color:#007bff; margin-bottom: 20px;">💳 Sheko Store</h2>
+          <p><strong>المبلغ:</strong> ${item.amount} جنيه</p>
+          <p><strong>طريقة الدفع:</strong> ${item.method}</p>
+          <p><strong>معلومات التحويل:</strong> ${item.senderInfo}</p>
+          <p><strong>الحالة:</strong> <span class="status ${statusClass}">${item.status}</span></p>
+          <p><strong>التاريخ:</strong> ${new Date(item.timestamp).toLocaleString("ar-EG")}</p>
+        </div>
+        <button class="download-btn" onclick="downloadPDF('${uniqueId}', '${item.timestamp}')">📥 تحميل كـ PDF</button>
       `;
-      const printBtn = document.createElement("button");
-      printBtn.className = "print-btn";
-      printBtn.textContent = "🖨️ طباعة";
-      printBtn.onclick = () => printTransaction(div);
-      div.appendChild(printBtn);
+
       historyEl.appendChild(div);
     });
   });
 }
 
-function printTransaction(element) {
-  const win = window.open('', '', 'height=600,width=800');
-  win.document.write(`
-    <html><head><title>طباعة سجل</title>
-    <style>
-      body { font-family: 'Cairo', sans-serif; direction: rtl; padding: 20px; }
-      .transaction { border: 1px solid #ccc; padding: 20px; border-radius: 10px; }
-      strong { display: inline-block; width: 120px; }
-      .status { font-weight: bold; }
-    </style>
-    </head><body>
-    <div class="transaction">${element.innerHTML}</div>
-    </body></html>
-  `);
-  win.document.close();
-  win.focus();
-  win.print();
-  win.close();
+function downloadPDF(id, timestamp) {
+  const element = document.getElementById(id);
+  const opt = {
+    margin:       0.5,
+    filename:     `ShekoStore-${new Date(timestamp).toLocaleDateString('ar-EG')}.pdf`,
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2 },
+    jsPDF:        { unit: 'in', format: 'A4', orientation: 'portrait' }
+  };
+  html2pdf().set(opt).from(element).save();
 }
 </script>
 </body>
