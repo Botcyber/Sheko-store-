@@ -32,13 +32,14 @@
       color: white;
       padding: 15px 20px;
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
       align-items: center;
       font-size: 18px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       user-select: none;
       flex-wrap: wrap;
       gap: 10px;
+      /* تم حذف عناصر الرصيد وزر الخروج */
     }
 
     .nav-links {
@@ -61,32 +62,6 @@
       background: #ffb700;
       color: #222;
       box-shadow: 0 4px 14px rgba(255,183,0,0.6);
-    }
-
-    #balance {
-      font-weight: 700;
-      min-width: 120px;
-      text-align: center;
-      user-select: text;
-      font-size: 17px;
-    }
-
-    button {
-      background: #ffb700;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 16px;
-      color: #222;
-      cursor: pointer;
-      box-shadow: 0 6px 16px rgba(255, 183, 0, 0.6);
-      transition: background-color 0.3s ease, transform 0.2s ease;
-      user-select: none;
-    }
-    button:hover {
-      background: #e6a200;
-      transform: scale(1.05);
     }
 
     .dashboard {
@@ -150,7 +125,6 @@
       }
     }
 
-    /* أيقونة الطلب المتحركة */
     .order-icon {
       width: 40px;
       height: 40px;
@@ -182,13 +156,13 @@
 
     .status {
       font-weight: 900;
-      padding: 6px 14px;
+      padding: 4px 12px;
       border-radius: 18px;
       min-width: 110px;
       text-align: center;
       user-select: none;
       flex-shrink: 0;
-      font-size: 15px;
+      font-size: 12px; /* حجم أصغر */
       transition: background-color 0.3s ease, color 0.3s ease;
     }
 
@@ -241,10 +215,6 @@
       <a href="dashboard.html" aria-current="page">لوحة التحكم</a>
       <a href="account.html">معلومات حسابك</a>
     </nav>
-    <div>
-      <span id="balance" aria-live="polite" aria-atomic="true">رصيدك: ...</span>
-      <button onclick="logout()" aria-label="تسجيل الخروج">تسجيل الخروج</button>
-    </div>
   </div>
 
   <main class="dashboard" role="main">
@@ -272,7 +242,6 @@
     const db = firebase.database();
 
     const ordersList = document.getElementById("ordersList");
-    const balanceEl = document.getElementById("balance");
 
     let currentUser = null;
 
@@ -282,12 +251,6 @@
         return;
       }
       currentUser = user;
-
-      // عرض الرصيد من Realtime Database
-      db.ref("users/" + user.uid + "/balance").on("value", snapshot => {
-        const balance = snapshot.val();
-        balanceEl.textContent = `رصيدك: ${balance !== null ? balance : 0} جنيه`;
-      });
 
       // جلب الطلبات من Realtime Database (orders) للمستخدم الحالي
       db.ref("orders").orderByChild("uid").equalTo(user.uid).on("value", snapshot => {
@@ -323,12 +286,6 @@
         });
       });
     });
-
-    function logout() {
-      auth.signOut().then(() => {
-        location.href = 'index.html';
-      });
-    }
   </script>
 </body>
 </html>
