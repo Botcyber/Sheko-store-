@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <title>التصنيف العالمي - Sheko Store</title>
@@ -10,11 +11,6 @@
       margin: 0;
       padding: 0;
       scroll-behavior: smooth;
-      animation: fadeIn 1s ease-in;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
     }
     header {
       background: linear-gradient(to left, #111, #333);
@@ -36,14 +32,11 @@
       padding: 16px;
       margin-bottom: 12px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-      transition: transform 0.3s ease, background 0.3s ease;
+      transition: transform 0.3s ease;
       scroll-margin: 100px;
-      opacity: 0;
-      animation: slideIn 0.6s forwards;
     }
-    @keyframes slideIn {
-      from { transform: translateY(20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+    .card:hover {
+      transform: scale(1.01);
     }
     .rank {
       font-weight: bold;
@@ -74,19 +67,24 @@
       from { box-shadow: 0 0 15px #cd7f32; }
       to   { box-shadow: 0 0 30px #a0522d; }
     }
+    .not-top {
+      color: #777;
+    }
     #yourRankBox {
       background: #222;
       color: white;
       font-weight: bold;
       border-radius: 10px;
       padding: 15px;
-      margin: 30px auto 10px;
+      margin: 20px auto;
       text-align: center;
+      cursor: pointer;
       display: none;
       max-width: 400px;
       box-shadow: 0 0 10px rgba(0,0,0,0.3);
-      position: relative;
-      cursor: pointer;
+    }
+    #yourRankBox:hover {
+      background: #444;
     }
     .highlight {
       animation: blink 1s ease-in-out 4;
@@ -101,8 +99,10 @@
   <header>🏆 التصنيف العالمي لأفضل المستخدمين</header>
   <div class="container">
     <div id="rankingList">جاري تحميل التصنيفات...</div>
-    <div id="yourRankBox"></div>
-  </div>  <script type="module">
+    <div id="yourRankBox" title="اضغط لرؤية ترتيبك"></div>
+  </div>
+
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -126,6 +126,7 @@
 
     onAuthStateChanged(auth, async user => {
       const currentUid = user?.uid || null;
+
       const ordersSnap = await get(ref(db, "orders"));
       const usersSnap = await get(ref(db, "users"));
 
@@ -181,7 +182,7 @@
         yourRankBox.style.display = "block";
         yourRankBox.textContent = `🚀 ترتيبك الحالي: المركز ${currentUserRank}`;
 
-        yourRankBox.onclick = () => {
+        yourRankBox.addEventListener("click", () => {
           if (currentUserRank <= 100) {
             const el = document.getElementById("rank-" + currentUserRank);
             if (el) {
@@ -190,8 +191,9 @@
               setTimeout(() => el.classList.remove("highlight"), 3000);
             }
           }
-        };
+        });
       }
     });
-  </script></body>
+  </script>
+</body>
 </html>
