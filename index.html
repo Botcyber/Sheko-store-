@@ -29,6 +29,7 @@
       padding: 10px;
       border-radius: 6px;
       border: 1px solid #ccc;
+      box-sizing: border-box;
     }
     button {
       width: 100%;
@@ -41,11 +42,13 @@
       font-weight: bold;
       cursor: pointer;
       font-size: 16px;
+      box-sizing: border-box;
     }
     .toggle {
       margin-top: 10px;
       cursor: pointer;
       color: #0069d9;
+      user-select: none;
     }
     .btn-share {
       margin-top: 20px;
@@ -59,6 +62,7 @@
       margin-top: 15px;
       color: #0069d9;
       font-size: 14px;
+      user-select: none;
     }
     #toast {
       display: none;
@@ -87,8 +91,7 @@
     <div class="toggle" id="toggleForm">ليس لديك حساب؟ أنشئ الآن</div>
 
     <div class="whatsapp">
-      إذا نسيت الباسورد كلم الأدمن على الواتساب:
-      <br />
+      إذا نسيت الباسورد كلم الأدمن على الواتساب:<br />
       <a href="https://wa.me/201099874914" target="_blank">01099874914</a>
     </div>
 
@@ -135,7 +138,7 @@
       toggleForm.textContent = isRegister ? "لديك حساب؟ تسجيل الدخول" : "ليس لديك حساب؟ أنشئ الآن";
     };
 
-    actionBtn.onclick = () => {
+    actionBtn.onclick = async () => {
       const userEmail = email.value.trim();
       const userPass = password.value;
       const confirmPass = confirmPassword.value;
@@ -144,27 +147,28 @@
         if (userPass !== confirmPass) {
           return showToast("كلمتا المرور غير متطابقتين", "error");
         }
-
-        createUserWithEmailAndPassword(auth, userEmail, userPass)
-          .then((userCredential) => {
-            const user = userCredential.user;
-            set(ref(db, 'users/' + user.uid), {
-              uid: user.uid,
-              email: user.email,
-              balance: 0,
-              points: 0
-            });
-            showToast("✅ تم إنشاء الحساب", "success");
-            window.location.href = "dashboard.html";
-          })
-          .catch(error => showToast(error.message, "error"));
+        try {
+          const userCredential = await createUserWithEmailAndPassword(auth, userEmail, userPass);
+          const user = userCredential.user;
+          await set(ref(db, 'users/' + user.uid), {
+            uid: user.uid,
+            email: user.email,
+            balance: 0,
+            points: 0
+          });
+          showToast("✅ تم إنشاء الحساب", "success");
+          window.location.href = "dashboard.html";
+        } catch (error) {
+          showToast(error.message, "error");
+        }
       } else {
-        signInWithEmailAndPassword(auth, userEmail, userPass)
-          .then(() => {
-            showToast("✅ تم تسجيل الدخول", "success");
-            window.location.href = "dashboard.html";
-          })
-          .catch(error => showToast(error.message, "error"));
+        try {
+          await signInWithEmailAndPassword(auth, userEmail, userPass);
+          showToast("✅ تم تسجيل الدخول", "success");
+          window.location.href = "dashboard.html";
+        } catch (error) {
+          showToast(error.message, "error");
+        }
       }
     };
 
@@ -196,7 +200,6 @@
       toast.textContent = message;
       toast.style.display = "block";
 
-      // لون حسب النوع
       if (type === "success") {
         toast.style.backgroundColor = "#28a745";
       } else if (type === "error") {
