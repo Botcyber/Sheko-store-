@@ -63,7 +63,7 @@
   
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, set, get, update, onChildAdded, onChildChanged, push, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, set, get, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
@@ -162,7 +162,7 @@
     }
     loadUsers();
 
-    // خدمة معرفة البريد الإلكتروني من UID
+    // استدعاء Cloud Function لمعرفة البريد من UID
     window.lookupEmail = async () => {
       const uid = document.getElementById("lookupUid").value.trim();
       const resultP = document.getElementById("emailResult");
@@ -172,19 +172,20 @@
         return;
       }
       try {
-        const snapshot = await get(ref(db, 'users/' + uid + '/email'));
-        if (snapshot.exists()) {
-          resultP.textContent = `البريد الإلكتروني للمستخدم ${uid} هو: ${snapshot.val()}`;
+        const functionUrl = "https://us-central1-your-project.cloudfunctions.net/getEmailByUid"; // غيّر إلى رابط الوظيفة السحابية الخاصة بك
+        const response = await fetch(functionUrl + "?uid=" + encodeURIComponent(uid));
+        const data = await response.json();
+        if (response.ok) {
+          resultP.textContent = `البريد الإلكتروني للمستخدم ${uid} هو: ${data.email}`;
         } else {
-          resultP.textContent = `لم يتم العثور على بريد إلكتروني للمستخدم ${uid}.`;
+          resultP.textContent = `خطأ: ${data.error}`;
         }
       } catch (error) {
         resultP.textContent = `حدث خطأ: ${error.message}`;
       }
     };
 
-    // (باقي الكود كما هو — إدارة الطلبات، الإشعارات، الخ... بدون تعديل)
-    // يمكنك دمج باقي كودك الخاص بالطلبات والتحويلات والإشعارات هنا بنفس الطريقة.
+    // تابع باقي الكود الخاص بالطلبات والإشعارات كما في كودك الأصلي...
 
   </script>
 </body>
