@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <title>التصنيف العالمي - Sheko Store</title>
@@ -113,9 +112,7 @@
   <div class="container">
     <div id="rankingList">جاري تحميل التصنيفات...</div>
     <div id="yourRankBox" title="اضغط لرؤية ترتيبك"></div>
-  </div>
-
-  <script type="module">
+  </div>  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -179,7 +176,7 @@
 
         const card = document.createElement("div");
         card.className = "card";
-        card.style.animationDelay = `${index * 100}ms`; // تأخير لكل عنصر
+        card.style.animationDelay = `${index * 100}ms`;
         if (index === 0) card.classList.add("top1");
         else if (index === 1) card.classList.add("top2");
         else if (index === 2) card.classList.add("top3");
@@ -208,6 +205,5 @@
         });
       }
     });
-  </script>
-</body>
+  </script></body>
 </html>
