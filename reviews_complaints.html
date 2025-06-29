@@ -103,18 +103,19 @@
       font-style: italic;
     }
     .delete-btn {
-      position: absolute;
-      bottom: 18px;
-      right: 20px;
+      position: static; /* مهم: زر الحذف اسفل التقييم */
+      display: block;
+      margin: 15px auto 0 auto;
       background: #e53935;
       color: white;
       border: none;
       border-radius: 10px;
-      padding: 5px 12px;
-      font-size: 14px;
+      padding: 8px 16px;
+      font-size: 15px;
       cursor: pointer;
       box-shadow: 0 3px 10px rgba(229, 57, 53, 0.7);
       transition: background-color 0.3s ease;
+      width: fit-content;
     }
     .delete-btn:hover {
       background: #b71c1c;
@@ -366,7 +367,7 @@
           `;
           div.appendChild(reactionsDiv);
 
-          // زر الحذف فقط للأدمن
+          // زر الحذف فقط للأدمن، أسفل التقييم
           if (currentUid === "mlifDgEAkKMaOeuUq63cs5NAkV93") {
             const btn = document.createElement("button");
             btn.textContent = "🗑 حذف التقييم";
