@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>التقييمات والشكاوى - Sheko Store</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
@@ -75,20 +75,26 @@
     .stars span {
       font-size: 28px;
       cursor: pointer;
-      color: #cfd8dc;
-      transition: color 0.3s ease, transform 0.3s ease;
+      color: #222; /* أسود افتراضي */
+      transition: color 0.3s ease, transform 0.3s ease, text-shadow 0.6s ease;
       user-select: none;
       animation: starPulse 2.5s infinite alternate ease-in-out;
     }
     .stars span.active {
-      color: #ffca28;
-      text-shadow: 0 0 8px #ffca28cc;
+      color: #ffd700; /* ذهبي */
+      text-shadow:
+        0 0 8px #ffd700cc,
+        0 0 20px #ffec8599,
+        0 0 30px #fff48fbb;
       animation: starGlow 1.5s infinite alternate ease-in-out;
     }
     .stars span:hover {
-      transform: scale(1.3);
-      color: #ffca28;
-      text-shadow: 0 0 12px #ffca28dd;
+      transform: scale(1.4) rotate(10deg);
+      color: #ffd700;
+      text-shadow:
+        0 0 12px #ffd700ff,
+        0 0 25px #ffec859f,
+        0 0 35px #fff48fff;
       animation: starGlow 1.5s infinite alternate ease-in-out;
     }
     @keyframes starPulse {
@@ -97,8 +103,8 @@
       100% { transform: scale(1) rotate(0deg);}
     }
     @keyframes starGlow {
-      0% { text-shadow: 0 0 8px #ffca28cc; }
-      100% { text-shadow: 0 0 20px #ffd54fff; }
+      0% { text-shadow: 0 0 8px #ffd700cc; }
+      100% { text-shadow: 0 0 20px #fffacdff; }
     }
     .section {
       margin-top: 50px;
@@ -446,6 +452,6 @@
         });
       });
     }
-  </script>
+      </script>
 </body>
 </html>
