@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <title>لوحة تحكم الأدمن - Sheko Store</title>
@@ -17,17 +18,47 @@
     .approve-btn { background: #28a745; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
     .reject-btn { background: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
     .notify-btn { background: #007bff; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
-    .delete-btn { background: #6c757d; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
+    .hide-btn { background: #6c757d; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
     .status-text { font-weight: bold; }
   </style>
 </head>
 <body>
   <header>لوحة تحكم الأدمن</header>
   <div class="container">
-    <!-- باقي الصفحة كما هي -->
-  </div>    <script type="module">
+    <h3>إضافة مستخدم يدويًا</h3>
+    <input id="uid" placeholder="UID المستخدم" />
+    <input id="email" placeholder="البريد الإلكتروني" />
+    <input id="balance" placeholder="الرصيد" type="number" />
+    <input id="points" placeholder="النقاط" type="number" />
+    <button onclick="addUserManually()">إضافة المستخدم</button>
+    
+    <h3>إدارة الرصيد والنقاط</h3>
+    <input id="manageUid" placeholder="UID المستخدم" />
+    <input id="addBalance" placeholder="إضافة رصيد" type="number" />
+    <input id="removeBalance" placeholder="خصم رصيد" type="number" />
+    <input id="addPoints" placeholder="إضافة نقاط" type="number" />
+    <input id="removePoints" placeholder="خصم نقاط" type="number" />
+    <button onclick="updateUserData()">تحديث</button>
+
+    <h3>المستخدمين المسجلين</h3>
+    <div id="userList"></div>
+
+    <h3>طلبات الشحن</h3>
+    <div id="orders"></div>
+
+    <h3>طلبات تحويل الأموال</h3>
+    <div id="transactions"></div>
+
+    <h3>إرسال إشعار للمستخدم</h3>
+    <input id="notifUid" placeholder="UID المستخدم" />
+    <input id="notifTitle" placeholder="عنوان الإشعار" />
+    <textarea id="notifMessage" placeholder="نص الرسالة" style="height:80px;"></textarea>
+    <button onclick="sendNotification()">إرسال إشعار</button>
+  </div>  
+  
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, set, get, update, remove, onChildAdded, onChildChanged, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, set, get, update, onChildAdded, onChildChanged, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
@@ -42,9 +73,82 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // الدوال الحالية هنا...
+    // إضافة مستخدم يدويًا
+    window.addUserManually = async () => {
+      const uid = document.getElementById("uid").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const balance = parseFloat(document.getElementById("balance").value);
+      const points = parseFloat(document.getElementById("points").value);
 
-    // إضافة زر حذف لكل طلب شحن
+      if (!uid || !email) return alert("يرجى إدخال UID والبريد الإلكتروني.");
+      await set(ref(db, 'users/' + uid), {
+        email,
+        balance: balance || 0,
+        points: points || 0
+      });
+      alert("✅ تم إضافة المستخدم.");
+      loadUsers();
+    };
+
+    // تحديث رصيد ونقاط المستخدم
+    window.updateUserData = async () => {
+      const uid = document.getElementById("manageUid").value.trim();
+      const addBalance = parseFloat(document.getElementById("addBalance").value);
+      const removeBalance = parseFloat(document.getElementById("removeBalance").value);
+      const addPoints = parseFloat(document.getElementById("addPoints").value);
+      const removePoints = parseFloat(document.getElementById("removePoints").value);
+
+      const userRef = ref(db, 'users/' + uid);
+      const snapshot = await get(userRef);
+      if (!snapshot.exists()) return alert("المستخدم غير موجود.");
+      const userData = snapshot.val();
+
+      const newBalance = (userData.balance || 0) + (addBalance || 0) - (removeBalance || 0);
+      const newPoints = (userData.points || 0) + (addPoints || 0) - (removePoints || 0);
+
+      await update(userRef, {
+        balance: newBalance,
+        points: newPoints
+      });
+      alert("✅ تم التحديث.");
+      loadUsers();
+    };
+
+    // تحميل وعرض المستخدمين
+    const userListDiv = document.getElementById("userList");
+    function loadUsers() {
+      const usersRef = ref(db, 'users');
+      userListDiv.innerHTML = "جاري تحميل المستخدمين...";
+      get(usersRef).then(snapshot => {
+        userListDiv.innerHTML = "";
+        if (!snapshot.exists()) {
+          userListDiv.textContent = "لا يوجد مستخدمين مسجلين";
+          return;
+        }
+        snapshot.forEach(child => {
+          const uid = child.key;
+          const data = child.val();
+          const div = document.createElement("div");
+          div.className = "card";
+          div.textContent = `UID: ${uid} | 📌 ${data.email || 'بدون بريد'} | 💰 ${data.balance || 0} جنيه | ⭐ ${data.points || 0}`;
+          userListDiv.appendChild(div);
+        });
+      });
+    }
+    loadUsers();
+
+    // دالة تلوين الحالة
+    function updateStatusColor(span, status) {
+      if (status === "تم") {
+        span.style.color = "green";
+      } else if (status === "مرفوض") {
+        span.style.color = "red";
+      } else {
+        span.style.color = "black";
+      }
+    }
+
+    // عرض طلبات الشحن مع أزرار قبول/رفض/إشعار/إخفاء
     const ordersDiv = document.getElementById("orders");
     const ordersRef = ref(db, 'orders');
     const ordersMap = new Map();
@@ -52,7 +156,10 @@
     onChildAdded(ordersRef, (snapshot) => {
       const data = snapshot.val();
       const orderKey = snapshot.key;
-      if (ordersMap.has(orderKey)) return;
+      if (ordersMap.has(orderKey)) return; // منع التكرار
+
+      // تجاهل الطلبات المخفية بواسطة الأدمن
+      if (data.hiddenByAdmin) return;
 
       const div = document.createElement("div");
       div.className = "card";
@@ -92,12 +199,12 @@
         sendNotificationToUser(data.uid, title, message);
       };
 
-      const deleteBtn = document.createElement("button");
-      deleteBtn.className = "delete-btn";
-      deleteBtn.textContent = "🗑️ حذف الطلب";
-      deleteBtn.onclick = () => {
-        if (confirm("هل أنت متأكد من حذف هذا الطلب؟")) {
-          remove(ref(db, `orders/${orderKey}`));
+      const hideBtn = document.createElement("button");
+      hideBtn.className = "hide-btn";
+      hideBtn.textContent = "🗑️ إخفاء عن الأدمن";
+      hideBtn.onclick = () => {
+        if (confirm("هل تريد إخفاء هذا الطلب من لوحة الأدمن فقط؟")) {
+          update(ref(db, `orders/${orderKey}`), { hiddenByAdmin: true });
           div.remove();
         }
       };
@@ -105,16 +212,37 @@
       btnGroup.appendChild(acceptBtn);
       btnGroup.appendChild(rejectBtn);
       btnGroup.appendChild(notifyBtn);
-      btnGroup.appendChild(deleteBtn);
+      btnGroup.appendChild(hideBtn);
+
       div.appendChild(btnGroup);
       ordersDiv.appendChild(div);
+
       ordersMap.set(orderKey, div);
 
       const statusSpan = div.querySelector(".status-text");
       updateStatusColor(statusSpan, data.status);
     });
 
-    // نفس الشيء لطلبات تحويل الأموال
+    onChildChanged(ordersRef, (snapshot) => {
+      const data = snapshot.val();
+      const orderKey = snapshot.key;
+      const div = ordersMap.get(orderKey);
+
+      if (div) {
+        // إخفاء الطلب إذا تم تعيين hiddenByAdmin
+        if (data.hiddenByAdmin) {
+          div.remove();
+          ordersMap.delete(orderKey);
+          return;
+        }
+
+        const statusSpan = div.querySelector(".status-text");
+        statusSpan.textContent = data.status || 'قيد التنفيذ';
+        updateStatusColor(statusSpan, data.status);
+      }
+    });
+
+    // عرض طلبات تحويل الأموال مع أزرار قبول/رفض/إشعار/إخفاء
     const transactionsDiv = document.getElementById("transactions");
     const transactionsRef = ref(db, 'transactions');
     const transactionsMap = new Map();
@@ -122,7 +250,10 @@
     onChildAdded(transactionsRef, async (snapshot) => {
       const data = snapshot.val();
       const transactionKey = snapshot.key;
-      if (transactionsMap.has(transactionKey)) return;
+      if (transactionsMap.has(transactionKey)) return; // منع التكرار
+
+      // تجاهل الطلبات المخفية بواسطة الأدمن
+      if (data.hiddenByAdmin) return;
 
       const userSnap = await get(ref(db, 'users/' + data.uid));
       const email = userSnap.exists() ? userSnap.val().email : 'غير معروف';
@@ -171,12 +302,12 @@
         sendNotificationToUser(data.uid, title, message);
       };
 
-      const deleteBtn = document.createElement("button");
-      deleteBtn.className = "delete-btn";
-      deleteBtn.textContent = "🗑️ حذف الطلب";
-      deleteBtn.onclick = () => {
-        if (confirm("هل أنت متأكد من حذف هذا الطلب؟")) {
-          remove(ref(db, `transactions/${transactionKey}`));
+      const hideBtn = document.createElement("button");
+      hideBtn.className = "hide-btn";
+      hideBtn.textContent = "🗑️ إخفاء عن الأدمن";
+      hideBtn.onclick = () => {
+        if (confirm("هل تريد إخفاء هذا الطلب من لوحة الأدمن فقط؟")) {
+          update(ref(db, `transactions/${transactionKey}`), { hiddenByAdmin: true });
           div.remove();
         }
       };
@@ -184,14 +315,64 @@
       btnGroup.appendChild(acceptBtn);
       btnGroup.appendChild(rejectBtn);
       btnGroup.appendChild(notifyBtn);
-      btnGroup.appendChild(deleteBtn);
+      btnGroup.appendChild(hideBtn);
 
       div.appendChild(btnGroup);
       transactionsDiv.appendChild(div);
+
       transactionsMap.set(transactionKey, div);
 
       const statusSpan = div.querySelector(".status-text");
       updateStatusColor(statusSpan, data.status);
     });
-  </script></body>
+
+    onChildChanged(transactionsRef, (snapshot) => {
+      const data = snapshot.val();
+      const transactionKey = snapshot.key;
+      const div = transactionsMap.get(transactionKey);
+
+      if (div) {
+        if (data.hiddenByAdmin) {
+          div.remove();
+          transactionsMap.delete(transactionKey);
+          return;
+        }
+
+        const statusSpan = div.querySelector(".status-text");
+        statusSpan.textContent = data.status || 'قيد التنفيذ';
+        updateStatusColor(statusSpan, data.status);
+      }
+    });
+
+    // دالة إرسال إشعار لمستخدم
+    async function sendNotificationToUser(uid, title, message) {
+      if (!uid || !title || !message) {
+        alert("يرجى ملء جميع الحقول لإرسال الإشعار.");
+        return;
+      }
+      try {
+        const notifRef = ref(db, 'notifications/' + uid);
+        const newNotifRef = push(notifRef);
+        await set(newNotifRef, {
+          title,
+          message,
+          read: false,
+          createdAt: Date.now()
+        });
+        alert("✅ تم إرسال الإشعار بنجاح.");
+      } catch (err) {
+        console.error("خطأ أثناء إرسال الإشعار:", err);
+        alert("❌ حدث خطأ أثناء إرسال الإشعار: " + err.message);
+      }
+    }
+
+    // زر إرسال إشعار عام
+    window.sendNotification = async () => {
+      const uid = document.getElementById("notifUid").value.trim();
+      const title = document.getElementById("notifTitle").value.trim();
+      const message = document.getElementById("notifMessage").value.trim();
+      await sendNotificationToUser(uid, title, message);
+    };
+  </script>
+</body>
 </html>
