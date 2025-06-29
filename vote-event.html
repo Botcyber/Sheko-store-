@@ -69,20 +69,19 @@
       cursor: pointer;
       transition: background 0.3s ease;
     }
-    .card button:hover {
+    .card button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+    .card button:hover:not(:disabled) {
       background: #0056b3;
     }
-    .message {
-      max-width: 600px;
-      margin: 40px auto;
-      padding: 20px;
-      background: #ffc9c9;
-      border: 1px solid #ff5c5c;
-      border-radius: 12px;
-      color: #a70000;
-      font-weight: bold;
+    #closedMessage {
       text-align: center;
+      color: #999;
       font-size: 18px;
+      margin-top: 40px;
+      display: none;
     }
     @keyframes fadeInUp {
       0% { opacity: 0; transform: translateY(20px); }
@@ -94,8 +93,8 @@
 
   <header>🎉 فعالية التصويت - اختر نجم الفعالية!</header>
 
-  <div id="voteContainer" class="container">جاري تحميل المشاركين...</div>
-  <div id="closedMessage" class="message" style="display:none;">عذرًا، التصويت مغلق حالياً.</div>
+  <div id="closedMessage">التصويت مغلق حالياً.</div>
+  <div class="container" id="voteContainer">جاري تحميل المشاركين...</div>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -119,29 +118,35 @@
 
     const container = document.getElementById("voteContainer");
     const closedMessage = document.getElementById("closedMessage");
-
     let voteOpen = false;
 
-    function loadParticipants(currentUid) {
-      if (!voteOpen) {
-        container.style.display = "none";
-        closedMessage.style.display = "block";
-        return;
-      } else {
-        container.style.display = "grid";
-        closedMessage.style.display = "none";
-      }
+    function listenVoteStatusAndParticipants(currentUid) {
+      // استمع لتغيير حالة التصويت
+      db.ref('voteSettings/isOpen').on('value', snap => {
+        voteOpen = snap.val() === true;
 
-      db.ref("voteParticipants").once("value", snap => {
+        if (!voteOpen) {
+          container.style.display = "none";
+          closedMessage.style.display = "block";
+        } else {
+          container.style.display = "grid";
+          closedMessage.style.display = "none";
+        }
+      });
+
+      // استمع لتغييرات المشاركين وعدد تصويتاتهم
+      db.ref("voteParticipants").on("value", snap => {
         const data = snap.val();
         container.innerHTML = "";
+
+        if (!voteOpen) return; // اذا التصويت مغلق لا تعرض المشاركين
 
         if (!data) {
           container.innerHTML = "لا يوجد مشاركين حتى الآن.";
           return;
         }
 
-        const sorted = Object.entries(data).sort((a, b) => b[1].votes - a[1].votes);
+        const sorted = Object.entries(data).sort((a, b) => (b[1].votes || 0) - (a[1].votes || 0));
 
         sorted.forEach(([uid, user]) => {
           const card = document.createElement("div");
@@ -166,19 +171,12 @@
       });
     }
 
-    function checkVoteStatusAndLoad(user) {
-      db.ref('voteSettings/isOpen').once('value').then(snap => {
-        voteOpen = snap.val() === true;
-        loadParticipants(user.uid);
-      });
-    }
-
     auth.onAuthStateChanged(user => {
       if (!user) {
         alert("يرجى تسجيل الدخول أولاً.");
         location.href = "index.html";
       } else {
-        checkVoteStatusAndLoad(user);
+        listenVoteStatusAndParticipants(user.uid);
       }
     });
   </script>
