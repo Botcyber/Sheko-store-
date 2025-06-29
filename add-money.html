@@ -5,6 +5,7 @@
   <title>إضافة أموال - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
     body { font-family: 'Cairo', sans-serif; background: #f1f1f1; margin: 0; padding: 0; }
     .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 12px; margin-top: 40px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
     h2 { text-align: center; color: #222; }
@@ -22,6 +23,8 @@
       position: relative;
       font-size: 16px;
       color: #333;
+      direction: rtl;
+      text-align: right;
     }
     .transaction:last-child { border-bottom: none; }
     .status {
@@ -82,7 +85,6 @@
   <div id="topupHistory">جاري التحميل...</div>
 </div>
 
-<!-- مكتبة html2pdf -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -200,26 +202,33 @@ function loadTopupHistory() {
   });
 }
 
+// دالة تحميل PDF مع تضمين خط Cairo
 function downloadPDF(id, timestamp) {
   const element = document.getElementById(id);
 
-  // نص ترحيبي للترويسة
-  const headerHtml = `
-    <div style="text-align:center; margin-bottom: 20px; font-family: 'Cairo', sans-serif;">
-      <h1 style="color:#ffb700;">Sheko Store</h1>
-      <h3>سجل طلب إضافة أموال</h3>
-      <hr style="border:1px solid #ffb700; margin: 10px 0 20px 0;" />
+  // بناء محتوى نصي من بيانات السجل
+  const amount = element.querySelector('strong:nth-of-type(1)').nextSibling.textContent.trim();
+  const method = element.querySelector('strong:nth-of-type(2)').nextSibling.textContent.trim();
+  const senderInfo = element.querySelector('strong:nth-of-type(3)').nextSibling.textContent.trim();
+  const status = element.querySelector('.status').textContent.trim();
+  const date = element.querySelector('small').textContent.trim();
+
+  // نص المحتوى بصيغة HTML منظمة
+  const content = `
+    <div style="font-family: 'Cairo', sans-serif; direction: rtl; text-align: right; padding: 20px;">
+      <h1 style="color:#ffb700; text-align:center; margin-bottom: 20px;">Sheko Store</h1>
+      <h2 style="text-align:center; margin-bottom: 30px;">سجل طلب إضافة أموال</h2>
+      <p><strong>المبلغ:</strong> ${amount}</p>
+      <p><strong>الطريقة:</strong> ${method}</p>
+      <p><strong>التحويل:</strong> ${senderInfo}</p>
+      <p><strong>الحالة:</strong> ${status}</p>
+      <p><small>التاريخ: ${date}</small></p>
     </div>
   `;
 
-  // ننسخ المحتوى المطلوب طباعته
-  const contentHtml = element.innerHTML;
-
-  // نخلق عنصر مؤقت لجمع المحتوى مع الهيدر
-  const tempDiv = document.createElement("div");
-  tempDiv.style.padding = "20px";
-  tempDiv.style.fontFamily = "'Cairo', sans-serif";
-  tempDiv.innerHTML = headerHtml + contentHtml;
+  // أنشئ عنصر مؤقت للـ PDF
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = content;
 
   const opt = {
     margin:       0.5,
