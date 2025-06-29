@@ -63,7 +63,7 @@
   
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, set, get, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, set, get, update, remove, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
@@ -195,8 +195,126 @@
       loadUserInfo(uid);
     });
 
-    // تابع باقي الأكواد كما هي (طلبات الشحن، تحويل الأموال، الإشعارات، إلخ)
-    // ...
+    // --- تحميل وعرض طلبات الشحن ---
+    const ordersDiv = document.getElementById("orders");
+    function loadOrders() {
+      const ordersRef = ref(db, 'orders');
+      ordersDiv.innerHTML = "جاري تحميل طلبات الشحن...";
+      
+      onChildAdded(ordersRef, (snapshot) => {
+        const orderId = snapshot.key;
+        const orderData = snapshot.val();
+        
+        // تجنب تكرار العرض
+        if(document.getElementById("order-" + orderId)) return;
+
+        const orderCard = document.createElement("div");
+        orderCard.className = "card";
+        orderCard.id = "order-" + orderId;
+
+        orderCard.innerHTML = `
+          <div>
+            <strong>طلب شحن #${orderId}</strong><br/>
+            UID: ${orderData.uid || "غير معروف"}<br/>
+            الخدمة: ${orderData.service || "غير محدد"}<br/>
+            المبلغ: ${orderData.amount || 0} جنيه<br/>
+            الحالة: <span class="status-text">${orderData.status || "جديد"}</span>
+          </div>
+          <div class="btns">
+            <button class="approve-btn">قبول</button>
+            <button class="reject-btn">رفض</button>
+          </div>
+        `;
+
+        orderCard.querySelector(".approve-btn").onclick = async () => {
+          await update(ref(db, 'orders/' + orderId), { status: "تم القبول" });
+          orderCard.querySelector(".status-text").textContent = "تم القبول";
+          alert("تم قبول الطلب");
+        };
+
+        orderCard.querySelector(".reject-btn").onclick = async () => {
+          await update(ref(db, 'orders/' + orderId), { status: "مرفوض" });
+          orderCard.querySelector(".status-text").textContent = "مرفوض";
+          alert("تم رفض الطلب");
+        };
+
+        ordersDiv.appendChild(orderCard);
+      });
+    }
+    loadOrders();
+
+    // --- تحميل وعرض طلبات تحويل الأموال ---
+    const transactionsDiv = document.getElementById("transactions");
+    function loadTransactions() {
+      const transRef = ref(db, 'transactions');
+      transactionsDiv.innerHTML = "جاري تحميل طلبات تحويل الأموال...";
+      
+      onChildAdded(transRef, (snapshot) => {
+        const transId = snapshot.key;
+        const transData = snapshot.val();
+
+        // تجنب تكرار العرض
+        if(document.getElementById("trans-" + transId)) return;
+
+        const transCard = document.createElement("div");
+        transCard.className = "card";
+        transCard.id = "trans-" + transId;
+
+        transCard.innerHTML = `
+          <div>
+            <strong>طلب تحويل أموال #${transId}</strong><br/>
+            UID: ${transData.uid || "غير معروف"}<br/>
+            المبلغ: ${transData.amount || 0} جنيه<br/>
+            الحالة: <span class="status-text">${transData.status || "جديد"}</span>
+          </div>
+          <div class="btns">
+            <button class="approve-btn">قبول</button>
+            <button class="reject-btn">رفض</button>
+          </div>
+        `;
+
+        transCard.querySelector(".approve-btn").onclick = async () => {
+          await update(ref(db, 'transactions/' + transId), { status: "تم القبول" });
+          transCard.querySelector(".status-text").textContent = "تم القبول";
+          alert("تم قبول طلب تحويل الأموال");
+        };
+
+        transCard.querySelector(".reject-btn").onclick = async () => {
+          await update(ref(db, 'transactions/' + transId), { status: "مرفوض" });
+          transCard.querySelector(".status-text").textContent = "مرفوض";
+          alert("تم رفض طلب تحويل الأموال");
+        };
+
+        transactionsDiv.appendChild(transCard);
+      });
+    }
+    loadTransactions();
+
+    // --- إرسال إشعار للمستخدم ---
+    window.sendNotification = async () => {
+      const uid = document.getElementById("notifUid").value.trim();
+      const title = document.getElementById("notifTitle").value.trim();
+      const message = document.getElementById("notifMessage").value.trim();
+
+      if (!uid || !title || !message) {
+        alert("يرجى تعبئة جميع حقول الإشعار.");
+        return;
+      }
+
+      const notifRef = ref(db, "notifications/" + uid);
+      const newNotifRef = ref(db, "notifications/" + uid + "/" + Date.now());
+      try {
+        await set(newNotifRef, {
+          title,
+          message,
+          timestamp: Date.now()
+        });
+        alert("تم إرسال الإشعار بنجاح.");
+        // يمكنك إضافة مسح الحقول هنا إذا أردت
+      } catch (error) {
+        alert("حدث خطأ أثناء إرسال الإشعار: " + error.message);
+      }
+    };
   </script>
 </body>
 </html>
