@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>إدارة فعالية التصويت</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: 'Cairo', sans-serif; background: #f7f7f7; margin: 0; padding: 20px; direction: rtl; }
+    h1 { text-align: center; color: #333; }
+    .box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); max-width: 600px; margin: auto; margin-bottom: 20px; }
+    label { font-weight: bold; display: block; margin: 10px 0 5px; }
+    input, select, button { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; margin-bottom: 10px; }
+    button { background: #007bff; color: white; font-weight: bold; cursor: pointer; border: none; }
+    button:hover { background: #0056b3; }
+    .status { text-align: center; margin-top: 10px; font-weight: bold; }
+    .list { background: #fff; padding: 15px; border-radius: 10px; margin-top: 20px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+    .user-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .user-item span { font-weight: bold; }
+    .user-item button { width: auto; padding: 5px 10px; background: red; }
+  </style>
+</head>
+<body>
+
+  <h1>🎯 إدارة فعالية التصويت</h1>
+
+  <div class="box">
+    <label>📌 UID المستخدم</label>
+    <input type="text" id="uidInput" placeholder="أدخل UID لإضافته إلى التصويت">
+
+    <button onclick="addUser()">➕ إضافة المستخدم إلى التصويت</button>
+
+    <label>🔒 حالة التصويت</label>
+    <select id="voteStatus">
+      <option value="open">مفتوح</option>
+      <option value="closed">مغلق</option>
+    </select>
+    <button onclick="updateVoteStatus()">🔁 تحديث حالة التصويت</button>
+
+    <label>⏳ إغلاق التصويت تلقائيًا بعد (بالدقائق)</label>
+    <input type="number" id="closeAfter" placeholder="مثال: 10">
+    <button onclick="startCountdown()">🚀 بدء العد التنازلي</button>
+
+    <div class="status" id="countdownText"></div>
+  </div>
+
+  <div class="list" id="userList">
+    <h3>🧑‍💻 المشاركون في التصويت:</h3>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const uidInput = document.getElementById("uidInput");
+    const voteStatus = document.getElementById("voteStatus");
+    const closeAfter = document.getElementById("closeAfter");
+    const countdownText = document.getElementById("countdownText");
+    const userList = document.getElementById("userList");
+
+    function addUser() {
+      const uid = uidInput.value.trim();
+      if (!uid) return alert("أدخل UID");
+
+      db.ref("users/" + uid).once("value").then(snap => {
+        if (!snap.exists()) return alert("المستخدم غير موجود");
+
+        const data = snap.val();
+        const username = data.username || "بدون اسم";
+        const photo = data.photoURL || "";
+
+        db.ref("voting/users/" + uid).set({
+          uid,
+          username,
+          photo,
+          votes: 0
+        }).then(() => {
+          alert("تمت الإضافة بنجاح");
+          uidInput.value = "";
+          loadUsers();
+        });
+      });
+    }
+
+    function updateVoteStatus() {
+      const status = voteStatus.value;
+      db.ref("voting/status").set(status).then(() => {
+        alert("تم تحديث الحالة إلى: " + (status === "open" ? "مفتوح" : "مغلق"));
+      });
+    }
+
+    function deleteUser(uid) {
+      if (!confirm("هل أنت متأكد من حذف هذا المستخدم؟")) return;
+      db.ref("voting/users/" + uid).remove().then(loadUsers);
+    }
+
+    function startCountdown() {
+      const mins = parseInt(closeAfter.value);
+      if (isNaN(mins) || mins <= 0) return alert("أدخل عدد دقائق صحيح");
+
+      const endTime = Date.now() + mins * 60000;
+      db.ref("voting/endTime").set(endTime);
+
+      alert("تم بدء العد التنازلي لمدة " + mins + " دقيقة");
+      countdownText.textContent = "⏳ العد التنازلي بدأ...";
+    }
+
+    function loadUsers() {
+      db.ref("voting/users").once("value").then(snap => {
+        userList.innerHTML = "<h3>🧑‍💻 المشاركون في التصويت:</h3>";
+        if (!snap.exists()) {
+          userList.innerHTML += "<p>لا يوجد مشاركين.</p>";
+          return;
+        }
+
+        snap.forEach(child => {
+          const user = child.val();
+          const div = document.createElement("div");
+          div.className = "user-item";
+          div.innerHTML = `
+            <span>${user.username}</span>
+            <button onclick="deleteUser('${user.uid}')">❌ حذف</button>
+          `;
+          userList.appendChild(div);
+        });
+      });
+    }
+
+    // عرض الحالة الحالية
+    db.ref("voting/status").on("value", snap => {
+      const status = snap.val() || "closed";
+      voteStatus.value = status;
+    });
+
+    // تحقق من الإغلاق التلقائي
+    setInterval(() => {
+      db.ref("voting/endTime").once("value").then(snap => {
+        const end = snap.val();
+        if (end && Date.now() >= end) {
+          db.ref("voting/status").set("closed");
+          db.ref("voting/endTime").remove();
+          countdownText.textContent = "🚫 تم إغلاق التصويت تلقائيًا";
+        } else if (end) {
+          const remaining = Math.ceil((end - Date.now()) / 1000);
+          countdownText.textContent = "⏳ متبقي: " + Math.floor(remaining / 60) + " دقيقة و" + (remaining % 60) + " ثانية";
+        } else {
+          countdownText.textContent = "";
+        }
+      });
+    }, 1000);
+
+    loadUsers();
+  </script>
+
+</body>
+</html>
