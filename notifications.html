@@ -5,108 +5,191 @@
   <title>الإشعارات - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
+
     body {
       font-family: 'Cairo', sans-serif;
-      background: #f5f7fa;
+      background: linear-gradient(135deg, #f0f4ff, #d9e6ff);
       margin: 0;
       padding: 20px;
       direction: rtl;
       color: #333;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      animation: fadeSlideIn 0.8s ease forwards;
     }
+
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     .container {
       max-width: 600px;
-      margin: auto;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-      padding: 20px;
+      width: 100%;
+      background: #ffffffcc;
+      backdrop-filter: blur(8px);
+      border-radius: 16px;
+      box-shadow: 0 15px 40px rgba(0,0,50,0.1);
+      padding: 30px 25px;
+      box-sizing: border-box;
+      transition: box-shadow 0.3s ease;
     }
+    .container:hover {
+      box-shadow: 0 25px 60px rgba(0,0,50,0.15);
+    }
+
     h2 {
       text-align: center;
-      margin-bottom: 15px;
-      color: #007bff;
+      margin-bottom: 25px;
+      color: #0d47a1;
+      font-weight: 900;
+      font-size: 2.2rem;
+      letter-spacing: 1.2px;
+      user-select: none;
+      text-shadow: 1px 1px 3px #a0b8ff;
     }
+
     #deleteAllBtn {
-      background-color: #dc3545;
+      background-color: #e53935;
       color: white;
       border: none;
-      padding: 10px 15px;
-      border-radius: 8px;
+      padding: 14px 15px;
+      border-radius: 12px;
       cursor: pointer;
-      margin-bottom: 20px;
+      margin-bottom: 28px;
       width: 100%;
-      font-weight: bold;
-      transition: background-color 0.3s ease;
-    }
-    #deleteAllBtn:hover {
-      background-color: #b02a37;
-    }
-    .notification {
-      padding: 15px 20px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      cursor: pointer;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      transition: background-color 0.3s ease;
+      font-weight: 800;
+      font-size: 1.1rem;
+      box-shadow: 0 5px 15px rgba(229,57,53,0.6);
+      transition: background-color 0.35s ease, box-shadow 0.35s ease;
       user-select: none;
     }
-    .notification.unread {
-      background-color: #e1f0ff;
+    #deleteAllBtn:hover {
+      background-color: #b71c1c;
+      box-shadow: 0 7px 20px rgba(183,28,28,0.8);
+    }
+    #deleteAllBtn:active {
+      transform: scale(0.98);
+    }
+
+    .notification {
+      padding: 18px 25px;
+      border-radius: 14px;
+      margin-bottom: 18px;
+      cursor: pointer;
+      box-shadow: 0 6px 15px rgba(0,0,70,0.07);
+      transition: background-color 0.35s ease, box-shadow 0.35s ease;
       font-weight: 600;
+      font-size: 1.05rem;
+      border-left: 6px solid transparent;
+      user-select: none;
+      background-color: #fefefe;
+    }
+    .notification:hover {
+      box-shadow: 0 10px 25px rgba(0,0,70,0.15);
+      background-color: #f0f6ff;
+    }
+    .notification.unread {
+      background-color: #d0e4ff;
+      border-left-color: #1976d2;
+      font-weight: 700;
+      color: #0d47a1;
+      box-shadow: 0 10px 25px rgba(25, 118, 210, 0.3);
     }
     .notification.read {
-      background-color: #f9f9f9;
-      color: #666;
-      font-weight: normal;
+      background-color: #fafafa;
+      color: #777;
+      font-weight: 500;
+      border-left-color: #bbb;
     }
+
     .empty {
       text-align: center;
-      color: #aaa;
-      margin-top: 50px;
-      font-size: 18px;
+      color: #999;
+      margin-top: 60px;
+      font-size: 1.25rem;
+      font-style: italic;
+      user-select: none;
     }
 
     /* ستايل النافذة المنبثقة */
     .modal {
       display: none; /* مخفية افتراضياً */
       position: fixed;
-      z-index: 1000;
+      z-index: 1100;
       left: 0; top: 0;
       width: 100%; height: 100%;
       overflow: auto;
-      background-color: rgba(0,0,0,0.5);
+      background-color: rgba(0,0,0,0.45);
       direction: rtl;
-      padding: 50px 20px;
+      padding: 50px 15px;
       box-sizing: border-box;
+      backdrop-filter: blur(5px);
+      animation: fadeInModal 0.3s ease forwards;
     }
+
+    @keyframes fadeInModal {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+
     .modal-content {
-      background-color: #fff;
+      background-color: #ffffff;
       margin: auto;
-      padding: 20px;
-      border-radius: 10px;
+      padding: 30px 28px;
+      border-radius: 20px;
       max-width: 500px;
       position: relative;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-      font-size: 16px;
+      box-shadow: 0 25px 60px rgba(0,0,80,0.25);
+      font-size: 1.15rem;
       color: #222;
+      user-select: text;
+      animation: slideUpModal 0.4s ease forwards;
     }
+
+    @keyframes slideUpModal {
+      from {
+        opacity: 0;
+        transform: translateY(50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     .modal-content h3 {
       margin-top: 0;
-      color: #007bff;
-      font-weight: bold;
+      color: #1565c0;
+      font-weight: 900;
+      font-size: 1.7rem;
+      text-align: center;
+      user-select: none;
+      text-shadow: 1px 1px 3px #a0b8ff;
     }
+
     .modal-close {
       position: absolute;
-      top: 10px;
-      left: 15px;
-      font-size: 24px;
+      top: 12px;
+      left: 20px;
+      font-size: 30px;
       font-weight: bold;
-      color: #888;
+      color: #555;
       cursor: pointer;
       user-select: none;
+      transition: color 0.3s ease;
     }
     .modal-close:hover {
-      color: #000;
+      color: #111;
     }
   </style>
   <!-- Firebase -->
@@ -115,18 +198,18 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 </head>
 <body>
-  <div class="container">
+  <div class="container" role="main" aria-label="قسم الإشعارات">
     <h2>الإشعارات الخاصة بك</h2>
-    <button id="deleteAllBtn">حذف جميع الإشعارات</button>
-    <div id="notificationsList">
+    <button id="deleteAllBtn" aria-label="حذف جميع الإشعارات">حذف جميع الإشعارات</button>
+    <div id="notificationsList" aria-live="polite" aria-relevant="additions removals">
       جاري تحميل الإشعارات...
     </div>
   </div>
 
   <!-- النافذة المنبثقة -->
-  <div id="modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+  <div id="modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-describedby="modalMessage">
     <div class="modal-content">
-      <span id="modalClose" class="modal-close" title="إغلاق">&times;</span>
+      <span id="modalClose" class="modal-close" title="إغلاق" role="button" tabindex="0" aria-label="إغلاق النافذة">&times;</span>
       <h3 id="modalTitle">عنوان الإشعار</h3>
       <p id="modalMessage">محتوى الإشعار</p>
     </div>
@@ -191,18 +274,15 @@
         notificationsArray.forEach(notif => {
           const div = document.createElement("div");
           div.className = "notification " + (notif.read ? "read" : "unread");
-          // نعرض موضوع الإشعار
           div.textContent = notif.title || "إشعار جديد";
           div.title = notif.read ? "مقروء" : "غير مقروء";
 
           div.onclick = () => {
-            // فتح النافذة المنبثقة مع بيانات الإشعار
             modalTitle.textContent = notif.title || "لا يوجد عنوان";
             modalMessage.textContent = notif.content || notif.message || "لا يوجد محتوى";
             modal.style.display = "block";
             modal.setAttribute("aria-hidden", "false");
 
-            // تحديث حالة القراءة في قاعدة البيانات
             if (!notif.read) {
               db.ref(`notifications/${currentUid}/${notif.key}`).update({ read: true });
             }
@@ -219,13 +299,29 @@
       modal.setAttribute("aria-hidden", "true");
     };
 
-    // إغلاق النافذة عند الضغط خارجه
+    // إغلاق النافذة عند الضغط خارجها
     window.onclick = (event) => {
       if (event.target === modal) {
         modal.style.display = "none";
         modal.setAttribute("aria-hidden", "true");
       }
     };
+
+    // دعم إغلاق النافذة بالكيبورد (زر ESC)
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal.style.display === "block") {
+        modal.style.display = "none";
+        modal.setAttribute("aria-hidden", "true");
+      }
+    });
+
+    // دعم إغلاق النافذة عند الضغط على زر الإغلاق بالكيبورد (Enter أو Space)
+    modalClose.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        modal.style.display = "none";
+        modal.setAttribute("aria-hidden", "true");
+      }
+    });
 
     // حذف جميع الإشعارات
     deleteAllBtn.onclick = () => {
