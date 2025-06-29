@@ -437,6 +437,7 @@ function submitOrder() {
       package: pack,
       account: account,
       status: "قيد التنفيذ",
+      amount: cost,  // <-- إضافة حقل المبلغ المنفق
       createdAt: new Date().toISOString()
     };
 
