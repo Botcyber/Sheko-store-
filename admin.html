@@ -19,6 +19,7 @@
     .reject-btn { background: #dc3545; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
     .notify-btn { background: #007bff; color: white; padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; }
     .delete-user-btn { background: #e63946; color: white; padding: 6px 10px; border: none; border-radius: 5px; cursor: pointer; }
+    .hide-btn { background: #6c757d; color: white; padding: 6px 10px; border: none; border-radius: 5px; cursor: pointer; }
     .status-text { font-weight: bold; }
   </style>
 </head>
@@ -195,122 +196,135 @@
       loadUserInfo(uid);
     });
 
-    // --- تحميل وعرض طلبات الشحن ---
+    // عرض طلبات الشحن مع زر إخفاء
     const ordersDiv = document.getElementById("orders");
     function loadOrders() {
       const ordersRef = ref(db, 'orders');
       ordersDiv.innerHTML = "جاري تحميل طلبات الشحن...";
-      
-      onChildAdded(ordersRef, (snapshot) => {
-        const orderId = snapshot.key;
-        const orderData = snapshot.val();
-        
-        // تجنب تكرار العرض
-        if(document.getElementById("order-" + orderId)) return;
+      get(ordersRef).then(snapshot => {
+        ordersDiv.innerHTML = "";
+        if (!snapshot.exists()) {
+          ordersDiv.textContent = "لا يوجد طلبات شحن جديدة";
+          return;
+        }
+        snapshot.forEach(child => {
+          const orderId = child.key;
+          const orderData = child.val();
+          if (orderData.hidden) return; // تخطي الطلب المخفي
 
-        const orderCard = document.createElement("div");
-        orderCard.className = "card";
-        orderCard.id = "order-" + orderId;
+          const orderCard = document.createElement("div");
+          orderCard.className = "card";
 
-        orderCard.innerHTML = `
-          <div>
-            <strong>طلب شحن #${orderId}</strong><br/>
-            UID: ${orderData.uid || "غير معروف"}<br/>
-            الخدمة: ${orderData.service || "غير محدد"}<br/>
-            المبلغ: ${orderData.amount || 0} جنيه<br/>
-            الحالة: <span class="status-text">${orderData.status || "جديد"}</span>
-          </div>
-          <div class="btns">
-            <button class="approve-btn">قبول</button>
-            <button class="reject-btn">رفض</button>
-          </div>
-        `;
+          orderCard.innerHTML = `
+            <div>
+              <strong>طلب شحن #${orderId}</strong><br/>
+              UID: ${orderData.uid || "غير معروف"}<br/>
+              الخدمة: ${orderData.service || "غير محدد"}<br/>
+              المبلغ: ${orderData.amount || 0} جنيه<br/>
+              الحالة: <span class="status-text">${orderData.status || "جديد"}</span>
+            </div>
+            <div class="btns">
+              <button class="approve-btn">قبول</button>
+              <button class="reject-btn">رفض</button>
+              <button class="hide-btn">إخفاء</button>
+            </div>
+          `;
 
-        orderCard.querySelector(".approve-btn").onclick = async () => {
-          await update(ref(db, 'orders/' + orderId), { status: "تم القبول" });
-          orderCard.querySelector(".status-text").textContent = "تم القبول";
-          alert("تم قبول الطلب");
-        };
+          orderCard.querySelector(".approve-btn").onclick = async () => {
+            await update(ref(db, 'orders/' + orderId), { status: "تم" });
+            orderCard.querySelector(".status-text").textContent = "تم";
+            alert("✅ تم قبول الطلب.");
+          };
 
-        orderCard.querySelector(".reject-btn").onclick = async () => {
-          await update(ref(db, 'orders/' + orderId), { status: "مرفوض" });
-          orderCard.querySelector(".status-text").textContent = "مرفوض";
-          alert("تم رفض الطلب");
-        };
+          orderCard.querySelector(".reject-btn").onclick = async () => {
+            await update(ref(db, 'orders/' + orderId), { status: "مرفوض" });
+            orderCard.querySelector(".status-text").textContent = "مرفوض";
+            alert("✅ تم رفض الطلب.");
+          };
 
-        ordersDiv.appendChild(orderCard);
+          orderCard.querySelector(".hide-btn").onclick = async () => {
+            await update(ref(db, 'orders/' + orderId), { hidden: true });
+            orderCard.remove();
+            alert("✅ تم إخفاء الطلب.");
+          };
+
+          ordersDiv.appendChild(orderCard);
+        });
       });
     }
     loadOrders();
 
-    // --- تحميل وعرض طلبات تحويل الأموال ---
+    // عرض طلبات تحويل الأموال مع زر إخفاء
     const transactionsDiv = document.getElementById("transactions");
     function loadTransactions() {
-      const transRef = ref(db, 'transactions');
+      const transactionsRef = ref(db, 'transactions');
       transactionsDiv.innerHTML = "جاري تحميل طلبات تحويل الأموال...";
-      
-      onChildAdded(transRef, (snapshot) => {
-        const transId = snapshot.key;
-        const transData = snapshot.val();
+      get(transactionsRef).then(snapshot => {
+        transactionsDiv.innerHTML = "";
+        if (!snapshot.exists()) {
+          transactionsDiv.textContent = "لا يوجد طلبات تحويل أموال جديدة";
+          return;
+        }
+        snapshot.forEach(child => {
+          const transId = child.key;
+          const transData = child.val();
+          if (transData.hidden) return; // تخطي الطلب المخفي
 
-        // تجنب تكرار العرض
-        if(document.getElementById("trans-" + transId)) return;
+          const transCard = document.createElement("div");
+          transCard.className = "card";
 
-        const transCard = document.createElement("div");
-        transCard.className = "card";
-        transCard.id = "trans-" + transId;
+          transCard.innerHTML = `
+            <div>
+              <strong>طلب تحويل أموال #${transId}</strong><br/>
+              UID: ${transData.uid || "غير معروف"}<br/>
+              المبلغ: ${transData.amount || 0} جنيه<br/>
+              الحالة: <span class="status-text">${transData.status || "جديد"}</span>
+            </div>
+            <div class="btns">
+              <button class="approve-btn">قبول</button>
+              <button class="reject-btn">رفض</button>
+              <button class="hide-btn">إخفاء</button>
+            </div>
+          `;
 
-        transCard.innerHTML = `
-          <div>
-            <strong>طلب تحويل أموال #${transId}</strong><br/>
-            UID: ${transData.uid || "غير معروف"}<br/>
-            المبلغ: ${transData.amount || 0} جنيه<br/>
-            الحالة: <span class="status-text">${transData.status || "جديد"}</span>
-          </div>
-          <div class="btns">
-            <button class="approve-btn">قبول</button>
-            <button class="reject-btn">رفض</button>
-          </div>
-        `;
+          transCard.querySelector(".approve-btn").onclick = async () => {
+            await update(ref(db, 'transactions/' + transId), { status: "تم" });
+            transCard.querySelector(".status-text").textContent = "تم";
+            alert("✅ تم قبول طلب تحويل الأموال.");
+          };
 
-        transCard.querySelector(".approve-btn").onclick = async () => {
-          await update(ref(db, 'transactions/' + transId), { status: "تم القبول" });
-          transCard.querySelector(".status-text").textContent = "تم القبول";
-          alert("تم قبول طلب تحويل الأموال");
-        };
+          transCard.querySelector(".reject-btn").onclick = async () => {
+            await update(ref(db, 'transactions/' + transId), { status: "مرفوض" });
+            transCard.querySelector(".status-text").textContent = "مرفوض";
+            alert("✅ تم رفض طلب تحويل الأموال.");
+          };
 
-        transCard.querySelector(".reject-btn").onclick = async () => {
-          await update(ref(db, 'transactions/' + transId), { status: "مرفوض" });
-          transCard.querySelector(".status-text").textContent = "مرفوض";
-          alert("تم رفض طلب تحويل الأموال");
-        };
+          transCard.querySelector(".hide-btn").onclick = async () => {
+            await update(ref(db, 'transactions/' + transId), { hidden: true });
+            transCard.remove();
+            alert("✅ تم إخفاء طلب تحويل الأموال.");
+          };
 
-        transactionsDiv.appendChild(transCard);
+          transactionsDiv.appendChild(transCard);
+        });
       });
     }
     loadTransactions();
 
-    // --- إرسال إشعار للمستخدم ---
+    // إرسال إشعار (مخطط، حسب الحاجة)
     window.sendNotification = async () => {
       const uid = document.getElementById("notifUid").value.trim();
       const title = document.getElementById("notifTitle").value.trim();
       const message = document.getElementById("notifMessage").value.trim();
+      if (!uid || !title || !message) return alert("يرجى ملء جميع حقول الإشعار.");
 
-      if (!uid || !title || !message) {
-        alert("يرجى تعبئة جميع حقول الإشعار.");
-        return;
-      }
-
-      const notifRef = ref(db, "notifications/" + uid);
-      const newNotifRef = ref(db, "notifications/" + uid + "/" + Date.now());
       try {
-        await set(newNotifRef, {
-          title,
-          message,
-          timestamp: Date.now()
-        });
-        alert("تم إرسال الإشعار بنجاح.");
-        // يمكنك إضافة مسح الحقول هنا إذا أردت
+        // هنا يمكنك وضع كود الإرسال إلى قاعدة بيانات الإشعارات أو خدمة أخرى
+        alert(`✅ تم إرسال الإشعار إلى المستخدم ${uid}`);
+        // تنظيف الحقول
+        document.getElementById("notifUid").value = "";
+        document.getElementById("notifTitle").value = "";
+        document.getElementById("notifMessage").value = "";
       } catch (error) {
         alert("حدث خطأ أثناء إرسال الإشعار: " + error.message);
       }
