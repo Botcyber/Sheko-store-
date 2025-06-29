@@ -1,0 +1,103 @@
+<!DOCTYPE html><html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>التصنيف العالمي - Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: 'Cairo', sans-serif; background: #f9f9f9; margin: 0; padding: 0; }
+    header { background: #222; color: #fff; text-align: center; padding: 20px; font-size: 24px; }
+    .container { max-width: 1000px; margin: auto; padding: 20px; }
+    .card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+    .rank { font-weight: bold; color: #007bff; }
+    .not-top { color: #777; }
+  </style>
+</head>
+<body>
+  <header>🏆 التصنيف العالمي لأفضل المستخدمين</header>
+  <div class="container">
+    <div id="rankingList">جاري تحميل التصنيفات...</div>
+  </div>  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    async function loadRanking() {
+      const ordersSnap = await get(ref(db, "orders"));
+      const usersSnap = await get(ref(db, "users"));
+      const rankingDiv = document.getElementById("rankingList");
+
+      if (!ordersSnap.exists() || !usersSnap.exists()) {
+        rankingDiv.textContent = "لا توجد بيانات كافية للتصنيف.";
+        return;
+      }
+
+      const spendMap = {}; // uid => total spent
+      ordersSnap.forEach(child => {
+        const o = child.val();
+        if (o.uid && o.amount && !isNaN(parseFloat(o.amount))) {
+          if (!spendMap[o.uid]) spendMap[o.uid] = 0;
+          spendMap[o.uid] += parseFloat(o.amount);
+        }
+      });
+
+      const users = [];
+      usersSnap.forEach(child => {
+        const uid = child.key;
+        const data = child.val();
+        const totalSpent = spendMap[uid] || 0;
+        users.push({
+          uid,
+          username: data.username || 'بدون اسم',
+          totalSpent
+        });
+      });
+
+      users.sort((a, b) => b.totalSpent - a.totalSpent);
+      rankingDiv.innerHTML = "";
+
+      const currentUser = localStorage.getItem("uid"); // حدد UID المستخدم الحالي إن وجد
+      let currentUserRank = null;
+
+      users.forEach((user, index) => {
+        if (user.uid === currentUser) currentUserRank = index + 1;
+
+        if (index < 100) {
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <div><span class="rank">#${index + 1}</span> - ${user.username}</div>
+            <div>💰 أنفق: ${user.totalSpent.toFixed(2)} جنيه</div>
+          `;
+          rankingDiv.appendChild(card);
+        }
+      });
+
+      if (currentUser && currentUserRank > 100) {
+        const user = users.find(u => u.uid === currentUser);
+        const percentRank = ((currentUserRank / users.length) * 100).toFixed(0);
+        const note = document.createElement("div");
+        note.className = "card not-top";
+        note.innerHTML = `
+          <div>🚀 ترتيبك الحالي: المركز ${currentUserRank} خارج أفضل 100</div>
+          <div>💰 المبلغ المنفق: ${user.totalSpent.toFixed(2)} جنيه</div>
+          <div>🔢 ترتيبك النسبي: ${percentRank}% من إجمالي المستخدمين</div>
+        `;
+        rankingDiv.appendChild(note);
+      }
+    }
+
+    loadRanking();
+  </script></body>
+</html>
