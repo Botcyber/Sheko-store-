@@ -49,6 +49,11 @@
     <h3>طلبات تحويل الأموال</h3>
     <div id="transactions"></div>
 
+    <h3>معرفة البريد الإلكتروني من UID</h3>
+    <input id="lookupUid" placeholder="ادخل UID" />
+    <button onclick="lookupEmail()">اعرف البريد الإلكتروني</button>
+    <p id="emailResult" style="margin-top:10px; font-weight:bold;"></p>
+
     <h3>إرسال إشعار للمستخدم</h3>
     <input id="notifUid" placeholder="UID المستخدم" />
     <input id="notifTitle" placeholder="عنوان الإشعار" />
@@ -157,10 +162,30 @@
     }
     loadUsers();
 
+    // خدمة معرفة البريد الإلكتروني من UID
+    window.lookupEmail = async () => {
+      const uid = document.getElementById("lookupUid").value.trim();
+      const resultP = document.getElementById("emailResult");
+      resultP.textContent = "جاري البحث...";
+      if (!uid) {
+        resultP.textContent = "يرجى إدخال UID.";
+        return;
+      }
+      try {
+        const snapshot = await get(ref(db, 'users/' + uid + '/email'));
+        if (snapshot.exists()) {
+          resultP.textContent = `البريد الإلكتروني للمستخدم ${uid} هو: ${snapshot.val()}`;
+        } else {
+          resultP.textContent = `لم يتم العثور على بريد إلكتروني للمستخدم ${uid}.`;
+        }
+      } catch (error) {
+        resultP.textContent = `حدث خطأ: ${error.message}`;
+      }
+    };
+
     // (باقي الكود كما هو — إدارة الطلبات، الإشعارات، الخ... بدون تعديل)
-    
-    // تابع باقي الكود الموجود لديك كما هو...
-    
+    // يمكنك دمج باقي كودك الخاص بالطلبات والتحويلات والإشعارات هنا بنفس الطريقة.
+
   </script>
 </body>
 </html>
