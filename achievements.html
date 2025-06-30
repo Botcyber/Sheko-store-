@@ -1,0 +1,133 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>صفحة الإنجازات - Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .progress-bar-container {
+      width: 100%;
+      max-width: 800px;
+      margin: 30px auto;
+      background-color: #eee;
+      border-radius: 30px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .progress-bar {
+      height: 30px;
+      background: linear-gradient(to right, gold, orange);
+      width: 0%;
+      transition: width 1s ease-in-out;
+    }
+    .vip-milestones {
+      display: flex;
+      justify-content: space-between;
+      max-width: 800px;
+      margin: 10px auto;
+      padding: 0 10px;
+    }
+    .vip-milestones div {
+      text-align: center;
+      font-size: 12px;
+      color: #555;
+    }
+    .badges-inventory {
+      margin-top: 40px;
+      text-align: center;
+    }
+    .badges-inventory h2 {
+      margin-bottom: 10px;
+    }
+    .badge-grid {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .badge {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid #ccc;
+      transition: transform 0.3s ease;
+      cursor: pointer;
+    }
+    .badge img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .badge:hover {
+      transform: scale(1.2);
+      border-color: gold;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🏆 إنجازات المستخدم</h1>
+
+<div class="progress-bar-container">
+  <div class="progress-bar" id="progressBar"></div>
+</div>
+<div class="vip-milestones">
+  <div>VIP 1<br>1000</div>
+  <div>VIP 2<br>2000</div>
+  <div>VIP 3<br>3000</div>
+  <div>VIP 4<br>4000</div>
+  <div>VIP 5<br>5000</div>
+  <div>VIP 6<br>6000</div>
+  <div>VIP 7<br>7000</div>
+  <div>VIP 8<br>8000</div>
+  <div>VIP 9<br>9000</div>
+  <div>VIP 10<br>10000</div>
+</div>
+
+<div class="badges-inventory">
+  <h2>الشارات المملوكة</h2>
+  <div class="badge-grid" id="badgeGrid">
+    <!-- شارات VIP تظهر هنا -->
+  </div>
+</div>
+
+<script type="module">
+  // مثال: الإنفاق الحالي (تغييره حسب المستخدم الحقيقي)
+  const userSpent = 4700;
+  const progressBar = document.getElementById("progressBar");
+
+  // حساب النسبة المئوية
+  const percent = Math.min((userSpent / 10000) * 100, 100);
+  progressBar.style.width = percent + "%";
+
+  // عرض الشارات المكتسبة
+  const badgeGrid = document.getElementById("badgeGrid");
+  const badgesEarned = Math.floor(userSpent / 1000);
+
+  for (let i = 1; i <= badgesEarned; i++) {
+    const badge = document.createElement("div");
+    badge.className = "badge";
+    badge.title = `VIP ${i}`;
+
+    const img = document.createElement("img");
+    img.src = `https://via.placeholder.com/60x60.png?text=VIP+${i}`;
+
+    badge.appendChild(img);
+    badgeGrid.appendChild(badge);
+  }
+</script>
+
+</body>
+</html>
