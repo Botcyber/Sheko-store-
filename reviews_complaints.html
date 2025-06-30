@@ -203,7 +203,7 @@
       <span data-value="4">&#9733;</span>
       <span data-value="5">&#9733;</span>
     </div>
-    <input type="text" id="reviewerName" placeholder="اسمك (اختياري)" />
+    <input type="text" id="reviewerName" placeholder="اسمك" required />
     <textarea id="reviewText" placeholder="اكتب تعليقك هنا..." rows="4"></textarea>
     <button onclick="submitReview()">إرسال التقييم</button>
 
@@ -229,6 +229,16 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
+
+    const badWords = [
+      "كلب", "حمار", "وسخ", "تافه", "قذر", "نصاب", "حرامي", "ابن", "كس", "نيك", "طيز", "زب", "شرموط", "عبيط", "حقير", "متناك",
+      "fuck", "shit", "bitch", "asshole", "bastard", "dick", "pussy", "motherfucker", "fucking", "slut"
+    ];
+
+    function containsBadWords(text) {
+      const lowerText = text.toLowerCase();
+      return badWords.some(word => lowerText.includes(word));
+    }
 
     let currentUid = null;
 
@@ -257,12 +267,22 @@
     }
 
     function submitReview() {
-      const name = document.getElementById("reviewerName").value.trim() || "مستخدم";
+      const name = document.getElementById("reviewerName").value.trim();
       const text = document.getElementById("reviewText").value.trim();
+
+      if (!name) {
+        alert("يرجى كتابة اسمك.");
+        return;
+      }
       if (!selectedStars || !text) {
         alert("يرجى اختيار عدد النجوم وكتابة تعليقك.");
         return;
       }
+      if (containsBadWords(name) || containsBadWords(text)) {
+        alert("❌ يرجى تجنب استخدام كلمات مسيئة أو غير لائقة.");
+        return;
+      }
+
       const data = {
         uid: currentUid,
         name,
