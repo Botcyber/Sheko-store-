@@ -136,25 +136,20 @@
     let votingStartTime = null;
     let votingEndTime = null;
     let currentUserUid = null;
-    let votedForUid = null; // تخزين الـ UID الذي صوت له المستخدم
+    let votedForUid = null; // UID الذي صوت له المستخدم
 
-    // تحديث عرض التوقيت في الهيدر
     function updateEventTime() {
       if (!votingStartTime && !votingEndTime) {
         eventTimeEl.textContent = "لم يتم تحديد توقيت الفعالية";
         return;
       }
-
       const now = new Date();
       let statusText = isVotingOpen ? "التصويت مفتوح" : "التصويت مغلق";
-
       let startText = votingStartTime ? `بداية: ${votingStartTime.toLocaleString('ar-EG')}` : "";
       let endText = votingEndTime ? `نهاية: ${votingEndTime.toLocaleString('ar-EG')}` : "";
-
       eventTimeEl.textContent = `${startText} ${endText} - الحالة: ${statusText}`;
     }
 
-    // تحميل حالة التصويت من قاعدة البيانات
     function listenToVoteSettings() {
       db.ref("voteSettings").on("value", snapshot => {
         const settings = snapshot.val() || {};
@@ -162,7 +157,7 @@
         votingStartTime = settings.startTime ? new Date(settings.startTime) : null;
         votingEndTime = settings.endTime ? new Date(settings.endTime) : null;
 
-        // تحقق اذا انتهى الوقت
+        // تحقق انتهاء الوقت
         if (votingEndTime && new Date() > votingEndTime) {
           isVotingOpen = false;
         }
@@ -172,28 +167,33 @@
       });
     }
 
-    // تحميل حالة التصويت للمستخدم الحالي (مرة واحدة)
     async function loadUserVoteStatus(uid) {
       const snap = await db.ref(`userVotes/${uid}`).once("value");
       votedForUid = snap.val() || null;
+      console.log("votedForUid:", votedForUid);
+      renderParticipants();
     }
 
-    // عرض المشاركين
-    function renderParticipants() {
-      db.ref("voteParticipants").once("value").then(snap => {
+    async function renderParticipants() {
+      try {
+        const snap = await db.ref("voteParticipants").once("value");
         const data = snap.val();
         container.innerHTML = "";
+
+        console.log("isVotingOpen:", isVotingOpen);
+        console.log("votedForUid:", votedForUid);
+        console.log("currentUserUid:", currentUserUid);
 
         if (!data) {
           container.innerHTML = "لا يوجد مشاركين حتى الآن.";
           return;
         }
 
-        // ترتيب تنازلي حسب عدد التصويتات
         const sorted = Object.entries(data).sort((a, b) => (b[1].votes || 0) - (a[1].votes || 0));
 
         sorted.forEach(([uid, user]) => {
-          const disabled = !isVotingOpen || votedForUid !== null || currentUserUid === uid;
+          const hasVoted = votedForUid !== null;
+          const disabled = !isVotingOpen || hasVoted || currentUserUid === uid;
           const buttonLabel = (votedForUid === uid) ? "تم التصويت" : "تصويت";
 
           const card = document.createElement("div");
@@ -204,17 +204,18 @@
             <p>عدد التصويتات: <strong>${user.votes || 0}</strong></p>
             <button ${disabled ? 'disabled' : ''}>${buttonLabel}</button>
           `;
+
           const btn = card.querySelector("button");
           btn.onclick = () => {
-            if(!isVotingOpen) {
+            if (!isVotingOpen) {
               alert("التصويت مغلق حالياً.");
               return;
             }
-            if(votedForUid !== null) {
+            if (votedForUid !== null) {
               alert("لقد قمت بالتصويت مسبقًا.");
               return;
             }
-            if(currentUserUid === uid) {
+            if (currentUserUid === uid) {
               alert("لا يمكنك التصويت لنفسك.");
               return;
             }
@@ -227,16 +228,20 @@
               alert("شكراً لتصويتك!");
               renderParticipants();
             }).catch(err => {
-              console.error(err);
+              console.error("خطأ في التصويت:", err);
               alert("حدث خطأ أثناء التصويت.");
             });
           };
+
           container.appendChild(card);
         });
-      });
+
+      } catch (error) {
+        console.error("خطأ في تحميل المشاركين:", error);
+        container.innerHTML = "حدث خطأ أثناء تحميل المشاركين.";
+      }
     }
 
-    // تحميل البيانات عند بدء الصفحة - تسلسل التحميل الصحيح
     auth.onAuthStateChanged(async (user) => {
       if (!user) {
         alert("يرجى تسجيل الدخول أولاً.");
@@ -244,11 +249,7 @@
         return;
       }
       currentUserUid = user.uid;
-
-      // ننتظر تحميل حالة التصويت للمستخدم أولاً
       await loadUserVoteStatus(currentUserUid);
-
-      // ثم نستمع لتحديثات حالة التصويت والمشاركين
       listenToVoteSettings();
     });
   </script>
