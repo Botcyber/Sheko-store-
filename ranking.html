@@ -147,6 +147,8 @@
       const users = [];
       usersSnap.forEach(child => {
         const uid = child.key;
+        if (uid === "mlifDgEAkKMaOeuUq63cs5NAkV93") return; // استثناء المستخدم
+
         const data = child.val();
         const totalSpent = spendMap[uid] || 0;
         users.push({
@@ -160,25 +162,27 @@
       rankingDiv.innerHTML = "";
 
       let currentUserRank = null;
+      let visibleRank = 1;
 
-      users.forEach((user, index) => {
-        if (user.uid === currentUid) currentUserRank = index + 1;
+      users.forEach(user => {
+        if (user.uid === currentUid) currentUserRank = visibleRank;
 
         const card = document.createElement("div");
         card.className = "card";
-        if (index === 0) card.classList.add("top1");
-        else if (index === 1) card.classList.add("top2");
-        else if (index === 2) card.classList.add("top3");
+        if (visibleRank === 1) card.classList.add("top1");
+        else if (visibleRank === 2) card.classList.add("top2");
+        else if (visibleRank === 3) card.classList.add("top3");
 
-        card.id = "rank-" + (index + 1);
+        card.id = "rank-" + visibleRank;
         card.innerHTML = `
-          <div><span class="rank">#${index + 1}</span> - ${user.username}</div>
+          <div><span class="rank">#${visibleRank}</span> - ${user.username}</div>
           <div>💰 أنفق: ${user.totalSpent.toFixed(2)} جنيه</div>
         `;
         rankingDiv.appendChild(card);
+        visibleRank++;
       });
 
-      if (currentUid && currentUserRank) {
+      if (currentUid && currentUserRank && currentUid !== "mlifDgEAkKMaOeuUq63cs5NAkV93") {
         yourRankBox.style.display = "block";
         yourRankBox.textContent = `🚀 ترتيبك الحالي: المركز ${currentUserRank}`;
 
