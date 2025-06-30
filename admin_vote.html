@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>إدارة فعالية التصويت - Sheko Store</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
       font-family: 'Cairo', sans-serif;
@@ -32,7 +32,7 @@
       margin-top: 15px;
       display: block;
     }
-    input[type=text], input[type=number], input[type=datetime-local], select {
+    input[type=text], input[type=datetime-local], select {
       width: 100%;
       padding: 8px;
       margin-top: 5px;
@@ -77,6 +77,7 @@
     .status {
       font-weight: bold;
       margin-top: 10px;
+      font-size: 16px;
     }
   </style>
 </head>
@@ -96,10 +97,15 @@
     <option value="false">مغلق</option>
   </select>
 
+  <label for="startTime">تحديد وقت بداية التصويت:</label>
+  <input type="datetime-local" id="startTime" />
+
   <label for="endTime">تحديد وقت انتهاء التصويت:</label>
   <input type="datetime-local" id="endTime" />
 
-  <button id="setEndTimeBtn">حفظ وقت الانتهاء</button>
+  <button id="setTimesBtn">حفظ أوقات التصويت</button>
+
+  <button id="resetVoteBtn" style="background:#28a745;">بدء فعالية تصويت جديدة</button>
 
   <div class="status" id="timeLeftStatus"></div>
 
@@ -115,20 +121,6 @@
     </thead>
     <tbody>تحميل المشاركين...</tbody>
   </table>
-
-  <h3>أرشيف نتائج التصويت</h3>
-  <table id="archivesTable">
-    <thead>
-      <tr>
-        <th>تاريخ التصويت</th>
-        <th>عدد المشاركين</th>
-        <th>عرض النتائج</th>
-        <th>حذف الأرشيف</th>
-      </tr>
-    </thead>
-    <tbody>تحميل الأرشيف...</tbody>
-  </table>
-
 </div>
 
 <!-- Firebase -->
@@ -154,23 +146,22 @@
   const newUserUidInput = document.getElementById("newUserUid");
   const addUserBtn = document.getElementById("addUserBtn");
   const voteStatusSelect = document.getElementById("voteStatus");
+  const startTimeInput = document.getElementById("startTime");
   const endTimeInput = document.getElementById("endTime");
-  const setEndTimeBtn = document.getElementById("setEndTimeBtn");
+  const setTimesBtn = document.getElementById("setTimesBtn");
+  const resetVoteBtn = document.getElementById("resetVoteBtn");
   const participantsTableBody = document.querySelector("#participantsTable tbody");
   const timeLeftStatus = document.getElementById("timeLeftStatus");
-  const archivesTableBody = document.querySelector("#archivesTable tbody");
 
-  // تابع تحديث قائمة المشاركين
+  // تحميل المشاركين
   function loadParticipants() {
     db.ref("voteParticipants").on("value", snapshot => {
       const data = snapshot.val();
       participantsTableBody.innerHTML = "";
-
       if (!data) {
         participantsTableBody.innerHTML = `<tr><td colspan="4">لا يوجد مشاركين</td></tr>`;
         return;
       }
-
       for (const uid in data) {
         const user = data[uid];
         const username = user.username || "بدون اسم";
@@ -185,7 +176,6 @@
         `;
         participantsTableBody.appendChild(tr);
       }
-
       // ربط حدث الحذف للأزرار
       const deleteButtons = participantsTableBody.querySelectorAll("button.btn-danger");
       deleteButtons.forEach(btn => {
@@ -199,22 +189,14 @@
     });
   }
 
-  // تحميل حالة التصويت
-  function loadVoteStatus() {
-    db.ref("voteSettings/isOpen").on("value", snap => {
-      const val = snap.val();
-      voteStatusSelect.value = val === true ? "true" : "false";
-    });
-  }
-
-  // تحميل وقت الانتهاء
-  function loadEndTime() {
-    db.ref("voteSettings/endTime").on("value", snap => {
-      const val = snap.val();
-      if(val) {
-        endTimeInput.value = new Date(val).toISOString().slice(0,16);
-        updateTimeLeft();
-      }
+  // تحميل حالة التصويت والوقت
+  function loadVoteSettings() {
+    db.ref("voteSettings").on("value", snap => {
+      const val = snap.val() || {};
+      voteStatusSelect.value = val.isOpen ? "true" : "false";
+      startTimeInput.value = val.startTime ? new Date(val.startTime).toISOString().slice(0,16) : "";
+      endTimeInput.value = val.endTime ? new Date(val.endTime).toISOString().slice(0,16) : "";
+      updateTimeLeft();
     });
   }
 
@@ -222,7 +204,7 @@
   function updateTimeLeft() {
     db.ref("voteSettings/endTime").once("value").then(snap => {
       const val = snap.val();
-      if (!val) {
+      if(!val) {
         timeLeftStatus.textContent = "لم يتم تحديد وقت انتهاء التصويت.";
         return;
       }
@@ -232,12 +214,10 @@
 
       if(diffMs <= 0) {
         timeLeftStatus.textContent = "انتهى وقت التصويت.";
-        // إغلاق التصويت تلقائياً عند انتهاء الوقت
         db.ref("voteSettings").update({ isOpen: false });
         return;
       }
 
-      // حساب الوقت المتبقي بالساعات والدقائق والثواني
       let totalSeconds = Math.floor(diffMs / 1000);
       const hours = Math.floor(totalSeconds / 3600);
       totalSeconds %= 3600;
@@ -246,19 +226,17 @@
 
       timeLeftStatus.textContent = `الوقت المتبقي للتصويت: ${hours} ساعة ${minutes} دقيقة و ${seconds} ثانية`;
 
-      // تحديث مؤقت كل ثانية
       setTimeout(updateTimeLeft, 1000);
     });
   }
 
-  // إضافة مشارك جديد
+  // إضافة مشارك
   addUserBtn.onclick = () => {
     const uid = newUserUidInput.value.trim();
     if (!uid) {
       alert("يرجى إدخال UID صحيح");
       return;
     }
-    // جلب معلومات المستخدم (مثلاً اسم المستخدم والصورة)
     db.ref("users/" + uid).once("value").then(snap => {
       const userData = snap.val();
       if (!userData) {
@@ -267,7 +245,6 @@
       }
       const username = userData.username || "بدون اسم";
       const photoURL = userData.photoURL || "";
-      // أضف للمشاركين مع تعيين عدد التصويتات صفر
       db.ref("voteParticipants/" + uid).set({
         username,
         photoURL,
@@ -278,128 +255,64 @@
     });
   };
 
-  // تحديث حالة التصويت (فتح/إغلاق) مع أرشفة النتائج عند الإغلاق
+  // تغيير حالة التصويت
   voteStatusSelect.onchange = () => {
     const val = voteStatusSelect.value === "true";
-
-    if (!val) {
-      // إذا الإغلاق، نسخ نتائج التصويت إلى الأرشيف
-      db.ref("voteParticipants").once("value").then(snapshot => {
-        const participantsData = snapshot.val();
-        if (!participantsData) return;
-
-        const archiveKey = Date.now().toString();
-
-        const archiveData = {
-          timestamp: new Date().toISOString(),
-          participants: participantsData
-        };
-
-        // كتابة البيانات المؤرشفة
-        db.ref("voteArchives/" + archiveKey).set(archiveData)
-          .then(() => {
-            console.log("تم أرشفة نتائج التصويت");
-          })
-          .catch(err => {
-            console.error("خطأ في أرشفة التصويت:", err);
-          });
-      });
-    }
-
     db.ref("voteSettings").update({ isOpen: val });
   };
 
-  // تعيين وقت الانتهاء
-  setEndTimeBtn.onclick = () => {
-    const val = endTimeInput.value;
-    if (!val) {
-      alert("يرجى اختيار وقت الانتهاء");
+  // حفظ أوقات التصويت
+  setTimesBtn.onclick = () => {
+    const startVal = startTimeInput.value;
+    const endVal = endTimeInput.value;
+    if(!startVal || !endVal) {
+      alert("يرجى اختيار وقت البداية والنهاية");
       return;
     }
-    const endTimeISO = new Date(val).toISOString();
-    db.ref("voteSettings").update({ endTime: endTimeISO });
-    alert("تم تعيين وقت انتهاء التصويت");
-    updateTimeLeft();
+    const startISO = new Date(startVal).toISOString();
+    const endISO = new Date(endVal).toISOString();
+    if(new Date(startISO) >= new Date(endISO)) {
+      alert("وقت البداية يجب أن يكون قبل وقت النهاية");
+      return;
+    }
+    db.ref("voteSettings").update({
+      startTime: startISO,
+      endTime: endISO
+    });
+    alert("تم حفظ أوقات التصويت");
   };
 
-  // تحميل وعرض الأرشيف
-  function loadArchives() {
-    db.ref("voteArchives").on("value", snap => {
-      const data = snap.val();
-      archivesTableBody.innerHTML = "";
+  // بدء فعالية تصويت جديدة (إعادة ضبط)
+  resetVoteBtn.onclick = () => {
+    if(!confirm("هل أنت متأكد من بدء فعالية تصويت جديدة؟ سيتم حذف كل الأصوات والمشاركين الحاليين.")) return;
 
-      if (!data) {
-        archivesTableBody.innerHTML = `<tr><td colspan="4">لا يوجد أرشيف نتائج</td></tr>`;
-        return;
-      }
+    const nowISO = new Date().toISOString();
+    const defaultEnd = new Date(Date.now() + 24*60*60*1000).toISOString(); // 24 ساعة من الآن
 
-      // ترتيب حسب التاريخ تنازلياً (الأحدث أولاً)
-      const sortedArchives = Object.entries(data).sort((a, b) => b[1].timestamp.localeCompare(a[1].timestamp));
-
-      sortedArchives.forEach(([archiveId, archive]) => {
-        const date = new Date(archive.timestamp).toLocaleString("ar-EG", { hour12: false });
-        const participantsCount = archive.participants ? Object.keys(archive.participants).length : 0;
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${date}</td>
-          <td>${participantsCount}</td>
-          <td><button class="btn-view" data-id="${archiveId}">عرض النتائج</button></td>
-          <td><button class="btn-danger" data-id="${archiveId}">حذف</button></td>
-        `;
-        archivesTableBody.appendChild(tr);
-      });
-
-      // أزرار العرض
-      archivesTableBody.querySelectorAll("button.btn-view").forEach(btn => {
-        btn.onclick = () => {
-          const id = btn.getAttribute("data-id");
-          showArchiveDetails(id);
-        };
-      });
-
-      // أزرار الحذف
-      archivesTableBody.querySelectorAll("button.btn-danger").forEach(btn => {
-        btn.onclick = () => {
-          const id = btn.getAttribute("data-id");
-          if(confirm("هل تريد حذف هذا الأرشيف؟")) {
-            db.ref("voteArchives/" + id).remove();
-          }
-        };
-      });
+    Promise.all([
+      db.ref("voteParticipants").remove(),
+      db.ref("userVotes").remove(),
+      db.ref("voteSettings").set({
+        isOpen: true,
+        startTime: nowISO,
+        endTime: defaultEnd
+      })
+    ]).then(() => {
+      alert("تم بدء فعالية تصويت جديدة.");
+    }).catch(err => {
+      console.error("خطأ في بدء الفعالية الجديدة:", err);
+      alert("حدث خطأ أثناء بدء الفعالية الجديدة.");
     });
-  }
+  };
 
-  // عرض تفاصيل الأرشيف (نافذة منبثقة)
-  function showArchiveDetails(archiveId) {
-    db.ref("voteArchives/" + archiveId + "/participants").once("value").then(snap => {
-      const participants = snap.val();
-      if (!participants) {
-        alert("لا توجد بيانات لعرضها");
-        return;
-      }
-      let results = "نتائج التصويت:\n\n";
-      // ترتيب حسب الأصوات تنازلياً
-      const sorted = Object.entries(participants).sort((a,b) => (b[1].votes || 0) - (a[1].votes || 0));
-      sorted.forEach(([uid, user], index) => {
-        results += `${index + 1}. ${user.username || uid} - ${user.votes || 0} صوت\n`;
-      });
-      alert(results);
-    });
-  }
-
-  // تحميل البيانات عند بدء الصفحة
   auth.onAuthStateChanged(user => {
-    if (!user) {
+    if(!user) {
       alert("يرجى تسجيل الدخول أولاً");
       location.href = "index.html";
-    } else {
-      loadParticipants();
-      loadVoteStatus();
-      loadEndTime();
-      updateTimeLeft();
-      loadArchives();
+      return;
     }
+    loadParticipants();
+    loadVoteSettings();
   });
 </script>
 
