@@ -11,6 +11,7 @@
       background: #f9f9f9;
       padding: 0;
     }
+
     header {
       background: linear-gradient(to left, #111, #333);
       color: white;
@@ -21,11 +22,13 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.2);
       position: relative;
     }
+
     #eventTime {
       font-size: 16px;
       margin-top: 8px;
       color: #ddd;
     }
+
     .container {
       max-width: 1100px;
       margin: 30px auto;
@@ -34,6 +37,7 @@
       gap: 20px;
       padding: 0 20px;
     }
+
     .card {
       background: white;
       border-radius: 15px;
@@ -43,9 +47,11 @@
       transition: transform 0.3s ease;
       animation: fadeInUp 0.5s ease forwards;
     }
+
     .card:hover {
       transform: translateY(-5px);
     }
+
     .card img {
       width: 80px;
       height: 80px;
@@ -54,16 +60,19 @@
       margin-bottom: 10px;
       border: 3px solid #007bff;
     }
+
     .card h3 {
       margin: 10px 0 5px;
       font-size: 18px;
       color: #333;
     }
+
     .card p {
       margin: 5px 0;
       font-size: 15px;
       color: #777;
     }
+
     .card button {
       margin-top: 10px;
       background: #007bff;
@@ -75,13 +84,16 @@
       cursor: pointer;
       transition: background 0.3s ease;
     }
+
     .card button:disabled {
       background: #ccc;
       cursor: not-allowed;
     }
+
     .card button:hover:not(:disabled) {
       background: #0056b3;
     }
+
     @keyframes fadeInUp {
       0% { opacity: 0; transform: translateY(20px); }
       100% { opacity: 1; transform: translateY(0); }
@@ -89,10 +101,12 @@
   </style>
 </head>
 <body>
+
   <header>
     🎉 فعالية التصويت - اختر نجم الفعالية!
     <div id="eventTime">جاري تحميل معلومات الفعالية...</div>
   </header>
+
   <div class="container" id="voteContainer">جاري تحميل المشاركين...</div>
 
   <!-- Firebase -->
@@ -122,7 +136,7 @@
     let votingStartTime = null;
     let votingEndTime = null;
     let currentUserUid = null;
-    let votedForUid = null; // من صوت له المستخدم
+    let votedForUid = null;
 
     function updateEventTime() {
       if (!votingStartTime && !votingEndTime) {
@@ -136,7 +150,8 @@
       eventTimeEl.textContent = `${startText} ${endText} - الحالة: ${statusText}`;
     }
 
-    function listenToVoteSettings() {
+    // تحميل إعدادات التصويت
+    function loadVoteSettings() {
       db.ref("voteSettings").on("value", snapshot => {
         const settings = snapshot.val() || {};
         isVotingOpen = settings.isOpen === true;
@@ -146,28 +161,24 @@
         if (votingEndTime && new Date() > votingEndTime) {
           isVotingOpen = false;
         }
-
         updateEventTime();
         renderParticipants();
       });
     }
 
-    async function loadUserVoteStatus(uid) {
-      const snap = await db.ref(`userVotes/${uid}`).once("value");
-      votedForUid = snap.val() || null;
-      console.log("votedForUid:", votedForUid);
-      renderParticipants();
+    // تحميل حالة التصويت للمستخدم الحالي
+    function loadUserVoteStatus(uid) {
+      db.ref(`userVotes/${uid}`).once("value").then(snap => {
+        votedForUid = snap.val() || null;
+        renderParticipants();
+      });
     }
 
-    async function renderParticipants() {
-      try {
-        const snap = await db.ref("voteParticipants").once("value");
+    // عرض المشاركين
+    function renderParticipants() {
+      db.ref("voteParticipants").once("value").then(snap => {
         const data = snap.val();
         container.innerHTML = "";
-
-        console.log("isVotingOpen:", isVotingOpen);
-        console.log("votedForUid:", votedForUid);
-        console.log("currentUserUid:", currentUserUid);
 
         if (!data) {
           container.innerHTML = "لا يوجد مشاركين حتى الآن.";
@@ -177,8 +188,8 @@
         const sorted = Object.entries(data).sort((a, b) => (b[1].votes || 0) - (a[1].votes || 0));
 
         sorted.forEach(([uid, user]) => {
-          const hasVoted = votedForUid !== null;
-          const disabled = !isVotingOpen || hasVoted || currentUserUid === uid;
+          // الزر معطل اذا التصويت مغلق، أو المستخدم صوت مسبقاً، أو يحاول يصوت لنفسه
+          const disabled = !isVotingOpen || votedForUid !== null || currentUserUid === uid;
           const buttonLabel = (votedForUid === uid) ? "تم التصويت" : "تصويت";
 
           const card = document.createElement("div");
@@ -189,23 +200,20 @@
             <p>عدد التصويتات: <strong>${user.votes || 0}</strong></p>
             <button ${disabled ? 'disabled' : ''}>${buttonLabel}</button>
           `;
-
           const btn = card.querySelector("button");
           btn.onclick = () => {
-            if (!isVotingOpen) {
+            if(!isVotingOpen) {
               alert("التصويت مغلق حالياً.");
               return;
             }
-            if (votedForUid !== null) {
+            if(votedForUid !== null) {
               alert("لقد قمت بالتصويت مسبقًا.");
               return;
             }
-            if (currentUserUid === uid) {
+            if(currentUserUid === uid) {
               alert("لا يمكنك التصويت لنفسك.");
               return;
             }
-
-            // تحديث الأصوات وتسجيل صوت المستخدم
             const updates = {};
             updates[`voteParticipants/${uid}/votes`] = (user.votes || 0) + 1;
             updates[`userVotes/${currentUserUid}`] = uid;
@@ -215,29 +223,24 @@
               alert("شكراً لتصويتك!");
               renderParticipants();
             }).catch(err => {
-              console.error("خطأ في التصويت:", err);
+              console.error(err);
               alert("حدث خطأ أثناء التصويت.");
             });
           };
-
           container.appendChild(card);
         });
-
-      } catch (error) {
-        console.error("خطأ في تحميل المشاركين:", error);
-        container.innerHTML = "حدث خطأ أثناء تحميل المشاركين.";
-      }
+      });
     }
 
-    auth.onAuthStateChanged(async (user) => {
+    auth.onAuthStateChanged(user => {
       if (!user) {
         alert("يرجى تسجيل الدخول أولاً.");
         location.href = "index.html";
-        return;
+      } else {
+        currentUserUid = user.uid;
+        loadVoteSettings();
+        loadUserVoteStatus(currentUserUid);
       }
-      currentUserUid = user.uid;
-      await loadUserVoteStatus(currentUserUid);
-      listenToVoteSettings();
     });
   </script>
 </body>
