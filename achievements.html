@@ -1,40 +1,27 @@
-
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>الإنجازات - Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background: #f9f9f9;
-      margin: 0;
-      padding: 0;
-      direction: rtl;
-      text-align: center;
-    }
-    header {
-      background-color: #333;
-      color: white;
+      background: #f0f2f5;
       padding: 20px;
-      font-size: 24px;
+      color: #333;
     }
+    h1 { text-align: center; color: #444; }
     .progress-container {
-      margin: 40px auto;
-      width: 90%;
-      max-width: 600px;
-    }
-    .progress-bar {
-      height: 30px;
-      background-color: #ddd;
-      border-radius: 15px;
+      background: #ddd;
+      border-radius: 20px;
       overflow: hidden;
+      height: 30px;
+      margin: 30px 0;
       position: relative;
     }
-    .progress-bar-fill {
+    .progress-bar {
+      background: linear-gradient(to right, #ffce00, #ffa500);
       height: 100%;
-      background: linear-gradient(90deg, gold, orange);
       width: 0%;
       transition: width 1s ease-in-out;
     }
@@ -44,100 +31,119 @@
       margin-top: 10px;
     }
     .milestones div {
+      text-align: center;
       font-size: 12px;
+      color: #666;
     }
-    .badges {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin: 40px auto;
-      max-width: 700px;
+    .badges-container, .inventory-container {
+      margin: 30px 0;
     }
-    .badge {
-      border: 2px solid #ccc;
-      border-radius: 10px;
-      padding: 10px;
-      background: white;
+    .badge-img {
+      width: 50px;
+      height: 50px;
+      margin: 5px;
+      transition: transform 0.3s ease;
       cursor: pointer;
-      transition: transform 0.3s;
     }
-    .badge:hover {
+    .badge-img:hover {
       transform: scale(1.1);
     }
-    .inventory {
-      margin-top: 40px;
-    }
-    .inventory h3 {
-      margin-bottom: 10px;
-    }
     .active-badge {
-      margin-top: 20px;
+      border: 2px solid #4caf50;
+      border-radius: 50%;
+    }
+    .section-title {
+      margin-bottom: 10px;
       font-weight: bold;
+      font-size: 18px;
     }
   </style>
 </head>
 <body>
-  <header>الإنجازات</header>
+  <h1>✨ صفحة الإنجازات</h1>
+  <div class="section-title">تقدمك نحو الشارات</div>
   <div class="progress-container">
-    <div class="progress-bar">
-      <div id="progressFill" class="progress-bar-fill"></div>
-    </div>
-    <div class="milestones">
-      <div>0</div><div>1000</div><div>2000</div><div>3000</div><div>4000</div><div>5000</div><div>6000</div><div>7000</div><div>8000</div><div>9000</div><div>10000</div>
-    </div>
+    <div class="progress-bar" id="progressBar"></div>
   </div>
+  <div class="milestones">
+    <div>0</div>
+    <div>1000</div>
+    <div>2000</div>
+    <div>3000</div>
+    <div>4000</div>
+    <div>5000</div>
+    <div>6000</div>
+    <div>7000</div>
+    <div>8000</div>
+    <div>9000</div>
+    <div>10000</div>
+  </div>  <div class="badges-container">
+    <div class="section-title">الشارات التي حصلت عليها</div>
+    <div id="earnedBadges"></div>
+  </div>  <div class="inventory-container">
+    <div class="section-title">المخزون - اختر شارة لتظهر بجانب اسمك</div>
+    <div id="badgeInventory"></div>
+  </div>  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-  <div class="badges" id="badgesContainer">
-    <!-- الشارات تظهر هنا -->
-  </div>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
 
-  <div class="inventory">
-    <h3>المخزون</h3>
-    <div id="badgeInventory" class="badges"></div>
-  </div>
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
 
-  <div class="active-badge" id="activeBadgeDisplay">لا توجد شارة مفعّلة حاليًا</div>
-
-  <script>
-    const totalSpent = 4300; // ← يتم جلبه من Firebase لاحقًا
-    const progressFill = document.getElementById("progressFill");
-    const badgesContainer = document.getElementById("badgesContainer");
+    const progressBar = document.getElementById("progressBar");
+    const earnedBadges = document.getElementById("earnedBadges");
     const badgeInventory = document.getElementById("badgeInventory");
-    const activeBadgeDisplay = document.getElementById("activeBadgeDisplay");
 
-    const vipLevels = [
-      { threshold: 1000, label: "VIP 1" },
-      { threshold: 2000, label: "VIP 2" },
-      { threshold: 3000, label: "VIP 3" },
-      { threshold: 4000, label: "VIP 4" },
-      { threshold: 5000, label: "VIP 5" },
-      { threshold: 6000, label: "VIP 6" },
-      { threshold: 7000, label: "VIP 7" },
-      { threshold: 8000, label: "VIP 8" },
-      { threshold: 9000, label: "VIP 9" },
-      { threshold: 10000, label: "VIP 10" },
-    ];
+    const vipThresholds = [1000,2000,3000,4000,5000,6000,7000,8000,9000,10000];
 
-    const progressPercent = Math.min((totalSpent / 10000) * 100, 100);
-    progressFill.style.width = progressPercent + "%";
+    const badgeImg = (level, isActive = false) => `
+      <img src="https://via.placeholder.com/50x50?text=VIP${level}" class="badge-img ${isActive ? 'active-badge' : ''}" onclick="setBadge(${level})"/>
+    `;
 
-    let inventory = [];
+    window.setBadge = async (level) => {
+      const user = auth.currentUser;
+      if (!user) return alert("يجب تسجيل الدخول.");
+      await update(ref(db, "users/" + user.uid), {
+        activeBadge: level
+      });
+      alert("✅ تم اختيار الشارة VIP" + level);
+      location.reload();
+    };
 
-    vipLevels.forEach(level => {
-      if (totalSpent >= level.threshold) {
-        const badge = document.createElement("div");
-        badge.className = "badge";
-        badge.textContent = level.label;
-        badge.onclick = () => useBadge(level.label);
-        badgeInventory.appendChild(badge);
-        inventory.push(level.label);
-      }
+    onAuthStateChanged(auth, user => {
+      if (!user) return;
+      const userRef = ref(db, "users/" + user.uid);
+      onValue(userRef, snapshot => {
+        const data = snapshot.val();
+        const spent = data.spent || 0;
+        const active = data.activeBadge || 0;
+        const badges = [];
+
+        let maxBadge = 0;
+        vipThresholds.forEach((thresh, i) => {
+          if (spent >= thresh) {
+            maxBadge = i + 1;
+            badges.push(i + 1);
+          }
+        });
+
+        progressBar.style.width = Math.min((spent / 10000) * 100, 100) + "%";
+
+        earnedBadges.innerHTML = badges.map(v => badgeImg(v, v === active)).join("");
+        badgeInventory.innerHTML = badges.map(v => badgeImg(v, v === active)).join("");
+      });
     });
-
-    function useBadge(label) {
-      activeBadgeDisplay.textContent = `الشارة المفعّلة: ${label}`;
-    }
-  </script>
-</body>
+  </script></body>
 </html>
