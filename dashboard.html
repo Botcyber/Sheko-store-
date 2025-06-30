@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <title>لوحة التحكم - Sheko Store</title>
@@ -68,17 +69,70 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <script>
-    const firebaseConfig = { apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas", authDomain: "sheko-store.firebaseapp.com", databaseURL: "https://sheko-store-default-rtdb.firebaseio.com", projectId: "sheko-store", storageBucket: "sheko-store.appspot.com", messagingSenderId: "113892775847", appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882" };
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
     let currentUser = null;
+
     const prices = {
       "ألعاب": {
-        "ببجي موبايل": {"60 شدة": 50, "300 شدة": 250},
-        "كود موبايل": {"220 CP": 250},
-        "فري فاير": {"100 جوهرة": 70},
-        "فيفا موبايل": {"20 كوينز": 40}
+        "ببجي موبايل": {
+          "60 شده": 50,
+          "325 شده": 250,
+          "660 شده": 500,
+          "1800 شده": 1200
+        },
+        "كود موبايل": {
+          "30 سي بي": 25,
+          "88 سي بي": 60,
+          "420 سي بي": 260,
+          "880 سي بي": 500,
+          "2400 سي بي": 1250
+        },
+        "فيفا موبايل": {
+          "40 عمله": 25,
+          "100 عمله": 60,
+          "520 عمله": 300,
+          "1070 عمله": 550
+        },
+        "فري فاير": {
+          "50 جوهره": 30,
+          "100 جوهره": 60,
+          "200 جوهره": 120,
+          "310 جوهره": 180,
+          "520 جوهره": 300,
+          "1060 جوهره": 550
+        },
+        "Delta Force": {
+          "18 عمله": 20,
+          "30 عمله": 30,
+          "60 عمله": 55,
+          "300 عمله": 250,
+          "420 عمله": 350,
+          "680 عمله": 500,
+          "1280 عمله": 1000
+        },
+        "Valorant": {
+          "475 عمله": 270,
+          "1000 عمله": 530,
+          "2050 عمله": 1000,
+          "3650 عمله": 1800
+        },
+        "league of legends": {
+          "575 ار بي": 260,
+          "1380 ار بي": 600,
+          "2800 ار بي": 1120,
+          "4500 ار بي": 1900
+        }
       },
       "سوشيال": {
         "تيك توك": {
@@ -121,15 +175,38 @@
           "1000 مشاهدات بث ربع ساعه": 70,
           "1000 مشاهدات بث نص ساعه": 140,
           "1000 مشاهدات بث ساعه": 250
+        },
+        "كروت الفكه": {
+          "كرت فودافون 15 جنيه": 15,
+          "كرت فودافون 18 جنيه": 18,
+          "كرت فودافون 22 جنيه": 22,
+          "كرت فودافون 28 جنيه": 28,
+          "كرت اورنج 15 جنيه": 15,
+          "كرت اورنج 18 جنيه": 18,
+          "كرت اورنج 22 جنيه": 22,
+          "كرت اورنج 28 جنيه": 28,
+          "كرت اورنج 40 جنيه": 40,
+          "كرت اورنج 45 جنيه": 45,
+          "كرت اورنج 55 جنيه": 55,
+          "كرت اورنج 65 جنيه": 65,
+          "كرت إتصالات 15 جنيه": 15,
+          "كرت إتصالات 18 جنيه": 18,
+          "كرت إتصالات 22 جنيه": 22,
+          "كرت إتصالات 28 جنيه": 28,
+          "كرت إتصالات 40 جنيه": 40,
+          "كرت إتصالات 42 جنيه": 42,
+          "كرت إتصالات 65 جنيه": 65
         }
       }
     };
+
     const mainService = document.getElementById("mainService");
     const subService = document.getElementById("subService");
     const packageEl = document.getElementById("package");
     const accountInput = document.getElementById("accountInput");
     const balanceEl = document.getElementById("balance");
     const notifBadge = document.getElementById("notifBadge");
+
     mainService.addEventListener("change", () => {
       subService.innerHTML = "";
       packageEl.innerHTML = "";
@@ -143,7 +220,9 @@
       }
       updatePackage();
     });
+
     subService.addEventListener("change", updatePackage);
+
     function updatePackage() {
       packageEl.innerHTML = "";
       const selected = prices[mainService.value]?.[subService.value];
@@ -155,6 +234,7 @@
         packageEl.appendChild(opt);
       }
     }
+
     auth.onAuthStateChanged(user => {
       if (!user) return location.href = "index.html";
       currentUser = user;
@@ -163,6 +243,7 @@
         balanceEl.textContent = `رصيدك: ${balance !== null ? balance : 0} جنيه`;
       });
     });
+
     function submitOrder() {
       const service = mainService.value;
       const sub = subService.value;
@@ -200,18 +281,33 @@
         });
       });
     }
-    function logout() { auth.signOut().then(() => { location.href = "index.html"; }); }
+
+    function logout() {
+      auth.signOut().then(() => {
+        location.href = "index.html";
+      });
+    }
+
     function shareSite() {
       const url = "https://botcyber.github.io/Sheko-store-/";
       if (navigator.share) {
-        navigator.share({ title: "Sheko Store", text: "تفضلوا بزيارة موقع Sheko Store لشحن الألعاب والخدمات", url: url }).catch(console.error);
+        navigator.share({
+          title: "Sheko Store",
+          text: "تفضلوا بزيارة موقع Sheko Store لشحن الألعاب والخدمات",
+          url: url
+        }).catch(console.error);
       } else {
         alert("ميزة المشاركة غير مدعومة في متصفحك، يمكنك نسخ الرابط ومشاركته يدوياً.");
       }
     }
+
     function copyLink() {
       const url = "https://botcyber.github.io/Sheko-store-/";
-      navigator.clipboard.writeText(url).then(() => { alert("تم نسخ رابط الموقع!"); }).catch(() => { alert("فشل في نسخ الرابط، يرجى نسخه يدوياً."); });
+      navigator.clipboard.writeText(url).then(() => {
+        alert("تم نسخ رابط الموقع!");
+      }).catch(() => {
+        alert("فشل في نسخ الرابط، يرجى نسخه يدوياً.");
+      });
     }
   </script>
 </body>
