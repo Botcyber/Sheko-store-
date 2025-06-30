@@ -1,0 +1,143 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>الإنجازات - Sheko Store</title>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f9f9f9;
+      margin: 0;
+      padding: 0;
+      direction: rtl;
+      text-align: center;
+    }
+    header {
+      background-color: #333;
+      color: white;
+      padding: 20px;
+      font-size: 24px;
+    }
+    .progress-container {
+      margin: 40px auto;
+      width: 90%;
+      max-width: 600px;
+    }
+    .progress-bar {
+      height: 30px;
+      background-color: #ddd;
+      border-radius: 15px;
+      overflow: hidden;
+      position: relative;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, gold, orange);
+      width: 0%;
+      transition: width 1s ease-in-out;
+    }
+    .milestones {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+    .milestones div {
+      font-size: 12px;
+    }
+    .badges {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 40px auto;
+      max-width: 700px;
+    }
+    .badge {
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      background: white;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+    .badge:hover {
+      transform: scale(1.1);
+    }
+    .inventory {
+      margin-top: 40px;
+    }
+    .inventory h3 {
+      margin-bottom: 10px;
+    }
+    .active-badge {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <header>الإنجازات</header>
+  <div class="progress-container">
+    <div class="progress-bar">
+      <div id="progressFill" class="progress-bar-fill"></div>
+    </div>
+    <div class="milestones">
+      <div>0</div><div>1000</div><div>2000</div><div>3000</div><div>4000</div><div>5000</div><div>6000</div><div>7000</div><div>8000</div><div>9000</div><div>10000</div>
+    </div>
+  </div>
+
+  <div class="badges" id="badgesContainer">
+    <!-- الشارات تظهر هنا -->
+  </div>
+
+  <div class="inventory">
+    <h3>المخزون</h3>
+    <div id="badgeInventory" class="badges"></div>
+  </div>
+
+  <div class="active-badge" id="activeBadgeDisplay">لا توجد شارة مفعّلة حاليًا</div>
+
+  <script>
+    const totalSpent = 4300; // ← يتم جلبه من Firebase لاحقًا
+    const progressFill = document.getElementById("progressFill");
+    const badgesContainer = document.getElementById("badgesContainer");
+    const badgeInventory = document.getElementById("badgeInventory");
+    const activeBadgeDisplay = document.getElementById("activeBadgeDisplay");
+
+    const vipLevels = [
+      { threshold: 1000, label: "VIP 1" },
+      { threshold: 2000, label: "VIP 2" },
+      { threshold: 3000, label: "VIP 3" },
+      { threshold: 4000, label: "VIP 4" },
+      { threshold: 5000, label: "VIP 5" },
+      { threshold: 6000, label: "VIP 6" },
+      { threshold: 7000, label: "VIP 7" },
+      { threshold: 8000, label: "VIP 8" },
+      { threshold: 9000, label: "VIP 9" },
+      { threshold: 10000, label: "VIP 10" },
+    ];
+
+    const progressPercent = Math.min((totalSpent / 10000) * 100, 100);
+    progressFill.style.width = progressPercent + "%";
+
+    let inventory = [];
+
+    vipLevels.forEach(level => {
+      if (totalSpent >= level.threshold) {
+        const badge = document.createElement("div");
+        badge.className = "badge";
+        badge.textContent = level.label;
+        badge.onclick = () => useBadge(level.label);
+        badgeInventory.appendChild(badge);
+        inventory.push(level.label);
+      }
+    });
+
+    function useBadge(label) {
+      activeBadgeDisplay.textContent = `الشارة المفعّلة: ${label}`;
+    }
+  </script>
+</body>
+</html>
