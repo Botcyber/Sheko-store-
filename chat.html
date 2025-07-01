@@ -5,7 +5,6 @@
   <title>الدردشة - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    /* التصميم كما هو بدون تغيير */
     body {
       font-family: 'Cairo', sans-serif;
       background: #fff;
@@ -200,7 +199,7 @@
     /* زر رفع الصورة */
     #uploadImageContainer {
       position: fixed;
-      bottom: 50px;
+      bottom: 70px; /* فوق صورة المستخدم */
       left: 50%;
       transform: translateX(-50%);
       background: #ffb700;
@@ -213,9 +212,11 @@
       gap: 10px;
       font-weight: 600;
       color: #222;
+      cursor: pointer;
+      user-select: none;
     }
     #uploadImageInput {
-      cursor: pointer;
+      display: none;
     }
     /* صورة المستخدم الصغيرة أسفل تحت */
     #footerUserImage {
@@ -245,10 +246,10 @@
   </div>
 
   <!-- رفع صورة المستخدم -->
-  <div id="uploadImageContainer" title="رفع صورة شخصية">
-    <label for="uploadImageInput" style="cursor:pointer;">📷 رفع صورة</label>
-    <input type="file" id="uploadImageInput" accept="image/*" style="display:none;" />
-  </div>
+  <label id="uploadImageContainer" for="uploadImageInput" title="رفع صورة شخصية">
+    📷 رفع صورة
+  </label>
+  <input type="file" id="uploadImageInput" accept="image/*" />
 
   <!-- صورة المستخدم الصغيرة أسفل تحت -->
   <img id="footerUserImage" src="https://i.pravatar.cc/150?u=default" alt="صورة المستخدم" title="صورة حسابك" />
@@ -269,7 +270,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
 
   <script>
-    // إعداد Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -285,7 +285,6 @@
     const db = firebase.database();
     const storage = firebase.storage();
 
-    // عناصر HTML
     const chatContainer = document.getElementById('chatContainer');
     const messageInput = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
@@ -298,7 +297,7 @@
     const footerUserImage = document.getElementById('footerUserImage');
 
     let currentUser = null;
-    let usersData = {};  // لتخزين بيانات المستخدمين من قاعدة البيانات
+    let usersData = {};
 
     const bannedWords = ["سيء", "سيئة", "كلمة_سيئة"];
     const specialUID = "mlifDgEAkKMaOeuUq63cs5NAkV93";
@@ -323,23 +322,20 @@
       });
     });
 
-    // تحميل بيانات جميع المستخدمين (اسم وصورة وشارات)
     function loadAllUsersData() {
       return db.ref('users').once('value').then(snapshot => {
         usersData = snapshot.val() || {};
       });
     }
 
-    // تحديث صورة المستخدم الصغيرة أسفل تحت
     function updateFooterUserImage() {
       if(currentUser && usersData[currentUser.uid] && usersData[currentUser.uid].photoURL){
-        footerUserImage.src = usersData[currentUser.uid].photoURL + '?t=' + (new Date().getTime());
+        footerUserImage.src = usersData[currentUser.uid].photoURL + '?t=' + Date.now();
       } else {
         footerUserImage.src = "https://i.pravatar.cc/150?u=" + currentUser.uid;
       }
     }
 
-    // الاستماع لرسائل الدردشة وتحديث الواجهة
     function listenForMessages() {
       db.ref('chatMessages').on('value', snapshot => {
         const messages = snapshot.val() || {};
@@ -348,7 +344,6 @@
       });
     }
 
-    // عرض الرسائل مع زر حذف خاص حسب الشروط
     function renderMessages(messages) {
       chatContainer.innerHTML = '';
       Object.keys(messages).forEach(key => {
@@ -357,7 +352,7 @@
         const userData = usersData[msg.uid] || {};
         const userName = userData.username || msg.email || "مستخدم مجهول";
         const baseUserImage = userData.photoURL || "https://i.pravatar.cc/150?u=" + msg.uid;
-        const userImage = baseUserImage + '?t=' + (new Date().getTime()); // لمنع الكاش
+        const userImage = baseUserImage + '?t=' + Date.now();
 
         const msgDiv = document.createElement('div');
         msgDiv.classList.add('message');
@@ -400,7 +395,7 @@
       if (!user) return alert("بيانات المستخدم غير متوفرة");
 
       modalUserName.textContent = user.username || user.email || "مستخدم مجهول";
-      modalUserImage.src = (user.photoURL ? user.photoURL + '?t=' + (new Date().getTime()) : "https://i.pravatar.cc/150?u=" + uid);
+      modalUserImage.src = (user.photoURL ? user.photoURL + '?t=' + Date.now() : "https://i.pravatar.cc/150?u=" + uid);
 
       modalUserBadges.innerHTML = '';
 
@@ -474,31 +469,27 @@
       sendBtn.disabled = messageInput.value.trim() === '';
     });
 
-    // رفع صورة المستخدم وتخزينها في Firebase Storage
+    // رفع صورة المستخدم
     uploadImageInput.addEventListener('change', async (e) => {
       if (!currentUser) return alert('يجب تسجيل الدخول أولاً');
       const file = e.target.files[0];
       if (!file) return;
 
-      // اسم الملف مع uid لتجنب التكرار
       const filePath = `userProfileImages/${currentUser.uid}/${file.name}`;
 
       try {
         const storageRef = storage.ref(filePath);
         await storageRef.put(file);
 
-        // الحصول على رابط التنزيل
         const downloadURL = await storageRef.getDownloadURL();
 
-        // تحديث صورة المستخدم في قاعدة البيانات
         await db.ref(`users/${currentUser.uid}/photoURL`).set(downloadURL);
 
-        // تحديث بيانات المستخدم محلياً
         usersData[currentUser.uid] = usersData[currentUser.uid] || {};
         usersData[currentUser.uid].photoURL = downloadURL;
 
         updateFooterUserImage();
-        renderMessagesFromDb(); // تحديث الصور في الدردشة
+        renderMessagesFromDb();
 
         alert('تم رفع الصورة وتحديثها بنجاح!');
       } catch (error) {
@@ -507,7 +498,6 @@
       }
     });
 
-    // إعادة تحميل الرسائل لتحديث عرض الصور بعد رفع الصورة
     function renderMessagesFromDb() {
       db.ref('chatMessages').once('value').then(snapshot => {
         const messages = snapshot.val() || {};
