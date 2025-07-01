@@ -47,33 +47,98 @@
     .message {
       max-width: 70%;
       background: #e0e7ff;
-      padding: 12px 16px;
+      padding: 12px 16px 40px 60px;
       border-radius: 15px;
       position: relative;
       font-size: 1rem;
       line-height: 1.3;
       color: #111;
       word-break: break-word;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
     }
     .message.own {
       align-self: flex-end;
       background: #0077cc;
       color: white;
       border-bottom-right-radius: 4px;
+      padding-left: 16px;
+      padding-right: 60px;
+      flex-direction: row-reverse;
     }
-    .message .username {
+    .avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.3s;
+    }
+    .avatar:hover {
+      border-color: #0077cc;
+    }
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .message .content {
+      flex: 1;
+    }
+    .username {
       font-weight: 700;
       margin-bottom: 6px;
       font-size: 0.9rem;
       opacity: 0.8;
     }
-    .message .time {
+    .text {
+      white-space: pre-wrap;
+    }
+    .time {
       font-size: 0.7rem;
       opacity: 0.6;
       position: absolute;
-      bottom: 5px;
-      left: 10px;
+      bottom: 10px;
+      left: 16px;
+      user-select: none;
     }
+    .message.own .time {
+      left: auto;
+      right: 16px;
+    }
+    /* تفاعلات الإيموجي */
+    .reactions {
+      position: absolute;
+      bottom: 10px;
+      right: 16px;
+      display: flex;
+      gap: 8px;
+    }
+    .message.own .reactions {
+      right: auto;
+      left: 16px;
+    }
+    .reaction-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      user-select: none;
+      padding: 0 4px;
+      color: inherit;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .reaction-count {
+      font-size: 0.8rem;
+      color: inherit;
+      user-select: none;
+    }
+    /* صندوق الإدخال */
     #inputArea {
       margin-top: 15px;
       display: flex;
@@ -112,6 +177,71 @@
     #inputArea button:hover:not(:disabled) {
       background: #005fa3;
     }
+
+    /* نافذة معلومات المستخدم */
+    #userInfoPopup {
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      padding: 20px 25px;
+      border-radius: 15px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+      max-width: 320px;
+      z-index: 10000;
+      display: none;
+      direction: rtl;
+      font-family: 'Cairo', sans-serif;
+      text-align: center;
+      user-select: none;
+    }
+    #userInfoPopup .closeBtn {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      font-size: 1.4rem;
+      cursor: pointer;
+      font-weight: bold;
+      user-select: none;
+    }
+    #userInfoPopup img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    }
+    #userInfoPopup h3 {
+      margin: 5px 0;
+      font-weight: 900;
+      font-size: 1.3rem;
+      color: #0077cc;
+    }
+    #userInfoPopup .badges {
+      margin: 10px 0;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    #userInfoPopup .badge {
+      background: #0077cc;
+      color: #fff;
+      padding: 5px 12px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.15);
+    }
+    #overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 9999;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -127,13 +257,21 @@
     </div>
   </main>
 
+  <!-- نافذة معلومات المستخدم -->
+  <div id="overlay"></div>
+  <div id="userInfoPopup" role="dialog" aria-modal="true" aria-labelledby="popupName">
+    <div class="closeBtn" title="إغلاق" aria-label="إغلاق">×</div>
+    <img id="popupImage" src="" alt="صورة المستخدم" />
+    <h3 id="popupName">اسم المستخدم</h3>
+    <div class="badges" id="popupBadges"></div>
+  </div>
+
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <script>
-    // إعداد Firebase - عوّض بالقيم الحقيقية لديك
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -153,83 +291,179 @@
     const messageInput = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
 
+    const userInfoPopup = document.getElementById('userInfoPopup');
+    const overlay = document.getElementById('overlay');
+    const popupImage = document.getElementById('popupImage');
+    const popupName = document.getElementById('popupName');
+    const popupBadges = document.getElementById('popupBadges');
+    const closeBtn = userInfoPopup.querySelector('.closeBtn');
+
     const ALLOWED_UID = "mlifDgEAkKMaOeuUq63cs5NAkV93";
     let currentUser = null;
 
+    const reactionEmojis = ["♥️", "👍", "👎", "💯", "🌟"];
+
+    // تخزين بيانات المستخدمين لعدم طلبهم مرارا
+    let usersCache = {};
+
     auth.onAuthStateChanged(user => {
       if (!user) {
-        // غير مسجل دخول، اذهب إلى صفحة تسجيل الدخول
         location.href = "index.html";
         return;
       }
       currentUser = user;
 
-      // إذا المستخدم هو فقط mlifDgEAkKMaOeuUq63cs5NAkV93، نظهر صندوق الكتابة
       if (currentUser.uid === ALLOWED_UID) {
         inputArea.style.display = "flex";
       } else {
         inputArea.style.display = "none";
       }
 
-      // استمع للرسائل الحية
       listenMessages();
     });
 
-    // تمكين زر الإرسال فقط عند وجود نص
+    sendBtn.addEventListener('click', () => {
+      const text = messageInput.value.trim();
+      if (!text) return;
+
+      const newMsgRef = db.ref("newsMessages").push();
+      newMsgRef.set({
+        uid: currentUser.uid,
+        text,
+        timestamp: Date.now()
+      }).then(() => {
+        messageInput.value = "";
+        sendBtn.disabled = true;
+      });
+    });
+
     messageInput.addEventListener('input', () => {
       sendBtn.disabled = messageInput.value.trim() === "";
     });
 
-    sendBtn.onclick = () => {
-      const text = messageInput.value.trim();
-      if (text === "") return;
-
-      const newMsgRef = db.ref("newsMessages").push();
-      const messageData = {
-        uid: currentUser.uid,
-        text: text,
-        timestamp: Date.now()
-      };
-      newMsgRef.set(messageData).then(() => {
-        messageInput.value = "";
-        sendBtn.disabled = true;
-      });
-    };
-
     function listenMessages() {
       db.ref("newsMessages").on('value', snapshot => {
         const msgs = snapshot.val() || {};
-        // فرز حسب الوقت
         const sortedMsgs = Object.entries(msgs).sort((a, b) => a[1].timestamp - b[1].timestamp);
-
         messagesDiv.innerHTML = "";
+
         sortedMsgs.forEach(([id, msg]) => {
-          renderMessage(msg);
+          renderMessage(id, msg);
         });
+
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
       });
     }
 
-    function renderMessage(msg) {
-      const div = document.createElement('div');
-      div.classList.add('message');
-      if (msg.uid === currentUser.uid) div.classList.add('own');
+    // جلب بيانات المستخدم مع الصورة والشارات من قاعدة البيانات أو من الكاش
+    function getUserData(uid) {
+      return new Promise((resolve) => {
+        if (usersCache[uid]) {
+          resolve(usersCache[uid]);
+        } else {
+          db.ref("users/" + uid).once("value").then(snapshot => {
+            const data = snapshot.val() || {};
+            // جلب الشارات كصفيف، نفترض موجودة في users/{uid}/badges
+            const userData = {
+              username: data.username || "مستخدم",
+              photoURL: data.photoURL || "https://i.pravatar.cc/150?u=" + uid, // صورة افتراضية
+              badges: data.badges || []
+            };
+            usersCache[uid] = userData;
+            resolve(userData);
+          });
+        }
+      });
+    }
 
-      // اجلب اسم المستخدم من قاعدة بيانات users
-      db.ref("users/" + msg.uid + "/username").once('value').then(snap => {
-        const username = snap.val() || "مستخدم";
+    function renderMessage(id, msg) {
+      getUserData(msg.uid).then(userData => {
+        const div = document.createElement('div');
+        div.classList.add('message');
+        if (msg.uid === currentUser.uid) div.classList.add('own');
 
+        // بناء الرسالة مع صورة الحساب والتفاعل
         div.innerHTML = `
-          <div class="username">${username}</div>
-          <div class="text">${escapeHtml(msg.text)}</div>
-          <div class="time">${new Date(msg.timestamp).toLocaleTimeString('ar-EG', {hour: '2-digit', minute: '2-digit'})}</div>
+          <div class="avatar" tabindex="0" role="button" aria-label="معلومات المستخدم ${userData.username}" data-uid="${msg.uid}">
+            <img src="${userData.photoURL}" alt="صورة ${userData.username}" />
+          </div>
+          <div class="content">
+            <div class="username">${escapeHtml(userData.username)}</div>
+            <div class="text">${escapeHtml(msg.text)}</div>
+            <div class="time">${new Date(msg.timestamp).toLocaleTimeString('ar-EG', {hour: '2-digit', minute: '2-digit'})}</div>
+            <div class="reactions" data-msgid="${id}"></div>
+          </div>
         `;
+
         messagesDiv.appendChild(div);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+        // إضافة أزرار التفاعل
+        const reactionsDiv = div.querySelector('.reactions');
+        reactionEmojis.forEach(emoji => {
+          const btn = document.createElement('button');
+          btn.classList.add('reaction-btn');
+          btn.textContent = emoji;
+          btn.title = `التفاعل بـ ${emoji}`;
+          btn.dataset.emoji = emoji;
+          reactionsDiv.appendChild(btn);
+        });
+
+        // تحميل التفاعلات من قاعدة البيانات وعرضها
+        listenReactions(id, reactionsDiv);
+
+        // حدث الضغط على صورة الحساب لفتح نافذة معلومات المستخدم
+        const avatar = div.querySelector('.avatar');
+        avatar.addEventListener('click', () => {
+          showUserInfo(msg.uid);
+        });
+        // يمكن دعم الضغط عبر لوحة المفاتيح (Enter أو Space)
+        avatar.addEventListener('keydown', e => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            showUserInfo(msg.uid);
+          }
+        });
+
+        // حدث التفاعل على الإيموجي
+        reactionsDiv.querySelectorAll('.reaction-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            toggleReaction(id, btn.dataset.emoji);
+          });
+        });
       });
     }
 
-    // دالة لحماية النص من html injection
+    // تابع لإظهار نافذة معلومات المستخدم
+    function showUserInfo(uid) {
+      getUserData(uid).then(data => {
+        popupImage.src = data.photoURL;
+        popupName.textContent = data.username;
+        popupBadges.innerHTML = "";
+        if (data.badges.length) {
+          data.badges.forEach(badge => {
+            const span = document.createElement('span');
+            span.classList.add('badge');
+            span.textContent = badge;
+            popupBadges.appendChild(span);
+          });
+        } else {
+          popupBadges.textContent = "لا توجد شارات";
+        }
+        overlay.style.display = "block";
+        userInfoPopup.style.display = "block";
+        closeBtn.focus();
+      });
+    }
+
+    closeBtn.addEventListener('click', closeUserInfo);
+    overlay.addEventListener('click', closeUserInfo);
+    function closeUserInfo() {
+      userInfoPopup.style.display = "none";
+      overlay.style.display = "none";
+    }
+
+    // دالة الهروب من html
     function escapeHtml(text) {
       return text.replace(/[&<>"']/g, function(m) {
         return ({
@@ -239,6 +473,49 @@
           '"': '&quot;',
           "'": '&#39;'
         })[m];
+      });
+    }
+
+    // التفاعل بالإيموجي: بيانات في قاعدة البيانات: reactions/{messageId}/{emoji}/{uid} = true
+    function toggleReaction(msgId, emoji) {
+      const userReactionRef = db.ref(`reactions/${msgId}/${emoji}/${currentUser.uid}`);
+      userReactionRef.once('value').then(snap => {
+        if (snap.exists()) {
+          // إزالة التفاعل
+          userReactionRef.remove();
+        } else {
+          // إضافة التفاعل
+          userReactionRef.set(true);
+        }
+      });
+    }
+
+    // الاستماع للتفاعلات وتحديث العرض
+    function listenReactions(msgId, container) {
+      const reactionsRef = db.ref(`reactions/${msgId}`);
+      reactionsRef.on('value', snapshot => {
+        const data = snapshot.val() || {};
+        // إزالة المحتوى السابق
+        container.querySelectorAll('.reaction-count').forEach(el => el.remove());
+
+        // لكل إيموجي حساب عدد التفاعلات وعرضه بجانب الزر
+        reactionEmojis.forEach(emoji => {
+          const emojiUsers = data[emoji] || {};
+          const count = Object.keys(emojiUsers).length;
+          // إزالة أي عداد قديم
+          let btn = Array.from(container.children).find(b => b.dataset.emoji === emoji);
+          if (!btn) return;
+          // أزل عداد قديم إذا وجد
+          const oldCount = btn.querySelector('.reaction-count');
+          if (oldCount) oldCount.remove();
+
+          if (count > 0) {
+            const span = document.createElement('span');
+            span.classList.add('reaction-count');
+            span.textContent = count;
+            btn.appendChild(span);
+          }
+        });
       });
     }
   </script>
