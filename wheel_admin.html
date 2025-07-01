@@ -12,7 +12,7 @@
       padding: 20px;
       color: #222;
     }
-    h1 {
+    h1, h2 {
       text-align: center;
       color: #ffb700;
       margin-bottom: 20px;
@@ -70,21 +70,9 @@
     .delete-btn:hover {
       background: #bd2130;
     }
-    #logoutBtn {
-      background: #444;
-      color: white;
-      padding: 8px 15px;
-      border-radius: 5px;
-      cursor: pointer;
-      position: fixed;
-      top: 20px;
-      left: 20px;
-    }
   </style>
 </head>
 <body>
-
-  <button id="logoutBtn">تسجيل الخروج</button>
 
   <h1>إدارة خانات عجلة الحظ</h1>
 
@@ -102,6 +90,22 @@
         <th>اسم الخانة</th>
         <th>نسبة الفوز</th>
         <th>التحكم</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- سيتم ملئها ديناميكياً -->
+    </tbody>
+  </table>
+
+  <!-- قسم عرض النتائج التي فاز بها المستخدمون -->
+  <h2>النتائج التي فاز بها المستخدمون</h2>
+  <table id="resultsTable">
+    <thead>
+      <tr>
+        <th>البريد الإلكتروني</th>
+        <th>الخانة التي فاز بها</th>
+        <th>التاريخ</th>
+        <th>حذف</th>
       </tr>
     </thead>
     <tbody>
@@ -129,26 +133,23 @@
     const auth = firebase.auth();
     const db = firebase.database();
 
-    // تحقق من تسجيل دخول الأدمن
     auth.onAuthStateChanged(user => {
       if (!user) {
         location.href = "index.html";
         return;
       }
-      // هنا ممكن تتحقق اذا هذا المستخدم هو أدمن بناء على البريد أو uid
-      // لو تحب أضف شرط هنا
       loadEntries();
+      loadResults();
     });
 
     const entriesTableBody = document.querySelector("#entriesTable tbody");
+    const resultsTableBody = document.querySelector("#resultsTable tbody");
     const showAddFormBtn = document.getElementById("showAddFormBtn");
     const addForm = document.getElementById("addForm");
     const newLabel = document.getElementById("newLabel");
     const newProbability = document.getElementById("newProbability");
     const addEntryBtn = document.getElementById("addEntryBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
 
-    // عرض وإخفاء نموذج الإضافة
     showAddFormBtn.addEventListener("click", () => {
       if(addForm.style.display === "none") {
         addForm.style.display = "block";
@@ -159,7 +160,6 @@
       }
     });
 
-    // تحميل الخانات من Firebase
     function loadEntries() {
       db.ref("wheelData/entries").on("value", snapshot => {
         const data = snapshot.val() || {};
@@ -167,13 +167,11 @@
       });
     }
 
-    // عرض الخانات في الجدول
     function renderEntries(data) {
       entriesTableBody.innerHTML = "";
       Object.keys(data).forEach(key => {
         const entry = data[key];
         const tr = document.createElement("tr");
-
         tr.innerHTML = `
           <td><input type="text" value="${entry.label}" data-key="${key}" class="labelInput" /></td>
           <td><input type="number" min="1" max="100" value="${entry.probability}" data-key="${key}" class="probabilityInput" /></td>
@@ -185,7 +183,6 @@
         entriesTableBody.appendChild(tr);
       });
 
-      // إضافة الأحداث للأزرار والمدخلات بعد العرض
       document.querySelectorAll(".edit-btn").forEach(btn => {
         btn.addEventListener("click", () => {
           const key = btn.getAttribute("data-key");
@@ -215,7 +212,6 @@
       });
     }
 
-    // إضافة خانة جديدة
     addEntryBtn.addEventListener("click", () => {
       const label = newLabel.value.trim();
       let prob = parseInt(newProbability.value);
@@ -239,12 +235,37 @@
       });
     });
 
-    // زر تسجيل الخروج
-    logoutBtn.addEventListener("click", () => {
-      auth.signOut().then(() => {
-        location.href = "index.html";
+    // تحميل النتائج التي فاز بها المستخدمون
+    function loadResults() {
+      db.ref("wheelData/results").on("value", snapshot => {
+        const results = snapshot.val() || {};
+        renderResults(results);
       });
-    });
+    }
+
+    function renderResults(results) {
+      resultsTableBody.innerHTML = "";
+      Object.keys(results).forEach(key => {
+        const res = results[key];
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${res.userEmail || 'غير معروف'}</td>
+          <td>${res.label || ''}</td>
+          <td>${new Date(res.timestamp).toLocaleString()}</td>
+          <td><button class="delete-btn" data-key="${key}">حذف</button></td>
+        `;
+        resultsTableBody.appendChild(tr);
+      });
+
+      document.querySelectorAll("#resultsTable .delete-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const key = btn.getAttribute("data-key");
+          if(confirm("هل تريد حذف هذه النتيجة؟")) {
+            db.ref(`wheelData/results/${key}`).remove();
+          }
+        });
+      });
+    }
   </script>
 </body>
 </html>
