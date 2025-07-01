@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>لوحة تحكم الأدمن - Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f9f9f9;
+      margin: 0; padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      color: #ffb700;
+      margin-bottom: 20px;
+    }
+    .container {
+      max-width: 600px;
+      width: 100%;
+      background: white;
+      padding: 15px 25px 25px;
+      border-radius: 10px;
+      box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+    }
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+    }
+    input[type="text"], select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 6px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+      font-family: 'Cairo', sans-serif;
+    }
+    button {
+      margin-top: 12px;
+      background-color: #ffb700;
+      border: none;
+      color: #222;
+      padding: 10px 20px;
+      font-weight: bold;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      font-family: 'Cairo', sans-serif;
+    }
+    button:hover {
+      background-color: #e6a600;
+    }
+    .user-list {
+      margin-top: 20px;
+      max-height: 250px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+    }
+    .user-list div {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'Cairo', sans-serif;
+    }
+    .user-list div:last-child {
+      border-bottom: none;
+    }
+    .user-list button {
+      padding: 5px 10px;
+      font-size: 0.9rem;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>لوحة تحكم الأدمن - Sheko Store</h1>
+  <div class="container">
+
+    <label for="uidInput">UID المستخدم:</label>
+    <input type="text" id="uidInput" placeholder="أدخل معرف المستخدم (UID)" />
+
+    <label for="badgeInput">إضافة شارة للمستخدم (مثلاً: مؤسس، مشرف):</label>
+    <input type="text" id="badgeInput" placeholder="أدخل اسم الشارة" />
+
+    <button id="addBadgeBtn">إضافة الشارة</button>
+
+    <hr />
+
+    <label>إدارة الحظر:</label>
+    <input type="text" id="banUidInput" placeholder="أدخل معرف المستخدم (UID) للحظر أو رفع الحظر" />
+    <button id="banBtn">حظر المستخدم</button>
+    <button id="unbanBtn">رفع الحظر</button>
+
+    <hr />
+
+    <label>حالة الدردشة:</label>
+    <button id="toggleChatBtn">تحميل حالة الدردشة...</button>
+
+    <hr />
+
+    <h3>المستخدمون المحظورون:</h3>
+    <div class="user-list" id="bannedUsersList">جارٍ تحميل القائمة...</div>
+  </div>
+
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <script>
+    // إعداد Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    // تحقق تسجيل دخول الأدمن (يمكن تعديل uid حسب الأدمن)
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        alert("يرجى تسجيل الدخول أولاً");
+        location.href = "index.html";
+      } else {
+        if (user.uid !== "mlifDgEAkKMaOeuUq63cs5NAkV93") {
+          alert("غير مصرح بالدخول");
+          location.href = "index.html";
+        }
+      }
+    });
+
+    // عناصر الواجهة
+    const uidInput = document.getElementById("uidInput");
+    const badgeInput = document.getElementById("badgeInput");
+    const addBadgeBtn = document.getElementById("addBadgeBtn");
+
+    const banUidInput = document.getElementById("banUidInput");
+    const banBtn = document.getElementById("banBtn");
+    const unbanBtn = document.getElementById("unbanBtn");
+
+    const toggleChatBtn = document.getElementById("toggleChatBtn");
+    const bannedUsersList = document.getElementById("bannedUsersList");
+
+    // إضافة شارة للمستخدم
+    addBadgeBtn.onclick = () => {
+      const uid = uidInput.value.trim();
+      const badge = badgeInput.value.trim();
+      if (!uid || !badge) return alert("يرجى ملء الحقول");
+
+      const userBadgesRef = db.ref(`userBadges/${uid}/badges`);
+      userBadgesRef.once("value").then(snapshot => {
+        let badges = snapshot.val() || [];
+        if (!badges.includes(badge)) {
+          badges.push(badge);
+          userBadgesRef.set(badges).then(() => {
+            alert("تم إضافة الشارة بنجاح");
+            badgeInput.value = "";
+          });
+        } else {
+          alert("هذه الشارة مضافة مسبقاً لهذا المستخدم");
+        }
+      });
+    };
+
+    // حظر مستخدم
+    banBtn.onclick = () => {
+      const uid = banUidInput.value.trim();
+      if (!uid) return alert("أدخل UID للحظر");
+      db.ref(`bannedUsers/${uid}`).set(true).then(() => {
+        alert("تم حظر المستخدم");
+        banUidInput.value = "";
+      });
+    };
+
+    // رفع الحظر
+    unbanBtn.onclick = () => {
+      const uid = banUidInput.value.trim();
+      if (!uid) return alert("أدخل UID لرفع الحظر");
+      db.ref(`bannedUsers/${uid}`).remove().then(() => {
+        alert("تم رفع الحظر عن المستخدم");
+        banUidInput.value = "";
+      });
+    };
+
+    // تحميل حالة الدردشة وتبديلها
+    function loadChatStatus() {
+      db.ref("chatSettings/isChatOpen").once("value").then(snap => {
+        const isOpen = snap.val();
+        updateToggleChatBtn(isOpen);
+      });
+    }
+    function updateToggleChatBtn(isOpen) {
+      toggleChatBtn.textContent = isOpen ? "إغلاق الدردشة" : "فتح الدردشة";
+      toggleChatBtn.dataset.isOpen = isOpen ? "true" : "false";
+    }
+
+    toggleChatBtn.onclick = () => {
+      const isOpen = toggleChatBtn.dataset.isOpen === "true";
+      db.ref("chatSettings/isChatOpen").set(!isOpen).then(() => {
+        updateToggleChatBtn(!isOpen);
+      });
+    };
+
+    // تحميل قائمة المستخدمين المحظورين وعرضها
+    function loadBannedUsers() {
+      db.ref("bannedUsers").on("value", snap => {
+        const banned = snap.val() || {};
+        bannedUsersList.innerHTML = "";
+
+        if (Object.keys(banned).length === 0) {
+          bannedUsersList.textContent = "لا يوجد مستخدمون محظورون حالياً";
+          return;
+        }
+
+        Object.keys(banned).forEach(uid => {
+          const div = document.createElement("div");
+          div.textContent = uid;
+
+          const unbanBtnUser = document.createElement("button");
+          unbanBtnUser.textContent = "رفع الحظر";
+          unbanBtnUser.onclick = () => {
+            db.ref(`bannedUsers/${uid}`).remove();
+          };
+          div.appendChild(unbanBtnUser);
+
+          bannedUsersList.appendChild(div);
+        });
+      });
+    }
+
+    // بدء التحميل
+    loadChatStatus();
+    loadBannedUsers();
+  </script>
+</body>
+</html>
