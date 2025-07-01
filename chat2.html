@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>الدردشة - Sheko Store</title>
+  <title>الأخبار</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet" />
   <style>
@@ -311,6 +311,13 @@
       db.ref("usersOnline/" + user.uid).set(true);
       db.ref("usersOnline/" + user.uid).onDisconnect().remove();
 
+      // إخفاء مربع الإدخال وزر الإرسال إذا لم يكن المستخدم هو mlifDgEAkKMaOeuUq63cs5NAkV93
+      if (currentUser.uid !== "mlifDgEAkKMaOeuUq63cs5NAkV93") {
+        document.getElementById("inputContainer").style.display = "none";
+      } else {
+        document.getElementById("inputContainer").style.display = "flex";
+      }
+
       listenForMessages();
     });
 
@@ -365,6 +372,8 @@
 
       // عند الضغط مرتين للرد على الرسالة
       msgDiv.ondblclick = () => {
+        // فقط المستخدم الخاص يمكنه الرد (إذا تريد منع الرد للمستخدمين الآخرين)
+        if (currentUser.uid !== "mlifDgEAkKMaOeuUq63cs5NAkV93") return;
         replyMessage = {
           uid: msg.uid,
           text: msg.text,
@@ -416,13 +425,11 @@
       const reactionsDiv = document.createElement("div");
       reactionsDiv.style = "margin-top:5px; display:flex; gap:8px;";
 
-      // هنا التفاعل مخزن بشكل كائن {emoji: {uid: true, uid2: true, ...}}
       if (!msg.reactions) msg.reactions = {};
 
       reactionEmojis.forEach(emoji => {
         const btn = document.createElement("button");
 
-        // حساب عدد المستخدمين الذين تفاعلوا بهذا الإيموجي
         const usersReacted = msg.reactions[emoji] || {};
         const count = Object.keys(usersReacted).length;
 
@@ -430,27 +437,22 @@
         btn.style = "background:none; border:none; cursor:pointer; font-size:1.2rem; user-select:none;";
 
         btn.onclick = () => {
-          // تفاعل المستخدم الحالي مع الإيموجي
           const reactionsRef = db.ref("chatMessages/" + id + "/reactions/" + emoji);
 
           if (usersReacted[currentUser.uid]) {
-            // المستخدم قد ألغى التفاعل
             reactionsRef.child(currentUser.uid).remove();
           } else {
-            // المستخدم يضيف تفاعل
             reactionsRef.child(currentUser.uid).set(true);
           }
         };
 
         reactionsDiv.appendChild(btn);
         
-        });
+      });
 
-    content.appendChild(reactionsDiv);
+      content.appendChild(reactionsDiv);
 
-      msgDiv.appendChild(content);
-
-      // زر الحذف (يظهر فقط لصاحب الرسالة أو الأدمن)
+      // زر الحذف (يظهر فقط لصاحب الرسالة أو المستخدم الخاص)
       if (msg.uid === currentUser.uid || currentUser.uid === "mlifDgEAkKMaOeuUq63cs5NAkV93") {
         const delBtn = document.createElement("button");
         delBtn.className = "delete-btn";
@@ -488,10 +490,12 @@
       userInfoPopup.style.display = "block";
       overlay.style.display = "block";
     }
+
     closeBtn.onclick = () => {
       userInfoPopup.style.display = "none";
       overlay.style.display = "none";
     };
+
     overlay.onclick = () => {
       userInfoPopup.style.display = "none";
       overlay.style.display = "none";
