@@ -95,10 +95,80 @@
       color: #666;
       font-size: 14px;
     }
+    
+    /* --- إضافة مودال التنبيه --- */
+    #modalOverlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    #modalContent {
+      background: white;
+      padding: 25px 30px;
+      border-radius: 12px;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      font-size: 16px;
+      line-height: 1.5;
+      color: #222;
+    }
+    #modalContent p {
+      margin-bottom: 25px;
+      white-space: pre-line;
+    }
+    #modalButtons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    #btnAgree, #btnDecline {
+      padding: 10px 25px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #btnAgree {
+      background-color: #ffb700;
+      color: #222;
+    }
+    #btnAgree:hover {
+      background-color: #e0a100;
+    }
+    #btnDecline {
+      background-color: #ccc;
+      color: #444;
+    }
+    #btnDecline:hover {
+      background-color: #aaa;
+    }
   </style>
 </head>
 <body>
   <header>فريق الدعم والشكاوى</header>
+
+  <!-- مودال التنبيه -->
+  <div id="modalOverlay">
+    <div id="modalContent">
+      <p>
+        يرجى عدم إرسال أكثر من رسالة لفريق الدعم لتجنب حظر حسابك
+        \nيرجى إرسال رسالة تحتوي على تفاصيل الشكوى الخاصة بك
+        \nوانتظر حين يرد عليك فريق الدعم
+      </p>
+      <div id="modalButtons">
+        <button id="btnAgree">فهمت</button>
+        <button id="btnDecline">لا</button>
+      </div>
+    </div>
+  </div>
+
   <div id="messages">جارٍ تحميل المحادثة...</div>
   <div id="statusMsg"></div>
   <div id="inputArea">
@@ -111,6 +181,18 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <script>
+    const modalOverlay = document.getElementById('modalOverlay');
+    const btnAgree = document.getElementById('btnAgree');
+    const btnDecline = document.getElementById('btnDecline');
+
+    btnAgree.addEventListener('click', () => {
+      modalOverlay.style.display = 'none';
+    });
+
+    btnDecline.addEventListener('click', () => {
+      location.href = 'dashboard.html';
+    });
+
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -135,10 +217,9 @@
     let conversationId = null;
     let chatRef = null;
 
-    // تأكد أن المستخدم مسجل دخول
     auth.onAuthStateChanged(user => {
       if (!user) {
-        location.href = "index.html"; // أعد التوجيه لتسجيل الدخول
+        location.href = "index.html";
         return;
       }
       currentUser = user;
@@ -146,14 +227,12 @@
     });
 
     function initializeChat() {
-      // ابحث عن محادثة المستخدم أو أنشئ واحدة جديدة
       const convRef = db.ref('supportChats');
       convRef.orderByChild('userId').equalTo(currentUser.uid).limitToFirst(1).once('value', snapshot => {
         if (snapshot.exists()) {
           conversationId = Object.keys(snapshot.val())[0];
           listenMessages();
         } else {
-          // أنشئ محادثة جديدة
           conversationId = convRef.push().key;
           convRef.child(conversationId).set({
             userId: currentUser.uid,
@@ -171,7 +250,6 @@
     function listenMessages() {
       chatRef = db.ref(`supportChats/${conversationId}`);
 
-      // استمع لتغير حالة المحادثة (مفتوحة/مغلقة)
       chatRef.child('status').on('value', snapshot => {
         const status = snapshot.val();
         if (status === 'closed') {
@@ -183,7 +261,6 @@
         }
       });
 
-      // استمع للرسائل
       chatRef.child('messages').on('value', snapshot => {
         const messages = snapshot.val() || {};
         renderMessages(messages);
