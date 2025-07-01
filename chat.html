@@ -1,5 +1,4 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
-<head>
+<!DOCTYPE html><html lang="ar" dir="rtl"><head>
   <meta charset="UTF-8">
   <title>الدردشة - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -44,6 +43,7 @@
       display: flex;
       margin-bottom: 12px;
       align-items: flex-start;
+      position: relative;
     }
     .message.own {
       flex-direction: row-reverse;
@@ -54,6 +54,7 @@
       border-radius: 50%;
       margin: 0 10px;
       overflow: hidden;
+      cursor: pointer;
     }
     .avatar img {
       width: 100%;
@@ -112,6 +113,17 @@
       font-weight: bold;
       cursor: pointer;
     }
+    .popup {
+      position: absolute;
+      top: 60px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 0.85rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
@@ -121,11 +133,16 @@
       <div id="onlineNumber">0</div>
     </div>
     دردشة Sheko Store
-  </header>  <div id="chatContainer"></div>
+  </header>
+  <div id="chatContainer"></div>
   <div id="inputContainer">
     <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا...">
     <button id="sendBtn">إرسال</button>
-  </div>  <!-- Firebase Scripts -->  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>  <script>
+  </div>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -136,85 +153,104 @@
       appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
     firebase.initializeApp(firebaseConfig);
-
     const auth = firebase.auth();
-    const db = firebase.database();
-    const storage = firebase.storage();
+    const db = firebase.database();const chatContainer = document.getElementById("chatContainer");
+const messageInput = document.getElementById("messageInput");
+const sendBtn = document.getElementById("sendBtn");
+const onlineNumber = document.getElementById("onlineNumber");
 
-    const chatContainer = document.getElementById("chatContainer");
-    const messageInput = document.getElementById("messageInput");
-    const sendBtn = document.getElementById("sendBtn");
-    const onlineNumber = document.getElementById("onlineNumber");
+let currentUser;
+let userInfo = {};
 
-    let currentUser;
+auth.onAuthStateChanged(user => {
+  if (!user) return location.href = "index.html";
+  currentUser = user;
+  db.ref("usersOnline/" + user.uid).set(true);
+  db.ref("usersOnline/" + user.uid).onDisconnect().remove();
 
-    auth.onAuthStateChanged(user => {
-      if (!user) return location.href = "index.html";
-      currentUser = user;
-      db.ref("usersOnline/" + user.uid).set(true);
-      db.ref("usersOnline/" + user.uid).onDisconnect().remove();
+  db.ref("users/" + user.uid).once("value").then(snap => {
+    userInfo = snap.val() || {};
+    listenForMessages();
+  });
+});
 
-      listenForMessages();
-    });
+db.ref("usersOnline").on("value", snap => {
+  const users = snap.val() || {};
+  onlineNumber.textContent = Object.keys(users).length;
+});
 
-    db.ref("usersOnline").on("value", snap => {
-      const users = snap.val() || {};
-      onlineNumber.textContent = Object.keys(users).length;
-    });
+function listenForMessages() {
+  db.ref("chatMessages").on("value", snap => {
+    const msgs = snap.val() || {};
+    chatContainer.innerHTML = "";
+    Object.entries(msgs).forEach(([id, msg]) => renderMessage(id, msg));
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  });
+}
 
-    function listenForMessages() {
-      db.ref("chatMessages").on("value", snap => {
-        const msgs = snap.val() || {};
-        chatContainer.innerHTML = "";
-        Object.entries(msgs).forEach(([id, msg]) => renderMessage(id, msg));
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-      });
-    }
+function renderMessage(id, msg) {
+  const msgDiv = document.createElement("div");
+  msgDiv.className = "message";
+  if (msg.uid === currentUser.uid) msgDiv.classList.add("own");
 
-    function renderMessage(id, msg) {
-      const msgDiv = document.createElement("div");
-      msgDiv.className = "message";
-      if (msg.uid === currentUser.uid) msgDiv.classList.add("own");
+  const avatar = document.createElement("div");
+  avatar.className = "avatar";
+  const img = document.createElement("img");
+  img.src = msg.photoURL || "https://via.placeholder.com/48";
+  avatar.appendChild(img);
 
-      const avatar = document.createElement("div");
-      avatar.className = "avatar";
-      const img = document.createElement("img");
-      img.src = msg.photoURL || "https://via.placeholder.com/48";
-      avatar.appendChild(img);
+  const content = document.createElement("div");
+  content.className = "content";
+  content.innerHTML = `
+    <div class="username">${msg.username || "مستخدم مجهول"}</div>
+    <div>${msg.text}</div>
+    <div class="timestamp">${new Date(msg.timestamp).toLocaleString("ar-EG")}</div>
+  `;
 
-      const content = document.createElement("div");
-      content.className = "content";
-      content.innerHTML = `
-        <div class="username">${msg.username || "مستخدم مجهول"}</div>
-        <div>${msg.text}</div>
-        <div class="timestamp">${new Date(msg.timestamp).toLocaleString("ar-EG")}</div>
-      `;
+  if (msg.uid === currentUser.uid) {
+    const del = document.createElement("button");
+    del.textContent = "حذف";
+    del.className = "delete-btn";
+    del.onclick = () => db.ref("chatMessages/" + id).remove();
+    msgDiv.appendChild(del);
+  }
 
-      if (msg.uid === currentUser.uid) {
-        const del = document.createElement("button");
-        del.textContent = "حذف";
-        del.className = "delete-btn";
-        del.onclick = () => db.ref("chatMessages/" + id).remove();
-        msgDiv.appendChild(del);
-      }
+  avatar.onclick = () => {
+    const popup = document.createElement("div");
+    popup.className = "popup";
+    popup.innerHTML = `
+      <strong>${msg.username || "مستخدم مجهول"}</strong><br>
+      شارات: ${msg.badges || "لا توجد"}<br>
+      التصنيف: ${msg.rank || "غير محدد"}
+    `;
+    document.body.appendChild(popup);
+    const rect = avatar.getBoundingClientRect();
+    popup.style.left = rect.left + "px";
+    popup.style.top = rect.bottom + "px";
+    setTimeout(() => popup.remove(), 5000);
+  };
 
-      msgDiv.appendChild(avatar);
-      msgDiv.appendChild(content);
-      chatContainer.appendChild(msgDiv);
-    }
+  msgDiv.appendChild(avatar);
+  msgDiv.appendChild(content);
+  chatContainer.appendChild(msgDiv);
+}
 
-    sendBtn.onclick = () => {
-      const text = messageInput.value.trim();
-      if (!text) return;
-      const msg = {
-        uid: currentUser.uid,
-        username: currentUser.displayName || currentUser.email,
-        text,
-        timestamp: Date.now(),
-        photoURL: currentUser.photoURL || null
-      };
-      db.ref("chatMessages").push(msg);
-      messageInput.value = "";
-    }
-  </script></body>
+sendBtn.onclick = () => {
+  const text = messageInput.value.trim();
+  if (!text) return;
+  const msg = {
+    uid: currentUser.uid,
+    username: userInfo.username || currentUser.displayName || "مستخدم مجهول",
+    text,
+    timestamp: Date.now(),
+    photoURL: userInfo.profileImage || currentUser.photoURL || null,
+    badges: userInfo.badges || "",
+    rank: userInfo.rank || ""
+  };
+  db.ref("chatMessages").push(msg);
+  messageInput.value = "";
+};
+
+  </script>
+</body>
 </html>
