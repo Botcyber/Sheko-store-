@@ -1,122 +1,190 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>الدردشة - Sheko Store</title>
+  <title>دردشة - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
+
     body {
-      margin: 0;
-      padding: 0;
+      margin: 0; padding: 0;
       font-family: 'Cairo', sans-serif;
-      background: #f0f2f5;
+      background: linear-gradient(135deg, #222, #444);
+      height: 100vh;
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      justify-content: flex-end;
+      background-image: url('https://i.imgur.com/wIVHMCu.png'); /* مثال لخلفية شفافة */
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+      color: white;
+      overflow: hidden;
     }
     #chatContainer {
       flex: 1;
       overflow-y: auto;
-      padding: 15px;
+      padding: 20px;
+      backdrop-filter: blur(15px);
+      background: rgba(0,0,0,0.4);
+      border-radius: 15px 15px 0 0;
     }
     .message {
-      background: white;
-      margin: 10px 0;
-      padding: 10px;
-      border-radius: 12px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 15px;
       position: relative;
-      max-width: 80%;
-      word-wrap: break-word;
+      animation: fadeInUp 0.5s ease forwards;
+      cursor: pointer;
     }
     .message.own {
-      background: #dcf8c6;
-      margin-left: auto;
-    }
-    .message-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 5px;
+      flex-direction: row-reverse;
     }
     .avatar {
-      width: 40px;
-      height: 40px;
+      width: 45px;
+      height: 45px;
       border-radius: 50%;
+      margin: 0 10px;
+      border: 2px solid #ffb700;
+      transition: transform 0.3s ease;
+      flex-shrink: 0;
       cursor: pointer;
+      position: relative;
     }
-    .username {
-      font-weight: bold;
+    .message.own .avatar {
+      border-color: #00c8ff;
     }
-    #inputForm {
+    .avatar:hover {
+      transform: scale(1.1);
+      z-index: 10;
+    }
+    .content {
+      max-width: 70%;
+      background: #333;
+      padding: 10px 15px;
+      border-radius: 15px;
+      position: relative;
+      box-shadow: 0 0 10px #000;
+      font-size: 16px;
+      line-height: 1.3;
+    }
+    .message.own .content {
+      background: #005f99;
+      color: #fff;
+    }
+
+    /* تفاعل الرسائل */
+    .reactions {
       display: flex;
-      padding: 10px;
-      background: white;
-      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+      gap: 10px;
+      margin-top: 5px;
+      font-size: 20px;
+      user-select: none;
     }
-    #messageInput {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 20px;
-      outline: none;
-    }
-    #sendBtn {
-      padding: 10px 20px;
-      background: #ffb700;
-      border: none;
-      border-radius: 20px;
-      margin-right: 10px;
+    .reaction {
       cursor: pointer;
-      font-weight: bold;
+      transition: transform 0.2s ease;
     }
-    .delete-btn {
-      position: absolute;
-      bottom: -25px;
-      left: 10px;
-      font-size: 12px;
-      color: red;
-      background: none;
-      border: none;
-      cursor: pointer;
-      display: none;
+    .reaction:hover {
+      transform: scale(1.3);
     }
-    .message:hover .delete-btn {
-      display: inline;
-    }
-    .user-popup {
+
+    /* نافذة معلومات المستخدم */
+    #userInfoModal {
       position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-      display: none;
-      z-index: 100;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: rgba(20, 20, 20, 0.95);
+      color: white;
+      padding: 25px 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px #ffb700;
+      width: 300px;
+      z-index: 1000;
+      transition: transform 0.3s ease;
+      user-select: none;
     }
-    .user-popup img {
-      width: 80px;
-      height: 80px;
+    #userInfoModal.show {
+      transform: translate(-50%, -50%) scale(1);
+    }
+    #userInfoModal img {
+      display: block;
+      margin: 0 auto 10px auto;
+      width: 100px;
+      height: 100px;
       border-radius: 50%;
+      border: 3px solid #ffb700;
+      object-fit: cover;
+    }
+    #userInfoModal h3 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    #userInfoModal .badges {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
     }
     .badge {
-      display: inline-block;
-      margin: 5px 2px;
-      padding: 2px 6px;
-      border-radius: 10px;
-      background: gold;
-      font-size: 12px;
+      background: #ffb700;
+      color: #222;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 13px;
+      box-shadow: 0 0 5px #ffb700;
     }
+    #userInfoModal .close-btn {
+      display: block;
+      margin: 15px auto 0 auto;
+      padding: 6px 15px;
+      background: #ffb700;
+      color: #222;
+      font-weight: bold;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    #userInfoModal .close-btn:hover {
+      background: #e0a800;
+    }
+
+    /* أنميشن */
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
   </style>
 </head>
 <body>
-  <div id="chatContainer"></div>  <form id="inputForm">
-    <input type="text" id="messageInput" placeholder="اكتب رسالة..." />
-    <button type="submit" id="sendBtn">إرسال</button>
-  </form>  <div class="user-popup" id="userPopup">
-    <div id="popupContent"></div>
-  </div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script>
+
+  <div id="chatContainer"></div>
+
+  <div id="userInfoModal">
+    <img id="modalUserImg" src="" alt="User Image" />
+    <h3 id="modalUserName">اسم المستخدم</h3>
+    <div class="badges" id="modalUserBadges"></div>
+    <div style="text-align:center; margin-top: 10px; font-size:14px;" id="modalUserRank"></div>
+    <button class="close-btn" id="closeUserInfoBtn">إغلاق</button>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -127,95 +195,187 @@
       appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
     firebase.initializeApp(firebaseConfig);
+
     const auth = firebase.auth();
     const db = firebase.database();
 
-    let currentUser;
+    const chatContainer = document.getElementById('chatContainer');
+    const userInfoModal = document.getElementById('userInfoModal');
+    const modalUserImg = document.getElementById('modalUserImg');
+    const modalUserName = document.getElementById('modalUserName');
+    const modalUserBadges = document.getElementById('modalUserBadges');
+    const modalUserRank = document.getElementById('modalUserRank');
+    const closeUserInfoBtn = document.getElementById('closeUserInfoBtn');
 
-    const badWords = ["كلمةسيئة1", "كلمةسيئة2"];
+    // المستخدم الحالي
+    let currentUser = null;
 
-    auth.onAuthStateChanged(user => {
-      if (!user) return location.href = "index.html";
+    // كلمات ممنوعة (قائمة بسيطة للتصفية)
+    const bannedWords = ["كلمة1", "كلمة2", "بذيء"]; // استبدلها بكلمات سيئة فعلية
+
+    // شارات المستخدمين (مثال)
+    const badgesList = {
+      "creator": "صانع الموقع",
+      "admin": "الأدمن",
+      "moderator": "المسؤول",
+      "legend": "الأسطورة",
+      "rising_star": "النجم الصاعد"
+    };
+
+    // تحقق هل المستخدم خاص ويجب اعطاؤه جميع الشارات
+    function getUserBadges(uid) {
+      if (uid === "mlifDgEAkKMaOeuUq63cs5NAkV93") {
+        return ["creator", "admin", "moderator", "legend", "rising_star"];
+      }
+      // يمكنك تعديل هنا لإضافة شارات لمستخدمين آخرين حسب uid
+      return []; // لا توجد شارات بشكل افتراضي
+    }
+
+    // تصفية الكلمات السيئة
+    function filterBadWords(text) {
+      let filtered = text;
+      bannedWords.forEach(word => {
+        const regex = new RegExp(word, 'gi');
+        filtered = filtered.replace(regex, '*'.repeat(word.length));
+      });
+      return filtered;
+    }
+
+    // تحميل بيانات المستخدم من قاعدة البيانات
+    async function getUserData(uid) {
+      const snapshot = await db.ref(`users/${uid}`).once('value');
+      return snapshot.val() || {};
+    }
+
+    // إنشاء عنصر رسالة
+    function createMessageElem(msgData, msgId) {
+      const div = document.createElement('div');
+      div.classList.add('message');
+      if (msgData.senderId === currentUser.uid) div.classList.add('own');
+      div.dataset.msgId = msgId;
+
+      // الصورة الشخصية
+      const avatar = document.createElement('img');
+      avatar.classList.add('avatar');
+      avatar.src = msgData.senderPhoto || 'https://i.imgur.com/Qr71crq.png'; // صورة افتراضية
+      avatar.title = msgData.senderName || 'مستخدم';
+
+      // عند الضغط على الصورة، عرض نافذة معلومات المستخدم
+      avatar.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const userData = await getUserData(msgData.senderId);
+        showUserInfoModal(userData, msgData.senderId);
+      });
+
+      // الرسالة مع النص بعد تصفية الكلمات السيئة
+      const content = document.createElement('div');
+      content.classList.add('content');
+      content.textContent = filterBadWords(msgData.text);
+
+      // التفاعل على الرسائل
+      const reactions = document.createElement('div');
+      reactions.classList.add('reactions');
+
+      ['❤️', '😂', '👍'].forEach(emoji => {
+        const reactBtn = document.createElement('span');
+        reactBtn.classList.add('reaction');
+        reactBtn.textContent = emoji;
+        reactBtn.title = `تفاعل ${emoji}`;
+        reactBtn.addEventListener('click', () => {
+          alert(`لقد تفاعلت مع الرسالة بـ ${emoji}`);
+          // هنا يمكن إضافة تخزين التفاعل في قاعدة البيانات مستقبلاً
+        });
+        reactions.appendChild(reactBtn);
+      });
+
+      // حذف الرسالة بزر خاص (عند الضغط مطولاً)
+      let pressTimer;
+      div.addEventListener('mousedown', (e) => {
+        pressTimer = setTimeout(() => {
+          // فقط صاحب الرسالة أو الأدمن يمكنه الحذف
+          if (msgData.senderId === currentUser.uid || currentUser.uid === "mlifDgEAkKMaOeuUq63cs5NAkV93") {
+            if (confirm('هل تريد حذف هذه الرسالة؟')) {
+              db.ref(`messages/${msgId}`).remove();
+            }
+          }
+        }, 800);
+      });
+      div.addEventListener('mouseup', () => clearTimeout(pressTimer));
+      div.addEventListener('mouseout', () => clearTimeout(pressTimer));
+
+      div.appendChild(avatar);
+      div.appendChild(content);
+      div.appendChild(reactions);
+
+      return div;
+    }
+
+    // عرض نافذة معلومات المستخدم
+    function showUserInfoModal(userData, uid) {
+      modalUserImg.src = userData.photoURL || 'https://i.imgur.com/Qr71crq.png';
+      modalUserName.textContent = userData.name || 'مستخدم مجهول';
+
+      // الشارات
+      modalUserBadges.innerHTML = '';
+      const badges = getUserBadges(uid);
+      badges.forEach(badgeKey => {
+        const span = document.createElement('span');
+        span.classList.add('badge');
+        span.textContent = badgesList[badgeKey] || badgeKey;
+        modalUserBadges.appendChild(span);
+      });
+
+      // المركز في التصنيفات (مثال بسيط)
+      modalUserRank.textContent = userData.rank ? `المركز: ${userData.rank}` : '';
+
+      userInfoModal.classList.add('show');
+    }
+
+    closeUserInfoBtn.addEventListener('click', () => {
+      userInfoModal.classList.remove('show');
+    });
+
+    auth.onAuthStateChanged(async user => {
+      if (!user) {
+        location.href = "index.html";
+        return;
+      }
       currentUser = user;
       loadMessages();
     });
 
-    const chatContainer = document.getElementById("chatContainer");
-    const messageInput = document.getElementById("messageInput");
-    const inputForm = document.getElementById("inputForm");
-    const userPopup = document.getElementById("userPopup");
-    const popupContent = document.getElementById("popupContent");
-
-    function filterBadWords(text) {
-      badWords.forEach(word => {
-        const re = new RegExp(word, 'gi');
-        text = text.replace(re, "****");
-      });
-      return text;
-    }
-
-    inputForm.addEventListener("submit", e => {
-      e.preventDefault();
-      let text = messageInput.value.trim();
-      if (!text) return;
-      text = filterBadWords(text);
-      db.ref("chat/messages").push({
-        uid: currentUser.uid,
-        email: currentUser.email,
-        text,
-        timestamp: Date.now()
-      });
-      messageInput.value = "";
-    });
-
+    // تحميل وعرض الرسائل
     function loadMessages() {
-      db.ref("chat/messages").on("value", snap => {
-        chatContainer.innerHTML = "";
-        const data = snap.val() || {};
-        Object.entries(data).forEach(([key, msg]) => {
-          const div = document.createElement("div");
-          div.className = "message" + (msg.uid === currentUser.uid ? " own" : "");
-          div.innerHTML = `
-            <div class="message-header">
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.uid}" class="avatar" data-uid="${msg.uid}" />
-              <span class="username">${msg.email}</span>
-            </div>
-            <div>${msg.text}</div>
-            <button class="delete-btn" style="display:none" data-key="${key}">حذف</button>
-          `;
-
-          div.addEventListener("contextmenu", e => {
-            e.preventDefault();
-            const btn = div.querySelector(".delete-btn");
-            if (msg.uid === currentUser.uid || currentUser.uid === "mlifDgEAkKMaOeuUq63cs5NAkV93") {
-              btn.style.display = "inline";
-            }
-          });
-
-          div.querySelector(".delete-btn").addEventListener("click", () => {
-            db.ref(`chat/messages/${key}`).remove();
-          });
-
-          div.querySelector(".avatar").addEventListener("click", () => showUserPopup(msg.uid, msg.email));
-          chatContainer.appendChild(div);
+      db.ref('messages').on('value', snapshot => {
+        chatContainer.innerHTML = '';
+        const messages = snapshot.val() || {};
+        Object.entries(messages).forEach(([msgId, msgData]) => {
+          chatContainer.appendChild(createMessageElem(msgData, msgId));
         });
         chatContainer.scrollTop = chatContainer.scrollHeight;
       });
     }
 
-    function showUserPopup(uid, email) {
-      db.ref(`users/${uid}`).once("value").then(snap => {
-        const data = snap.val() || {};
-        popupContent.innerHTML = `
-          <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=${uid}" />
-          <h3>${data.name || email}</h3>
-          ${data.rank ? `<div class="badge">${data.rank}</div>` : ""}
-          ${data.vip ? `<div class="badge">VIP ${data.vip}</div>` : ""}
-          ${data.partnership === true ? `<div class="badge">شريك رسمي</div>` : ""}
-        `;
-        userPopup.style.display = "block";
-        setTimeout(() => userPopup.style.display = "none", 5000);
-      });
-    }
-  </script></body>
+    // إرسال رسالة عند الضغط Enter
+    window.addEventListener('keydown', async (e) => {
+      if (e.key === 'Enter' && document.activeElement.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        const text = prompt('أدخل رسالتك:');
+        if (!text) return;
+        const filteredText = filterBadWords(text.trim());
+        if (!filteredText) {
+          alert('لا يمكن إرسال رسالة فارغة');
+          return;
+        }
+        await db.ref('messages').push({
+          text: filteredText,
+          senderId: currentUser.uid,
+          senderName: currentUser.displayName || 'مستخدم',
+          senderPhoto: currentUser.photoURL || '',
+          timestamp: Date.now()
+        });
+      }
+    });
+  </script>
+</body>
 </html>
