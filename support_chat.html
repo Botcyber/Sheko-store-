@@ -1,250 +1,235 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>فريق الدعم والشكاوي</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
-  body {
-    font-family: 'Cairo', sans-serif;
-    background: #f5f7fa;
-    margin: 0; padding: 0;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-  }
-  header {
-    background: #2c3e50;
-    color: white;
-    padding: 15px 20px;
-    font-size: 22px;
-    text-align: center;
-    font-weight: bold;
-  }
-  #chat-container {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px;
-    background: #ecf0f1;
-  }
-  .message {
-    max-width: 70%;
-    padding: 10px 15px;
-    margin: 8px 0;
-    border-radius: 15px;
-    word-wrap: break-word;
-    line-height: 1.3;
-    font-size: 15px;
-  }
-  .message.user {
-    background: #3498db;
-    color: white;
-    align-self: flex-end;
-    border-bottom-right-radius: 0;
-  }
-  .message.admin {
-    background: #bdc3c7;
-    color: #2c3e50;
-    align-self: flex-start;
-    border-bottom-left-radius: 0;
-  }
-  #input-area {
-    display: flex;
-    padding: 10px 20px;
-    background: white;
-    border-top: 1px solid #ccc;
-  }
-  #input-area input[type="text"] {
-    flex: 1;
-    padding: 12px 15px;
-    font-size: 16px;
-    border-radius: 20px;
-    border: 1px solid #ccc;
-    outline: none;
-  }
-  #input-area button {
-    background: #3498db;
-    border: none;
-    color: white;
-    font-weight: bold;
-    font-size: 18px;
-    margin-left: 10px;
-    border-radius: 50%;
-    width: 44px;
-    height: 44px;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: background 0.3s ease;
-  }
-  #input-area button:hover {
-    background: #2980b9;
-  }
-  #status-bar {
-    text-align: center;
-    font-size: 14px;
-    padding: 8px;
-    background: #f39c12;
-    color: white;
-    cursor: pointer;
-    user-select: none;
-  }
-  #status-bar.closed {
-    background: #c0392b;
-  }
-  #logout-btn {
-    position: fixed;
-    top: 15px;
-    left: 20px;
-    background: #e74c3c;
-    border: none;
-    color: white;
-    padding: 8px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 14px;
-  }
-  #logout-btn:hover {
-    background: #c0392b;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <title>فريق الدعم والشكاوى - Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      color: #222;
+    }
+    header {
+      background: #222;
+      color: white;
+      padding: 15px 20px;
+      font-size: 22px;
+      font-weight: bold;
+      text-align: center;
+    }
+    #messages {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 15px;
+      background: white;
+      border-radius: 10px 10px 0 0;
+      box-sizing: border-box;
+    }
+    .message {
+      max-width: 70%;
+      margin: 8px 0;
+      padding: 10px 15px;
+      border-radius: 20px;
+      line-height: 1.3;
+      word-wrap: break-word;
+      white-space: pre-line;
+    }
+    .message.user {
+      background: #ddd;
+      margin-left: auto;
+      border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 4px;
+      color: #222;
+    }
+    .message.admin {
+      background: #ffb700;
+      margin-right: auto;
+      border-bottom-right-radius: 20px;
+      border-bottom-left-radius: 4px;
+      color: #222;
+    }
+    #inputArea {
+      display: flex;
+      gap: 10px;
+      background: white;
+      padding: 10px 15px;
+      border-radius: 0 0 10px 10px;
+      box-sizing: border-box;
+      border-top: 1px solid #ccc;
+    }
+    #inputArea input {
+      flex-grow: 1;
+      padding: 12px 15px;
+      border-radius: 25px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      outline: none;
+    }
+    #sendBtn {
+      background: #222;
+      border: none;
+      color: white;
+      padding: 0 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+    }
+    #sendBtn:hover {
+      background: #ffb700;
+      color: #222;
+    }
+    #statusMsg {
+      text-align: center;
+      margin: 10px 0;
+      color: #666;
+      font-size: 14px;
+    }
+  </style>
 </head>
 <body>
+  <header>فريق الدعم والشكاوى</header>
+  <div id="messages">جارٍ تحميل المحادثة...</div>
+  <div id="statusMsg"></div>
+  <div id="inputArea">
+    <input type="text" id="messageInput" placeholder="اكتب شكواك هنا..." autocomplete="off" />
+    <button id="sendBtn"><i class="fa fa-paper-plane"></i> إرسال</button>
+  </div>
 
-<header>فريق الدعم والشكاوي</header>
-<button id="logout-btn" title="تسجيل الخروج">خروج</button>
-<div id="chat-container"></div>
-<div id="status-bar" title="اضغط لتغيير حالة المحادثة">الحالة: جارٍ المتابعة</div>
-<div id="input-area">
-  <input type="text" id="message-input" placeholder="اكتب شكواك هنا..." autocomplete="off" />
-  <button id="send-btn" title="إرسال">&#9658;</button>
-</div>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+    firebase.initializeApp(firebaseConfig);
 
-<script>
-  // إعداد Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-    authDomain: "sheko-store.firebaseapp.com",
-    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-    projectId: "sheko-store",
-    storageBucket: "sheko-store.appspot.com",
-    messagingSenderId: "113892775847",
-    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.database();
+    const auth = firebase.auth();
+    const db = firebase.database();
 
-  let currentUser = null;
-  const chatContainer = document.getElementById('chat-container');
-  const messageInput = document.getElementById('message-input');
-  const sendBtn = document.getElementById('send-btn');
-  const statusBar = document.getElementById('status-bar');
-  const logoutBtn = document.getElementById('logout-btn');
+    const messagesEl = document.getElementById('messages');
+    const inputArea = document.getElementById('inputArea');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const statusMsg = document.getElementById('statusMsg');
 
-  // تحقق من تسجيل الدخول
-  auth.onAuthStateChanged(user => {
-    if (!user) {
-      location.href = "index.html"; // إعادة توجيه لتسجيل الدخول
-    } else {
+    let currentUser = null;
+    let conversationId = null;
+    let chatRef = null;
+
+    // تأكد أن المستخدم مسجل دخول
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        location.href = "index.html"; // أعد التوجيه لتسجيل الدخول
+        return;
+      }
       currentUser = user;
-      listenToChat();
-      listenToStatus();
+      initializeChat();
+    });
+
+    function initializeChat() {
+      // ابحث عن محادثة المستخدم أو أنشئ واحدة جديدة
+      const convRef = db.ref('supportChats');
+      convRef.orderByChild('userId').equalTo(currentUser.uid).limitToFirst(1).once('value', snapshot => {
+        if (snapshot.exists()) {
+          conversationId = Object.keys(snapshot.val())[0];
+          listenMessages();
+        } else {
+          // أنشئ محادثة جديدة
+          conversationId = convRef.push().key;
+          convRef.child(conversationId).set({
+            userId: currentUser.uid,
+            userName: currentUser.email || 'مستخدم',
+            status: 'open',
+            createdAt: Date.now(),
+            messages: {}
+          }).then(() => {
+            listenMessages();
+          });
+        }
+      });
     }
-  });
 
-  // الاستماع لمحادثة المستخدم
-  function listenToChat() {
-    const messagesRef = db.ref(`support_chats/${currentUser.uid}/messages`);
-    messagesRef.off(); // إزالة أي مستمع سابق
+    function listenMessages() {
+      chatRef = db.ref(`supportChats/${conversationId}`);
 
-    messagesRef.on('value', snapshot => {
-      chatContainer.innerHTML = '';
-      const messages = snapshot.val();
-      if (!messages) return;
+      // استمع لتغير حالة المحادثة (مفتوحة/مغلقة)
+      chatRef.child('status').on('value', snapshot => {
+        const status = snapshot.val();
+        if (status === 'closed') {
+          statusMsg.textContent = "هذه المحادثة مغلقة من قبل الدعم. لا يمكنك إرسال رسائل جديدة.";
+          inputArea.style.display = 'none';
+        } else {
+          statusMsg.textContent = "";
+          inputArea.style.display = 'flex';
+        }
+      });
 
-      // ترتيب الرسائل حسب الوقت
-      const msgsArr = Object.entries(messages).sort((a,b) => a[1].timestamp - b[1].timestamp);
-      for (const [key, msg] of msgsArr) {
+      // استمع للرسائل
+      chatRef.child('messages').on('value', snapshot => {
+        const messages = snapshot.val() || {};
+        renderMessages(messages);
+      });
+    }
+
+    function renderMessages(messages) {
+      messagesEl.innerHTML = '';
+      const keys = Object.keys(messages);
+      if (keys.length === 0) {
+        messagesEl.textContent = 'لا توجد رسائل بعد. ابدأ بكتابة شكواك!';
+        return;
+      }
+      keys.forEach(key => {
+        const msg = messages[key];
         const div = document.createElement('div');
         div.classList.add('message');
         div.classList.add(msg.sender === 'user' ? 'user' : 'admin');
-        div.textContent = msg.text;
-        chatContainer.appendChild(div);
-      }
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    });
-  }
-
-  // الاستماع لحالة المحادثة
-  function listenToStatus() {
-    const statusRef = db.ref(`support_chats/${currentUser.uid}/status`);
-    statusRef.on('value', snapshot => {
-      const status = snapshot.val() || "open";
-      if (status === "open") {
-        statusBar.textContent = "الحالة: جارٍ المتابعة";
-        statusBar.classList.remove('closed');
-        messageInput.disabled = false;
-        sendBtn.disabled = false;
-      } else {
-        statusBar.textContent = "الحالة: تم الإغلاق - يمكنك فتح المحادثة مجدداً";
-        statusBar.classList.add('closed');
-        messageInput.disabled = true;
-        sendBtn.disabled = true;
-      }
-    });
-  }
-
-  // إرسال رسالة
-  sendBtn.addEventListener('click', sendMessage);
-  messageInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !sendBtn.disabled) {
-      sendMessage();
-    }
-  });
-
-  function sendMessage() {
-    const text = messageInput.value.trim();
-    if (text === '') return;
-    const messagesRef = db.ref(`support_chats/${currentUser.uid}/messages`);
-    const newMsgRef = messagesRef.push();
-    newMsgRef.set({
-      text,
-      sender: 'user',
-      timestamp: Date.now()
-    }).then(() => {
-      messageInput.value = '';
-      // تحديث وقت آخر تفاعل
-      db.ref(`support_chats/${currentUser.uid}`).update({
-        lastUpdated: Date.now(),
-        status: "open" // تفتح المحادثة تلقائياً لو كانت مغلقة
+        div.textContent = msg.text + "\n" + new Date(msg.timestamp).toLocaleString();
+        messagesEl.appendChild(div);
       });
-    }).catch(console.error);
-  }
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
 
-  // تغيير حالة المحادثة (فتح/إغلاق) عند الضغط على شريط الحالة
-  statusBar.addEventListener('click', () => {
-    const statusRef = db.ref(`support_chats/${currentUser.uid}/status`);
-    statusRef.once('value').then(snapshot => {
-      const currentStatus = snapshot.val() || "open";
-      const newStatus = currentStatus === "open" ? "closed" : "open";
-      statusRef.set(newStatus);
+    sendBtn.addEventListener('click', sendMessage);
+    messageInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendMessage();
+      }
     });
-  });
 
-  // تسجيل الخروج
-  logoutBtn.addEventListener('click', () => {
-    auth.signOut().then(() => location.href = 'index.html');
-  });
-</script>
+    function sendMessage() {
+      const text = messageInput.value.trim();
+      if (!text) return;
 
+      const message = {
+        sender: 'user',
+        text,
+        timestamp: Date.now()
+      };
+
+      db.ref(`supportChats/${conversationId}/messages`).push(message).then(() => {
+        messageInput.value = '';
+      });
+    }
+  </script>
 </body>
 </html>
