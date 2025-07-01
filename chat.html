@@ -7,14 +7,12 @@
   <style>
     body {
       font-family: 'Cairo', sans-serif;
+      margin: 0; padding: 0;
       background: #fff;
       color: #222;
-      margin: 0;
-      padding: 0;
       display: flex;
       flex-direction: column;
-      height: 100vh;
-      position: relative;
+      min-height: 100vh;
     }
     header {
       background: #ffb700;
@@ -26,11 +24,23 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
       position: relative;
       z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+    }
+    /* صورة المستخدم دائرية أعلى الصفحة بجانب العنوان */
+    #userImageTop {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: #fff; /* خلفية بيضاء */
+      border: 2px solid #ffb700;
+      object-fit: cover;
+      display: inline-block;
     }
     #chatContainer {
       flex: 1;
-      display: flex;
-      flex-direction: column;
       padding: 10px;
       overflow-y: auto;
       background: linear-gradient(45deg, #fffbdb, #fff);
@@ -40,18 +50,6 @@
       margin-bottom: 12px;
       align-items: flex-start;
     }
-    .message img {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      margin-left: 10px;
-      cursor: pointer;
-      border: 2px solid transparent;
-      transition: border-color 0.3s ease;
-    }
-    .message img:hover {
-      border-color: #ffb700;
-    }
     .message .content {
       background: #ffb700;
       color: #222;
@@ -59,7 +57,6 @@
       border-radius: 15px;
       max-width: 70%;
       word-break: break-word;
-      position: relative;
       font-size: 1rem;
       font-weight: 600;
       box-shadow: 0 2px 5px rgba(0,0,0,0.15);
@@ -106,137 +103,31 @@
       background: #ccc;
       cursor: not-allowed;
     }
-    #userInfoModal {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      box-shadow: 0 0 15px rgba(0,0,0,0.3);
-      border-radius: 15px;
-      width: 320px;
-      padding: 20px;
-      z-index: 1000;
-      font-size: 1rem;
-      direction: rtl;
-      color: #222;
-    }
-    #userInfoModal h3 {
-      margin-top: 0;
-      margin-bottom: 15px;
-      text-align: center;
-      color: #ffb700;
-    }
-    #userInfoModal img {
-      display: block;
-      margin: 0 auto 15px auto;
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      border: 3px solid #ffb700;
-    }
-    #userInfoModal .badge {
-      display: inline-block;
-      background: #222;
-      color: #ffb700;
+    #uploadImageLabel {
+      cursor: pointer;
+      background: #ffb700;
       padding: 5px 12px;
-      margin: 3px;
-      border-radius: 12px;
-      font-weight: 700;
-      font-size: 0.9rem;
-      user-select: none;
-    }
-    #closeUserInfo {
-      display: block;
-      margin: 15px auto 0 auto;
-      padding: 8px 15px;
-      background: #ffb700;
-      border: none;
-      color: #222;
       border-radius: 20px;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 1rem;
-    }
-    #backgroundOverlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      pointer-events: none;
-      z-index: -1;
-      background: white;
-      opacity: 0.9;
-    }
-    #backgroundOverlay::before {
-      content: "Sheko Store";
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) rotate(-30deg);
-      font-size: 10vw;
-      font-weight: 900;
-      color: #ffb700;
-      opacity: 0.1;
-      user-select: none;
-      white-space: nowrap;
-    }
-    /* زر حذف الرسالة */
-    .delete-btn {
-      margin-right: 10px;
-      padding: 4px 10px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      background-color: #dc3545;
-      color: white;
+      color: #222;
       font-weight: bold;
       user-select: none;
-      transition: background-color 0.3s ease;
-    }
-    .delete-btn:hover {
-      background-color: #a71d2a;
-    }
-    /* زر رفع الصورة */
-    #uploadImageContainer {
-      position: fixed;
-      bottom: 70px; /* فوق صورة المستخدم */
-      left: 50%;
-      transform: translateX(-50%);
-      background: #ffb700;
-      padding: 8px 12px;
-      border-radius: 20px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      z-index: 20;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 600;
-      color: #222;
-      cursor: pointer;
-      user-select: none;
+      margin: 10px;
+      display: inline-block;
     }
     #uploadImageInput {
       display: none;
     }
-    /* صورة المستخدم الصغيرة أسفل تحت */
-    #footerUserImage {
-      position: fixed;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      border: 2px solid #ffb700;
-      box-shadow: 0 0 8px rgba(255, 183, 0, 0.7);
-      object-fit: cover;
-      background: #fff;
-      z-index: 30;
-    }
   </style>
 </head>
 <body>
-  <header>الدردشة - Sheko Store</header>
+
+  <header>
+    <img id="userImageTop" src="" alt="صورة المستخدم" title="صورة حسابك" />
+    دردشة - Sheko Store
+  </header>
+
+  <label id="uploadImageLabel" for="uploadImageInput">📷 رفع صورة شخصية</label>
+  <input type="file" id="uploadImageInput" accept="image/*" />
 
   <div id="chatContainer"></div>
 
@@ -245,25 +136,7 @@
     <button id="sendBtn" disabled>إرسال</button>
   </div>
 
-  <!-- رفع صورة المستخدم -->
-  <label id="uploadImageContainer" for="uploadImageInput" title="رفع صورة شخصية">
-    📷 رفع صورة
-  </label>
-  <input type="file" id="uploadImageInput" accept="image/*" />
-
-  <!-- صورة المستخدم الصغيرة أسفل تحت -->
-  <img id="footerUserImage" src="https://i.pravatar.cc/150?u=default" alt="صورة المستخدم" title="صورة حسابك" />
-
-  <div id="userInfoModal">
-    <h3 id="modalUserName"></h3>
-    <img id="modalUserImage" src="" alt="صورة المستخدم" />
-    <div id="modalUserBadges"></div>
-    <button id="closeUserInfo">إغلاق</button>
-  </div>
-
-  <div id="backgroundOverlay"></div>
-
-  <!-- Firebase -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -285,29 +158,20 @@
     const db = firebase.database();
     const storage = firebase.storage();
 
+    const userImageTop = document.getElementById('userImageTop');
+    const uploadImageInput = document.getElementById('uploadImageInput');
     const chatContainer = document.getElementById('chatContainer');
     const messageInput = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
-    const userInfoModal = document.getElementById('userInfoModal');
-    const modalUserName = document.getElementById('modalUserName');
-    const modalUserImage = document.getElementById('modalUserImage');
-    const modalUserBadges = document.getElementById('modalUserBadges');
-    const closeUserInfo = document.getElementById('closeUserInfo');
-    const uploadImageInput = document.getElementById('uploadImageInput');
-    const footerUserImage = document.getElementById('footerUserImage');
 
     let currentUser = null;
     let usersData = {};
 
-    const bannedWords = ["سيء", "سيئة", "كلمة_سيئة"];
-    const specialUID = "mlifDgEAkKMaOeuUq63cs5NAkV93";
-    const specialBadges = [
-      { text: "صانع الموقع" },
-      { text: "الأدمن" },
-      { text: "المسؤول" },
-      { text: "الأسطورة" },
-      { text: "النجم الصاعد" },
-    ];
+    // لاظهار صورة بيضاء افتراضية (خلفية فقط) عند عدم وجود صورة:
+    function showDefaultUserImage() {
+      userImageTop.src = "";
+      userImageTop.style.backgroundColor = "#fff"; // خلفية بيضاء
+    }
 
     auth.onAuthStateChanged(user => {
       if (!user) {
@@ -316,171 +180,41 @@
       }
       currentUser = user;
       sendBtn.disabled = false;
-      loadAllUsersData().then(() => {
-        listenForMessages();
-        updateFooterUserImage();
+
+      loadUserData().then(() => {
+        loadChatMessages();
+        updateUserImage();
       });
     });
 
-    function loadAllUsersData() {
-      return db.ref('users').once('value').then(snapshot => {
-        usersData = snapshot.val() || {};
-      });
+    async function loadUserData() {
+      // جلب بيانات المستخدم (خصوصاً الصورة)
+      const snapshot = await db.ref('users/' + currentUser.uid).once('value');
+      usersData[currentUser.uid] = snapshot.val() || {};
     }
 
-    function updateFooterUserImage() {
-      if(currentUser && usersData[currentUser.uid] && usersData[currentUser.uid].photoURL){
-        footerUserImage.src = usersData[currentUser.uid].photoURL + '?t=' + Date.now();
+    function updateUserImage() {
+      const photoURL = usersData[currentUser.uid]?.photoURL || "";
+      if(photoURL) {
+        // الصورة التي رفعها المستخدم
+        userImageTop.src = photoURL + "?t=" + Date.now();
+        userImageTop.style.backgroundColor = "transparent";
       } else {
-        footerUserImage.src = "https://i.pravatar.cc/150?u=" + currentUser.uid;
+        // صورة بيضاء فقط (خلفية)
+        showDefaultUserImage();
       }
     }
 
-    function listenForMessages() {
-      db.ref('chatMessages').on('value', snapshot => {
-        const messages = snapshot.val() || {};
-        renderMessages(messages);
-        scrollChatToBottom();
-      });
-    }
-
-    function renderMessages(messages) {
-      chatContainer.innerHTML = '';
-      Object.keys(messages).forEach(key => {
-        const msg = messages[key];
-        const isOwnMessage = msg.uid === currentUser.uid;
-        const userData = usersData[msg.uid] || {};
-        const userName = userData.username || msg.email || "مستخدم مجهول";
-        const baseUserImage = userData.photoURL || "https://i.pravatar.cc/150?u=" + msg.uid;
-        const userImage = baseUserImage + '?t=' + Date.now();
-
-        const msgDiv = document.createElement('div');
-        msgDiv.classList.add('message');
-        if (isOwnMessage) msgDiv.classList.add('own');
-
-        const img = document.createElement('img');
-        img.src = userImage;
-        img.alt = userName;
-        img.title = userName;
-        img.style.cursor = 'pointer';
-        img.addEventListener('click', () => showUserInfo(msg.uid));
-
-        const content = document.createElement('div');
-        content.classList.add('content');
-        content.textContent = msg.text;
-
-        msgDiv.appendChild(img);
-        msgDiv.appendChild(content);
-
-        if (isOwnMessage || currentUser.uid === specialUID) {
-          const delBtn = document.createElement('button');
-          delBtn.textContent = 'حذف';
-          delBtn.className = 'delete-btn';
-          delBtn.title = "حذف الرسالة";
-
-          delBtn.addEventListener('click', () => {
-            if (confirm("هل تريد حذف هذه الرسالة؟")) {
-              db.ref(`chatMessages/${key}`).remove();
-            }
-          });
-          msgDiv.appendChild(delBtn);
-        }
-
-        chatContainer.appendChild(msgDiv);
-      });
-    }
-
-    function showUserInfo(uid) {
-      const user = usersData[uid];
-      if (!user) return alert("بيانات المستخدم غير متوفرة");
-
-      modalUserName.textContent = user.username || user.email || "مستخدم مجهول";
-      modalUserImage.src = (user.photoURL ? user.photoURL + '?t=' + Date.now() : "https://i.pravatar.cc/150?u=" + uid);
-
-      modalUserBadges.innerHTML = '';
-
-      if(uid === specialUID) {
-        specialBadges.forEach(badge => {
-          const span = document.createElement('span');
-          span.className = 'badge';
-          span.textContent = badge.text;
-          modalUserBadges.appendChild(span);
-        });
-      }
-
-      if(user.partnership) {
-        const partnerBadge = document.createElement('span');
-        partnerBadge.className = 'badge';
-        partnerBadge.textContent = 'شريك';
-        modalUserBadges.appendChild(partnerBadge);
-      }
-
-      if(user.rank) {
-        const rankBadge = document.createElement('span');
-        rankBadge.className = 'badge';
-        rankBadge.textContent = user.rank;
-        modalUserBadges.appendChild(rankBadge);
-      }
-
-      userInfoModal.style.display = 'block';
-    }
-
-    closeUserInfo.addEventListener('click', () => {
-      userInfoModal.style.display = 'none';
-    });
-
-    function scrollChatToBottom() {
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
-
-    function containsBannedWords(text) {
-      const lowerText = text.toLowerCase();
-      return bannedWords.some(word => lowerText.includes(word));
-    }
-
-    sendBtn.addEventListener('click', () => {
-      const text = messageInput.value.trim();
-      if (!text) return alert('الرجاء كتابة رسالة');
-
-      if (containsBannedWords(text)) {
-        alert('الرسالة تحتوي على كلمات ممنوعة');
-        return;
-      }
-
-      const newMessage = {
-        uid: currentUser.uid,
-        email: currentUser.email || "غير معروف",
-        text: text,
-        timestamp: Date.now()
-      };
-
-      db.ref('chatMessages').push(newMessage)
-        .then(() => {
-          messageInput.value = '';
-          scrollChatToBottom();
-        })
-        .catch(err => {
-          alert('حدث خطأ أثناء إرسال الرسالة');
-          console.error(err);
-        });
-    });
-
-    messageInput.addEventListener('input', () => {
-      sendBtn.disabled = messageInput.value.trim() === '';
-    });
-
-    // رفع صورة المستخدم
-    uploadImageInput.addEventListener('change', async (e) => {
+    // رفع صورة المستخدم وتخزينها
+    uploadImageInput.addEventListener('change', async e => {
       if (!currentUser) return alert('يجب تسجيل الدخول أولاً');
       const file = e.target.files[0];
       if (!file) return;
 
-      const filePath = `userProfileImages/${currentUser.uid}/${file.name}`;
-
       try {
+        const filePath = `userProfileImages/${currentUser.uid}/${file.name}`;
         const storageRef = storage.ref(filePath);
         await storageRef.put(file);
-
         const downloadURL = await storageRef.getDownloadURL();
 
         await db.ref(`users/${currentUser.uid}/photoURL`).set(downloadURL);
@@ -488,8 +222,7 @@
         usersData[currentUser.uid] = usersData[currentUser.uid] || {};
         usersData[currentUser.uid].photoURL = downloadURL;
 
-        updateFooterUserImage();
-        renderMessagesFromDb();
+        updateUserImage();
 
         alert('تم رفع الصورة وتحديثها بنجاح!');
       } catch (error) {
@@ -498,12 +231,51 @@
       }
     });
 
-    function renderMessagesFromDb() {
-      db.ref('chatMessages').once('value').then(snapshot => {
+    // الدردشة
+    function loadChatMessages() {
+      db.ref('chatMessages').on('value', snapshot => {
         const messages = snapshot.val() || {};
         renderMessages(messages);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
       });
     }
+
+    function renderMessages(messages) {
+      chatContainer.innerHTML = '';
+      Object.keys(messages).forEach(key => {
+        const msg = messages[key];
+        const div = document.createElement('div');
+        div.className = 'message';
+
+        const content = document.createElement('div');
+        content.className = 'content';
+        content.textContent = msg.text;
+
+        div.appendChild(content);
+        chatContainer.appendChild(div);
+      });
+    }
+
+    sendBtn.addEventListener('click', () => {
+      const text = messageInput.value.trim();
+      if (!text) return alert('الرجاء كتابة رسالة');
+
+      const newMessage = {
+        uid: currentUser.uid,
+        email: currentUser.email || "غير معروف",
+        text,
+        timestamp: Date.now()
+      };
+
+      db.ref('chatMessages').push(newMessage).then(() => {
+        messageInput.value = '';
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      });
+    });
+
+    messageInput.addEventListener('input', () => {
+      sendBtn.disabled = messageInput.value.trim() === '';
+    });
   </script>
 </body>
 </html>
