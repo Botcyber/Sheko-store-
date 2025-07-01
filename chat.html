@@ -2,437 +2,443 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>دردشة Sheko Store</title>
+  <title>الدردشة - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
+    /* تصميم بسيط وجذاب */
     body {
       font-family: 'Cairo', sans-serif;
-      margin: 0; padding: 0;
       background: #fff;
       color: #222;
-      height: 100vh;
+      margin: 0;
+      padding: 0;
       display: flex;
       flex-direction: column;
+      height: 100vh;
     }
     header {
-      padding: 15px 20px;
       background: #ffb700;
       color: #222;
-      font-weight: bold;
+      padding: 15px;
       text-align: center;
-      font-size: 1.6rem;
-      box-shadow: 0 3px 10px #ffb700aa;
+      font-weight: bold;
+      font-size: 1.5rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
     #chatContainer {
       flex: 1;
-      padding: 10px 15px;
+      display: flex;
+      flex-direction: column;
+      padding: 10px;
       overflow-y: auto;
-      background: #f9f9f9;
-      position: relative;
-      border: 1px solid #ddd;
-      border-radius: 8px;
+      background: linear-gradient(45deg, #fffbdb, #fff);
     }
     .message {
       display: flex;
+      margin-bottom: 12px;
       align-items: flex-start;
-      margin: 10px 0;
-      max-width: 70%;
-      padding: 10px 15px;
-      border-radius: 12px;
-      position: relative;
-      animation: fadeInUp 0.4s ease forwards;
-      user-select: none;
-      box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
-      cursor: default;
     }
-    .message.own {
-      background: #fff3cd;
-      margin-left: auto;
-      color: #222;
-      flex-direction: row-reverse;
-      border: 1px solid #ffecb5;
-    }
-    .message.other {
-      background: #e9ecef;
-      color: #222;
-      margin-right: auto;
-      border: 1px solid #ced4da;
-    }
-    .avatar {
-      width: 40px;
-      height: 40px;
+    .message img {
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
-      margin: 0 10px;
+      margin-left: 10px;
       cursor: pointer;
-      flex-shrink: 0;
-      border: 2px solid #ffb700;
-      object-fit: cover;
-      background: #ddd;
+      border: 2px solid transparent;
+      transition: border-color 0.3s ease;
     }
-    .content {
-      flex-grow: 1;
+    .message img:hover {
+      border-color: #ffb700;
+    }
+    .message .content {
+      background: #ffb700;
+      color: #222;
+      padding: 8px 12px;
+      border-radius: 15px;
+      max-width: 70%;
       word-break: break-word;
+      position: relative;
+      font-size: 1rem;
+      font-weight: 600;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    }
+    .message.own .content {
+      background: #222;
+      color: #ffb700;
+      margin-left: auto;
+      margin-right: 10px;
     }
     #inputContainer {
       display: flex;
-      padding: 12px 20px;
-      background: #fff8e1;
-      border-top: 1px solid #ffd454;
-      border-radius: 0 0 8px 8px;
+      padding: 10px;
+      background: #eee;
+      border-top: 1px solid #ccc;
     }
     #messageInput {
-      flex-grow: 1;
-      padding: 10px 15px;
-      border-radius: 30px;
-      border: 1px solid #ffc107;
-      outline: none;
+      flex: 1;
+      padding: 10px;
+      border-radius: 20px;
+      border: 1px solid #ccc;
       font-size: 1rem;
-      font-family: 'Cairo', sans-serif;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+    #messageInput:focus {
+      border-color: #ffb700;
     }
     #sendBtn {
       background: #ffb700;
       border: none;
       color: #222;
       font-weight: bold;
-      font-size: 1.2rem;
-      border-radius: 30px;
-      padding: 0 20px;
+      padding: 10px 20px;
       margin-left: 10px;
+      border-radius: 20px;
       cursor: pointer;
-      box-shadow: 0 0 15px #ffb700aa;
+      font-size: 1rem;
       transition: background 0.3s ease;
     }
-    #sendBtn:hover:not(:disabled) {
-      background: #ffcc33;
-    }
     #sendBtn:disabled {
-      background: #e0dcdc;
+      background: #ccc;
       cursor: not-allowed;
-      box-shadow: none;
     }
-    /* زر حذف الرسالة */
-    .delete-btn-message {
-      position: absolute;
-      top: 5px;
-      left: 5px;
-      background: #dc3545;
-      border: none;
-      color: white;
-      padding: 3px 7px;
-      border-radius: 5px;
-      font-size: 0.85rem;
-      cursor: pointer;
-      display: none;
-      z-index: 10;
-    }
-    .message.show-delete-btn .delete-btn-message {
-      display: block;
-    }
-
     /* نافذة معلومات المستخدم */
     #userInfoModal {
-      position: fixed;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      background: #fff;
-      border-radius: 15px;
-      padding: 25px 20px 20px 20px;
-      box-shadow: 0 0 20px #ffb700aa;
-      color: #222;
-      width: 320px;
-      max-width: 90%;
       display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      border-radius: 15px;
+      width: 320px;
+      padding: 20px;
       z-index: 1000;
-      text-align: center;
-      font-weight: 600;
-      font-family: 'Cairo', sans-serif;
-    }
-    #userInfoModal img {
-      width: 90px;
-      height: 90px;
-      border-radius: 50%;
-      border: 3px solid #ffb700;
-      margin-bottom: 15px;
-      object-fit: cover;
-      background: #ddd;
+      font-size: 1rem;
+      direction: rtl;
+      color: #222;
     }
     #userInfoModal h3 {
-      margin: 5px 0 10px 0;
-      font-size: 1.4rem;
-      color: #333;
+      margin-top: 0;
+      margin-bottom: 15px;
+      text-align: center;
+      color: #ffb700;
     }
-    #userInfoModal .badges {
-      margin-top: 10px;
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
+    #userInfoModal img {
+      display: block;
+      margin: 0 auto 15px auto;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 3px solid #ffb700;
     }
-    .badge {
-      background: #ffb700;
-      color: #222;
-      padding: 6px 12px;
-      border-radius: 25px;
+    #userInfoModal .badge {
+      display: inline-block;
+      background: #222;
+      color: #ffb700;
+      padding: 5px 12px;
+      margin: 3px;
+      border-radius: 12px;
+      font-weight: 700;
       font-size: 0.9rem;
-      font-weight: bold;
-      box-shadow: 0 0 8px #ffb700bb;
       user-select: none;
     }
     #closeUserInfo {
-      position: absolute;
-      top: 8px;
-      right: 12px;
+      display: block;
+      margin: 15px auto 0 auto;
+      padding: 8px 15px;
+      background: #ffb700;
+      border: none;
+      color: #222;
+      border-radius: 20px;
       cursor: pointer;
       font-weight: bold;
-      font-size: 1.4rem;
-      color: #ffb700;
+      font-size: 1rem;
     }
-
-    @keyframes fadeInUp {
-      from {opacity: 0; transform: translateY(10px);}
-      to {opacity: 1; transform: translateY(0);}
+    /* خلفية شفافة مع اسم الموقع */
+    #backgroundOverlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: -1;
+      background: white;
+      opacity: 0.9;
+    }
+    #backgroundOverlay::before {
+      content: "Sheko Store";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      font-size: 10vw;
+      font-weight: 900;
+      color: #ffb700;
+      opacity: 0.1;
+      user-select: none;
+      white-space: nowrap;
     }
   </style>
 </head>
 <body>
+  <header>الدردشة - Sheko Store</header>
 
-<header>دردشة Sheko Store</header>
+  <div id="chatContainer"></div>
 
-<div id="chatContainer"></div>
+  <div id="inputContainer">
+    <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا..." autocomplete="off" />
+    <button id="sendBtn" disabled>إرسال</button>
+  </div>
 
-<div id="inputContainer">
-  <input type="text" id="messageInput" placeholder="اكتب رسالتك..." autocomplete="off" />
-  <button id="sendBtn" disabled>إرسال</button>
-</div>
+  <div id="userInfoModal">
+    <h3 id="modalUserName"></h3>
+    <img id="modalUserImage" src="" alt="صورة المستخدم" />
+    <div id="modalUserBadges"></div>
+    <button id="closeUserInfo">إغلاق</button>
+  </div>
 
-<div id="userInfoModal" role="dialog" aria-modal="true" aria-labelledby="userInfoName">
-  <span id="closeUserInfo" title="إغلاق النافذة">&times;</span>
-  <img id="userInfoAvatar" src="" alt="صورة المستخدم" />
-  <h3 id="userInfoName">اسم المستخدم</h3>
-  <div class="badges" id="userBadges"></div>
-</div>
+  <div id="backgroundOverlay"></div>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
-<script>
-  // إعداد Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-    authDomain: "sheko-store.firebaseapp.com",
-    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-    projectId: "sheko-store",
-    storageBucket: "sheko-store.appspot.com",
-    messagingSenderId: "113892775847",
-    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-  };
-  firebase.initializeApp(firebaseConfig);
-
-  const auth = firebase.auth();
-  const db = firebase.database();
-
-  const chatContainer = document.getElementById('chatContainer');
-  const messageInput = document.getElementById('messageInput');
-  const sendBtn = document.getElementById('sendBtn');
-
-  const userInfoModal = document.getElementById('userInfoModal');
-  const userInfoAvatar = document.getElementById('userInfoAvatar');
-  const userInfoName = document.getElementById('userInfoName');
-  const userBadges = document.getElementById('userBadges');
-  const closeUserInfo = document.getElementById('closeUserInfo');
-
-  let currentUser = null;
-  let usersData = {}; // بيانات المستخدمين (الاسم، الصورة، الشارات، التصنيف)
-
-  // شارات خاصة للمستخدم المميز
-  const specialUserId = "mlifDgEAkKMaOeuUq63cs5NAkV93";
-  const specialBadges = [
-    "صانع الموقع",
-    "الأدمن",
-    "المسؤول",
-    "الأسطورة",
-    "النجم الصاعد"
-  ];
-
-  auth.onAuthStateChanged(user => {
-    if (!user) {
-      location.href = "index.html"; // أو صفحة تسجيل الدخول
-      return;
-    }
-    currentUser = user;
-    sendBtn.disabled = false;
-    loadAllUsersData();
-    listenForMessages();
-  });
-
-  // تحميل بيانات المستخدمين من قاعدة البيانات
-  function loadAllUsersData() {
-    db.ref('users').once('value').then(snapshot => {
-      usersData = snapshot.val() || {};
-    });
-  }
-
-  // الاستماع للرسائل الجديدة
-  function listenForMessages() {
-    db.ref('chatMessages').on('value', snapshot => {
-      const messages = snapshot.val() || {};
-      renderMessages(messages);
-      scrollChatToBottom();
-    });
-  }
-
-  // عرض الرسائل
-  function renderMessages(messages) {
-    chatContainer.innerHTML = '';
-    Object.keys(messages).forEach(key => {
-      const msg = messages[key];
-      const isOwn = msg.uid === currentUser.uid;
-
-      // بيانات المرسل من usersData، اسم المستخدم (name) وصورة (photoURL)
-      const user = usersData[msg.uid] || {};
-      const name = user.name || msg.email || "مستخدم مجهول";
-      const avatar = user.photoURL || "https://i.pravatar.cc/40?u=" + msg.uid;
-
-      // عنصر الرسالة
-      const messageDiv = document.createElement('div');
-      messageDiv.classList.add('message');
-      messageDiv.classList.add(isOwn ? 'own' : 'other');
-      messageDiv.dataset.key = key;
-
-      messageDiv.innerHTML = `
-        <img src="${avatar}" alt="صورة ${name}" class="avatar" data-uid="${msg.uid}" />
-        <div class="content">
-          <strong>${escapeHtml(name)}</strong>
-          <div>${escapeHtml(msg.text)}</div>
-        </div>
-        <button class="delete-btn-message" title="حذف الرسالة">حذف</button>
-      `;
-
-      chatContainer.appendChild(messageDiv);
-
-      // عند الضغط على صورة المستخدم تظهر نافذة معلوماته
-      messageDiv.querySelector('.avatar').addEventListener('click', () => {
-        showUserInfo(msg.uid);
-      });
-
-      // إضافة دعم زر حذف عند الضغط المطول
-      addDeleteButtonHandler(messageDiv, key, msg.uid);
-    });
-  }
-
-  // فلتر كلمات سيئة (يمكن توسعته)
-  const badWords = ['سيء', 'كلمةسيئة', 'شتم'];
-  function containsBadWords(text) {
-    const lowered = text.toLowerCase();
-    return badWords.some(word => lowered.includes(word));
-  }
-
-  // إرسال رسالة
-  function sendMessage() {
-    let text = messageInput.value.trim();
-    if (!text) return;
-
-    if (containsBadWords(text)) {
-      alert("لا يمكن استخدام كلمات مسيئة في الرسائل");
-      return;
-    }
-
-    const message = {
-      uid: currentUser.uid,
-      email: currentUser.email || "غير معروف",
-      text: text,
-      timestamp: Date.now()
+  <script>
+    // إعداد Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
+    firebase.initializeApp(firebaseConfig);
 
-    db.ref('chatMessages').push(message).then(() => {
-      messageInput.value = '';
-      scrollChatToBottom();
-    });
-  }
+    const auth = firebase.auth();
+    const db = firebase.database();
 
-  // زر إرسال
-  sendBtn.addEventListener('click', () => {
-    sendMessage();
-  });
+    // عناصر HTML
+    const chatContainer = document.getElementById('chatContainer');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const userInfoModal = document.getElementById('userInfoModal');
+    const modalUserName = document.getElementById('modalUserName');
+    const modalUserImage = document.getElementById('modalUserImage');
+    const modalUserBadges = document.getElementById('modalUserBadges');
+    const closeUserInfo = document.getElementById('closeUserInfo');
 
-  // إرسال عند الضغط Enter (دون Shift)
-  messageInput.addEventListener('keypress', e => {
-    if(e.key === 'Enter' && !e.shiftKey){
-      e.preventDefault();
-      sendMessage();
-    }
-  });
+    // متغيرات عامة
+    let currentUser = null;
+    let usersData = {};  // لتخزين بيانات المستخدمين من قاعدة البيانات
 
-  // تمرير الدردشة لأسفل
-  function scrollChatToBottom() {
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-  }
+    // كلمات ممنوعة (مثال)
+    const bannedWords = ["سيء", "سيئة", "كلمة_سيئة"];
 
-  // إظهار نافذة معلومات المستخدم مع الشارات
-  function showUserInfo(uid) {
-    const user = usersData[uid] || {};
-    userInfoAvatar.src = user.photoURL || "https://i.pravatar.cc/80?u=" + uid;
-    userInfoName.textContent = user.name || user.email || "مستخدم مجهول";
+    // شارات خاصة للمستخدم المحدد
+    const specialUID = "mlifDgEAkKMaOeuUq63cs5NAkV93";
+    const specialBadges = [
+      { text: "صانع الموقع" },
+      { text: "الأدمن" },
+      { text: "المسؤول" },
+      { text: "الأسطورة" },
+      { text: "النجم الصاعد" },
+    ];
 
-    userBadges.innerHTML = '';
-    if(uid === specialUserId){
-      specialBadges.forEach(badge => {
-        const span = document.createElement('span');
-        span.className = 'badge';
-        span.textContent = badge;
-        userBadges.appendChild(span);
-      });
-    } else if (user.badges && Array.isArray(user.badges)) {
-      user.badges.forEach(badge => {
-        const span = document.createElement('span');
-        span.className = 'badge';
-        span.textContent = badge;
-        userBadges.appendChild(span);
-      });
-    }
-
-    userInfoModal.style.display = 'block';
-  }
-
-  closeUserInfo.addEventListener('click', () => {
-    userInfoModal.style.display = 'none';
-  });
-
-  // زر حذف يظهر عند الضغط المطول
-  function addDeleteButtonHandler(messageDiv, messageKey, messageUid) {
-    let timer = null;
-    const deleteBtn = messageDiv.querySelector('.delete-btn-message');
-
-    messageDiv.addEventListener('mousedown', () => {
-      timer = setTimeout(() => {
-        messageDiv.classList.add('show-delete-btn');
-      }, 700);
-    });
-
-    messageDiv.addEventListener('mouseup', () => {
-      clearTimeout(timer);
-    });
-
-    messageDiv.addEventListener('mouseleave', () => {
-      clearTimeout(timer);
-    });
-
-    deleteBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if(currentUser.uid === messageUid || currentUser.uid === specialUserId){
-        if(confirm("هل تريد حذف هذه الرسالة؟")){
-          db.ref('chatMessages/' + messageKey).remove();
-        }
-      } else {
-        alert("لا يمكنك حذف هذه الرسالة");
+    // التحقق من تسجيل الدخول
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        location.href = "index.html";
+        return;
       }
-      messageDiv.classList.remove('show-delete-btn');
+      currentUser = user;
+      sendBtn.disabled = false;
+      loadAllUsersData();
+      listenForMessages();
     });
-  }
-</script>
 
+    // تحميل بيانات جميع المستخدمين (الاسم، الصورة، الشارات، مركز التصنيف)
+    function loadAllUsersData() {
+      db.ref('users').once('value').then(snapshot => {
+        usersData = snapshot.val() || {};
+        console.log("Loaded users data", usersData);
+      });
+    }
+
+    // الاستماع لرسائل الدردشة وتحديث الواجهة
+    function listenForMessages() {
+      db.ref('chatMessages').on('value', snapshot => {
+        const messages = snapshot.val() || {};
+        console.log("Received messages:", messages);
+        renderMessages(messages);
+        scrollChatToBottom();
+      });
+    }
+
+    // عرض الرسائل في الواجهة
+    function renderMessages(messages) {
+      chatContainer.innerHTML = '';
+      Object.keys(messages).forEach(key => {
+        const msg = messages[key];
+        const isOwnMessage = msg.uid === currentUser.uid;
+        const userData = usersData[msg.uid] || {};
+        const userName = userData.username || msg.email || "مستخدم مجهول";
+        const userImage = userData.photoURL || "https://i.pravatar.cc/150?u=" + msg.uid;
+
+        const msgDiv = document.createElement('div');
+        msgDiv.classList.add('message');
+        if (isOwnMessage) msgDiv.classList.add('own');
+
+        // الصورة
+        const img = document.createElement('img');
+        img.src = userImage;
+        img.alt = userName;
+        img.title = userName;
+        img.style.cursor = 'pointer';
+
+        img.addEventListener('click', () => showUserInfo(msg.uid));
+
+        // محتوى الرسالة
+        const content = document.createElement('div');
+        content.classList.add('content');
+        content.textContent = msg.text;
+
+        // دعم حذف الرسالة (اضغط مطول)
+        let pressTimer;
+        content.addEventListener('mousedown', (e) => {
+          pressTimer = setTimeout(() => {
+            showDeleteButton(msgDiv, key, msg.uid);
+          }, 800);
+        });
+        content.addEventListener('mouseup', () => clearTimeout(pressTimer));
+        content.addEventListener('mouseleave', () => clearTimeout(pressTimer));
+
+        msgDiv.appendChild(img);
+        msgDiv.appendChild(content);
+
+        chatContainer.appendChild(msgDiv);
+      });
+    }
+
+    // اظهار زر الحذف للرسالة اذا كان صاحب الرسالة الحالي أو المستخدم الخاص
+    function showDeleteButton(messageElement, messageKey, messageUid) {
+      if (currentUser.uid !== messageUid && currentUser.uid !== specialUID) return;
+
+      // منع ظهور عدة أزرار حذف
+      if (messageElement.querySelector('.delete-btn')) return;
+
+      const btn = document.createElement('button');
+      btn.textContent = 'حذف';
+      btn.className = 'delete-btn';
+      btn.style.marginRight = '10px';
+      btn.style.padding = '4px 10px';
+      btn.style.borderRadius = '6px';
+      btn.style.border = 'none';
+      btn.style.cursor = 'pointer';
+      btn.style.backgroundColor = '#dc3545';
+      btn.style.color = 'white';
+      btn.style.fontWeight = 'bold';
+
+      btn.addEventListener('click', () => {
+        if (confirm("هل تريد حذف هذه الرسالة؟")) {
+          db.ref(`chatMessages/${messageKey}`).remove();
+        }
+      });
+
+      messageElement.appendChild(btn);
+    }
+
+    // عرض نافذة معلومات المستخدم
+    function showUserInfo(uid) {
+      const user = usersData[uid];
+      if (!user) return alert("بيانات المستخدم غير متوفرة");
+
+      modalUserName.textContent = user.username || user.email || "مستخدم مجهول";
+      modalUserImage.src = user.photoURL || "https://i.pravatar.cc/150?u=" + uid;
+
+      // مسح الشارات السابقة
+      modalUserBadges.innerHTML = '';
+
+      // إضافة الشارات حسب الشروط
+      if(uid === specialUID) {
+        specialBadges.forEach(badge => {
+          const span = document.createElement('span');
+          span.className = 'badge';
+          span.textContent = badge.text;
+          modalUserBadges.appendChild(span);
+        });
+      }
+
+      // شارة الشراكه إن وجدت (مثلاً موجودة في user.partnership = true)
+      if(user.partnership) {
+        const partnerBadge = document.createElement('span');
+        partnerBadge.className = 'badge';
+        partnerBadge.textContent = 'شريك';
+        modalUserBadges.appendChild(partnerBadge);
+      }
+
+      // إضافة مركز التصنيف (مثال من user.rank)
+      if(user.rank) {
+        const rankBadge = document.createElement('span');
+        rankBadge.className = 'badge';
+        rankBadge.textContent = user.rank;
+        modalUserBadges.appendChild(rankBadge);
+      }
+
+      userInfoModal.style.display = 'block';
+    }
+
+    closeUserInfo.addEventListener('click', () => {
+      userInfoModal.style.display = 'none';
+    });
+
+    // التمرير تلقائيًا لأسفل الدردشة
+    function scrollChatToBottom() {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    // فلترة الرسائل من الكلمات السيئة
+    function containsBannedWords(text) {
+      const lowerText = text.toLowerCase();
+      return bannedWords.some(word => lowerText.includes(word));
+    }
+
+    // ارسال رسالة جديدة
+    sendBtn.addEventListener('click', () => {
+      const text = messageInput.value.trim();
+      if (!text) return alert('الرجاء كتابة رسالة');
+
+      if (containsBannedWords(text)) {
+        alert('الرسالة تحتوي على كلمات ممنوعة');
+        return;
+      }
+
+      const newMessage = {
+        uid: currentUser.uid,
+        email: currentUser.email || "غير معروف",
+        text: text,
+        timestamp: Date.now()
+      };
+
+      db.ref('chatMessages').push(newMessage)
+        .then(() => {
+          console.log("Message sent successfully");
+          messageInput.value = '';
+          scrollChatToBottom();
+        })
+        .catch(err => {
+          console.error("Error sending message:", err);
+          alert('حدث خطأ أثناء إرسال الرسالة');
+        });
+    });
+
+    // تمكين زر الإرسال بناء على وجود نص
+    messageInput.addEventListener('input', () => {
+      sendBtn.disabled = messageInput.value.trim() === '';
+    });
+
+  </script>
 </body>
 </html>
