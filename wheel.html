@@ -123,7 +123,7 @@
     function loadUserData() {
       db.ref(`users/${currentUser.uid}`).once('value').then(snapshot => {
         const data = snapshot.val() || {};
-        userPoints = data.balance || 0;
+        userPoints = data.points || 0;  // هنا تم التغيير لاستخدام points بدلاً من balance
         lastSpinTimestamp = data.lastSpinTimestamp || 0;
         updatePointsUI();
         updateSpinButton();
@@ -305,7 +305,7 @@
 
         // تحديث بيانات المستخدم في Firebase
         db.ref(`users/${currentUser.uid}`).update({
-          balance: userPoints,
+          points: userPoints,          // التغيير هنا لاستخدام points
           lastSpinTimestamp: now
         });
 
