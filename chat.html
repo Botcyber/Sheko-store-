@@ -34,17 +34,20 @@
     }
     .message {
       display: flex;
+      align-items: flex-start;
       margin: 10px 0;
       max-width: 70%;
       padding: 8px 12px;
       border-radius: 12px;
       position: relative;
       animation: fadeInUp 0.4s ease forwards;
+      user-select: none;
     }
     .message.own {
       background: #ffb700cc;
       margin-left: auto;
       color: #222;
+      flex-direction: row-reverse;
     }
     .message.other {
       background: #444;
@@ -59,6 +62,7 @@
       cursor: pointer;
       flex-shrink: 0;
       border: 2px solid #ffb700;
+      object-fit: cover;
     }
     .content {
       flex-grow: 1;
@@ -99,6 +103,25 @@
       cursor: not-allowed;
       box-shadow: none;
     }
+    /* زر حذف الرسالة */
+    .delete-btn-message {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      background: #dc3545;
+      border: none;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: none;
+      z-index: 10;
+    }
+    .message.show-delete-btn .delete-btn-message {
+      display: block;
+    }
+
     /* نافذة معلومات المستخدم */
     #userInfoModal {
       position: fixed;
@@ -121,6 +144,7 @@
       border-radius: 50%;
       border: 2px solid #ffb700;
       margin-bottom: 10px;
+      object-fit: cover;
     }
     #userInfoModal h3 {
       margin: 5px 0;
@@ -258,38 +282,31 @@
       const name = user.name || msg.email || "مستخدم مجهول";
       const avatar = user.photoURL || "https://i.pravatar.cc/40?u=" + msg.uid;
 
-      // الشارات
-      let badgesHtml = "";
-      if(msg.uid === specialUserId){
-        badgesHtml = specialBadges.map(b => `<span class="badge">${b}</span>`).join('');
-      } else if(user.badges && Array.isArray(user.badges)) {
-        badgesHtml = user.badges.map(b => `<span class="badge">${b}</span>`).join('');
-      }
-
       // عنصر الرسالة
       const messageDiv = document.createElement('div');
       messageDiv.classList.add('message');
       messageDiv.classList.add(isOwn ? 'own' : 'other');
       messageDiv.dataset.key = key;
 
-      // المحتوى
+      // بناء محتوى الرسالة مع زر الحذف (مخفي تلقائياً)
       messageDiv.innerHTML = `
         <img src="${avatar}" alt="avatar" class="avatar" data-uid="${msg.uid}" />
         <div class="content">
-          <strong>${name}</strong> ${badgesHtml ? `<div>${badgesHtml}</div>` : ''}
+          <strong>${name}</strong>
           <div>${escapeHtml(msg.text)}</div>
         </div>
+        <button class="delete-btn-message">حذف</button>
       `;
 
       chatContainer.appendChild(messageDiv);
-
-      // دعم حذف الرسائل بالضغط المطول
-      addDeleteHandler(messageDiv, key, msg.uid);
 
       // عند الضغط على الصورة تظهر نافذة معلومات المستخدم
       messageDiv.querySelector('.avatar').addEventListener('click', () => {
         showUserInfo(msg.uid);
       });
+
+      // إضافة أحداث الضغط المطول لإظهار زر الحذف
+      addDeleteButtonHandler(messageDiv, key, msg.uid);
     });
   }
 
@@ -359,7 +376,7 @@
     userInfoAvatar.src = user.photoURL || "https://i.pravatar.cc/80?u=" + uid;
     userInfoName.textContent = user.name || user.email || "مستخدم مجهول";
 
-    // الشارات الخاصة
+    // الشارات الخاصة تظهر فقط في النافذة
     userBadges.innerHTML = '';
     if(uid === specialUserId){
       specialBadges.forEach(b => {
@@ -383,31 +400,41 @@
     userInfoModal.style.display = 'none';
   });
 
-  // حذف رسالة عند الضغط المطول (اضغط مطولًا على الرسالة)
-  function addDeleteHandler(messageDiv, messageKey, messageUid) {
+  // إضافة دعم زر حذف يظهر عند الضغط المطول
+  function addDeleteButtonHandler(messageDiv, messageKey, messageUid) {
     let timer = null;
+    const deleteBtn = messageDiv.querySelector('.delete-btn-message');
+
+    // عند الضغط المطول على الرسالة
     messageDiv.addEventListener('mousedown', () => {
       timer = setTimeout(() => {
-        tryDeleteMessage(messageKey, messageUid);
-      }, 1000); // ثانية واحدة ضغط مطول
+        // عرض زر الحذف
+        messageDiv.classList.add('show-delete-btn');
+      }, 700); // 700 مللي ثانية ضغط مطول
     });
+
     messageDiv.addEventListener('mouseup', () => {
       clearTimeout(timer);
     });
+
     messageDiv.addEventListener('mouseleave', () => {
       clearTimeout(timer);
     });
-  }
 
-  // حذف رسالة (صاحب الرسالة أو المستخدم المميز فقط يمكنه الحذف)
-  function tryDeleteMessage(messageKey, messageUid) {
-    if(currentUser.uid === messageUid || currentUser.uid === specialUserId){
-      if(confirm("هل تريد حذف هذه الرسالة؟")){
-        db.ref('chatMessages/' + messageKey).remove();
+    // عند الضغط على زر الحذف
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // فقط صاحب الرسالة أو المستخدم المميز يمكنه الحذف
+      if(currentUser.uid === messageUid || currentUser.uid === specialUserId){
+        if(confirm("هل تريد حذف هذه الرسالة؟")){
+          db.ref('chatMessages/' + messageKey).remove();
+        }
+      } else {
+        alert("لا يمكنك حذف هذه الرسالة");
       }
-    } else {
-      alert("لا يمكنك حذف هذه الرسالة");
-    }
+      // اخفاء زر الحذف بعد الإجراء
+      messageDiv.classList.remove('show-delete-btn');
+    });
   }
 </script>
 
