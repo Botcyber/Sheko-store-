@@ -123,7 +123,7 @@
     function loadUserData() {
       db.ref(`users/${currentUser.uid}`).once('value').then(snapshot => {
         const data = snapshot.val() || {};
-        userPoints = data.points || 0;  // هنا تم التغيير لاستخدام points بدلاً من balance
+        userPoints = data.points || 0;
         lastSpinTimestamp = data.lastSpinTimestamp || 0;
         updatePointsUI();
         updateSpinButton();
@@ -140,7 +140,13 @@
       const now = Date.now();
       const canSpin = (userPoints >= spinCost) && (now - lastSpinTimestamp >= cooldownMs);
       spinBtn.disabled = !canSpin;
-      spinBtn.textContent = canSpin ? 'دور العجلة' : `يمكنك التدوير بعد ${timeLeftString(now - lastSpinTimestamp)}`;
+      if (userPoints < spinCost) {
+        spinBtn.textContent = 'نقاطك غير كافية للتدوير';
+      } else if (!canSpin) {
+        spinBtn.textContent = `يمكنك التدوير بعد ${timeLeftString(now - lastSpinTimestamp)}`;
+      } else {
+        spinBtn.textContent = 'دور العجلة';
+      }
     }
 
     // صيغة الوقت المتبقي للعرض
@@ -166,7 +172,6 @@
         }
         segments = [];
         colors = [];
-        // لتحميل الخانات والنسب
         for (const key in data) {
           const item = data[key];
           if (item.label && item.probability && item.probability > 0) {
@@ -179,10 +184,8 @@
           spinBtn.textContent = "لا توجد خانات";
           return;
         }
-        // رسم العجلة
         drawWheel();
-        spinBtn.disabled = false;
-        spinBtn.textContent = 'دور العجلة';
+        updateSpinButton();
       });
     }
 
@@ -214,7 +217,6 @@
         const color = getRandomColor();
         colors.push(color);
 
-        // رسم القطاع
         ctx.beginPath();
         ctx.moveTo(wheelRadius, wheelRadius);
         ctx.arc(wheelRadius, wheelRadius, wheelRadius - 10, angle, angle + arc, false);
@@ -223,7 +225,6 @@
         ctx.fill();
         ctx.stroke();
 
-        // النص داخل القطاع
         ctx.save();
         ctx.fillStyle = "black";
         ctx.translate(
@@ -235,7 +236,6 @@
         ctx.restore();
       });
 
-      // مثلث المؤشر في الأعلى
       ctx.fillStyle = "#ffb700";
       ctx.beginPath();
       ctx.moveTo(wheelRadius * 2 - 20, wheelRadius - 15);
@@ -252,7 +252,6 @@
       spinBtn.disabled = true;
       resultEl.textContent = "";
 
-      // بناء مصفوفة بناءً على الاحتمالات (مكرر حسب النسبة)
       let weightedSegments = [];
       segments.forEach(seg => {
         for (let i = 0; i < seg.probability; i++) {
@@ -260,16 +259,14 @@
         }
       });
 
-      // اختيار عنصر عشوائي من weightedSegments
       const selectedLabel = weightedSegments[Math.floor(Math.random() * weightedSegments.length)];
-
-      // إيجاد index للعنصر المختار
       const selectedIndex = segments.findIndex(s => s.label === selectedLabel);
 
-      // دوران العجلة
-      spinAngleStart = Math.random() * 10 + 10; // سرعة ابتدائية
+      spinAngleStart = Math.random() * 10 + 10;
       spinTime = 0;
-      spinTimeTotal = Math.random() * 3 + 4 * 1000; // مدة التدوير بين 4-7 ثواني
+
+      // مدة التدوير بين 10 و 15 ثانية
+      spinTimeTotal = (Math.random() * 5 + 10) * 1000;
 
       function rotateWheel() {
         spinTime += 30;
@@ -286,41 +283,37 @@
       function stopRotateWheel() {
         clearTimeout(spinTimeout);
 
-        // تدوير الزاوية ليتوقف عند القطاع المحدد
         const degreesPerSegment = 360 / segments.length;
         const stopAngle = 270 - (selectedIndex * degreesPerSegment) - (degreesPerSegment / 2);
         startAngle = (stopAngle * Math.PI / 180) % (2 * Math.PI);
         drawWheel();
 
         spinning = false;
-        spinBtn.disabled = false;
-        resultEl.textContent = `الفوز: ${selectedLabel}`;
 
-        // خصم النقاط وتحديث آخر تدوير
         const now = Date.now();
         userPoints -= spinCost;
         lastSpinTimestamp = now;
         updatePointsUI();
         updateSpinButton();
 
-        // تحديث بيانات المستخدم في Firebase
         db.ref(`users/${currentUser.uid}`).update({
-          points: userPoints,          // التغيير هنا لاستخدام points
+          points: userPoints,
           lastSpinTimestamp: now
         });
 
-        // إرسال بيانات الفوز إلى صفحة الأدمن (تخزين في مسار منفصل)
+        // إرسال بيانات الفوز لصفحة الأدمن
         db.ref(`wheelResults/${currentUser.uid}`).push({
           email: currentUser.email || "غير معروف",
           result: selectedLabel,
           timestamp: now
         });
+
+        resultEl.textContent = `الفوز: ${selectedLabel}`;
       }
 
       rotateWheel();
     }
 
-    // دالة التباطؤ لتقليل سرعة التدوير تدريجياً
     function easeOut(t, b, c, d) {
       const ts = (t /= d) * t;
       const tc = ts * t;
