@@ -1,91 +1,75 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
   <title>عجلة الحظ - Sheko Store</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      margin: 0;
-      background: linear-gradient(to bottom, #fff7e6, #ffe08a);
+      background: #222;
+      color: white;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      color: #222;
+      margin: 0;
     }
-    h1 {
-      margin-bottom: 20px;
-      font-size: 28px;
-    }
-    #wheel {
-      width: 300px;
-      height: 300px;
+    #wheelCanvas {
+      border: 5px solid #ffb700;
       border-radius: 50%;
-      border: 10px solid #222;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    }
-    .segment {
-      position: absolute;
-      width: 50%;
-      height: 50%;
-      background: #ffb700;
-      transform-origin: 100% 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      font-weight: bold;
-      color: #222;
-      font-size: 14px;
-    }
-    #pointer {
-      width: 0;
-      height: 0;
-      border-left: 20px solid transparent;
-      border-right: 20px solid transparent;
-      border-bottom: 30px solid #222;
-      position: absolute;
-      top: -30px;
-      left: 50%;
-      transform: translateX(-50%);
+      background: #333;
+      box-shadow: 0 0 20px #ffb700;
     }
     #spinBtn {
-      margin-top: 30px;
-      background: #222;
-      color: white;
-      padding: 12px 30px;
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: 18px;
       border: none;
-      border-radius: 25px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    #spinBtn:hover {
+      border-radius: 30px;
       background: #ffb700;
       color: #222;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 0 10px #ffb700;
+      transition: background 0.3s;
+    }
+    #spinBtn:disabled {
+      background: #555;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    #points {
+      margin-top: 15px;
+      font-size: 20px;
     }
     #result {
-      margin-top: 20px;
-      font-size: 18px;
+      margin-top: 25px;
+      font-size: 24px;
       font-weight: bold;
-      color: green;
+      color: #ffb700;
+      min-height: 28px;
+      text-align: center;
+      white-space: nowrap;
+      max-width: 90vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   </style>
 </head>
 <body>
-  <h1>جرب حظك اليوم!</h1>
-  <div id="wheel-container" style="position: relative;">
-    <div id="pointer"></div>
-    <div id="wheel"></div>
-  </div>
-  <button id="spinBtn">تدوير العجلة (50 نقطة)</button>
-  <div id="result"></div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script>
+  <canvas id="wheelCanvas" width="400" height="400"></canvas>
+  <button id="spinBtn" disabled>تحميل العجلة...</button>
+  <div id="points">نقاطك: <span id="pointsCount">0</span></div>
+  <div id="result"></div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -96,96 +80,254 @@
       appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
     firebase.initializeApp(firebaseConfig);
+
     const auth = firebase.auth();
     const db = firebase.database();
 
-    const wheel = document.getElementById('wheel');
+    // العناصر
+    const canvas = document.getElementById('wheelCanvas');
+    const ctx = canvas.getContext('2d');
     const spinBtn = document.getElementById('spinBtn');
+    const pointsCountEl = document.getElementById('pointsCount');
     const resultEl = document.getElementById('result');
 
+    const wheelRadius = 200;
     let segments = [];
-    let angles = [];
-    let canSpin = false;
+    let colors = [];
+    let startAngle = 0;
+    let arc = 0;
+    let spinning = false;
+    let spinTimeout = null;
+    let spinAngleStart = 0;
+    let spinTime = 0;
+    let spinTimeTotal = 0;
+
+    // بيانات المستخدم
     let currentUser = null;
+    let userPoints = 0;
+    let lastSpinTimestamp = 0;
+    const spinCost = 50; // تكلفة التدوير بالنقاط
+    const cooldownMs = 24 * 60 * 60 * 1000; // 24 ساعة بالميلي ثانية
 
     auth.onAuthStateChanged(user => {
-      if (!user) return location.href = 'index.html';
+      if (!user) {
+        location.href = "index.html";
+        return;
+      }
       currentUser = user;
-      loadWheel();
+      loadUserData();
+      loadWheelData();
     });
 
-    function loadWheel() {
-      db.ref('wheelSegments').once('value').then(snapshot => {
+    // تحميل نقاط المستخدم ووقت التدوير الأخير
+    function loadUserData() {
+      db.ref(`users/${currentUser.uid}`).once('value').then(snapshot => {
         const data = snapshot.val() || {};
-        segments = Object.keys(data);
-        if (segments.length === 0) {
-          wheel.innerHTML = '<p style="text-align:center;margin-top:100px;">لم يتم ضبط خانات العجلة بعد</p>';
+        userPoints = data.balance || 0;
+        lastSpinTimestamp = data.lastSpinTimestamp || 0;
+        updatePointsUI();
+        updateSpinButton();
+      });
+    }
+
+    // تحديث عرض النقاط
+    function updatePointsUI() {
+      pointsCountEl.textContent = userPoints;
+    }
+
+    // تحديث حالة زر التدوير
+    function updateSpinButton() {
+      const now = Date.now();
+      const canSpin = (userPoints >= spinCost) && (now - lastSpinTimestamp >= cooldownMs);
+      spinBtn.disabled = !canSpin;
+      spinBtn.textContent = canSpin ? 'دور العجلة' : `يمكنك التدوير بعد ${timeLeftString(now - lastSpinTimestamp)}`;
+    }
+
+    // صيغة الوقت المتبقي للعرض
+    function timeLeftString(diff) {
+      const left = cooldownMs - diff;
+      if (left <= 0) return 'الآن';
+      const h = Math.floor(left / (1000*60*60));
+      const m = Math.floor((left % (1000*60*60)) / (1000*60));
+      const s = Math.floor((left % (1000*60)) / 1000);
+      return `${h} س ${m} د ${s} ث`;
+    }
+
+    // تحميل بيانات العجلة من Firebase
+    function loadWheelData() {
+      const ref = db.ref("wheelData/entries");
+      ref.once("value").then(snapshot => {
+        const data = snapshot.val();
+        if (!data) {
+          alert("لا توجد خانات متاحة حاليا.");
+          spinBtn.disabled = true;
+          spinBtn.textContent = "لا توجد خانات";
           return;
         }
-        drawWheel();
-        checkCooldown();
-      });
-    }
-
-    function drawWheel() {
-      wheel.innerHTML = '';
-      const angleSize = 360 / segments.length;
-      angles = [];
-      segments.forEach((seg, i) => {
-        const angle = i * angleSize;
-        angles.push({ value: seg, from: angle, to: angle + angleSize });
-        const div = document.createElement('div');
-        div.className = 'segment';
-        div.style.transform = `rotate(${angle}deg) skewY(-${90 - angleSize}deg)`;
-        div.style.background = i % 2 === 0 ? '#ffe48a' : '#ffd047';
-        div.textContent = seg;
-        wheel.appendChild(div);
-      });
-    }
-
-    function checkCooldown() {
-      const spinRef = db.ref('wheelSpins/' + currentUser.uid);
-      spinRef.once('value').then(snap => {
-        const lastSpin = snap.val();
-        const now = Date.now();
-        if (!lastSpin || now - lastSpin >= 86400000) {
-          canSpin = true;
-        } else {
-          const remaining = Math.ceil((86400000 - (now - lastSpin)) / 3600000);
-          resultEl.textContent = `يمكنك التدوير بعد ${remaining} ساعة`;
+        segments = [];
+        colors = [];
+        // لتحميل الخانات والنسب
+        for (const key in data) {
+          const item = data[key];
+          if (item.label && item.probability && item.probability > 0) {
+            segments.push({label: item.label, probability: item.probability});
+          }
+        }
+        if(segments.length === 0){
+          alert("لا توجد خانات صحيحة في العجلة.");
           spinBtn.disabled = true;
+          spinBtn.textContent = "لا توجد خانات";
+          return;
+        }
+        // رسم العجلة
+        drawWheel();
+        spinBtn.disabled = false;
+        spinBtn.textContent = 'دور العجلة';
+      });
+    }
+
+    // ألوان متنوعة لكل خانة
+    function getRandomColor() {
+      const letters = '789ABCD';
+      let color = '#';
+      for(let i=0; i<6; i++){
+        color += letters[Math.floor(Math.random()*letters.length)];
+      }
+      return color;
+    }
+
+    // رسم العجلة
+    function drawWheel() {
+      arc = Math.PI * 2 / segments.length;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = "#222";
+      ctx.lineWidth = 3;
+      ctx.font = 'bold 16px Cairo';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      colors = [];
+      let start = startAngle;
+
+      segments.forEach((segment, i) => {
+        const angle = start + i * arc;
+        const color = getRandomColor();
+        colors.push(color);
+
+        // رسم القطاع
+        ctx.beginPath();
+        ctx.moveTo(wheelRadius, wheelRadius);
+        ctx.arc(wheelRadius, wheelRadius, wheelRadius - 10, angle, angle + arc, false);
+        ctx.lineTo(wheelRadius, wheelRadius);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.stroke();
+
+        // النص داخل القطاع
+        ctx.save();
+        ctx.fillStyle = "black";
+        ctx.translate(
+          wheelRadius + Math.cos(angle + arc / 2) * (wheelRadius - 60),
+          wheelRadius + Math.sin(angle + arc / 2) * (wheelRadius - 60)
+        );
+        ctx.rotate(angle + arc / 2 + Math.PI / 2);
+        ctx.fillText(segment.label, 0, 0);
+        ctx.restore();
+      });
+
+      // مثلث المؤشر في الأعلى
+      ctx.fillStyle = "#ffb700";
+      ctx.beginPath();
+      ctx.moveTo(wheelRadius * 2 - 20, wheelRadius - 15);
+      ctx.lineTo(wheelRadius * 2 - 5, wheelRadius);
+      ctx.lineTo(wheelRadius * 2 - 20, wheelRadius + 15);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // التدوير - اختيار خانة عشوائية بناءً على الاحتمالات
+    function spin() {
+      if (spinning) return;
+      spinning = true;
+      spinBtn.disabled = true;
+      resultEl.textContent = "";
+
+      // بناء مصفوفة بناءً على الاحتمالات (مكرر حسب النسبة)
+      let weightedSegments = [];
+      segments.forEach(seg => {
+        for (let i = 0; i < seg.probability; i++) {
+          weightedSegments.push(seg.label);
         }
       });
+
+      // اختيار عنصر عشوائي من weightedSegments
+      const selectedLabel = weightedSegments[Math.floor(Math.random() * weightedSegments.length)];
+
+      // إيجاد index للعنصر المختار
+      const selectedIndex = segments.findIndex(s => s.label === selectedLabel);
+
+      // دوران العجلة
+      spinAngleStart = Math.random() * 10 + 10; // سرعة ابتدائية
+      spinTime = 0;
+      spinTimeTotal = Math.random() * 3 + 4 * 1000; // مدة التدوير بين 4-7 ثواني
+
+      function rotateWheel() {
+        spinTime += 30;
+        if(spinTime >= spinTimeTotal){
+          stopRotateWheel();
+          return;
+        }
+        const spinAngle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
+        startAngle += (spinAngle * Math.PI / 180);
+        drawWheel();
+        spinTimeout = setTimeout(rotateWheel, 30);
+      }
+
+      function stopRotateWheel() {
+        clearTimeout(spinTimeout);
+
+        // تدوير الزاوية ليتوقف عند القطاع المحدد
+        const degreesPerSegment = 360 / segments.length;
+        const stopAngle = 270 - (selectedIndex * degreesPerSegment) - (degreesPerSegment / 2);
+        startAngle = (stopAngle * Math.PI / 180) % (2 * Math.PI);
+        drawWheel();
+
+        spinning = false;
+        spinBtn.disabled = false;
+        resultEl.textContent = `الفوز: ${selectedLabel}`;
+
+        // خصم النقاط وتحديث آخر تدوير
+        const now = Date.now();
+        userPoints -= spinCost;
+        lastSpinTimestamp = now;
+        updatePointsUI();
+        updateSpinButton();
+
+        // تحديث بيانات المستخدم في Firebase
+        db.ref(`users/${currentUser.uid}`).update({
+          balance: userPoints,
+          lastSpinTimestamp: now
+        });
+
+        // إرسال بيانات الفوز إلى صفحة الأدمن (تخزين في مسار منفصل)
+        db.ref(`wheelResults/${currentUser.uid}`).push({
+          email: currentUser.email || "غير معروف",
+          result: selectedLabel,
+          timestamp: now
+        });
+      }
+
+      rotateWheel();
     }
 
-    spinBtn.addEventListener('click', () => {
-      if (!canSpin) return;
-      db.ref('users/' + currentUser.uid + '/points').once('value').then(snapshot => {
-        const points = snapshot.val() || 0;
-        if (points < 50) return alert('يجب أن يكون لديك 50 نقطة على الأقل');
+    // دالة التباطؤ لتقليل سرعة التدوير تدريجياً
+    function easeOut(t, b, c, d) {
+      const ts = (t /= d) * t;
+      const tc = ts * t;
+      return b + c * (tc + -3 * ts + 3 * t);
+    }
 
-        // تدوير
-        const randomIndex = Math.floor(Math.random() * segments.length);
-        const chosenSegment = segments[randomIndex];
-        const rotation = 3600 + (360 / segments.length) * randomIndex;
-
-        wheel.style.transition = 'transform 5s ease-out';
-        wheel.style.transform = `rotate(-${rotation}deg)`;
-        spinBtn.disabled = true;
-
-        setTimeout(() => {
-          resultEl.textContent = `مبروك! ربحت: ${chosenSegment}`;
-          db.ref('wheelSpins/' + currentUser.uid).set(Date.now());
-          db.ref('users/' + currentUser.uid + '/points').set(points - 50);
-
-          const resultRef = db.ref('wheelResults').push();
-          resultRef.set({
-            user: currentUser.email,
-            reward: chosenSegment,
-            time: Date.now()
-          });
-        }, 5200);
-      });
-    });
-  </script></body>
+    spinBtn.addEventListener('click', spin);
+  </script>
+</body>
 </html>
