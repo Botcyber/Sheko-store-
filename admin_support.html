@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>لوحة إدارة الدعم - Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      margin: 0;
+      background: #f5f5f5;
+      color: #222;
+    }
+    header {
+      background: #222;
+      color: white;
+      padding: 10px 20px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+    }
+    #conversationsList {
+      width: 300px;
+      max-height: calc(100vh - 70px);
+      overflow-y: auto;
+      background: white;
+      border-left: 1px solid #ccc;
+      padding: 10px;
+      box-sizing: border-box;
+      float: right;
+    }
+    #chatContainer {
+      margin-right: 300px;
+      height: calc(100vh - 70px);
+      display: flex;
+      flex-direction: column;
+      background: white;
+      padding: 15px;
+      box-sizing: border-box;
+    }
+    #messages {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding-right: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #f9f9f9;
+    }
+    .message {
+      margin: 8px 0;
+      max-width: 70%;
+      padding: 10px 15px;
+      border-radius: 20px;
+      line-height: 1.3;
+      word-wrap: break-word;
+    }
+    .message.admin {
+      background: #ffb700;
+      color: #222;
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+    .message.user {
+      background: #ddd;
+      color: #222;
+      margin-right: auto;
+      border-bottom-left-radius: 4px;
+    }
+    #inputArea {
+      display: flex;
+      gap: 10px;
+    }
+    #replyInput {
+      flex-grow: 1;
+      padding: 10px;
+      border-radius: 25px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      outline: none;
+    }
+    #sendBtn {
+      background: #222;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    #sendBtn:hover {
+      background: #ffb700;
+      color: #222;
+    }
+    .conversation-item {
+      cursor: pointer;
+      padding: 10px 12px;
+      border-bottom: 1px solid #eee;
+      font-weight: bold;
+      color: #222;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+    .conversation-item:hover {
+      background: #ffb700;
+      color: #222;
+    }
+    .conversation-item.active {
+      background: #222;
+      color: white;
+    }
+    .status-btn {
+      font-size: 14px;
+      background: #eee;
+      border: none;
+      border-radius: 10px;
+      padding: 2px 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .status-btn.open {
+      background: #4caf50;
+      color: white;
+    }
+    .status-btn.closed {
+      background: #f44336;
+      color: white;
+    }
+    #logoutBtn {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: #222;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s;
+      z-index: 1000;
+    }
+    #logoutBtn:hover {
+      background: #ffb700;
+      color: #222;
+    }
+    @media (max-width: 768px) {
+      #conversationsList {
+        position: fixed;
+        width: 100%;
+        height: 200px;
+        bottom: 0;
+        right: 0;
+        max-height: 200px;
+        border-left: none;
+        border-top: 1px solid #ccc;
+        overflow-x: auto;
+        display: flex;
+      }
+      .conversation-item {
+        flex: 1 0 auto;
+        border-bottom: none;
+        border-right: 1px solid #eee;
+        white-space: nowrap;
+      }
+      #chatContainer {
+        margin-right: 0;
+        height: calc(100vh - 270px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <button id="logoutBtn">خروج</button>
+  <header>لوحة إدارة الدعم والشكاوى</header>
+
+  <div id="chatContainer">
+    <div id="messages">اختر محادثة لعرض الرسائل...</div>
+    <div id="inputArea" style="display:none;">
+      <input type="text" id="replyInput" placeholder="اكتب ردك هنا..." />
+      <button id="sendBtn"><i class="fa fa-paper-plane"></i> إرسال</button>
+    </div>
+  </div>
+
+  <div id="conversationsList" title="المحادثات"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+    firebase.initializeApp(firebaseConfig);
+
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    const logoutBtn = document.getElementById('logoutBtn');
+    const conversationsList = document.getElementById('conversationsList');
+    const messagesEl = document.getElementById('messages');
+    const inputArea = document.getElementById('inputArea');
+    const replyInput = document.getElementById('replyInput');
+    const sendBtn = document.getElementById('sendBtn');
+
+    let currentUser = null;
+    let selectedConversationId = null;
+    let conversationsData = {};
+
+    // تحقق دخول الأدمن (يمكنك تحديد شرطك هنا)
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        location.href = "index.html";
+      } else {
+        currentUser = user;
+        loadConversations();
+      }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      auth.signOut().then(() => {
+        location.href = "index.html";
+      });
+    });
+
+    // تحميل قائمة المحادثات (الشكاوى)
+    function loadConversations() {
+      const convRef = db.ref('supportChats');
+      convRef.on('value', snapshot => {
+        conversationsData = snapshot.val() || {};
+        renderConversationsList();
+      });
+    }
+
+    function renderConversationsList() {
+      conversationsList.innerHTML = '';
+      if (Object.keys(conversationsData).length === 0) {
+        conversationsList.textContent = 'لا توجد محادثات حالياً';
+        messagesEl.textContent = 'لا توجد محادثات حالياً';
+        inputArea.style.display = 'none';
+        return;
+      }
+      for (const convId in conversationsData) {
+        const conv = conversationsData[convId];
+        const div = document.createElement('div');
+        div.classList.add('conversation-item');
+        if (convId === selectedConversationId) div.classList.add('active');
+        div.textContent = conv.userName || `مستخدم (${conv.userId})`;
+
+        // زر حالة المحادثة (فتح/إغلاق)
+        const statusBtn = document.createElement('button');
+        statusBtn.classList.add('status-btn');
+        if (conv.status === 'open') {
+          statusBtn.textContent = 'مفتوحة';
+          statusBtn.classList.add('open');
+        } else {
+          statusBtn.textContent = 'مغلقة';
+          statusBtn.classList.add('closed');
+        }
+        statusBtn.onclick = (e) => {
+          e.stopPropagation();
+          toggleConversationStatus(convId);
+        };
+
+        div.appendChild(statusBtn);
+
+        div.onclick = () => {
+          selectConversation(convId);
+        };
+
+        conversationsList.appendChild(div);
+      }
+    }
+
+    // تبديل حالة المحادثة بين مفتوحة ومغلقة
+    function toggleConversationStatus(convId) {
+      const currentStatus = conversationsData[convId].status;
+      const newStatus = currentStatus === 'open' ? 'closed' : 'open';
+      db.ref(`supportChats/${convId}/status`).set(newStatus);
+    }
+
+    // تحديد محادثة للعرض والرد
+    function selectConversation(convId) {
+      selectedConversationId = convId;
+      renderConversationsList();
+      loadMessages(convId);
+    }
+
+    // تحميل الرسائل في المحادثة
+    function loadMessages(convId) {
+      messagesEl.innerHTML = 'جارٍ تحميل الرسائل...';
+      inputArea.style.display = 'none';
+
+      db.ref(`supportChats/${convId}/messages`).off(); // افصل أي مستمع سابق
+      db.ref(`supportChats/${convId}/messages`).on('value', snapshot => {
+        const messages = snapshot.val() || {};
+        renderMessages(messages);
+      });
+      inputArea.style.display = 'flex';
+      replyInput.value = '';
+      replyInput.focus();
+    }
+
+    // عرض الرسائل في واجهة الإدارة
+    function renderMessages(messages) {
+      messagesEl.innerHTML = '';
+      const msgKeys = Object.keys(messages);
+      if (msgKeys.length === 0) {
+        messagesEl.textContent = 'لا توجد رسائل في هذه المحادثة.';
+        return;
+      }
+      msgKeys.forEach(key => {
+        const msg = messages[key];
+        const div = document.createElement('div');
+        div.classList.add('message');
+        div.classList.add(msg.sender === 'admin' ? 'admin' : 'user');
+        div.textContent = msg.text + '\n' + new Date(msg.timestamp).toLocaleString();
+        messagesEl.appendChild(div);
+      });
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    // إرسال رد من الأدمن
+    sendBtn.addEventListener('click', () => {
+      sendMessage();
+    });
+    replyInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    function sendMessage() {
+      const text = replyInput.value.trim();
+      if (!text || !selectedConversationId) return;
+      const message = {
+        sender: 'admin',
+        text,
+        timestamp: Date.now()
+      };
+      const messagesRef = db.ref(`supportChats/${selectedConversationId}/messages`);
+      messagesRef.push(message);
+      replyInput.value = '';
+    }
+  </script>
+</body>
+</html>
