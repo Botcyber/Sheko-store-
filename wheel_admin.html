@@ -1,85 +1,34 @@
 <!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>إدارة عجلة الحظ - Sheko Store</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background: #f4f4f4;
-      margin: 0;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-      color: #222;
-    }
-    .container {
-      max-width: 800px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    .wheel-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    .wheel-item input {
-      flex: 1;
-      padding: 8px;
-      margin-left: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    button {
-      padding: 8px 15px;
-      background-color: #222;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #ffb700;
-      color: #222;
-    }
-    .add-btn {
-      width: 100%;
-      margin-top: 20px;
-    }
-    .result-log {
-      margin-top: 30px;
-    }
-    .result-log h3 {
-      margin-bottom: 10px;
-    }
-    .result-log ul {
-      list-style: none;
-      padding: 0;
-    }
-    .result-log li {
-      background: #eee;
-      margin-bottom: 5px;
-      padding: 8px;
-      border-radius: 5px;
-    }
+    body { font-family: 'Cairo', sans-serif; margin: 0; background: #f4f4f4; }
+    header { background: #222; color: #fff; padding: 15px; text-align: center; font-size: 20px; font-weight: bold; }
+    .container { max-width: 600px; margin: 30px auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    label, input, button { display: block; width: 100%; margin: 10px 0; font-size: 16px; }
+    input { padding: 10px; border-radius: 6px; border: 1px solid #ccc; }
+    button { background: #222; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+    button:hover { background: #ffb700; color: #222; }
+    ul { list-style: none; padding: 0; margin-top: 20px; }
+    li { background: #eee; padding: 10px; margin: 5px 0; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
+    .delete-btn { background: red; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; }
   </style>
 </head>
 <body>
-  <h1>إدارة عجلة الحظ</h1>
+  <header>إدارة عجلة الحظ</header>
   <div class="container">
-    <div id="wheelItems"></div>
-    <button class="add-btn" onclick="addNewItem()">+ إضافة خانة جديدة</button><div class="result-log">
-  <h3>نتائج التدوير</h3>
-  <ul id="resultList">تحميل...</ul>
-</div>
+    <label>عنوان الخانة:</label>
+    <input type="text" id="optionText" placeholder="مثال: 50 نقطة" /><label>نسبة الفوز (%):</label>
+<input type="number" id="optionChance" placeholder="مثال: 10" />
 
-  </div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script>
+<button onclick="addOption()">إضافة خانة</button>
+
+<ul id="optionsList"></ul>
+
+  </div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -89,67 +38,58 @@
       messagingSenderId: "113892775847",
       appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
+
     firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
     const db = firebase.database();
 
-    const wheelItemsDiv = document.getElementById('wheelItems');
-    const resultList = document.getElementById('resultList');
+    const optionText = document.getElementById('optionText');
+    const optionChance = document.getElementById('optionChance');
+    const optionsList = document.getElementById('optionsList');
 
-    function addNewItem(text = '', chance = '') {
-      const div = document.createElement('div');
-      div.className = 'wheel-item';
-      div.innerHTML = `
-        <input type="text" placeholder="نص الخانة" value="${text}">
-        <input type="number" placeholder="نسبة الفوز %" value="${chance}" min="0" max="100">
-        <button onclick="removeItem(this)"><i class="fa fa-trash"></i></button>
-      `;
-      wheelItemsDiv.appendChild(div);
-    }
+    let currentUser;
 
-    function removeItem(btn) {
-      btn.parentElement.remove();
-    }
+    auth.onAuthStateChanged(user => {
+      if (!user || user.uid !== 'mlifDgEAkKMaOeuUq63cs5NAkV93') {
+        alert('غير مصرح لك بالدخول إلى هذه الصفحة');
+        location.href = 'index.html';
+      } else {
+        currentUser = user;
+        loadOptions();
+      }
+    });
 
-    function saveWheelItems() {
-      const items = [];
-      document.querySelectorAll('.wheel-item').forEach(div => {
-        const text = div.children[0].value.trim();
-        const chance = parseFloat(div.children[1].value);
-        if (text && !isNaN(chance)) {
-          items.push({ text, chance });
-        }
-      });
-      db.ref('wheel/items').set(items);
-      alert('تم حفظ الخانات بنجاح');
-    }
-
-    function loadWheelItems() {
-      db.ref('wheel/items').once('value').then(snapshot => {
-        const items = snapshot.val() || [];
-        wheelItemsDiv.innerHTML = '';
-        items.forEach(item => addNewItem(item.text, item.chance));
+    function addOption() {
+      const text = optionText.value.trim();
+      const chance = parseFloat(optionChance.value);
+      if (!text || isNaN(chance) || chance <= 0) {
+        alert('يرجى إدخال عنوان الخانة ونسبة الفوز بشكل صحيح');
+        return;
+      }
+      const newRef = db.ref('wheel/options').push();
+      newRef.set({ text, chance }).then(() => {
+        optionText.value = '';
+        optionChance.value = '';
+        loadOptions();
       });
     }
 
-    function loadResults() {
-      db.ref('wheel/results').limitToLast(20).on('value', snapshot => {
-        const results = snapshot.val();
-        resultList.innerHTML = '';
-        if (!results) return resultList.innerHTML = '<li>لا توجد نتائج بعد</li>';
-        Object.values(results).reverse().forEach(res => {
+    function loadOptions() {
+      db.ref('wheel/options').once('value', snapshot => {
+        optionsList.innerHTML = '';
+        snapshot.forEach(child => {
           const li = document.createElement('li');
-          li.textContent = `${res.email || 'مستخدم'} - ${res.result}`;
-          resultList.appendChild(li);
+          li.innerHTML = `<span>${child.val().text} (${child.val().chance}%)</span>
+            <button class="delete-btn" onclick="deleteOption('${child.key}')">حذف</button>`;
+          optionsList.appendChild(li);
         });
       });
     }
 
-    window.onload = () => {
-      loadWheelItems();
-      loadResults();
-    };
-  </script>  <div style="text-align:center; margin-top:20px">
-    <button onclick="saveWheelItems()">💾 حفظ الخانات</button>
-  </div>
-</body>
+    function deleteOption(key) {
+      if (confirm('هل أنت متأكد من حذف هذه الخانة؟')) {
+        db.ref('wheel/options/' + key).remove().then(loadOptions);
+      }
+    }
+  </script></body>
 </html>
