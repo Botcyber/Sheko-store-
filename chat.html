@@ -28,16 +28,24 @@
       align-items: center;
       position: relative;
     }
-    /* عداد المستخدمين على الشمال */
+    /* أيقونة العين وعدد المستخدمين */
     #onlineCount {
       position: absolute;
       left: 15px;
       top: 50%;
       transform: translateY(-50%);
-      font-weight: normal;
-      font-size: 1rem;
-      user-select: none;
+      text-align: center;
+      font-weight: bold;
       color: #222;
+      cursor: default;
+      user-select: none;
+    }
+    #onlineCount svg {
+      display: block;
+      margin: 0 auto 4px;
+      fill: #ffb700;
+      width: 28px;
+      height: 28px;
     }
     #chatContainer {
       flex: 1;
@@ -71,12 +79,20 @@
       flex-shrink: 0;
       overflow: hidden;
     }
+    /* تعديل صور المستخدم لتكون مشابهة صفحة الحساب */
     .message .avatar img {
       width: 48px;
       height: 48px;
       border-radius: 50%;
+      border: 5px solid #fff;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
       object-fit: cover;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
       display: block;
+    }
+    .message .avatar img:hover {
+      transform: scale(1.1) rotate(5deg);
+      box-shadow: 0 10px 30px rgba(0, 123, 255, 0.6);
     }
     .message .avatar:hover {
       box-shadow: 0 0 25px #ffd700ff, inset 0 0 12px #fffecbaa;
@@ -326,7 +342,13 @@
 </head>
 <body>
   <header>
-    <div id="onlineCount">المستخدمون المتصلون: 0</div>
+    <div id="onlineCount">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M12 5c-7 0-11 7-11 7s4 7 11 7 11-7 11-7-4-7-11-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>
+        <circle cx="12" cy="12" r="3" fill="#222"/>
+      </svg>
+      <span id="onlineCountNumber">0</span>
+    </div>
     دردشة Sheko Store
   </header>
 
@@ -368,283 +390,191 @@
 
     const auth = firebase.auth();
     const db = firebase.database();
-    const storage = firebase.storage();
-
-    const chatContainer = document.getElementById('chatContainer');
-    const messageInput = document.getElementById('messageInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const onlineCountDiv = document.getElementById('onlineCount');
-
-    // مودال العناصر
-    const userModal = document.getElementById('userModal');
-    const closeModalBtn = document.getElementById('closeModalBtn');
-    const modalUserImagePlaceholder = document.getElementById('modalUserImagePlaceholder');
-    const modalUserName = document.getElementById('modalUserName');
-    const badgesContainer = document.getElementById('badgesContainer');
-    const noBadgesText = document.getElementById('noBadgesText');
+    // متابعة الكود السابق
 
     let currentUser = null;
-    let usersData = {};
 
-    // UID خاص بالمستخدم المسؤول والشارات الخاصة به (نصوص فقط)
-    const specialUID = "mlifDgEAkKMaOeuUq63cs5NAkV93";
-    const specialBadges = [
-      "الأدمن",
-      "المطور",
-      "الأسطورة",
-      "VIP 10",
-      "المؤسس"
-    ];
+    // عناصر DOM
+    const chatContainer = document.getElementById("chatContainer");
+    const messageInput = document.getElementById("messageInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const onlineCountNumber = document.getElementById("onlineCountNumber");
 
-    // كلمات ممنوعة
-    const bannedWords = ["سيء", "سيئة", "كلمة_سيئة"];
+    // مودال عرض بيانات المستخدم
+    const userModal = document.getElementById("userModal");
+    const modalUserName = document.getElementById("modalUserName");
+    const modalUserImagePlaceholder = document.getElementById("modalUserImagePlaceholder");
+    const badgesContainer = document.getElementById("badgesContainer");
+    const noBadgesText = document.getElementById("noBadgesText");
+    const closeModalBtn = document.getElementById("closeModalBtn");
 
-    auth.onAuthStateChanged(user => {
-      if (!user) {
-        location.href = "index.html";
-        return;
-      }
-      currentUser = user;
-      sendBtn.disabled = false;
-      loadAllUsersData();
-      listenForMessages();
-      setupPresence(); // تشغيل نظام تتبع المتصلين
+    // تمكين زر الإرسال إذا كان هناك نص
+    messageInput.addEventListener("input", () => {
+      sendBtn.disabled = messageInput.value.trim() === "";
     });
 
-    // تحميل بيانات جميع المستخدمين من قاعدة بيانات Firebase
-    function loadAllUsersData() {
-      db.ref('users').on('value', snapshot => {
-        usersData = snapshot.val() || {};
-      });
-    }
-
-    // تنسيق الطابع الزمني لعرض الوقت والتاريخ
-    function formatTimestamp(ts) {
-      const date = new Date(ts);
-      return date.toLocaleString('ar-EG', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    }
-
-    // الاستماع للرسائل الجديدة من قاعدة بيانات Firebase
-    function listenForMessages() {
-      db.ref('chatMessages').on('value', snapshot => {
-        const messages = snapshot.val() || {};
-        renderMessages(messages);
-        scrollChatToBottom();
-      });
-    }
-
-    // جلب رابط صورة المستخدم من التخزين أو إظهار أول حرف إذا لم توجد صورة
-    async function getUserPhotoURL(uid, fallbackChar) {
-      if (!usersData[uid] || !usersData[uid].photoURL) {
-        return null;
+    // تسجيل دخول المستخدم
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = user;
+        setupPresence();
+        loadMessages();
+        listenOnlineUsers();
+      } else {
+        location.href = "index.html"; // إعادة توجيه إلى تسجيل الدخول
       }
-      try {
-        const photoURL = usersData[uid].photoURL;
-        if (photoURL.startsWith('http://') || photoURL.startsWith('https://')) {
-          return photoURL; // رابط مباشر
-        } else if (photoURL.startsWith('gs://') || photoURL.startsWith('user_photos/')) {
-          const url = await storage.ref(photoURL).getDownloadURL();
-          return url;
-        } else {
-          return null;
-        }
-      } catch (error) {
-        console.warn('خطأ في تحميل صورة المستخدم:', error);
-        return null;
-      }
-    }
+    });
 
-    // عرض الرسائل في الصفحة
-    async function renderMessages(messages) {
-      chatContainer.innerHTML = '';
-      for (const key of Object.keys(messages)) {
-        const msg = messages[key];
+    // إرسال رسالة
+    sendBtn.addEventListener("click", () => {
+      const text = messageInput.value.trim();
+      if (!text) return;
+      const now = Date.now();
+
+      // الحصول على بيانات المستخدم (الاسم والصورة) من قاعدة البيانات
+      db.ref("users/" + currentUser.uid).once("value").then(snap => {
+        const data = snap.val() || {};
+        const username = data.username || "مستخدم مجهول";
+        const profileImage = data.profileImage || "https://via.placeholder.com/120?text=صورة";
+
+        // حفظ الرسالة
+        const messageData = {
+          uid: currentUser.uid,
+          username,
+          profileImage,
+          text,
+          timestamp: now
+        };
+
+        db.ref("chatMessages").push(messageData).then(() => {
+          messageInput.value = "";
+          sendBtn.disabled = true;
+          scrollToBottom();
+        });
+      });
+    });
+
+    // تحميل وعرض الرسائل
+    function loadMessages() {
+      const messagesRef = db.ref("chatMessages").limitToLast(100);
+
+      messagesRef.off(); // منع التكرار
+
+      messagesRef.on("child_added", snap => {
+        const msg = snap.val();
+        if (!msg) return;
+
         const isOwn = msg.uid === currentUser.uid;
-        const userData = usersData[msg.uid] || {};
-        const userName = userData.username || msg.email || "مستخدم مجهول";
-
-        const msgDiv = document.createElement('div');
-        msgDiv.classList.add('message');
-        if (isOwn) msgDiv.classList.add('own');
-
-        // تحضير صورة المستخدم أو أول حرف اسمه
-        const avatar = document.createElement('div');
-        avatar.className = 'avatar';
-        avatar.title = userName;
-        avatar.addEventListener('click', () => showUserModal(msg.uid));
-
-        const photoURL = await getUserPhotoURL(msg.uid, userName.charAt(0).toUpperCase());
-
-        if (photoURL) {
-          const img = document.createElement('img');
-          img.src = photoURL;
-          img.alt = userName;
-          avatar.appendChild(img);
-        } else {
-          avatar.textContent = (userName.trim().charAt(0) || "?").toUpperCase();
-        }
-
-        // المحتوى: اسم المستخدم + نص الرسالة + التاريخ
-        const content = document.createElement('div');
-        content.classList.add('content');
-
-        const userNameDiv = document.createElement('div');
-        userNameDiv.className = 'username';
-        userNameDiv.textContent = userName;
-
-        const textDiv = document.createElement('div');
-        textDiv.textContent = msg.text;
-
-        const timeDiv = document.createElement('div');
-        timeDiv.className = 'timestamp';
-        timeDiv.textContent = formatTimestamp(msg.timestamp);
-
-        content.appendChild(userNameDiv);
-        content.appendChild(textDiv);
-        content.appendChild(timeDiv);
-
-        msgDiv.appendChild(avatar);
-        msgDiv.appendChild(content);
-
-        // زر حذف للرسائل للمستخدم نفسه أو الأدمن
-        if (isOwn || currentUser.uid === specialUID) {
-          const delBtn = document.createElement('button');
-          delBtn.textContent = 'حذف';
-          delBtn.className = 'delete-btn';
-          delBtn.title = "حذف الرسالة";
-          delBtn.addEventListener('click', () => {
-            if (confirm("هل تريد حذف هذه الرسالة؟")) {
-              db.ref(`chatMessages/${key}`).remove();
-            }
-          });
-          msgDiv.appendChild(delBtn);
-        }
-
-        chatContainer.appendChild(msgDiv);
-      }
+        const msgElem = createMessageElement(msg, isOwn);
+        chatContainer.appendChild(msgElem);
+        scrollToBottom();
+      });
     }
 
-    // تمرير الشات لأسفل تلقائياً
-    function scrollChatToBottom() {
+    // إنشاء عنصر رسالة
+    function createMessageElement(msg, isOwn) {
+      const div = document.createElement("div");
+      div.className = "message" + (isOwn ? " own" : "");
+
+      // صورة المستخدم (avatar)
+      const avatarDiv = document.createElement("div");
+      avatarDiv.className = "avatar";
+
+      const img = document.createElement("img");
+      img.src = msg.profileImage;
+      img.alt = msg.username + " صورة المستخدم";
+
+      avatarDiv.appendChild(img);
+
+      // عند الضغط على صورة المستخدم، عرض مودال بياناته
+      avatarDiv.addEventListener("click", () => {
+        showUserModal(msg.uid);
+      });
+
+      // محتوى الرسالة
+      const contentDiv = document.createElement("div");
+      contentDiv.className = "content";
+
+      const usernameDiv = document.createElement("div");
+      usernameDiv.className = "username";
+      usernameDiv.textContent = msg.username;
+
+      const textDiv = document.createElement("div");
+      textDiv.textContent = msg.text;
+
+      const timeDiv = document.createElement("div");
+      timeDiv.className = "timestamp";
+      const date = new Date(msg.timestamp);
+      timeDiv.textContent = date.toLocaleTimeString("ar-EG", { hour: '2-digit', minute: '2-digit' });
+
+      contentDiv.appendChild(usernameDiv);
+      contentDiv.appendChild(textDiv);
+      contentDiv.appendChild(timeDiv);
+
+      div.appendChild(avatarDiv);
+      div.appendChild(contentDiv);
+
+      return div;
+    }
+
+    // عرض مودال بيانات المستخدم
+    function showUserModal(uid) {
+      db.ref("users/" + uid).once("value").then(snap => {
+        const data = snap.val() || {};
+
+        // الاسم
+        modalUserName.textContent = data.username || "مستخدم مجهول";
+
+        // الصورة
+        if (data.profileImage) {
+          modalUserImagePlaceholder.innerHTML = `<img src="${data.profileImage}" alt="صورة المستخدم">`;
+        } else {
+          modalUserImagePlaceholder.textContent = "?";
+        }
+
+        // الشارات (إن وجدت)
+        badgesContainer.innerHTML = "";
+        if (data.badges && Object.keys(data.badges).length > 0) {
+          noBadgesText.style.display = "none";
+          for (const badgeKey in data.badges) {
+            const badge = document.createElement("div");
+            badge.className = "badge";
+            badge.textContent = badgeKey; // يمكن استبدال النص برموز أو صور حسب بيانات الشارات
+            badgesContainer.appendChild(badge);
+          }
+        } else {
+          noBadgesText.style.display = "block";
+        }
+
+        userModal.style.display = "flex";
+      });
+    }
+
+    closeModalBtn.addEventListener("click", () => {
+      userModal.style.display = "none";
+    });
+
+    // التمرير إلى أسفل الدردشة تلقائياً
+    function scrollToBottom() {
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // التحقق من الكلمات الممنوعة
-    function containsBannedWords(text) {
-      const lowerText = text.toLowerCase();
-      return bannedWords.some(word => lowerText.includes(word));
-    }
-
-    // إرسال الرسالة
-    sendBtn.addEventListener('click', () => {
-      const text = messageInput.value.trim();
-      if (!text) return;
-
-      if (containsBannedWords(text)) {
-        alert("الرسالة تحتوي على كلمات ممنوعة، الرجاء تعديلها.");
-        return;
-      }
-
-      const newMsg = {
-        uid: currentUser.uid,
-        email: currentUser.email,
-        text: text,
-        timestamp: Date.now()
-      };
-
-      db.ref('chatMessages').push(newMsg)
-        .then(() => {
-          messageInput.value = '';
-          sendBtn.disabled = true;
-          scrollChatToBottom();
-        })
-        .catch(err => {
-          alert("حدث خطأ أثناء إرسال الرسالة.");
-          console.error(err);
-        });
-    });
-
-    messageInput.addEventListener('input', () => {
-      sendBtn.disabled = messageInput.value.trim().length === 0;
-    });
-
-    // عرض نافذة بيانات المستخدم عند الضغط على صورة أو حرف الاسم
-    async function showUserModal(uid) {
-      if (!usersData[uid]) {
-        alert("لا توجد بيانات لهذا المستخدم.");
-        return;
-      }
-      const user = usersData[uid];
-      modalUserName.textContent = user.username || user.email || "مستخدم مجهول";
-      badgesContainer.innerHTML = '';
-      noBadgesText.style.display = 'none';
-
-      // جلب صورة المستخدم أو أول حرف اسمه
-      const photoURL = await getUserPhotoURL(uid, modalUserName.textContent.charAt(0).toUpperCase());
-
-      if (photoURL) {
-        modalUserImagePlaceholder.innerHTML = `<img src="${photoURL}" alt="${modalUserName.textContent}">`;
-      } else {
-        modalUserImagePlaceholder.textContent = modalUserName.textContent.charAt(0).toUpperCase();
-      }
-
-      // عرض الشارات (إن وجدت)
-      if (uid === specialUID) {
-        specialBadges.forEach(badgeText => {
-          const badge = document.createElement('div');
-          badge.className = 'badge';
-          badge.textContent = badgeText;
-          badgesContainer.appendChild(badge);
-        });
-      } else if (user.badges && Array.isArray(user.badges) && user.badges.length > 0) {
-        user.badges.forEach(badgeText => {
-          const badge = document.createElement('div');
-          badge.className = 'badge';
-          badge.textContent = badgeText;
-          badgesContainer.appendChild(badge);
-        });
-      } else {
-        noBadgesText.style.display = 'block';
-      }
-
-      userModal.style.display = 'flex';
-    }
-
-    // إغلاق نافذة بيانات المستخدم
-    closeModalBtn.addEventListener('click', () => {
-      userModal.style.display = 'none';
-    });
-
-    // إغلاق المودال عند النقر خارج المحتوى
-    userModal.addEventListener('click', (e) => {
-      if (e.target === userModal) {
-        userModal.style.display = 'none';
-      }
-    });
-
-    // --- نظام تتبع المستخدمين المتصلين (Presence) ---
-
+    // نظام حضور المستخدم (Presence)
     function setupPresence() {
-      const userStatusDatabaseRef = db.ref(`/status/${currentUser.uid}`);
+      const userStatusDatabaseRef = db.ref("/status/" + currentUser.uid);
 
       const isOfflineForDatabase = {
-        state: 'offline',
+        state: "offline",
         last_changed: firebase.database.ServerValue.TIMESTAMP,
       };
 
       const isOnlineForDatabase = {
-        state: 'online',
+        state: "online",
         last_changed: firebase.database.ServerValue.TIMESTAMP,
       };
 
-      const connectedRef = db.ref('.info/connected');
-      connectedRef.on('value', (snapshot) => {
+      const connectedRef = db.ref(".info/connected");
+      connectedRef.on("value", function(snapshot) {
         if (snapshot.val() === false) {
           return;
         }
@@ -653,18 +583,23 @@
           userStatusDatabaseRef.set(isOnlineForDatabase);
         });
       });
+    }
 
-      // تحديث عدد المستخدمين المتصلين بشكل مباشر
-      const statusRef = db.ref('/status');
-      statusRef.on('value', (snapshot) => {
-        const statuses = snapshot.val() || {};
+    // تحديث عدد المستخدمين المتصلين
+    function listenOnlineUsers() {
+      const statusRef = db.ref("/status");
+      statusRef.on("value", snapshot => {
         let onlineCount = 0;
-        Object.values(statuses).forEach(status => {
-          if (status.state === 'online') onlineCount++;
+        snapshot.forEach(userSnap => {
+          const status = userSnap.val();
+          if (status && status.state === "online") {
+            onlineCount++;
+          }
         });
-        onlineCountDiv.textContent = `المستخدمون المتصلون: ${onlineCount}`;
+        onlineCountNumber.textContent = onlineCount;
       });
     }
+
   </script>
 </body>
 </html>
