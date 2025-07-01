@@ -1,30 +1,92 @@
 <!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>عجلة الحظ - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <title>عجلة الحظ - Sheko Store</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body { font-family: 'Cairo', sans-serif; background: #f0f0f0; margin: 0; padding: 0; text-align: center; }
-    h1 { color: #222; margin-top: 20px; }
-    .wheel-container { position: relative; margin: 40px auto; width: 300px; height: 300px; }
-    .wheel { width: 100%; height: 100%; border-radius: 50%; border: 8px solid #222; position: relative; overflow: hidden; transition: transform 5s ease-out; }
-    .segment { position: absolute; width: 50%; height: 50%; top: 50%; left: 50%; transform-origin: 0% 0%; background: #ffb700; clip-path: polygon(0 0, 100% 0, 0 100%); display: flex; align-items: center; justify-content: center; font-size: 12px; color: #222; font-weight: bold; }
-    .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-bottom: 25px solid red; z-index: 10; }
-    #spinBtn { padding: 12px 25px; font-size: 16px; font-weight: bold; background: #222; color: white; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; margin-top: 20px; }
-    #spinBtn:hover { background: #ffb700; color: #222; }
-    #result { margin-top: 25px; font-size: 18px; font-weight: bold; color: green; }
+    body {
+      font-family: 'Cairo', sans-serif;
+      margin: 0;
+      background: linear-gradient(to bottom, #fff7e6, #ffe08a);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      color: #222;
+    }
+    h1 {
+      margin-bottom: 20px;
+      font-size: 28px;
+    }
+    #wheel {
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      border: 10px solid #222;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
+    .segment {
+      position: absolute;
+      width: 50%;
+      height: 50%;
+      background: #ffb700;
+      transform-origin: 100% 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-weight: bold;
+      color: #222;
+      font-size: 14px;
+    }
+    #pointer {
+      width: 0;
+      height: 0;
+      border-left: 20px solid transparent;
+      border-right: 20px solid transparent;
+      border-bottom: 30px solid #222;
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    #spinBtn {
+      margin-top: 30px;
+      background: #222;
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    #spinBtn:hover {
+      background: #ffb700;
+      color: #222;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+      color: green;
+    }
   </style>
 </head>
 <body>
-  <h1>عجلة الحظ</h1>
-  <div class="wheel-container">
-    <div class="pointer"></div>
-    <div class="wheel" id="wheel"></div>
+  <h1>جرب حظك اليوم!</h1>
+  <div id="wheel-container" style="position: relative;">
+    <div id="pointer"></div>
+    <div id="wheel"></div>
   </div>
   <button id="spinBtn">تدوير العجلة (50 نقطة)</button>
   <div id="result"></div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script>
-    const config = {
+    const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
       databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
@@ -33,91 +95,97 @@
       messagingSenderId: "113892775847",
       appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
-    firebase.initializeApp(config);
+    firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
 
-    let user = null;
-    let segments = [];
-    let probabilities = [];
-    let isSpinning = false;
-    const wheel = document.getElementById("wheel");
-    const resultDiv = document.getElementById("result");
-    const spinBtn = document.getElementById("spinBtn");
+    const wheel = document.getElementById('wheel');
+    const spinBtn = document.getElementById('spinBtn');
+    const resultEl = document.getElementById('result');
 
-    auth.onAuthStateChanged(u => {
-      if (!u) return location.href = "index.html";
-      user = u;
-      db.ref("wheelSegments").once("value", snapshot => {
-        const data = snapshot.val();
-        if (!data) {
-          wheel.innerHTML = '<p>لا توجد خانات بعد</p>';
-          spinBtn.disabled = true;
-          return;
-        }
-        segments = Object.keys(data);
-        probabilities = Object.values(data);
-        renderSegments();
-      });
+    let segments = [];
+    let angles = [];
+    let canSpin = false;
+    let currentUser = null;
+
+    auth.onAuthStateChanged(user => {
+      if (!user) return location.href = 'index.html';
+      currentUser = user;
+      loadWheel();
     });
 
-    function renderSegments() {
-      wheel.innerHTML = "";
-      const total = segments.length;
+    function loadWheel() {
+      db.ref('wheelSegments').once('value').then(snapshot => {
+        const data = snapshot.val() || {};
+        segments = Object.keys(data);
+        if (segments.length === 0) {
+          wheel.innerHTML = '<p style="text-align:center;margin-top:100px;">لم يتم ضبط خانات العجلة بعد</p>';
+          return;
+        }
+        drawWheel();
+        checkCooldown();
+      });
+    }
+
+    function drawWheel() {
+      wheel.innerHTML = '';
+      const angleSize = 360 / segments.length;
+      angles = [];
       segments.forEach((seg, i) => {
-        const angle = (360 / total) * i;
-        const div = document.createElement("div");
-        div.className = "segment";
-        div.style.transform = `rotate(${angle}deg) translate(-100%, -100%)`;
+        const angle = i * angleSize;
+        angles.push({ value: seg, from: angle, to: angle + angleSize });
+        const div = document.createElement('div');
+        div.className = 'segment';
+        div.style.transform = `rotate(${angle}deg) skewY(-${90 - angleSize}deg)`;
+        div.style.background = i % 2 === 0 ? '#ffe48a' : '#ffd047';
         div.textContent = seg;
         wheel.appendChild(div);
       });
     }
 
-    spinBtn.addEventListener("click", () => {
-      if (isSpinning) return;
-      db.ref(`users/${user.uid}/lastSpin`).once("value").then(snap => {
-        const last = snap.val();
+    function checkCooldown() {
+      const spinRef = db.ref('wheelSpins/' + currentUser.uid);
+      spinRef.once('value').then(snap => {
+        const lastSpin = snap.val();
         const now = Date.now();
-        if (last && now - last < 86400000) {
-          alert("يمكنك التدوير مرة واحدة كل 24 ساعة.");
-          return;
+        if (!lastSpin || now - lastSpin >= 86400000) {
+          canSpin = true;
+        } else {
+          const remaining = Math.ceil((86400000 - (now - lastSpin)) / 3600000);
+          resultEl.textContent = `يمكنك التدوير بعد ${remaining} ساعة`;
+          spinBtn.disabled = true;
         }
-        db.ref(`users/${user.uid}/balance`).once("value").then(balSnap => {
-          let balance = balSnap.val() || 0;
-          if (balance < 50) return alert("لا تملك نقاط كافية");
-          const selected = weightedChoice(segments, probabilities);
-          const index = segments.indexOf(selected);
-          const angle = 360 * 5 + (360 / segments.length) * index + Math.random() * 15;
-          isSpinning = true;
-          wheel.style.transition = "transform 5s ease-out";
-          wheel.style.transform = `rotate(-${angle}deg)`;
-          setTimeout(() => {
-            resultDiv.textContent = `مبروك! ربحت: ${selected}`;
-            isSpinning = false;
-            db.ref(`users/${user.uid}`).update({
-              balance: balance - 50,
-              lastSpin: Date.now()
-            });
-            db.ref("wheelResults").push({
-              user: user.email,
-              result: selected,
-              time: Date.now()
-            });
-          }, 5200);
-        });
+      });
+    }
+
+    spinBtn.addEventListener('click', () => {
+      if (!canSpin) return;
+      db.ref('users/' + currentUser.uid + '/points').once('value').then(snapshot => {
+        const points = snapshot.val() || 0;
+        if (points < 50) return alert('يجب أن يكون لديك 50 نقطة على الأقل');
+
+        // تدوير
+        const randomIndex = Math.floor(Math.random() * segments.length);
+        const chosenSegment = segments[randomIndex];
+        const rotation = 3600 + (360 / segments.length) * randomIndex;
+
+        wheel.style.transition = 'transform 5s ease-out';
+        wheel.style.transform = `rotate(-${rotation}deg)`;
+        spinBtn.disabled = true;
+
+        setTimeout(() => {
+          resultEl.textContent = `مبروك! ربحت: ${chosenSegment}`;
+          db.ref('wheelSpins/' + currentUser.uid).set(Date.now());
+          db.ref('users/' + currentUser.uid + '/points').set(points - 50);
+
+          const resultRef = db.ref('wheelResults').push();
+          resultRef.set({
+            user: currentUser.email,
+            reward: chosenSegment,
+            time: Date.now()
+          });
+        }, 5200);
       });
     });
-
-    function weightedChoice(items, weights) {
-      const total = weights.reduce((a, b) => a + b, 0);
-      const rand = Math.random() * total;
-      let sum = 0;
-      for (let i = 0; i < items.length; i++) {
-        sum += weights[i];
-        if (rand <= sum) return items[i];
-      }
-      return items[items.length - 1];
-    }
   </script></body>
 </html>
