@@ -47,6 +47,8 @@
       border: 1px solid #ccc;
       border-radius: 8px;
       background: #f9f9f9;
+      height: calc(100% - 90px);
+      white-space: pre-wrap;
     }
     .message {
       margin: 8px 0;
@@ -55,6 +57,7 @@
       border-radius: 20px;
       line-height: 1.3;
       word-wrap: break-word;
+      white-space: pre-wrap;
     }
     .message.admin {
       background: #ffb700;
@@ -71,6 +74,8 @@
     #inputArea {
       display: flex;
       gap: 10px;
+      align-items: center;
+      margin-top: 10px;
     }
     #replyInput {
       flex-grow: 1;
@@ -122,6 +127,7 @@
       padding: 2px 8px;
       cursor: pointer;
       transition: background 0.2s;
+      min-width: 70px;
     }
     .status-btn.open {
       background: #4caf50;
@@ -180,7 +186,13 @@
   <header>لوحة إدارة الدعم والشكاوى</header>
 
   <div id="chatContainer">
-    <div id="messages">اختر محادثة لعرض الرسائل...</div>
+    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <div id="chatUserName" style="font-weight: bold; font-size: 18px;">اختر محادثة لعرض الرسائل...</div>
+      <button id="toggleStatusBtn" class="status-btn" style="font-size: 14px; padding: 4px 10px; border-radius: 12px; display: none;">
+        حالة المحادثة
+      </button>
+    </div>
+    <div id="messages">لا توجد محادثة مختارة</div>
     <div id="inputArea" style="display:none;">
       <input type="text" id="replyInput" placeholder="اكتب ردك هنا..." />
       <button id="sendBtn"><i class="fa fa-paper-plane"></i> إرسال</button>
@@ -214,6 +226,8 @@
     const inputArea = document.getElementById('inputArea');
     const replyInput = document.getElementById('replyInput');
     const sendBtn = document.getElementById('sendBtn');
+    const toggleStatusBtn = document.getElementById('toggleStatusBtn');
+    const chatUserName = document.getElementById('chatUserName');
 
     let currentUser = null;
     let selectedConversationId = null;
@@ -250,6 +264,8 @@
         conversationsList.textContent = 'لا توجد محادثات حالياً';
         messagesEl.textContent = 'لا توجد محادثات حالياً';
         inputArea.style.display = 'none';
+        toggleStatusBtn.style.display = 'none';
+        chatUserName.textContent = 'لا توجد محادثات حالياً';
         return;
       }
       for (const convId in conversationsData) {
@@ -259,22 +275,7 @@
         if (convId === selectedConversationId) div.classList.add('active');
         div.textContent = conv.userName || `مستخدم (${conv.userId})`;
 
-        // زر حالة المحادثة (فتح/إغلاق)
-        const statusBtn = document.createElement('button');
-        statusBtn.classList.add('status-btn');
-        if (conv.status === 'open') {
-          statusBtn.textContent = 'مفتوحة';
-          statusBtn.classList.add('open');
-        } else {
-          statusBtn.textContent = 'مغلقة';
-          statusBtn.classList.add('closed');
-        }
-        statusBtn.onclick = (e) => {
-          e.stopPropagation();
-          toggleConversationStatus(convId);
-        };
-
-        div.appendChild(statusBtn);
+        // زر حالة المحادثة (فتح/إغلاق) تم نقله لأعلى المحادثة، لذا هنا لا نضيفه
 
         div.onclick = () => {
           selectConversation(convId);
@@ -285,16 +286,35 @@
     }
 
     // تبديل حالة المحادثة بين مفتوحة ومغلقة
-    function toggleConversationStatus(convId) {
-      const currentStatus = conversationsData[convId].status;
+    toggleStatusBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (!selectedConversationId) return;
+      const currentStatus = conversationsData[selectedConversationId].status;
       const newStatus = currentStatus === 'open' ? 'closed' : 'open';
-      db.ref(`supportChats/${convId}/status`).set(newStatus);
-    }
+      db.ref(`supportChats/${selectedConversationId}/status`).set(newStatus);
+    };
 
     // تحديد محادثة للعرض والرد
     function selectConversation(convId) {
       selectedConversationId = convId;
       renderConversationsList();
+
+      // عرض اسم المستخدم أعلى المحادثة
+      chatUserName.textContent = conversationsData[convId].userName || `مستخدم (${conversationsData[convId].userId})`;
+
+      // إظهار زر حالة المحادثة وضبط نصه ولونه حسب الحالة
+      const status = conversationsData[convId].status;
+      toggleStatusBtn.style.display = 'inline-block';
+      if (status === 'open') {
+        toggleStatusBtn.textContent = 'مفتوحة';
+        toggleStatusBtn.classList.remove('closed');
+        toggleStatusBtn.classList.add('open');
+      } else {
+        toggleStatusBtn.textContent = 'مغلقة';
+        toggleStatusBtn.classList.remove('open');
+        toggleStatusBtn.classList.add('closed');
+      }
+
       loadMessages(convId);
     }
 
