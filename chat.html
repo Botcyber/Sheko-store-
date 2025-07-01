@@ -88,14 +88,12 @@
       flex-wrap: wrap;
     }
     .username .badge {
-      background: #222;
-      color: #ffb700;
-      padding: 2px 6px;
-      border-radius: 8px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      box-shadow: 0 0 3px #ffb700;
-      user-select: none;
+      background:#ffb700; 
+      color:#222; 
+      padding:2px 6px; 
+      border-radius:8px; 
+      font-size:0.75rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     }
     .timestamp {
       font-size: 0.7rem;
@@ -303,11 +301,6 @@
     // متغير لتخزين رسالة الرد (مقتبسة)
     let replyMessage = null;
 
-    // حالة الدردشة
-    let isChatOpen = true;
-    // قائمة المستخدمين المحظورين
-    let blockedUsers = [];
-
     auth.onAuthStateChanged(user => {
       if (!user) return location.href = "index.html";
       currentUser = user;
@@ -316,44 +309,8 @@
       db.ref("usersOnline/" + user.uid).set(true);
       db.ref("usersOnline/" + user.uid).onDisconnect().remove();
 
-      // استمع لحالة الدردشة و المحظورين
-      listenChatSettings();
-
-      // ابدأ الاستماع لرسائل الدردشة
       listenForMessages();
     });
-
-    // الاستماع لحالة الدردشة وقائمة المحظورين من قاعدة البيانات (صفحة الادمن)
-    function listenChatSettings() {
-      db.ref("chatSettings/isChatOpen").on("value", snap => {
-        isChatOpen = snap.val();
-        updateInputState();
-      });
-
-      db.ref("chatSettings/blockedUsers").on("value", snap => {
-        blockedUsers = snap.val() || [];
-        updateInputState();
-      });
-    }
-
-    // تحديث حالة مربع الإدخال وزر الإرسال بناءً على حالة الدردشة وحظر المستخدم
-    function updateInputState() {
-      if (!isChatOpen) {
-        messageInput.disabled = true;
-        sendBtn.disabled = true;
-        messageInput.placeholder = "الدردشة مغلقة حالياً من قبل الإدارة";
-        return;
-      }
-      if (blockedUsers.includes(currentUser.uid)) {
-        messageInput.disabled = true;
-        sendBtn.disabled = true;
-        messageInput.placeholder = "لقد تم حظرك من الدردشة";
-        return;
-      }
-      messageInput.disabled = false;
-      sendBtn.disabled = false;
-      messageInput.placeholder = "اكتب رسالتك هنا...";
-    }
 
     // تحديث عدد المستخدمين المتصلين
     db.ref("usersOnline").on("value", snap => {
@@ -376,15 +333,22 @@
 
     // عرض رسالة واحدة
     function renderMessage(id, msg) {
-      const msgDiv = document.createElement("div");
-      msgDiv.className = "message";
-      if (msg.uid === currentUser.uid) msgDiv.classList.add("own");
-
-      // عنصر الصورة (الأفاتار)
-      const avatar = document.createElement("div");
-      avatar.className = "avatar";
-
+      // أولاً، جلب بيانات المستخدم
       getUserData(msg.uid).then(userData => {
+
+        // منع عرض رسائل المستخدم المحظور (إلا للأدمن)
+        if (userData.banned && currentUser.uid !== "mlifDgEAkKMaOeuUq63cs5NAkV93") {
+          return; // لا تعرض الرسالة
+        }
+
+        const msgDiv = document.createElement("div");
+        msgDiv.className = "message";
+        if (msg.uid === currentUser.uid) msgDiv.classList.add("own");
+
+        // عنصر الصورة (الأفاتار)
+        const avatar = document.createElement("div");
+        avatar.className = "avatar";
+
         avatar.innerHTML = '';
         const img = document.createElement("img");
         img.src = userData.profileImage || "https://via.placeholder.com/48?text=صورة";
@@ -394,153 +358,226 @@
 
         // عند الضغط على الصورة تظهر نافذة معلومات المستخدم
         avatar.onclick = () => showUserInfo(userData);
-      });
 
-      // محتوى الرسالة مع الرد المقتبس (إن وجد)
-      const content = document.createElement("div");
-      content.className = "content";
+        // محتوى الرسالة مع الرد المقتبس (إن وجد)
+        const content = document.createElement("div");
+        content.className = "content";
 
-      // عرض اسم المستخدم الحقيقي مع الشارات بجانبه
-      const displayName = msg.username && msg.username !== msg.uid ? msg.username : (msg.username || "مستخدم مجهول");
+        // اسم المستخدم الحقيقي بدل البريد الإلكتروني
+        const displayName = msg.username && msg.username !== msg.uid ? msg.username : (msg.username || "مستخدم مجهول");
 
-      // بناء عنصر الاسم مع الشارات
-      const usernameDiv = document.createElement("div");
-      usernameDiv.className = "username";
-
-      const nameSpan = document.createElement("span");
-      nameSpan.textContent = displayName;
-      usernameDiv.appendChild(nameSpan);
-
-      // أضف شارات المستخدم من بياناته (إذا كانت موجودة)
-      getUserData(msg.uid).then(userData => {
+        // بناء HTML للشارات بجانب الاسم
+        let badgesHTML = "";
         if (userData.badges && userData.badges.length) {
-          userData.badges.forEach(badge => {
-            const badgeSpan = document.createElement("span");
-            badgeSpan.className = "badge";
-            badgeSpan.textContent = badge;
-            usernameDiv.appendChild(badgeSpan);
-          });
+          badgesHTML = userData.badges.map(b => `<span class="badge">${escapeHtml(b)}</span>`).join("");
         }
-      });
 
-      // رسالة الرد (مقتبس)
-      let replyHTML = "";
-      if (msg.replyTo && typeof msg.replyTo === "object" && msg.replyTo.text) {
-        replyHTML = `
-          <div style="background:#f0e68c; padding:6px 10px; border-radius:10px; margin-bottom:6px; font-size:0.8rem; color:#444;">
-            <strong>رد على:</strong> ${escapeHtml(msg.replyTo.text.slice(0, 50))}${msg.replyTo.text.length > 50 ? "..." : ""}
-          </div>
-        `;
-      }
+        // عرض اسم المستخدم مع الشارات
+        const usernameHTML = `<div class="username">${escapeHtml(displayName)}${badgesHTML}</div>`;
 
-      // التفاعل - عرض الإيموجي وعددهم
-      let reactionsHTML = "";
-      if (msg.reactions) {
-        reactionsHTML = `<div style="margin-top: 6px;">`;
-        for (const [emoji, users] of Object.entries(msg.reactions)) {
-          reactionsHTML += `<span style="cursor:pointer; margin-right: 8px;" title="${emoji}">${emoji} (${Object.keys(users).length})</span>`;
+        let replyHTML = "";
+        if (msg.replyTo && typeof msg.replyTo === "object" && msg.replyTo.text) {
+          replyHTML = `
+            <div style="background:#f0e68c; padding:6px 10px; border-radius:10px; margin-bottom:6px; font-size:0.8rem; color:#444;">
+              <strong>رد على:</strong> ${escapeHtml(msg.replyTo.text.slice(0, 50))}${msg.replyTo.text.length > 50 ? "..." : ""}
+            </div>
+          `;
         }
-        reactionsHTML += `</div>`;
-      }
 
-      content.innerHTML = `
-        ${replyHTML}
-        <div>${escapeHtml(msg.text)}</div>
-        <div class="timestamp">${new Date(msg.timestamp).toLocaleString("ar-EG")}</div>
-        ${reactionsHTML}
-      `;
-
-      // أضف اسم المستخدم مع الشارات في أعلى المحتوى
-      content.insertBefore(usernameDiv, content.firstChild);
-
-      // زر حذف الرسالة:
-      if (msg.uid === currentUser.uid || currentUser.uid === "mlifDgEAkKMaOeuUq63cs5NAkV93") {
-        const del = document.createElement("button");
-        del.textContent = "حذف";
-        del.className = "delete-btn";
-        del.onclick = () => {
-          if (confirm("هل أنت متأكد من حذف هذه الرسالة؟")) {
-            db.ref("chatMessages/" + id).remove();
+        // التفاعل - عرض الإيموجي وعددهم
+        let reactionsHTML = "";
+        if (msg.reactions) {
+          reactionsHTML = `<div style="margin-top: 6px;">`;
+          for (const [emoji, users] of Object.entries(msg.reactions)) {
+            reactionsHTML += `<span style="cursor:pointer; margin-right: 8px;" title="${emoji}">${emoji} (${Object.keys(users).length})</span>`;
           }
-        };
-        msgDiv.appendChild(del);
-      }
+          reactionsHTML += `</div>`;
+        }
 
-      // إضافة خاصية التفاعل بالإيموجي
-      const reactionsContainer = document.createElement("div");
-      reactionsContainer.style.marginTop = "5px";
-      reactionEmojis.forEach(emoji => {
-        const emojiBtn = document.createElement("span");
-        emojiBtn.textContent = emoji;
-        emojiBtn.style.cursor = "pointer";
-        emojiBtn.style.marginRight = "8px";
-        emojiBtn.title = "اضغط للتفاعل بـ " + emoji;
-        emojiBtn.onclick = () => toggleReaction(id, emoji);
-        reactionsContainer.appendChild(emojiBtn);
-      });
-      content.appendChild(reactionsContainer);
+        content.innerHTML = `
+          ${usernameHTML}
+          ${replyHTML}
+          <div>${escapeHtml(msg.text)}</div>
+          <div class="timestamp">${new Date(msg.timestamp).toLocaleString("ar-EG")}</div>
+          ${reactionsHTML}
+        `;
 
-      // إضافة استماع لسحب الرسالة يمين للرد (Swipe Right)
-      addSwipeRightListener(msgDiv, msg, id);
+        // زر حذف الرسالة:
+        // - يسمح للمستخدم صاحب الرسالة بحذفها
+        // - ويسمح للمستخدم الخاص بحذف أي رسالة
+        if (msg.uid === currentUser.uid || currentUser.uid === "mlifDgEAkKMaOeuUq63cs5NAkV93") {
+          const del = document.createElement("button");
+          del.textContent = "حذف";
+          del.className = "delete-btn";
+          del.onclick = () => {
+            if (confirm("هل أنت متأكد من حذف هذه الرسالة؟")) {
+              db.ref("chatMessages/" + id).remove();
+            }
+          };
+          msgDiv.appendChild(del);
+        }
 
-      msgDiv.appendChild(avatar);
-      msgDiv.appendChild(content);
-      chatContainer.appendChild(msgDiv);
-    }
+        // زر الحظر (للمستخدم الخاص فقط)
+        if (currentUser.uid === "mlifDgEAkKMaOeuUq63cs5NAkV93" && msg.uid !== currentUser.uid) {
+          const banBtn = document.createElement("button");
+          banBtn.textContent = userData.banned ? "رفع الحظر" : "حظر";
+          banBtn.className = "delete-btn";
+          banBtn.style.backgroundColor = userData.banned ? "#28a745" : "#dc3545";
+          banBtn.onclick = () => {
+            if (confirm("هل أنت متأكد من حظر/رفع حظر هذا المستخدم؟")) {
+              const newBanState = !userData.banned;
+              db.ref("users/" + msg.uid).update({ banned: newBanState }).then(() => {
+                alert(newBanState ? "تم حظر المستخدم" : "تم رفع الحظر عن المستخدم");
+                usersCache[msg.uid].banned = newBanState; // تحديث الكاش
+                listenForMessages(); // إعادة تحميل الرسائل فورًا
+              });
+            }
+          };
+          msgDiv.appendChild(banBtn);
+        }
 
-    // دالة لجلب بيانات المستخدم مع التخزين المؤقت
-    async function getUserData(uid) {
-      if (usersCache[uid]) return usersCache[uid];
-      const snapshot = await db.ref("users/" + uid).once("value");
-      const data = snapshot.val() || {};
-      usersCache[uid] = data;
-      return data;
-    }
-
-    // فتح نافذة معلومات المستخدم
-    function showUserInfo(userData) {
-      popupImage.src = userData.profileImage || "https://via.placeholder.com/100?text=صورة";
-      popupName.textContent = userData.username || "مستخدم مجهول";
-      popupBadges.innerHTML = "";
-      popupVIP.style.display = "none";
-      popupRank.textContent = "";
-
-      if (userData.badges && userData.badges.length) {
-        userData.badges.forEach(badge => {
-          const span = document.createElement("span");
-          span.className = "badge";
-          span.textContent = badge;
-          popupBadges.appendChild(span);
+        // إضافة خاصية التفاعل بالإيموجي
+        const reactionsContainer = document.createElement("div");
+        reactionsContainer.style.marginTop = "5px";
+        reactionEmojis.forEach(emoji => {
+          const emojiBtn = document.createElement("span");
+          emojiBtn.textContent = emoji;
+          emojiBtn.style.cursor = "pointer";
+          emojiBtn.style.marginRight = "8px";
+          emojiBtn.title = "اضغط للتفاعل بـ " + emoji;
+          emojiBtn.onclick = () => toggleReaction(id, emoji);
+          reactionsContainer.appendChild(emojiBtn);
         });
-      }
+        content.appendChild(reactionsContainer);
 
-      if (userData.vipRank) {
-        popupVIP.style.display = "block";
-        popupVIP.textContent = "VIP " + userData.vipRank;
-      }
+        // إضافة استماع لسحب الرسالة يمين للرد (Swipe Right)
+        addSwipeRightListener(msgDiv, msg, id);
 
-      if (userData.rankName) {
-        popupRank.textContent = userData.rankName;
-      }
-
-      userInfoPopup.style.display = "block";
-      overlay.style.display = "block";
+        msgDiv.appendChild(avatar);
+        msgDiv.appendChild(content);
+        chatContainer.appendChild(msgDiv);
+      });
     }
 
-    closeBtn.onclick = () => {
-      userInfoPopup.style.display = "none";
-      overlay.style.display = "none";
-    };
-    overlay.onclick = closeBtn.onclick;
+// إرسال رسالة
+sendBtn.onclick = () => {
+  const text = messageInput.value.trim();
+  if (text === "") return;
 
-    // الهروب من HTML الضار
-    function escapeHtml(text) {
-      return text.replace(/[&<>"']/g, m => {
-        switch(m) {
-          case "&": return "&amp;";
-          case "<": return "&lt;";
-          case ">": return "&gt;";
-          case '"': return "&quot;";
+  const messageData = {
+    text: text,
+    uid: currentUser.uid,
+    username: currentUser.displayName || currentUser.email,
+    timestamp: Date.now()
+  };
+
+  if (replyMessage) {
+    messageData.replyTo = {
+      text: replyMessage.text,
+      username: replyMessage.username
+    };
+    replyMessage = null; // إعادة تعيين
+  }
+
+  db.ref("chatMessages").push(messageData);
+  messageInput.value = "";
+};
+
+// استرجاع بيانات المستخدم من قاعدة البيانات أو من الكاش
+function getUserData(uid) {
+  if (usersCache[uid]) {
+    return Promise.resolve(usersCache[uid]);
+  }
+
+  return db.ref("users/" + uid).once("value").then(snap => {
+    const userData = snap.val() || {};
+    // إضافة الشارات الخاصة للمستخدم الخاص
+    if (specialBadgesForUser[uid]) {
+      userData.badges = specialBadgesForUser[uid].badges;
+      userData.vip = specialBadgesForUser[uid].vip;
+    }
+
+    userData.uid = uid;
+    usersCache[uid] = userData;
+    return userData;
+  });
+}
+
+// عرض نافذة معلومات المستخدم
+function showUserInfo(user) {
+  popupImage.src = user.profileImage || "https://via.placeholder.com/100";
+  popupName.textContent = user.username || "مستخدم مجهول";
+
+  popupBadges.innerHTML = "";
+  if (user.badges) {
+    user.badges.forEach(b => {
+      const badgeEl = document.createElement("span");
+      badgeEl.className = "badge";
+      badgeEl.textContent = b;
+      popupBadges.appendChild(badgeEl);
+    });
+  }
+
+  popupVIP.style.display = user.vip ? "block" : "none";
+  popupVIP.textContent = user.vip ? "VIP " + user.vip : "";
+
+  popupRank.textContent = user.rank ? "الرتبة: " + user.rank : "";
+
+  overlay.style.display = "block";
+  userInfoPopup.style.display = "block";
+}
+
+closeBtn.onclick = () => {
+  overlay.style.display = "none";
+  userInfoPopup.style.display = "none";
+};
+
+overlay.onclick = closeBtn.onclick;
+
+// التعامل مع التفاعل بالإيموجي
+function toggleReaction(messageId, emoji) {
+  const reactionRef = db.ref(`chatMessages/${messageId}/reactions/${emoji}/${currentUser.uid}`);
+  reactionRef.once("value").then(snap => {
+    if (snap.exists()) {
+      reactionRef.remove();
+    } else {
+      reactionRef.set(true);
+    }
+  });
+}
+
+// منع الكلمات السيئة (اختياري - تحسين لاحقاً)
+
+// الاستماع للسحب للرد على الرسائل
+function addSwipeRightListener(element, msg, id) {
+  let startX;
+  element.addEventListener("touchstart", e => {
+    startX = e.touches[0].clientX;
+  });
+  element.addEventListener("touchend", e => {
+    const endX = e.changedTouches[0].clientX;
+    if (startX - endX > -70 && startX - endX < 70) return;
+    replyMessage = { text: msg.text, username: msg.username || "مستخدم" };
+    messageInput.placeholder = `رد على: ${replyMessage.text.slice(0, 30)}...`;
+  });
+}
+
+// التعامل مع ضغط Enter للإرسال
+messageInput.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendBtn.click();
+  }
+});
+
+// حماية HTML
+function escapeHtml(text) {
+  if (!text) return "";
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+            case '"': return "&quot;";
           case "'": return "&#039;";
           default: return m;
         }
