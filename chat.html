@@ -9,50 +9,55 @@
     body {
       font-family: 'Cairo', sans-serif;
       margin: 0; padding: 0;
-      background: linear-gradient(135deg, #222 0%, #111 100%);
-      color: #eee;
+      background: #fff;
+      color: #222;
       height: 100vh;
       display: flex;
       flex-direction: column;
     }
     header {
-      padding: 10px 20px;
-      background: rgba(255, 183, 0, 0.9);
+      padding: 15px 20px;
+      background: #ffb700;
       color: #222;
       font-weight: bold;
       text-align: center;
-      font-size: 1.5rem;
+      font-size: 1.6rem;
       box-shadow: 0 3px 10px #ffb700aa;
     }
     #chatContainer {
       flex: 1;
-      padding: 10px;
+      padding: 10px 15px;
       overflow-y: auto;
-      background: rgba(0,0,0,0.6);
+      background: #f9f9f9;
       position: relative;
-      backdrop-filter: blur(6px);
+      border: 1px solid #ddd;
+      border-radius: 8px;
     }
     .message {
       display: flex;
       align-items: flex-start;
       margin: 10px 0;
       max-width: 70%;
-      padding: 8px 12px;
+      padding: 10px 15px;
       border-radius: 12px;
       position: relative;
       animation: fadeInUp 0.4s ease forwards;
       user-select: none;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+      cursor: default;
     }
     .message.own {
-      background: #ffb700cc;
+      background: #fff3cd;
       margin-left: auto;
       color: #222;
       flex-direction: row-reverse;
+      border: 1px solid #ffecb5;
     }
     .message.other {
-      background: #444;
-      color: #eee;
+      background: #e9ecef;
+      color: #222;
       margin-right: auto;
+      border: 1px solid #ced4da;
     }
     .avatar {
       width: 40px;
@@ -63,6 +68,7 @@
       flex-shrink: 0;
       border: 2px solid #ffb700;
       object-fit: cover;
+      background: #ddd;
     }
     .content {
       flex-grow: 1;
@@ -70,14 +76,16 @@
     }
     #inputContainer {
       display: flex;
-      padding: 10px 20px;
-      background: rgba(0,0,0,0.8);
+      padding: 12px 20px;
+      background: #fff8e1;
+      border-top: 1px solid #ffd454;
+      border-radius: 0 0 8px 8px;
     }
     #messageInput {
       flex-grow: 1;
       padding: 10px 15px;
       border-radius: 30px;
-      border: none;
+      border: 1px solid #ffc107;
       outline: none;
       font-size: 1rem;
       font-family: 'Cairo', sans-serif;
@@ -99,7 +107,7 @@
       background: #ffcc33;
     }
     #sendBtn:disabled {
-      background: #555;
+      background: #e0dcdc;
       cursor: not-allowed;
       box-shadow: none;
     }
@@ -111,9 +119,9 @@
       background: #dc3545;
       border: none;
       color: white;
-      padding: 2px 6px;
+      padding: 3px 7px;
       border-radius: 5px;
-      font-size: 0.8rem;
+      font-size: 0.85rem;
       cursor: pointer;
       display: none;
       z-index: 10;
@@ -127,43 +135,49 @@
       position: fixed;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      background: #222;
+      background: #fff;
       border-radius: 15px;
-      padding: 20px;
+      padding: 25px 20px 20px 20px;
       box-shadow: 0 0 20px #ffb700aa;
-      color: #eee;
-      width: 300px;
+      color: #222;
+      width: 320px;
       max-width: 90%;
       display: none;
       z-index: 1000;
       text-align: center;
+      font-weight: 600;
+      font-family: 'Cairo', sans-serif;
     }
     #userInfoModal img {
-      width: 80px;
-      height: 80px;
+      width: 90px;
+      height: 90px;
       border-radius: 50%;
-      border: 2px solid #ffb700;
-      margin-bottom: 10px;
+      border: 3px solid #ffb700;
+      margin-bottom: 15px;
       object-fit: cover;
+      background: #ddd;
     }
     #userInfoModal h3 {
-      margin: 5px 0;
+      margin: 5px 0 10px 0;
+      font-size: 1.4rem;
+      color: #333;
     }
     #userInfoModal .badges {
       margin-top: 10px;
       display: flex;
       justify-content: center;
-      gap: 8px;
+      gap: 10px;
       flex-wrap: wrap;
     }
     .badge {
       background: #ffb700;
       color: #222;
-      padding: 5px 10px;
-      border-radius: 20px;
-      font-size: 0.85rem;
+      padding: 6px 12px;
+      border-radius: 25px;
+      font-size: 0.9rem;
       font-weight: bold;
       box-shadow: 0 0 8px #ffb700bb;
+      user-select: none;
     }
     #closeUserInfo {
       position: absolute;
@@ -171,7 +185,7 @@
       right: 12px;
       cursor: pointer;
       font-weight: bold;
-      font-size: 1.2rem;
+      font-size: 1.4rem;
       color: #ffb700;
     }
 
@@ -192,8 +206,8 @@
   <button id="sendBtn" disabled>إرسال</button>
 </div>
 
-<div id="userInfoModal">
-  <span id="closeUserInfo">&times;</span>
+<div id="userInfoModal" role="dialog" aria-modal="true" aria-labelledby="userInfoName">
+  <span id="closeUserInfo" title="إغلاق النافذة">&times;</span>
   <img id="userInfoAvatar" src="" alt="صورة المستخدم" />
   <h3 id="userInfoName">اسم المستخدم</h3>
   <div class="badges" id="userBadges"></div>
@@ -231,9 +245,9 @@
   const closeUserInfo = document.getElementById('closeUserInfo');
 
   let currentUser = null;
-  let usersData = {}; // لتخزين بيانات المستخدمين (الاسم، الصورة، الشارات، التصنيف)
+  let usersData = {}; // بيانات المستخدمين (الاسم، الصورة، الشارات، التصنيف)
 
-  // شارات خاصة للمستخدم المعين
+  // شارات خاصة للمستخدم المميز
   const specialUserId = "mlifDgEAkKMaOeuUq63cs5NAkV93";
   const specialBadges = [
     "صانع الموقع",
@@ -254,7 +268,7 @@
     listenForMessages();
   });
 
-  // تحميل بيانات جميع المستخدمين (الاسم، الصورة، الشارات، التصنيف)
+  // تحميل بيانات المستخدمين من قاعدة البيانات
   function loadAllUsersData() {
     db.ref('users').once('value').then(snapshot => {
       usersData = snapshot.val() || {};
@@ -277,7 +291,7 @@
       const msg = messages[key];
       const isOwn = msg.uid === currentUser.uid;
 
-      // بيانات المرسل
+      // بيانات المرسل من usersData، اسم المستخدم (name) وصورة (photoURL)
       const user = usersData[msg.uid] || {};
       const name = user.name || msg.email || "مستخدم مجهول";
       const avatar = user.photoURL || "https://i.pravatar.cc/40?u=" + msg.uid;
@@ -288,52 +302,33 @@
       messageDiv.classList.add(isOwn ? 'own' : 'other');
       messageDiv.dataset.key = key;
 
-      // بناء محتوى الرسالة مع زر الحذف (مخفي تلقائياً)
       messageDiv.innerHTML = `
-        <img src="${avatar}" alt="avatar" class="avatar" data-uid="${msg.uid}" />
+        <img src="${avatar}" alt="صورة ${name}" class="avatar" data-uid="${msg.uid}" />
         <div class="content">
-          <strong>${name}</strong>
+          <strong>${escapeHtml(name)}</strong>
           <div>${escapeHtml(msg.text)}</div>
         </div>
-        <button class="delete-btn-message">حذف</button>
+        <button class="delete-btn-message" title="حذف الرسالة">حذف</button>
       `;
 
       chatContainer.appendChild(messageDiv);
 
-      // عند الضغط على الصورة تظهر نافذة معلومات المستخدم
+      // عند الضغط على صورة المستخدم تظهر نافذة معلوماته
       messageDiv.querySelector('.avatar').addEventListener('click', () => {
         showUserInfo(msg.uid);
       });
 
-      // إضافة أحداث الضغط المطول لإظهار زر الحذف
+      // إضافة دعم زر حذف عند الضغط المطول
       addDeleteButtonHandler(messageDiv, key, msg.uid);
     });
   }
 
-  // الهروب من النص لتجنب كلمات سيئة (يمكنك إضافة فلتر هنا)
-  function escapeHtml(text) {
-    const map = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#039;'
-    };
-    return text.replace(/[&<>"']/g, m => map[m]);
+  // فلتر كلمات سيئة (يمكن توسعته)
+  const badWords = ['سيء', 'كلمةسيئة', 'شتم'];
+  function containsBadWords(text) {
+    const lowered = text.toLowerCase();
+    return badWords.some(word => lowered.includes(word));
   }
-
-  // زر إرسال رسالة
-  sendBtn.addEventListener('click', () => {
-    sendMessage();
-  });
-
-  // إرسال رسالة عند الضغط Enter
-  messageInput.addEventListener('keypress', e => {
-    if(e.key === 'Enter' && !e.shiftKey){
-      e.preventDefault();
-      sendMessage();
-    }
-  });
 
   // إرسال رسالة
   function sendMessage() {
@@ -358,41 +353,47 @@
     });
   }
 
-  // فلتر للكلمات السيئة (مثال بسيط، يمكن تطويره)
-  const badWords = ['سيء', 'كلمةسيئة', 'شتم']; // أضف كلمات أكثر حسب الحاجة
-  function containsBadWords(text) {
-    const lowered = text.toLowerCase();
-    return badWords.some(word => lowered.includes(word));
-  }
+  // زر إرسال
+  sendBtn.addEventListener('click', () => {
+    sendMessage();
+  });
 
-  // تمرير الدردشة للآخر تلقائياً
+  // إرسال عند الضغط Enter (دون Shift)
+  messageInput.addEventListener('keypress', e => {
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  // تمرير الدردشة لأسفل
   function scrollChatToBottom() {
     chatContainer.scrollTop = chatContainer.scrollHeight;
   }
 
-  // عرض نافذة معلومات المستخدم
+  // إظهار نافذة معلومات المستخدم مع الشارات
   function showUserInfo(uid) {
     const user = usersData[uid] || {};
     userInfoAvatar.src = user.photoURL || "https://i.pravatar.cc/80?u=" + uid;
     userInfoName.textContent = user.name || user.email || "مستخدم مجهول";
 
-    // الشارات الخاصة تظهر فقط في النافذة
     userBadges.innerHTML = '';
     if(uid === specialUserId){
-      specialBadges.forEach(b => {
+      specialBadges.forEach(badge => {
         const span = document.createElement('span');
         span.className = 'badge';
-        span.textContent = b;
+        span.textContent = badge;
         userBadges.appendChild(span);
       });
-    } else if(user.badges && Array.isArray(user.badges)) {
-      user.badges.forEach(b => {
+    } else if (user.badges && Array.isArray(user.badges)) {
+      user.badges.forEach(badge => {
         const span = document.createElement('span');
         span.className = 'badge';
-        span.textContent = b;
+        span.textContent = badge;
         userBadges.appendChild(span);
       });
     }
+
     userInfoModal.style.display = 'block';
   }
 
@@ -400,17 +401,15 @@
     userInfoModal.style.display = 'none';
   });
 
-  // إضافة دعم زر حذف يظهر عند الضغط المطول
+  // زر حذف يظهر عند الضغط المطول
   function addDeleteButtonHandler(messageDiv, messageKey, messageUid) {
     let timer = null;
     const deleteBtn = messageDiv.querySelector('.delete-btn-message');
 
-    // عند الضغط المطول على الرسالة
     messageDiv.addEventListener('mousedown', () => {
       timer = setTimeout(() => {
-        // عرض زر الحذف
         messageDiv.classList.add('show-delete-btn');
-      }, 700); // 700 مللي ثانية ضغط مطول
+      }, 700);
     });
 
     messageDiv.addEventListener('mouseup', () => {
@@ -421,10 +420,8 @@
       clearTimeout(timer);
     });
 
-    // عند الضغط على زر الحذف
     deleteBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      // فقط صاحب الرسالة أو المستخدم المميز يمكنه الحذف
       if(currentUser.uid === messageUid || currentUser.uid === specialUserId){
         if(confirm("هل تريد حذف هذه الرسالة؟")){
           db.ref('chatMessages/' + messageKey).remove();
@@ -432,7 +429,6 @@
       } else {
         alert("لا يمكنك حذف هذه الرسالة");
       }
-      // اخفاء زر الحذف بعد الإجراء
       messageDiv.classList.remove('show-delete-btn');
     });
   }
