@@ -89,17 +89,17 @@
       margin-left: auto;
       margin-right: 10px;
     }
-    .message .content .msg-header {
+    .message .username {
       font-weight: 700;
-      font-size: 0.85rem;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
       color: #444;
-      display: flex;
-      justify-content: space-between;
-      direction: rtl;
+      font-size: 0.85rem;
     }
-    .message.own .content .msg-header {
-      color: #ffb700;
+    .message .timestamp {
+      font-size: 0.7rem;
+      color: #666;
+      margin-top: 4px;
+      align-self: flex-end;
     }
     #inputContainer {
       display: flex;
@@ -136,6 +136,7 @@
       background: #ccc;
       cursor: not-allowed;
     }
+
     /* مودال النافذة */
     #userModal {
       display: none;
@@ -240,6 +241,7 @@
       margin-top: 15px;
       user-select: none;
     }
+
     /* حركات وتأثيرات الشارات */
     @keyframes badgeGlow {
       0%, 100% {
@@ -259,6 +261,7 @@
         color: #fff8b3;
       }
     }
+
     /* تأثير اسم المستخدم في المودال */
     @keyframes userNamePulse {
       0%, 100% {
@@ -278,6 +281,7 @@
         transform: scale(1.05) translateY(-4px);
       }
     }
+
     /* حركة صورة المستخدم */
     @keyframes imageSlideInOut {
       0%, 100% {
@@ -293,6 +297,7 @@
           inset 0 0 12px #fffecbaa;
       }
     }
+
     /* زر حذف الرسائل */
     .delete-btn {
       margin-right: 10px;
@@ -398,87 +403,95 @@
       });
     }
 
-    // استدعاء رابط الصورة من Firebase Storage إذا موجودة
-    async function getUserProfileImage(uid) {
-      try {
-        // افتراضياً مسار الصورة في Storage هو usersProfileImages/{uid}.jpg
-        const url = await storage.ref(`usersProfileImages/${uid}.jpg`).getDownloadURL();
-        return url;
-      } catch (error) {
-        return null;
-      }
+    // تنسيق الطابع الزمني لعرض الوقت والتاريخ
+    function formatTimestamp(ts) {
+      const date = new Date(ts);
+      return date.toLocaleString('ar-EG', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
     }
 
     // الاستماع للرسائل الجديدة من قاعدة بيانات Firebase
     function listenForMessages() {
-      db.ref('chatMessages').on('value', async snapshot => {
+      db.ref('chatMessages').on('value', snapshot => {
         const messages = snapshot.val() || {};
-        // لتحميل صور المستخدمين فقط مرة واحدة
-        for (const uid in usersData) {
-          if (!usersData[uid].profileImage) {
-            usersData[uid].profileImage = await getUserProfileImage(uid);
-          }
-        }
         renderMessages(messages);
         scrollChatToBottom();
       });
     }
 
-    // دالة تنسيق التاريخ (تاريخ ووقت)
-    function formatTimestamp(ts) {
-      const date = new Date(ts);
-      return date.toLocaleDateString('ar-EG') + ' ' + date.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
+    // جلب رابط صورة المستخدم من التخزين أو إظهار أول حرف إذا لم توجد صورة
+    async function getUserPhotoURL(uid, fallbackChar) {
+      if (!usersData[uid] || !usersData[uid].photoURL) {
+        return null;
+      }
+      try {
+        const photoURL = usersData[uid].photoURL;
+        // افترض أن photoURL هو رابط مباشر أو رابط تخزين firebase
+        // إذا هو رابط تخزين Firebase، استخرج الرابط النهائي
+        if (photoURL.startsWith('gs://') || photoURL.startsWith('user_photos/')) {
+          const url = await storage.ref(photoURL).getDownloadURL();
+          return url;
+        }
+        return photoURL;
+      } catch (error) {
+        console.warn('خطأ في تحميل صورة المستخدم:', error);
+        return null;
+      }
     }
 
     // عرض الرسائل في الصفحة
-    function renderMessages(messages) {
+    async function renderMessages(messages) {
       chatContainer.innerHTML = '';
-      Object.keys(messages).forEach(key => {
+      for (const key of Object.keys(messages)) {
         const msg = messages[key];
         const isOwn = msg.uid === currentUser.uid;
         const userData = usersData[msg.uid] || {};
         const userName = userData.username || msg.email || "مستخدم مجهول";
-        const profileImage = userData.profileImage || null;
 
         const msgDiv = document.createElement('div');
         msgDiv.classList.add('message');
         if (isOwn) msgDiv.classList.add('own');
 
-        // إنشاء العنصر الخاص بالأفاتار (صورة أو أول حرف)
+        // تحضير صورة المستخدم أو أول حرف اسمه
         const avatar = document.createElement('div');
         avatar.className = 'avatar';
         avatar.title = userName;
         avatar.addEventListener('click', () => showUserModal(msg.uid));
-        if (profileImage) {
+
+        const photoURL = await getUserPhotoURL(msg.uid, userName.charAt(0).toUpperCase());
+
+        if (photoURL) {
           const img = document.createElement('img');
-          img.src = profileImage;
+          img.src = photoURL;
           img.alt = userName;
           avatar.appendChild(img);
         } else {
-          // عرض أول حرف إذا لم توجد صورة
-          const firstChar = (userName.trim().charAt(0) || "?").toUpperCase();
-          avatar.textContent = firstChar;
+          avatar.textContent = (userName.trim().charAt(0) || "?").toUpperCase();
         }
 
-        // محتوى الرسالة مع اسم المستخدم وتاريخ الرسالة
+        // المحتوى: اسم المستخدم + نص الرسالة + التاريخ
         const content = document.createElement('div');
         content.classList.add('content');
 
-        const headerDiv = document.createElement('div');
-        headerDiv.className = 'msg-header';
-        const nameSpan = document.createElement('span');
-        nameSpan.textContent = userName;
-        const dateSpan = document.createElement('span');
-        dateSpan.textContent = formatTimestamp(msg.timestamp || Date.now());
-
-        headerDiv.appendChild(nameSpan);
-        headerDiv.appendChild(dateSpan);
+        const userNameDiv = document.createElement('div');
+        userNameDiv.className = 'username';
+        userNameDiv.textContent = userName;
 
         const textDiv = document.createElement('div');
         textDiv.textContent = msg.text;
 
-        content.appendChild(headerDiv);
+        const timeDiv = document.createElement('div');
+        timeDiv.className = 'timestamp';
+        timeDiv.textContent = formatTimestamp(msg.timestamp);
+
+        content.appendChild(userNameDiv);
         content.appendChild(textDiv);
+        content.appendChild(timeDiv);
 
         msgDiv.appendChild(avatar);
         msgDiv.appendChild(content);
@@ -498,7 +511,7 @@
         }
 
         chatContainer.appendChild(msgDiv);
-      });
+      }
     }
 
     // تمرير الشات لأسفل تلقائياً
@@ -506,66 +519,79 @@
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-    // التحقق من الكلمات الممنوعة في الرسالة
+// التحقق من الكلمات الممنوعة
     function containsBannedWords(text) {
       const lowerText = text.toLowerCase();
       return bannedWords.some(word => lowerText.includes(word));
     }
 
-    // إرسال رسالة جديدة
+    // إرسال الرسالة
     sendBtn.addEventListener('click', () => {
       const text = messageInput.value.trim();
-      if (!text) {
-        alert('الرجاء كتابة رسالة');
-        return;
-      }
+      if (!text) return;
+
       if (containsBannedWords(text)) {
-        alert('الرسالة تحتوي على كلمات ممنوعة');
+        alert("الرسالة تحتوي على كلمات ممنوعة، الرجاء تعديلها.");
         return;
       }
-      const newMessage = {
+
+      const newMsg = {
         uid: currentUser.uid,
-        email: currentUser.email || "غير معروف",
+        email: currentUser.email,
         text: text,
         timestamp: Date.now()
       };
-      db.ref('chatMessages').push(newMessage)
+
+      db.ref('chatMessages').push(newMsg)
         .then(() => {
           messageInput.value = '';
           sendBtn.disabled = true;
           scrollChatToBottom();
         })
         .catch(err => {
-          alert('حدث خطأ أثناء إرسال الرسالة');
+          alert("حدث خطأ أثناء إرسال الرسالة.");
           console.error(err);
         });
     });
 
     messageInput.addEventListener('input', () => {
-      sendBtn.disabled = messageInput.value.trim() === '';
+      sendBtn.disabled = messageInput.value.trim().length === 0;
     });
 
-    // عرض نافذة بيانات المستخدم عند الضغط على أول حرف اسمه
-    function showUserModal(uid) {
-      const userData = usersData[uid] || {};
-      const userName = userData.username || "مستخدم مجهول";
-
-      const firstChar = (userName.trim().charAt(0) || "?").toUpperCase();
-      modalUserImagePlaceholder.textContent = firstChar;
-
-      modalUserName.textContent = userName;
-
-      // تنظيف الشارات السابقة
+    // عرض نافذة بيانات المستخدم عند الضغط على صورة أو حرف الاسم
+    async function showUserModal(uid) {
+      if (!usersData[uid]) {
+        alert("لا توجد بيانات لهذا المستخدم.");
+        return;
+      }
+      const user = usersData[uid];
+      modalUserName.textContent = user.username || user.email || "مستخدم مجهول";
       badgesContainer.innerHTML = '';
       noBadgesText.style.display = 'none';
 
-      // إذا هو المستخدم الخاص بالأدمن نعرض له الشارات
+      // جلب صورة المستخدم أو أول حرف اسمه
+      const photoURL = await getUserPhotoURL(uid, modalUserName.textContent.charAt(0).toUpperCase());
+
+      if (photoURL) {
+        modalUserImagePlaceholder.innerHTML = `<img src="${photoURL}" alt="${modalUserName.textContent}">`;
+      } else {
+        modalUserImagePlaceholder.textContent = modalUserName.textContent.charAt(0).toUpperCase();
+      }
+
+      // عرض الشارات (إن وجدت)
       if (uid === specialUID) {
-        specialBadges.forEach(badge => {
-          const badgeDiv = document.createElement('div');
-          badgeDiv.className = 'badge';
-          badgeDiv.textContent = badge;
-          badgesContainer.appendChild(badgeDiv);
+        specialBadges.forEach(badgeText => {
+          const badge = document.createElement('div');
+          badge.className = 'badge';
+          badge.textContent = badgeText;
+          badgesContainer.appendChild(badge);
+        });
+      } else if (user.badges && Array.isArray(user.badges) && user.badges.length > 0) {
+        user.badges.forEach(badgeText => {
+          const badge = document.createElement('div');
+          badge.className = 'badge';
+          badge.textContent = badgeText;
+          badgesContainer.appendChild(badge);
         });
       } else {
         noBadgesText.style.display = 'block';
@@ -579,12 +605,13 @@
       userModal.style.display = 'none';
     });
 
-    // إغلاق المودال عند الضغط خارج المحتوى
-    userModal.addEventListener('click', e => {
+    // إغلاق المودال عند النقر خارج المحتوى
+    userModal.addEventListener('click', (e) => {
       if (e.target === userModal) {
         userModal.style.display = 'none';
       }
     });
+
   </script>
 </body>
 </html>
