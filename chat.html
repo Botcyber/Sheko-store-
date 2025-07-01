@@ -15,6 +15,7 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      position: relative;
     }
     header {
       background: #ffb700;
@@ -25,6 +26,7 @@
       font-size: 1.5rem;
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
       position: relative;
+      z-index: 10;
     }
     #chatContainer {
       flex: 1;
@@ -74,6 +76,8 @@
       padding: 10px;
       background: #eee;
       border-top: 1px solid #ccc;
+      position: relative;
+      z-index: 10;
     }
     #messageInput {
       flex: 1;
@@ -194,35 +198,44 @@
       background-color: #a71d2a;
     }
     /* زر رفع الصورة */
-    #uploadContainer {
-      position: absolute;
-      top: 15px;
-      left: 15px;
+    #uploadImageContainer {
+      position: fixed;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ffb700;
+      padding: 8px 12px;
+      border-radius: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      z-index: 20;
       display: flex;
       align-items: center;
-      gap: 5px;
-      background: #fff8dc;
-      border-radius: 15px;
-      padding: 5px 10px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      gap: 10px;
+      font-weight: 600;
+      color: #222;
     }
-    #profilePicInput {
+    #uploadImageInput {
       cursor: pointer;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      padding: 5px;
-      font-size: 0.9rem;
-      background: white;
+    }
+    /* صورة المستخدم الصغيرة أسفل تحت */
+    #footerUserImage {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid #ffb700;
+      box-shadow: 0 0 8px rgba(255, 183, 0, 0.7);
+      object-fit: cover;
+      background: #fff;
+      z-index: 30;
     }
   </style>
 </head>
 <body>
-  <header>
-    الدردشة - Sheko Store
-    <div id="uploadContainer" title="رفع صورة الملف الشخصي">
-      <input type="file" id="profilePicInput" accept="image/*" />
-    </div>
-  </header>
+  <header>الدردشة - Sheko Store</header>
 
   <div id="chatContainer"></div>
 
@@ -230,6 +243,15 @@
     <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا..." autocomplete="off" />
     <button id="sendBtn" disabled>إرسال</button>
   </div>
+
+  <!-- رفع صورة المستخدم -->
+  <div id="uploadImageContainer" title="رفع صورة شخصية">
+    <label for="uploadImageInput" style="cursor:pointer;">📷 رفع صورة</label>
+    <input type="file" id="uploadImageInput" accept="image/*" style="display:none;" />
+  </div>
+
+  <!-- صورة المستخدم الصغيرة أسفل تحت -->
+  <img id="footerUserImage" src="https://i.pravatar.cc/150?u=default" alt="صورة المستخدم" title="صورة حسابك" />
 
   <div id="userInfoModal">
     <h3 id="modalUserName"></h3>
@@ -272,10 +294,11 @@
     const modalUserImage = document.getElementById('modalUserImage');
     const modalUserBadges = document.getElementById('modalUserBadges');
     const closeUserInfo = document.getElementById('closeUserInfo');
-    const profilePicInput = document.getElementById('profilePicInput');
+    const uploadImageInput = document.getElementById('uploadImageInput');
+    const footerUserImage = document.getElementById('footerUserImage');
 
     let currentUser = null;
-    let usersData = {};  // تخزين بيانات المستخدمين
+    let usersData = {};  // لتخزين بيانات المستخدمين من قاعدة البيانات
 
     const bannedWords = ["سيء", "سيئة", "كلمة_سيئة"];
     const specialUID = "mlifDgEAkKMaOeuUq63cs5NAkV93";
@@ -296,6 +319,7 @@
       sendBtn.disabled = false;
       loadAllUsersData().then(() => {
         listenForMessages();
+        updateFooterUserImage();
       });
     });
 
@@ -304,6 +328,15 @@
       return db.ref('users').once('value').then(snapshot => {
         usersData = snapshot.val() || {};
       });
+    }
+
+    // تحديث صورة المستخدم الصغيرة أسفل تحت
+    function updateFooterUserImage() {
+      if(currentUser && usersData[currentUser.uid] && usersData[currentUser.uid].photoURL){
+        footerUserImage.src = usersData[currentUser.uid].photoURL + '?t=' + (new Date().getTime());
+      } else {
+        footerUserImage.src = "https://i.pravatar.cc/150?u=" + currentUser.uid;
+      }
     }
 
     // الاستماع لرسائل الدردشة وتحديث الواجهة
@@ -323,7 +356,8 @@
         const isOwnMessage = msg.uid === currentUser.uid;
         const userData = usersData[msg.uid] || {};
         const userName = userData.username || msg.email || "مستخدم مجهول";
-        const userImage = userData.photoURL || "https://i.pravatar.cc/150?u=" + msg.uid;
+        const baseUserImage = userData.photoURL || "https://i.pravatar.cc/150?u=" + msg.uid;
+        const userImage = baseUserImage + '?t=' + (new Date().getTime()); // لمنع الكاش
 
         const msgDiv = document.createElement('div');
         msgDiv.classList.add('message');
@@ -366,7 +400,7 @@
       if (!user) return alert("بيانات المستخدم غير متوفرة");
 
       modalUserName.textContent = user.username || user.email || "مستخدم مجهول";
-      modalUserImage.src = user.photoURL || "https://i.pravatar.cc/150?u=" + uid;
+      modalUserImage.src = (user.photoURL ? user.photoURL + '?t=' + (new Date().getTime()) : "https://i.pravatar.cc/150?u=" + uid);
 
       modalUserBadges.innerHTML = '';
 
@@ -440,42 +474,46 @@
       sendBtn.disabled = messageInput.value.trim() === '';
     });
 
-    // رفع صورة الملف الشخصي
-    profilePicInput.addEventListener('change', () => {
-      const file = profilePicInput.files[0];
+    // رفع صورة المستخدم وتخزينها في Firebase Storage
+    uploadImageInput.addEventListener('change', async (e) => {
+      if (!currentUser) return alert('يجب تسجيل الدخول أولاً');
+      const file = e.target.files[0];
       if (!file) return;
 
-      if(file.size > 2 * 1024 * 1024) {
-        alert('حجم الصورة يجب أن لا يتجاوز 2 ميجابايت');
-        profilePicInput.value = '';
-        return;
-      }
+      // اسم الملف مع uid لتجنب التكرار
+      const filePath = `userProfileImages/${currentUser.uid}/${file.name}`;
 
-      const storageRef = storage.ref(`profilePictures/${currentUser.uid}/${file.name}`);
-      storageRef.put(file).then(snapshot => {
-        return snapshot.ref.getDownloadURL();
-      }).then(downloadURL => {
-        return db.ref(`users/${currentUser.uid}`).update({ photoURL: downloadURL }).then(() => downloadURL);
-      }).then(downloadURL => {
-        if(!usersData[currentUser.uid]) usersData[currentUser.uid] = {};
+      try {
+        const storageRef = storage.ref(filePath);
+        await storageRef.put(file);
+
+        // الحصول على رابط التنزيل
+        const downloadURL = await storageRef.getDownloadURL();
+
+        // تحديث صورة المستخدم في قاعدة البيانات
+        await db.ref(`users/${currentUser.uid}/photoURL`).set(downloadURL);
+
+        // تحديث بيانات المستخدم محلياً
+        usersData[currentUser.uid] = usersData[currentUser.uid] || {};
         usersData[currentUser.uid].photoURL = downloadURL;
 
-        profilePicInput.style.borderColor = '#ffb700';
+        updateFooterUserImage();
+        renderMessagesFromDb(); // تحديث الصور في الدردشة
 
-        // إعادة رسم الرسائل فقط لعرض الصورة الجديدة
-        db.ref('chatMessages').once('value').then(snapshot => {
-          const messages = snapshot.val() || {};
-          renderMessages(messages);
-          scrollChatToBottom();
-        });
-
-        alert('تم تحديث صورة الملف الشخصي بنجاح');
-        profilePicInput.value = '';
-      }).catch(err => {
-        console.error(err);
+        alert('تم رفع الصورة وتحديثها بنجاح!');
+      } catch (error) {
+        console.error('خطأ في رفع الصورة:', error);
         alert('حدث خطأ أثناء رفع الصورة');
-      });
+      }
     });
+
+    // إعادة تحميل الرسائل لتحديث عرض الصور بعد رفع الصورة
+    function renderMessagesFromDb() {
+      db.ref('chatMessages').once('value').then(snapshot => {
+        const messages = snapshot.val() || {};
+        renderMessages(messages);
+      });
+    }
   </script>
 </body>
 </html>
