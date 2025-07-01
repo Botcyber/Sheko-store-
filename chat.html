@@ -24,6 +24,7 @@
       font-weight: bold;
       font-size: 1.5rem;
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      position: relative;
     }
     #chatContainer {
       flex: 1;
@@ -73,7 +74,6 @@
       padding: 10px;
       background: #eee;
       border-top: 1px solid #ccc;
-      align-items: center;
     }
     #messageInput {
       flex: 1;
@@ -102,18 +102,6 @@
     #sendBtn:disabled {
       background: #ccc;
       cursor: not-allowed;
-    }
-    #profilePicInput {
-      margin-right: 10px;
-      cursor: pointer;
-      border-radius: 50%;
-      width: 48px;
-      height: 48px;
-      border: 2px solid transparent;
-      transition: border-color 0.3s ease;
-    }
-    #profilePicInput:hover {
-      border-color: #ffb700;
     }
     #userInfoModal {
       display: none;
@@ -205,16 +193,40 @@
     .delete-btn:hover {
       background-color: #a71d2a;
     }
+    /* زر رفع الصورة */
+    #uploadContainer {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: #fff8dc;
+      border-radius: 15px;
+      padding: 5px 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+    #profilePicInput {
+      cursor: pointer;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      padding: 5px;
+      font-size: 0.9rem;
+      background: white;
+    }
   </style>
 </head>
 <body>
-  <header>الدردشة - Sheko Store</header>
+  <header>
+    الدردشة - Sheko Store
+    <div id="uploadContainer" title="رفع صورة الملف الشخصي">
+      <input type="file" id="profilePicInput" accept="image/*" />
+    </div>
+  </header>
 
   <div id="chatContainer"></div>
 
   <div id="inputContainer">
-    <!-- إضافة زر اختيار صورة الملف الشخصي -->
-    <input type="file" id="profilePicInput" accept="image/*" title="تغيير صورة الملف الشخصي" />
     <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا..." autocomplete="off" />
     <button id="sendBtn" disabled>إرسال</button>
   </div>
@@ -255,15 +267,15 @@
     const chatContainer = document.getElementById('chatContainer');
     const messageInput = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
-    const profilePicInput = document.getElementById('profilePicInput');
     const userInfoModal = document.getElementById('userInfoModal');
     const modalUserName = document.getElementById('modalUserName');
     const modalUserImage = document.getElementById('modalUserImage');
     const modalUserBadges = document.getElementById('modalUserBadges');
     const closeUserInfo = document.getElementById('closeUserInfo');
+    const profilePicInput = document.getElementById('profilePicInput');
 
     let currentUser = null;
-    let usersData = {};  // لتخزين بيانات المستخدمين من قاعدة البيانات
+    let usersData = {};  // تخزين بيانات المستخدمين
 
     const bannedWords = ["سيء", "سيئة", "كلمة_سيئة"];
     const specialUID = "mlifDgEAkKMaOeuUq63cs5NAkV93";
@@ -282,19 +294,15 @@
       }
       currentUser = user;
       sendBtn.disabled = false;
-      loadAllUsersData();
-      listenForMessages();
+      loadAllUsersData().then(() => {
+        listenForMessages();
+      });
     });
 
     // تحميل بيانات جميع المستخدمين (اسم وصورة وشارات)
     function loadAllUsersData() {
-      db.ref('users').once('value').then(snapshot => {
+      return db.ref('users').once('value').then(snapshot => {
         usersData = snapshot.val() || {};
-        // تحديث صورة الإدخال لملف المستخدم الحالي إذا موجودة
-        if (usersData[currentUser.uid] && usersData[currentUser.uid].photoURL) {
-          profilePicInput.style.borderColor = '#ffb700';
-          profilePicInput.title = "صورة الملف الشخصي مفعلة";
-        }
       });
     }
 
@@ -340,6 +348,7 @@
           delBtn.textContent = 'حذف';
           delBtn.className = 'delete-btn';
           delBtn.title = "حذف الرسالة";
+
           delBtn.addEventListener('click', () => {
             if (confirm("هل تريد حذف هذه الرسالة؟")) {
               db.ref(`chatMessages/${key}`).remove();
@@ -436,30 +445,29 @@
       const file = profilePicInput.files[0];
       if (!file) return;
 
-      // اختيار صورة وحجم معقول (اختياري)
-      if(file.size > 2 * 1024 * 1024) { // 2 ميجابايت
+      if(file.size > 2 * 1024 * 1024) {
         alert('حجم الصورة يجب أن لا يتجاوز 2 ميجابايت');
         profilePicInput.value = '';
         return;
       }
 
-      // رفع الصورة إلى Firebase Storage
       const storageRef = storage.ref(`profilePictures/${currentUser.uid}/${file.name}`);
       storageRef.put(file).then(snapshot => {
         return snapshot.ref.getDownloadURL();
       }).then(downloadURL => {
-        // تحديث رابط الصورة في قاعدة البيانات
         return db.ref(`users/${currentUser.uid}`).update({ photoURL: downloadURL }).then(() => downloadURL);
       }).then(downloadURL => {
-        // تحديث البيانات المحلية للمستخدم الحالي
         if(!usersData[currentUser.uid]) usersData[currentUser.uid] = {};
         usersData[currentUser.uid].photoURL = downloadURL;
 
-        // تغيير صورة الإدخال (إطار الصورة)
         profilePicInput.style.borderColor = '#ffb700';
 
-        // إعادة عرض الرسائل لتحديث الصور
-        listenForMessages();
+        // إعادة رسم الرسائل فقط لعرض الصورة الجديدة
+        db.ref('chatMessages').once('value').then(snapshot => {
+          const messages = snapshot.val() || {};
+          renderMessages(messages);
+          scrollChatToBottom();
+        });
 
         alert('تم تحديث صورة الملف الشخصي بنجاح');
         profilePicInput.value = '';
