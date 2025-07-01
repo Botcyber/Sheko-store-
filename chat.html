@@ -57,6 +57,14 @@
       user-select: none;
       transition: box-shadow 0.3s ease;
       flex-shrink: 0;
+      overflow: hidden;
+    }
+    .message .avatar img {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
     }
     .message .avatar:hover {
       box-shadow: 0 0 25px #ffd700ff, inset 0 0 12px #fffecbaa;
@@ -72,12 +80,26 @@
       font-size: 1rem;
       font-weight: 600;
       box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
     }
     .message.own .content {
       background: #222;
       color: #ffb700;
       margin-left: auto;
       margin-right: 10px;
+    }
+    .message .content .msg-header {
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+      color: #444;
+      display: flex;
+      justify-content: space-between;
+      direction: rtl;
+    }
+    .message.own .content .msg-header {
+      color: #ffb700;
     }
     #inputContainer {
       display: flex;
@@ -114,7 +136,6 @@
       background: #ccc;
       cursor: not-allowed;
     }
-
     /* مودال النافذة */
     #userModal {
       display: none;
@@ -154,6 +175,14 @@
         0 0 15px #ffb700aa,
         inset 0 0 8px #ffd700aa;
       animation: imageSlideInOut 4s ease-in-out infinite;
+      overflow: hidden;
+    }
+    #userModalContent .userImagePlaceholder img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
     }
     #userModalContent h2 {
       margin: 0 0 10px 0;
@@ -211,7 +240,6 @@
       margin-top: 15px;
       user-select: none;
     }
-
     /* حركات وتأثيرات الشارات */
     @keyframes badgeGlow {
       0%, 100% {
@@ -231,7 +259,6 @@
         color: #fff8b3;
       }
     }
-
     /* تأثير اسم المستخدم في المودال */
     @keyframes userNamePulse {
       0%, 100% {
@@ -251,7 +278,6 @@
         transform: scale(1.05) translateY(-4px);
       }
     }
-
     /* حركة صورة المستخدم */
     @keyframes imageSlideInOut {
       0%, 100% {
@@ -267,7 +293,6 @@
           inset 0 0 12px #fffecbaa;
       }
     }
-
     /* زر حذف الرسائل */
     .delete-btn {
       margin-right: 10px;
@@ -325,6 +350,7 @@
 
     const auth = firebase.auth();
     const db = firebase.database();
+    const storage = firebase.storage();
 
     const chatContainer = document.getElementById('chatContainer');
     const messageInput = document.getElementById('messageInput');
@@ -372,13 +398,36 @@
       });
     }
 
+    // استدعاء رابط الصورة من Firebase Storage إذا موجودة
+    async function getUserProfileImage(uid) {
+      try {
+        // افتراضياً مسار الصورة في Storage هو usersProfileImages/{uid}.jpg
+        const url = await storage.ref(`usersProfileImages/${uid}.jpg`).getDownloadURL();
+        return url;
+      } catch (error) {
+        return null;
+      }
+    }
+
     // الاستماع للرسائل الجديدة من قاعدة بيانات Firebase
     function listenForMessages() {
-      db.ref('chatMessages').on('value', snapshot => {
+      db.ref('chatMessages').on('value', async snapshot => {
         const messages = snapshot.val() || {};
+        // لتحميل صور المستخدمين فقط مرة واحدة
+        for (const uid in usersData) {
+          if (!usersData[uid].profileImage) {
+            usersData[uid].profileImage = await getUserProfileImage(uid);
+          }
+        }
         renderMessages(messages);
         scrollChatToBottom();
       });
+    }
+
+    // دالة تنسيق التاريخ (تاريخ ووقت)
+    function formatTimestamp(ts) {
+      const date = new Date(ts);
+      return date.toLocaleDateString('ar-EG') + ' ' + date.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
     }
 
     // عرض الرسائل في الصفحة
@@ -389,23 +438,47 @@
         const isOwn = msg.uid === currentUser.uid;
         const userData = usersData[msg.uid] || {};
         const userName = userData.username || msg.email || "مستخدم مجهول";
+        const profileImage = userData.profileImage || null;
 
         const msgDiv = document.createElement('div');
         msgDiv.classList.add('message');
         if (isOwn) msgDiv.classList.add('own');
 
-        // أول حرف من اسم المستخدم كنص مع تأثير
-        const firstChar = (userName.trim().charAt(0) || "?").toUpperCase();
-
+        // إنشاء العنصر الخاص بالأفاتار (صورة أو أول حرف)
         const avatar = document.createElement('div');
         avatar.className = 'avatar';
-        avatar.textContent = firstChar;
         avatar.title = userName;
         avatar.addEventListener('click', () => showUserModal(msg.uid));
+        if (profileImage) {
+          const img = document.createElement('img');
+          img.src = profileImage;
+          img.alt = userName;
+          avatar.appendChild(img);
+        } else {
+          // عرض أول حرف إذا لم توجد صورة
+          const firstChar = (userName.trim().charAt(0) || "?").toUpperCase();
+          avatar.textContent = firstChar;
+        }
 
+        // محتوى الرسالة مع اسم المستخدم وتاريخ الرسالة
         const content = document.createElement('div');
         content.classList.add('content');
-        content.textContent = msg.text;
+
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'msg-header';
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = userName;
+        const dateSpan = document.createElement('span');
+        dateSpan.textContent = formatTimestamp(msg.timestamp || Date.now());
+
+        headerDiv.appendChild(nameSpan);
+        headerDiv.appendChild(dateSpan);
+
+        const textDiv = document.createElement('div');
+        textDiv.textContent = msg.text;
+
+        content.appendChild(headerDiv);
+        content.appendChild(textDiv);
 
         msgDiv.appendChild(avatar);
         msgDiv.appendChild(content);
