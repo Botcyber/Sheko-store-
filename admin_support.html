@@ -11,6 +11,7 @@
       margin: 0;
       background: #f5f5f5;
       color: #222;
+      overflow-x: hidden;
     }
     header {
       background: #222;
@@ -19,6 +20,20 @@
       text-align: center;
       font-size: 22px;
       font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    #menuToggle {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 26px;
+      cursor: pointer;
+      color: white;
+      user-select: none;
     }
     #conversationsList {
       width: 300px;
@@ -28,16 +43,30 @@
       border-left: 1px solid #ccc;
       padding: 10px;
       box-sizing: border-box;
-      float: right;
+      position: fixed;
+      top: 70px;
+      right: 0;
+      height: calc(100vh - 70px);
+      transition: transform 0.3s ease;
+      transform: translateX(100%);
+      z-index: 1000;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+    }
+    #conversationsList.visible {
+      transform: translateX(0);
     }
     #chatContainer {
-      margin-right: 300px;
+      margin-right: 0;
       height: calc(100vh - 70px);
       display: flex;
       flex-direction: column;
       background: white;
       padding: 15px;
       box-sizing: border-box;
+      transition: margin-right 0.3s ease;
+    }
+    #chatContainer.with-sidebar {
+      margin-right: 300px;
     }
     #messages {
       flex-grow: 1;
@@ -142,35 +171,32 @@
       background: #f44336;
       color: white;
     }
-    @media (max-width: 768px) {
+
+    /* Responsive adjustments */
+    @media (min-width: 992px) {
       #conversationsList {
         position: fixed;
-        width: 100%;
-        height: 200px;
-        bottom: 0;
-        right: 0;
-        max-height: 200px;
-        border-left: none;
-        border-top: 1px solid #ccc;
-        overflow-x: auto;
-        display: flex;
-      }
-      .conversation-item {
-        flex: 1 0 auto;
-        border-bottom: none;
-        border-right: 1px solid #eee;
-        white-space: nowrap;
+        transform: translateX(0);
+        box-shadow: none;
+        border-left: 1px solid #ccc;
       }
       #chatContainer {
-        margin-right: 0;
-        height: calc(100vh - 270px);
+        margin-right: 300px;
+      }
+      #menuToggle {
+        display: none;
       }
     }
   </style>
 </head>
 <body>
 
-  <header>لوحة إدارة الدعم والشكاوى</header>
+  <header>
+    <div id="menuToggle"><i class="fa fa-bars"></i></div>
+    لوحة إدارة الدعم والشكاوى
+  </header>
+
+  <div id="conversationsList" title="المحادثات"></div>
 
   <div id="chatContainer">
     <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
@@ -185,8 +211,6 @@
       <button id="sendBtn"><i class="fa fa-paper-plane"></i> إرسال</button>
     </div>
   </div>
-
-  <div id="conversationsList" title="المحادثات"></div>
 
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
@@ -207,7 +231,9 @@
     const auth = firebase.auth();
     const db = firebase.database();
 
+    const menuToggle = document.getElementById('menuToggle');
     const conversationsList = document.getElementById('conversationsList');
+    const chatContainer = document.getElementById('chatContainer');
     const messagesEl = document.getElementById('messages');
     const inputArea = document.getElementById('inputArea');
     const replyInput = document.getElementById('replyInput');
@@ -219,7 +245,6 @@
     let selectedConversationId = null;
     let conversationsData = {};
 
-    // تحقق دخول الأدمن (يمكنك تحديد شرطك هنا)
     auth.onAuthStateChanged(user => {
       if (!user) {
         location.href = "index.html";
@@ -229,7 +254,11 @@
       }
     });
 
-    // تحميل قائمة المحادثات (الشكاوى)
+    menuToggle.addEventListener('click', () => {
+      conversationsList.classList.toggle('visible');
+      chatContainer.classList.toggle('with-sidebar');
+    });
+
     function loadConversations() {
       const convRef = db.ref('supportChats');
       convRef.on('value', snapshot => {
@@ -256,12 +285,16 @@
         div.textContent = conv.userName || `مستخدم (${conv.userId})`;
         div.onclick = () => {
           selectConversation(convId);
+          // إذا في نسخة صغيرة من القائمة، نخفيها تلقائياً بعد اختيار المحادثة
+          if(window.innerWidth < 992){
+            conversationsList.classList.remove('visible');
+            chatContainer.classList.remove('with-sidebar');
+          }
         };
         conversationsList.appendChild(div);
       }
     }
 
-    // تبديل حالة المحادثة بين مفتوحة ومغلقة
     toggleStatusBtn.onclick = (e) => {
       e.stopPropagation();
       if (!selectedConversationId) return;
@@ -270,15 +303,12 @@
       db.ref(`supportChats/${selectedConversationId}/status`).set(newStatus);
     };
 
-    // تحديد محادثة للعرض والرد
     function selectConversation(convId) {
       selectedConversationId = convId;
       renderConversationsList();
 
-      // عرض اسم المستخدم أعلى المحادثة
       chatUserName.textContent = conversationsData[convId].userName || `مستخدم (${conversationsData[convId].userId})`;
 
-      // إظهار زر حالة المحادثة وضبط نصه ولونه حسب الحالة
       const status = conversationsData[convId].status;
       toggleStatusBtn.style.display = 'inline-block';
       if (status === 'open') {
@@ -294,12 +324,11 @@
       loadMessages(convId);
     }
 
-    // تحميل الرسائل في المحادثة
     function loadMessages(convId) {
       messagesEl.innerHTML = 'جارٍ تحميل الرسائل...';
       inputArea.style.display = 'none';
 
-      db.ref(`supportChats/${convId}/messages`).off(); // افصل أي مستمع سابق
+      db.ref(`supportChats/${convId}/messages`).off();
       db.ref(`supportChats/${convId}/messages`).on('value', snapshot => {
         const messages = snapshot.val() || {};
         renderMessages(messages);
@@ -309,7 +338,6 @@
       replyInput.focus();
     }
 
-    // عرض الرسائل في واجهة الإدارة
     function renderMessages(messages) {
       messagesEl.innerHTML = '';
       const msgKeys = Object.keys(messages);
@@ -328,7 +356,6 @@
       messagesEl.scrollTop = messagesEl.scrollHeight;
     }
 
-    // إرسال رد من الأدمن
     sendBtn.addEventListener('click', () => {
       sendMessage();
     });
