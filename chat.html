@@ -26,6 +26,18 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      position: relative;
+    }
+    /* عداد المستخدمين على الشمال */
+    #onlineCount {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-weight: normal;
+      font-size: 1rem;
+      user-select: none;
+      color: #222;
     }
     #chatContainer {
       flex: 1;
@@ -314,6 +326,7 @@
 </head>
 <body>
   <header>
+    <div id="onlineCount">المستخدمون المتصلون: 0</div>
     دردشة Sheko Store
   </header>
 
@@ -360,6 +373,7 @@
     const chatContainer = document.getElementById('chatContainer');
     const messageInput = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
+    const onlineCountDiv = document.getElementById('onlineCount');
 
     // مودال العناصر
     const userModal = document.getElementById('userModal');
@@ -394,6 +408,7 @@
       sendBtn.disabled = false;
       loadAllUsersData();
       listenForMessages();
+      setupPresence(); // تشغيل نظام تتبع المتصلين
     });
 
     // تحميل بيانات جميع المستخدمين من قاعدة بيانات Firebase
@@ -431,13 +446,14 @@
       }
       try {
         const photoURL = usersData[uid].photoURL;
-        // افترض أن photoURL هو رابط مباشر أو رابط تخزين firebase
-        // إذا هو رابط تخزين Firebase، استخرج الرابط النهائي
-        if (photoURL.startsWith('gs://') || photoURL.startsWith('user_photos/')) {
+        if (photoURL.startsWith('http://') || photoURL.startsWith('https://')) {
+          return photoURL; // رابط مباشر
+        } else if (photoURL.startsWith('gs://') || photoURL.startsWith('user_photos/')) {
           const url = await storage.ref(photoURL).getDownloadURL();
           return url;
+        } else {
+          return null;
         }
-        return photoURL;
       } catch (error) {
         console.warn('خطأ في تحميل صورة المستخدم:', error);
         return null;
@@ -519,7 +535,7 @@
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
-// التحقق من الكلمات الممنوعة
+    // التحقق من الكلمات الممنوعة
     function containsBannedWords(text) {
       const lowerText = text.toLowerCase();
       return bannedWords.some(word => lowerText.includes(word));
@@ -612,6 +628,43 @@
       }
     });
 
+    // --- نظام تتبع المستخدمين المتصلين (Presence) ---
+
+    function setupPresence() {
+      const userStatusDatabaseRef = db.ref(`/status/${currentUser.uid}`);
+
+      const isOfflineForDatabase = {
+        state: 'offline',
+        last_changed: firebase.database.ServerValue.TIMESTAMP,
+      };
+
+      const isOnlineForDatabase = {
+        state: 'online',
+        last_changed: firebase.database.ServerValue.TIMESTAMP,
+      };
+
+      const connectedRef = db.ref('.info/connected');
+      connectedRef.on('value', (snapshot) => {
+        if (snapshot.val() === false) {
+          return;
+        }
+
+        userStatusDatabaseRef.onDisconnect().set(isOfflineForDatabase).then(() => {
+          userStatusDatabaseRef.set(isOnlineForDatabase);
+        });
+      });
+
+      // تحديث عدد المستخدمين المتصلين بشكل مباشر
+      const statusRef = db.ref('/status');
+      statusRef.on('value', (snapshot) => {
+        const statuses = snapshot.val() || {};
+        let onlineCount = 0;
+        Object.values(statuses).forEach(status => {
+          if (status.state === 'online') onlineCount++;
+        });
+        onlineCountDiv.textContent = `المستخدمون المتصلون: ${onlineCount}`;
+      });
+    }
   </script>
 </body>
 </html>
