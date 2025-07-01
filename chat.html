@@ -3,239 +3,223 @@
   <meta charset="UTF-8" />
   <title>الدردشة - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Cairo', sans-serif;
       background: #fff;
+      color: #222;
       margin: 0;
       padding: 0;
-      height: 100vh;
       display: flex;
       flex-direction: column;
+      height: 100vh;
     }
     header {
       background: #ffb700;
+      color: #222;
       padding: 15px;
+      text-align: center;
       font-weight: bold;
       font-size: 1.5rem;
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
+      position: relative;
     }
-    .online-counter {
+    #onlineUsers {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-left: 10px;
       font-size: 0.9rem;
+      font-weight: bold;
       color: #222;
     }
-    .online-counter i {
-      font-size: 1.4rem;
+    #onlineUsers i {
+      font-size: 1.3rem;
+      margin-bottom: 3px;
     }
     #chatContainer {
       flex: 1;
-      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
       padding: 10px;
+      overflow-y: auto;
+      background: linear-gradient(45deg, #fffbdb, #fff);
     }
     .message {
       display: flex;
+      margin-bottom: 12px;
       align-items: flex-start;
-      margin-bottom: 10px;
+      position: relative;
     }
-    .avatar {
-      margin-left: 10px;
+    .message .avatar {
       width: 48px;
       height: 48px;
       border-radius: 50%;
-      overflow: hidden;
-      flex-shrink: 0;
-    }
-    .avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+      margin-left: 10px;
       cursor: pointer;
+      background: linear-gradient(135deg, #fff7a6, #ffdf1a);
+      color: #bfa900;
+      font-weight: 900;
+      font-size: 1.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 0 10px #ffb700aa, inset 0 0 5px #ffd700aa;
+      user-select: none;
+      transition: box-shadow 0.3s ease;
+      flex-shrink: 0;
+      overflow: hidden;
     }
-    .content {
+    .message .avatar img {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+    }
+    .message .avatar:hover {
+      box-shadow: 0 0 25px #ffd700ff, inset 0 0 12px #fffecbaa;
+    }
+    .message .content {
       background: #ffb700;
       color: #222;
-      padding: 10px;
+      padding: 8px 12px;
       border-radius: 15px;
       max-width: 70%;
+      word-break: break-word;
       position: relative;
+      font-size: 1rem;
+      font-weight: 600;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
     }
-    .own .content {
+    .message.own .content {
       background: #222;
       color: #ffb700;
       margin-left: auto;
       margin-right: 10px;
     }
-    .username {
-      font-weight: bold;
+    .message .username {
+      font-weight: 700;
+      margin-bottom: 3px;
+      color: #444;
       font-size: 0.85rem;
-      margin-bottom: 5px;
     }
-    .timestamp {
-      font-size: 0.75rem;
+    .message .timestamp {
+      font-size: 0.7rem;
       color: #666;
-      margin-top: 5px;
-      text-align: left;
+      margin-top: 4px;
+      align-self: flex-end;
     }
     .delete-btn {
+      position: absolute;
+      top: 0;
+      left: 0;
       background: #dc3545;
+      color: #fff;
       border: none;
-      color: white;
+      padding: 4px 8px;
+      border-radius: 10px;
       font-weight: bold;
-      padding: 4px 10px;
-      margin-right: 5px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    #inputContainer {
-      display: flex;
-      padding: 10px;
-      background: #eee;
-      align-items: center;
-    }
-    #messageInput {
-      flex: 1;
-      padding: 10px;
-      border-radius: 20px;
-      border: 1px solid #ccc;
-      font-size: 1rem;
-      outline: none;
-    }
-    #sendBtn {
-      background: #ffb700;
-      border: none;
-      color: #222;
-      font-weight: bold;
-      padding: 10px 20px;
-      margin-left: 10px;
-      border-radius: 20px;
       cursor: pointer;
     }
   </style>
-  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <script src="https://kit.fontawesome.com/4f3ce16e3e.js" crossorigin="anonymous"></script>
 </head>
 <body>
   <header>
-    <div>دردشة Sheko Store</div>
-    <div class="online-counter">
+    دردشة Sheko Store
+    <div id="onlineUsers">
       <i class="fas fa-eye"></i>
-      <span id="onlineCount">0</span>
+      <span id="userCount">0</span>
     </div>
   </header>
   <div id="chatContainer"></div>
-  <div id="inputContainer">
-    <input type="text" id="messageInput" placeholder="اكتب رسالتك هنا...">
-    <button id="sendBtn" disabled>إرسال</button>
-  </div>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
   <script>
-    const firebaseConfig = { /* بياناتك */ };
+    const firebaseConfig = { /* config */ };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-    const db = firebase.database();const chatContainer = document.getElementById('chatContainer');
-const messageInput = document.getElementById('messageInput');
-const sendBtn = document.getElementById('sendBtn');
-const onlineCount = document.getElementById('onlineCount');
-
-let currentUser = null;
-const usersData = {};
+    const db = firebase.database();
+    const chatContainer = document.getElementById('chatContainer');
+    const userCountSpan = document.getElementById('userCount');let currentUser = null;
 
 auth.onAuthStateChanged(user => {
-  if (user) {
-    currentUser = user;
-    sendBtn.disabled = false;
-    const userStatusRef = db.ref(`presence/${user.uid}`);
-    userStatusRef.set(true);
-    userStatusRef.onDisconnect().remove();
-
-    db.ref('presence').on('value', snap => {
-      const val = snap.val() || {};
-      onlineCount.textContent = Object.keys(val).length;
-    });
-
-    db.ref('chatMessages').on('value', snap => {
-      const messages = snap.val() || {};
-      chatContainer.innerHTML = '';
-      Object.entries(messages).forEach(([id, msg]) => {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'message';
-        if (msg.uid === currentUser.uid) msgDiv.classList.add('own');
-
-        const avatar = document.createElement('div');
-        avatar.className = 'avatar';
-        const img = document.createElement('img');
-        img.src = usersData[msg.uid]?.photoURL || 'https://via.placeholder.com/48';
-        avatar.appendChild(img);
-
-        const content = document.createElement('div');
-        content.className = 'content';
-
-        const userNameDiv = document.createElement('div');
-        userNameDiv.className = 'username';
-        userNameDiv.textContent = usersData[msg.uid]?.username || msg.email || 'مستخدم';
-
-        const textDiv = document.createElement('div');
-        textDiv.textContent = msg.text;
-
-        const timeDiv = document.createElement('div');
-        timeDiv.className = 'timestamp';
-        timeDiv.textContent = new Date(msg.timestamp).toLocaleString('ar-EG');
-
-        content.appendChild(userNameDiv);
-        content.appendChild(textDiv);
-        content.appendChild(timeDiv);
-
-        msgDiv.appendChild(avatar);
-        msgDiv.appendChild(content);
-
-        if (msg.uid === currentUser.uid) {
-          const delBtn = document.createElement('button');
-          delBtn.className = 'delete-btn';
-          delBtn.textContent = 'حذف';
-          delBtn.onclick = () => {
-            if (confirm('تأكيد حذف الرسالة؟')) {
-              db.ref(`chatMessages/${id}`).remove();
-            }
-          };
-          msgDiv.appendChild(delBtn);
-        }
-
-        chatContainer.appendChild(msgDiv);
-      });
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    });
-  } else {
-    location.href = 'index.html';
-  }
+  if (!user) location.href = "index.html";
+  currentUser = user;
+  const presenceRef = db.ref(`presence/${user.uid}`);
+  presenceRef.set(true);
+  presenceRef.onDisconnect().remove();
+  listenForMessages();
+  trackOnlineUsers();
 });
 
-messageInput.addEventListener('input', () => {
-  sendBtn.disabled = messageInput.value.trim().length === 0;
-});
-
-sendBtn.addEventListener('click', () => {
-  const text = messageInput.value.trim();
-  if (!text) return;
-
-  db.ref('chatMessages').push({
-    uid: currentUser.uid,
-    email: currentUser.email,
-    text: text,
-    timestamp: Date.now()
+function trackOnlineUsers() {
+  db.ref('presence').on('value', snap => {
+    const count = snap.numChildren();
+    userCountSpan.textContent = count;
   });
+}
 
-  messageInput.value = '';
-  sendBtn.disabled = true;
-});
+function listenForMessages() {
+  db.ref('chatMessages').on('value', snap => {
+    const msgs = snap.val() || {};
+    chatContainer.innerHTML = '';
+    for (let id in msgs) {
+      const msg = msgs[id];
+      const isOwn = msg.uid === currentUser.uid;
+      const div = document.createElement('div');
+      div.className = 'message' + (isOwn ? ' own' : '');
+
+      const avatar = document.createElement('div');
+      avatar.className = 'avatar';
+      if (msg.photoURL) {
+        const img = document.createElement('img');
+        img.src = msg.photoURL;
+        avatar.appendChild(img);
+      } else {
+        avatar.textContent = msg.username ? msg.username.charAt(0) : '?';
+      }
+      div.appendChild(avatar);
+
+      const content = document.createElement('div');
+      content.className = 'content';
+      const name = document.createElement('div');
+      name.className = 'username';
+      name.textContent = msg.username || msg.email;
+      const text = document.createElement('div');
+      text.textContent = msg.text;
+      const time = document.createElement('div');
+      time.className = 'timestamp';
+      time.textContent = new Date(msg.timestamp).toLocaleTimeString();
+      content.appendChild(name);
+      content.appendChild(text);
+      content.appendChild(time);
+      div.appendChild(content);
+
+      if (isOwn || currentUser.uid === "mlifDgEAkKMaOeuUq63cs5NAkV93") {
+        const btn = document.createElement('button');
+        btn.textContent = 'حذف';
+        btn.className = 'delete-btn';
+        btn.onclick = () => db.ref('chatMessages/' + id).remove();
+        div.appendChild(btn);
+      }
+
+      chatContainer.appendChild(div);
+    }
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  });
+}
 
   </script>
 </body>
