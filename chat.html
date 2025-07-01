@@ -24,7 +24,7 @@
       font-size: 1.5rem;
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
       display: flex;
-      justify-content: center; /* مركز فقط لأن حذفنا زر */
+      justify-content: center;
       align-items: center;
     }
     #chatContainer {
@@ -40,19 +40,26 @@
       margin-bottom: 12px;
       align-items: flex-start;
     }
-    .message img {
+    .message .avatar {
       width: 48px;
       height: 48px;
       border-radius: 50%;
       margin-left: 10px;
       cursor: pointer;
-      border: 2px solid transparent;
-      transition: border-color 0.3s ease;
-      object-fit: cover;
-      background: #fff;
+      background: linear-gradient(135deg, #fff7a6, #ffdf1a);
+      color: #bfa900;
+      font-weight: 900;
+      font-size: 1.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 0 10px #ffb700aa, inset 0 0 5px #ffd700aa;
+      user-select: none;
+      transition: box-shadow 0.3s ease;
+      flex-shrink: 0;
     }
-    .message img:hover {
-      border-color: #ffb700;
+    .message .avatar:hover {
+      box-shadow: 0 0 25px #ffd700ff, inset 0 0 12px #fffecbaa;
     }
     .message .content {
       background: #ffb700;
@@ -129,20 +136,35 @@
       box-shadow: 0 4px 20px rgba(0,0,0,0.25);
       font-weight: 600;
       color: #222;
+      user-select: none;
     }
-    #userModalContent img {
+    #userModalContent .userImagePlaceholder {
       width: 120px;
       height: 120px;
       border-radius: 50%;
-      object-fit: cover;
-      margin-bottom: 15px;
-      border: 4px solid #ffb700;
-      background: #fff;
+      background: linear-gradient(135deg, #fff7a6, #ffdf1a);
+      margin: 0 auto 15px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #bfa900;
+      font-weight: 900;
+      font-size: 5rem;
+      box-shadow:
+        0 0 15px #ffb700aa,
+        inset 0 0 8px #ffd700aa;
+      animation: imageSlideInOut 4s ease-in-out infinite;
     }
     #userModalContent h2 {
       margin: 0 0 10px 0;
-      font-size: 1.6rem;
+      font-size: 2rem;
       color: #ffb700;
+      font-weight: 900;
+      text-shadow:
+        0 0 8px #ffd700,
+        0 0 20px #ffbf00,
+        0 0 30px #e6ac00;
+      animation: userNamePulse 3s ease-in-out infinite;
     }
     #closeModalBtn {
       position: absolute;
@@ -167,43 +189,96 @@
       flex-wrap: wrap;
     }
     .badge {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      font-size: 0.85rem;
-      color: #444;
+      font-size: 1.1rem;
+      color: #bfa900;
+      font-weight: bold;
+      text-shadow:
+        0 0 5px #fff8b3,
+        0 0 10px #ffd700,
+        0 0 20px #ffbf00,
+        0 0 30px #e6ac00;
+      animation: badgeGlow 3s ease-in-out infinite;
+      padding: 6px 12px;
+      border-radius: 12px;
+      background: linear-gradient(45deg, #fff7a6, #ffdf1a);
+      box-shadow: 0 0 10px #ffcc00aa inset;
       user-select: none;
-    }
-    .badge img {
-      width: 40px;
-      height: 40px;
-      margin-bottom: 6px;
-      filter: drop-shadow(0 0 1px #0003);
-      /* تأثيرات من script */
+      cursor: default;
     }
     #noBadgesText {
       color: #888;
       font-style: italic;
       margin-top: 15px;
+      user-select: none;
     }
 
     /* حركات وتأثيرات الشارات */
-    @keyframes glow {
+    @keyframes badgeGlow {
       0%, 100% {
-        filter: drop-shadow(0 0 6px gold);
+        text-shadow:
+          0 0 5px #fff8b3,
+          0 0 10px #ffd700,
+          0 0 20px #ffbf00,
+          0 0 30px #e6ac00;
+        color: #bfa900;
       }
       50% {
-        filter: drop-shadow(0 0 20px gold);
+        text-shadow:
+          0 0 10px #fff8b3,
+          0 0 20px #ffd700,
+          0 0 30px #ffbf00,
+          0 0 40px #e6ac00;
+        color: #fff8b3;
       }
     }
 
-    @keyframes spin {
-      from {
-        transform: rotate(0deg);
+    /* تأثير اسم المستخدم في المودال */
+    @keyframes userNamePulse {
+      0%, 100% {
+        color: #ffb700;
+        text-shadow:
+          0 0 8px #ffd700,
+          0 0 20px #ffbf00,
+          0 0 30px #e6ac00;
+        transform: scale(1) translateY(0);
       }
-      to {
-        transform: rotate(360deg);
+      50% {
+        color: #fff4a3;
+        text-shadow:
+          0 0 15px #fff4a3,
+          0 0 30px #ffdb44,
+          0 0 45px #ffb700;
+        transform: scale(1.05) translateY(-4px);
       }
+    }
+
+    /* حركة صورة المستخدم */
+    @keyframes imageSlideInOut {
+      0%, 100% {
+        transform: translateX(0);
+        box-shadow:
+          0 0 10px #ffb700aa,
+          inset 0 0 5px #ffd700aa;
+      }
+      50% {
+        transform: translateX(10px);
+        box-shadow:
+          0 0 25px #ffd700ff,
+          inset 0 0 12px #fffecbaa;
+      }
+    }
+
+    /* زر حذف الرسائل */
+    .delete-btn {
+      margin-right: 10px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      background-color: #dc3545;
+      color: white;
+      font-weight: bold;
+      align-self: center;
     }
   </style>
 </head>
@@ -223,7 +298,7 @@
   <div id="userModal">
     <div id="userModalContent">
       <button id="closeModalBtn" title="إغلاق">&times;</button>
-      <img id="modalUserImage" src="" alt="صورة المستخدم" />
+      <div class="userImagePlaceholder" id="modalUserImagePlaceholder">?</div>
       <h2 id="modalUserName"></h2>
       <div id="badgesContainer"></div>
       <div id="noBadgesText" style="display:none;">لم يحصل على شارات بعد</div>
@@ -250,7 +325,6 @@
 
     const auth = firebase.auth();
     const db = firebase.database();
-    const storage = firebase.storage();
 
     const chatContainer = document.getElementById('chatContainer');
     const messageInput = document.getElementById('messageInput');
@@ -259,7 +333,7 @@
     // مودال العناصر
     const userModal = document.getElementById('userModal');
     const closeModalBtn = document.getElementById('closeModalBtn');
-    const modalUserImage = document.getElementById('modalUserImage');
+    const modalUserImagePlaceholder = document.getElementById('modalUserImagePlaceholder');
     const modalUserName = document.getElementById('modalUserName');
     const badgesContainer = document.getElementById('badgesContainer');
     const noBadgesText = document.getElementById('noBadgesText');
@@ -267,34 +341,14 @@
     let currentUser = null;
     let usersData = {};
 
-    // شارات المستخدم mlifDgEAkKMaOeuUq63cs5NAkV93 مع صور وتاثيرات حركية
+    // UID خاص بالمستخدم المسؤول والشارات الخاصة به (نصوص فقط)
     const specialUID = "mlifDgEAkKMaOeuUq63cs5NAkV93";
     const specialBadges = [
-      {
-        name: "الأدمن",
-        icon: "https://i.imgur.com/jTqY7eP.gif", // تاج لامع مع توهج (مثال GIF)
-        style: "filter: drop-shadow(0 0 8px gold); animation: glow 2s ease-in-out infinite;"
-      },
-      {
-        name: "المطور",
-        icon: "https://i.imgur.com/y8RnF3H.gif", // لابتوب برمجي مع بيانات متحركة (مثال GIF)
-        style: ""
-      },
-      {
-        name: "الأسطورة",
-        icon: "https://i.imgur.com/AwDiS4g.gif", // فارس يحمل سيف ذهبي يلمع ويتحرك (مثال GIF)
-        style: ""
-      },
-      {
-        name: "VIP 10",
-        icon: "https://i.imgur.com/9i8N1qL.png", // ماسي متوهج (PNG شفاف)
-        style: "animation: spin 5s linear infinite; filter: drop-shadow(0 0 5px cyan);"
-      },
-      {
-        name: "المؤسس",
-        icon: "https://cdn-icons-png.flaticon.com/512/190/190411.png", // أيقونة المؤسس الأصلية
-        style: ""
-      },
+      "الأدمن",
+      "المطور",
+      "الأسطورة",
+      "VIP 10",
+      "المؤسس"
     ];
 
     // كلمات ممنوعة
@@ -311,14 +365,14 @@
       listenForMessages();
     });
 
-    // تحميل بيانات جميع المستخدمين
+    // تحميل بيانات جميع المستخدمين من قاعدة بيانات Firebase
     function loadAllUsersData() {
       db.ref('users').on('value', snapshot => {
         usersData = snapshot.val() || {};
       });
     }
 
-    // الاستماع للرسائل
+    // الاستماع للرسائل الجديدة من قاعدة بيانات Firebase
     function listenForMessages() {
       db.ref('chatMessages').on('value', snapshot => {
         const messages = snapshot.val() || {};
@@ -327,48 +381,40 @@
       });
     }
 
-    // عرض الرسائل
+    // عرض الرسائل في الصفحة
     function renderMessages(messages) {
       chatContainer.innerHTML = '';
       Object.keys(messages).forEach(key => {
         const msg = messages[key];
         const isOwn = msg.uid === currentUser.uid;
         const userData = usersData[msg.uid] || {};
-
         const userName = userData.username || msg.email || "مستخدم مجهول";
-        const userImage = userData.profileImage || "https://via.placeholder.com/48/FFFFFF/000000?text=+";
 
         const msgDiv = document.createElement('div');
         msgDiv.classList.add('message');
         if (isOwn) msgDiv.classList.add('own');
 
-        const img = document.createElement('img');
-        img.src = userImage;
-        img.alt = userName;
-        img.title = userName;
-        img.style.cursor = 'pointer';
-        img.addEventListener('click', () => showUserModal(msg.uid));
+        // أول حرف من اسم المستخدم كنص مع تأثير
+        const firstChar = (userName.trim().charAt(0) || "?").toUpperCase();
+
+        const avatar = document.createElement('div');
+        avatar.className = 'avatar';
+        avatar.textContent = firstChar;
+        avatar.title = userName;
+        avatar.addEventListener('click', () => showUserModal(msg.uid));
 
         const content = document.createElement('div');
         content.classList.add('content');
         content.textContent = msg.text;
 
-        msgDiv.appendChild(img);
+        msgDiv.appendChild(avatar);
         msgDiv.appendChild(content);
 
-        // زر حذف للرسائل الخاصة أو للمسؤول
+        // زر حذف للرسائل للمستخدم نفسه أو الأدمن
         if (isOwn || currentUser.uid === specialUID) {
           const delBtn = document.createElement('button');
           delBtn.textContent = 'حذف';
           delBtn.className = 'delete-btn';
-          delBtn.style.marginRight = '10px';
-          delBtn.style.padding = '4px 10px';
-          delBtn.style.borderRadius = '6px';
-          delBtn.style.border = 'none';
-          delBtn.style.cursor = 'pointer';
-          delBtn.style.backgroundColor = '#dc3545';
-          delBtn.style.color = 'white';
-          delBtn.style.fontWeight = 'bold';
           delBtn.title = "حذف الرسالة";
           delBtn.addEventListener('click', () => {
             if (confirm("هل تريد حذف هذه الرسالة؟")) {
@@ -382,34 +428,38 @@
       });
     }
 
+    // تمرير الشات لأسفل تلقائياً
     function scrollChatToBottom() {
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
+    // التحقق من الكلمات الممنوعة في الرسالة
     function containsBannedWords(text) {
       const lowerText = text.toLowerCase();
       return bannedWords.some(word => lowerText.includes(word));
     }
 
+    // إرسال رسالة جديدة
     sendBtn.addEventListener('click', () => {
       const text = messageInput.value.trim();
-      if (!text) return alert('الرجاء كتابة رسالة');
-
+      if (!text) {
+        alert('الرجاء كتابة رسالة');
+        return;
+      }
       if (containsBannedWords(text)) {
         alert('الرسالة تحتوي على كلمات ممنوعة');
         return;
       }
-
       const newMessage = {
         uid: currentUser.uid,
         email: currentUser.email || "غير معروف",
         text: text,
         timestamp: Date.now()
       };
-
       db.ref('chatMessages').push(newMessage)
         .then(() => {
           messageInput.value = '';
+          sendBtn.disabled = true;
           scrollChatToBottom();
         })
         .catch(err => {
@@ -422,53 +472,42 @@
       sendBtn.disabled = messageInput.value.trim() === '';
     });
 
-    // عرض مودال بيانات المستخدم
+    // عرض نافذة بيانات المستخدم عند الضغط على أول حرف اسمه
     function showUserModal(uid) {
       const userData = usersData[uid] || {};
       const userName = userData.username || "مستخدم مجهول";
-      const userImage = userData.profileImage || "https://via.placeholder.com/120/FFFFFF/000000?text=+";
+
+      const firstChar = (userName.trim().charAt(0) || "?").toUpperCase();
+      modalUserImagePlaceholder.textContent = firstChar;
 
       modalUserName.textContent = userName;
-      modalUserImage.src = userImage;
 
       // تنظيف الشارات السابقة
       badgesContainer.innerHTML = '';
       noBadgesText.style.display = 'none';
 
-      // إذا هو المستخدم الخاص نعرض له الشارات المحددة
+      // إذا هو المستخدم الخاص بالأدمن نعرض له الشارات
       if (uid === specialUID) {
         specialBadges.forEach(badge => {
           const badgeDiv = document.createElement('div');
           badgeDiv.className = 'badge';
-
-          const img = document.createElement('img');
-          img.src = badge.icon;
-          img.alt = badge.name;
-          img.title = badge.name;
-          if(badge.style) img.style.cssText = badge.style;
-
-          const span = document.createElement('span');
-          span.textContent = badge.name;
-
-          badgeDiv.appendChild(img);
-          badgeDiv.appendChild(span);
+          badgeDiv.textContent = badge;
           badgesContainer.appendChild(badgeDiv);
         });
       } else {
-        // لم يحصل على شارات
         noBadgesText.style.display = 'block';
       }
 
       userModal.style.display = 'flex';
     }
 
-    // إغلاق المودال
+    // إغلاق نافذة بيانات المستخدم
     closeModalBtn.addEventListener('click', () => {
       userModal.style.display = 'none';
     });
 
-    // إغلاق المودال عند الضغط بالخارج
-    userModal.addEventListener('click', (e) => {
+    // إغلاق المودال عند الضغط خارج المحتوى
+    userModal.addEventListener('click', e => {
       if (e.target === userModal) {
         userModal.style.display = 'none';
       }
