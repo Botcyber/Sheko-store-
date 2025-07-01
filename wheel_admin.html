@@ -1,34 +1,120 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <title>إدارة عجلة الحظ - Sheko Store</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { font-family: 'Cairo', sans-serif; margin: 0; background: #f4f4f4; }
-    header { background: #222; color: #fff; padding: 15px; text-align: center; font-size: 20px; font-weight: bold; }
-    .container { max-width: 600px; margin: 30px auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    label, input, button { display: block; width: 100%; margin: 10px 0; font-size: 16px; }
-    input { padding: 10px; border-radius: 6px; border: 1px solid #ccc; }
-    button { background: #222; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-    button:hover { background: #ffb700; color: #222; }
-    ul { list-style: none; padding: 0; margin-top: 20px; }
-    li { background: #eee; padding: 10px; margin: 5px 0; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
-    .delete-btn { background: red; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+      color: #222;
+    }
+    h1 {
+      text-align: center;
+      color: #ffb700;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      margin-bottom: 20px;
+      box-shadow: 0 0 10px #ccc;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+    th {
+      background: #222;
+      color: #ffb700;
+    }
+    input[type=text], input[type=number] {
+      width: 90%;
+      padding: 8px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    .add-btn {
+      background: #28a745;
+      color: white;
+      margin-bottom: 10px;
+    }
+    .add-btn:hover {
+      background: #218838;
+    }
+    .edit-btn {
+      background: #ffc107;
+      color: #222;
+    }
+    .edit-btn:hover {
+      background: #e0a800;
+    }
+    .delete-btn {
+      background: #dc3545;
+      color: white;
+    }
+    .delete-btn:hover {
+      background: #bd2130;
+    }
+    #logoutBtn {
+      background: #444;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      position: fixed;
+      top: 20px;
+      left: 20px;
+    }
   </style>
 </head>
 <body>
-  <header>إدارة عجلة الحظ</header>
-  <div class="container">
-    <label>عنوان الخانة:</label>
-    <input type="text" id="optionText" placeholder="مثال: 50 نقطة" /><label>نسبة الفوز (%):</label>
-<input type="number" id="optionChance" placeholder="مثال: 10" />
 
-<button onclick="addOption()">إضافة خانة</button>
+  <button id="logoutBtn">تسجيل الخروج</button>
 
-<ul id="optionsList"></ul>
+  <h1>إدارة خانات عجلة الحظ</h1>
 
-  </div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script>
+  <button class="add-btn" id="showAddFormBtn">إضافة خانة جديدة</button>
+
+  <div id="addForm" style="display:none; margin-bottom:20px;">
+    <input type="text" id="newLabel" placeholder="اسم الخانة" />
+    <input type="number" id="newProbability" placeholder="نسبة الفوز (1-100)" min="1" max="100" />
+    <button class="add-btn" id="addEntryBtn">حفظ الخانة</button>
+  </div>
+
+  <table id="entriesTable">
+    <thead>
+      <tr>
+        <th>اسم الخانة</th>
+        <th>نسبة الفوز</th>
+        <th>التحكم</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- سيتم ملئها ديناميكياً -->
+    </tbody>
+  </table>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -38,58 +124,127 @@
       messagingSenderId: "113892775847",
       appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
-
     firebase.initializeApp(firebaseConfig);
+
     const auth = firebase.auth();
     const db = firebase.database();
 
-    const optionText = document.getElementById('optionText');
-    const optionChance = document.getElementById('optionChance');
-    const optionsList = document.getElementById('optionsList');
-
-    let currentUser;
-
+    // تحقق من تسجيل دخول الأدمن
     auth.onAuthStateChanged(user => {
-      if (!user || user.uid !== 'mlifDgEAkKMaOeuUq63cs5NAkV93') {
-        alert('غير مصرح لك بالدخول إلى هذه الصفحة');
-        location.href = 'index.html';
+      if (!user) {
+        location.href = "index.html";
+        return;
+      }
+      // هنا ممكن تتحقق اذا هذا المستخدم هو أدمن بناء على البريد أو uid
+      // لو تحب أضف شرط هنا
+      loadEntries();
+    });
+
+    const entriesTableBody = document.querySelector("#entriesTable tbody");
+    const showAddFormBtn = document.getElementById("showAddFormBtn");
+    const addForm = document.getElementById("addForm");
+    const newLabel = document.getElementById("newLabel");
+    const newProbability = document.getElementById("newProbability");
+    const addEntryBtn = document.getElementById("addEntryBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    // عرض وإخفاء نموذج الإضافة
+    showAddFormBtn.addEventListener("click", () => {
+      if(addForm.style.display === "none") {
+        addForm.style.display = "block";
+        showAddFormBtn.textContent = "إلغاء";
       } else {
-        currentUser = user;
-        loadOptions();
+        addForm.style.display = "none";
+        showAddFormBtn.textContent = "إضافة خانة جديدة";
       }
     });
 
-    function addOption() {
-      const text = optionText.value.trim();
-      const chance = parseFloat(optionChance.value);
-      if (!text || isNaN(chance) || chance <= 0) {
-        alert('يرجى إدخال عنوان الخانة ونسبة الفوز بشكل صحيح');
-        return;
-      }
-      const newRef = db.ref('wheel/options').push();
-      newRef.set({ text, chance }).then(() => {
-        optionText.value = '';
-        optionChance.value = '';
-        loadOptions();
+    // تحميل الخانات من Firebase
+    function loadEntries() {
+      db.ref("wheelData/entries").on("value", snapshot => {
+        const data = snapshot.val() || {};
+        renderEntries(data);
       });
     }
 
-    function loadOptions() {
-      db.ref('wheel/options').once('value', snapshot => {
-        optionsList.innerHTML = '';
-        snapshot.forEach(child => {
-          const li = document.createElement('li');
-          li.innerHTML = `<span>${child.val().text} (${child.val().chance}%)</span>
-            <button class="delete-btn" onclick="deleteOption('${child.key}')">حذف</button>`;
-          optionsList.appendChild(li);
+    // عرض الخانات في الجدول
+    function renderEntries(data) {
+      entriesTableBody.innerHTML = "";
+      Object.keys(data).forEach(key => {
+        const entry = data[key];
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td><input type="text" value="${entry.label}" data-key="${key}" class="labelInput" /></td>
+          <td><input type="number" min="1" max="100" value="${entry.probability}" data-key="${key}" class="probabilityInput" /></td>
+          <td>
+            <button class="edit-btn" data-key="${key}">حفظ</button>
+            <button class="delete-btn" data-key="${key}">حذف</button>
+          </td>
+        `;
+        entriesTableBody.appendChild(tr);
+      });
+
+      // إضافة الأحداث للأزرار والمدخلات بعد العرض
+      document.querySelectorAll(".edit-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const key = btn.getAttribute("data-key");
+          const labelInput = document.querySelector(`.labelInput[data-key="${key}"]`);
+          const probInput = document.querySelector(`.probabilityInput[data-key="${key}"]`);
+          const label = labelInput.value.trim();
+          let prob = parseInt(probInput.value);
+          if (!label) {
+            alert("الرجاء إدخال اسم خانة صحيح");
+            return;
+          }
+          if (!prob || prob < 1 || prob > 100) {
+            alert("نسبة الفوز يجب أن تكون بين 1 و 100");
+            return;
+          }
+          db.ref(`wheelData/entries/${key}`).update({ label: label, probability: prob });
+        });
+      });
+
+      document.querySelectorAll(".delete-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const key = btn.getAttribute("data-key");
+          if(confirm("هل أنت متأكد من حذف هذه الخانة؟")) {
+            db.ref(`wheelData/entries/${key}`).remove();
+          }
         });
       });
     }
 
-    function deleteOption(key) {
-      if (confirm('هل أنت متأكد من حذف هذه الخانة؟')) {
-        db.ref('wheel/options/' + key).remove().then(loadOptions);
+    // إضافة خانة جديدة
+    addEntryBtn.addEventListener("click", () => {
+      const label = newLabel.value.trim();
+      let prob = parseInt(newProbability.value);
+      if (!label) {
+        alert("الرجاء إدخال اسم الخانة");
+        return;
       }
-    }
-  </script></body>
+      if (!prob || prob < 1 || prob > 100) {
+        alert("نسبة الفوز يجب أن تكون بين 1 و 100");
+        return;
+      }
+      const newKey = db.ref("wheelData/entries").push().key;
+      db.ref(`wheelData/entries/${newKey}`).set({
+        label: label,
+        probability: prob
+      }).then(() => {
+        newLabel.value = "";
+        newProbability.value = "";
+        addForm.style.display = "none";
+        showAddFormBtn.textContent = "إضافة خانة جديدة";
+      });
+    });
+
+    // زر تسجيل الخروج
+    logoutBtn.addEventListener("click", () => {
+      auth.signOut().then(() => {
+        location.href = "index.html";
+      });
+    });
+  </script>
+</body>
 </html>
