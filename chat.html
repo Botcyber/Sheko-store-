@@ -134,7 +134,7 @@
     }
     #sendBtn:hover {
       background-color: #e6a600;
-    }  
+    }
     /* نافذة معلومات المستخدم */
     #userInfoPopup {
       position: fixed;
@@ -207,6 +207,18 @@
       background: rgba(0,0,0,0.3);
       z-index: 900;
       display: none;
+    }
+
+    /* صندوق الرد */
+    #replyBox {
+      background: #ffb700;
+      padding: 8px 15px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+      color: #222;
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
     }
   </style>
 </head>
@@ -282,8 +294,11 @@
       }
     };
 
+    // إيموجي التفاعل
+    const reactionEmojis = ["❤️", "😂", "👍", "👎"];
+
     let currentUser;
-    let usersCache = {}; // لتخزين بيانات المستخدمين لتقليل الطلبات
+    let usersCache = {}; // تخزين بيانات المستخدمين لتقليل الطلبات
 
     // متغير لتخزين رسالة الرد (مقتبسة)
     let replyMessage = null;
@@ -305,53 +320,67 @@
       onlineNumber.textContent = Object.keys(users).length;
     });
 
-    // الاستماع لرسائل الدردشة مع حجب رسائل المحظورين
-    function listenForMessages() {
-      db.ref("chatMessages").on("value", snap => {
-        const msgs = snap.val() || {};
-        chatContainer.innerHTML = "";
+    // حالة الدردشة (مفتوحة/مغلقة)
+    let isChatOpen = true;
+    db.ref("chatSettings/isChatOpen").on("value", snap => {
+      isChatOpen = snap.val();
+      if (!isChatOpen) {
+        messageInput.disabled = true;
+        sendBtn.disabled = true;
+        sendBtn.textContent = "الدردشة مغلقة حالياً";
+      } else {
+        messageInput.disabled = false;
+        sendBtn.disabled = false;
+        sendBtn.textContent = "إرسال";
+      }
+    });
 
-        // جلب قائمة المحظورين
-        db.ref("bannedUsers").once("value").then(bannedSnap => {
-          const banned = bannedSnap.val() || {};
-
-          Object.entries(msgs).forEach(([id, msg]) => {
-            if (!banned[msg.uid]) {
-              renderMessage(id, msg, id);
-            }
+    // جلب بيانات المستخدم مع الشارات والفي أي بي
+    function getUserData(uid) {
+      return new Promise((resolve) => {
+        if (usersCache[uid]) {
+          resolve(usersCache[uid]);
+        } else {
+          db.ref("users/" + uid).once("value").then(userSnap => {
+            const data = userSnap.val() || {};
+            db.ref(`userBadges/${uid}/badges`).once("value").then(badgesSnap => {
+              const badges = badgesSnap.val() || [];
+              usersCache[uid] = {
+                ...data,
+                badges,
+                vip: specialBadgesForUser[uid]?.vip || data.vip || 0,
+              };
+              resolve(usersCache[uid]);
+            });
           });
-
-          chatContainer.scrollTop = chatContainer.scrollHeight;
-        });
+        }
       });
     }
 
-    // الإيموجي للتفاعل
-    const reactionEmojis = ["❤️", "😂", "👍", "👎"];
-
-    // عرض رسالة واحدة
+    // عرض رسالة واحدة مع التفاعلات والردود
     function renderMessage(id, msg) {
       const msgDiv = document.createElement("div");
       msgDiv.className = "message";
       if (msg.uid === currentUser.uid) msgDiv.classList.add("own");
 
-      // عنصر الصورة (الأفاتار)
+      // عند الضغط مرتين للرد على الرسالة
+      msgDiv.ondblclick = () => {
+        replyMessage = {
+          uid: msg.uid,
+          text: msg.text,
+          username: usersCache[msg.uid]?.username || "مستخدم"
+        };
+        showReplyUI(replyMessage);
+      };
+
+      // الصورة
       const avatar = document.createElement("div");
       avatar.className = "avatar";
 
-      // جلب بيانات المستخدم من الكاش أو من قاعدة البيانات
       getUserData(msg.uid).then(userData => {
-        avatar.innerHTML = '';
-        const img = document.createElement("img");
-        img.src = userData.profileImage || "https://via.placeholder.com/48?text=صورة";
-        img.alt = userData.username || "مستخدم";
-
-        avatar.appendChild(img);
-
-        // عند الضغط على الصورة تظهر نافذة معلومات المستخدم
+        avatar.innerHTML = `<img src="${userData.profileImage || 'https://via.placeholder.com/48?text=صورة'}" alt="مستخدم" />`;
         avatar.onclick = () => showUserInfo(userData);
       });
-
       msgDiv.appendChild(avatar);
 
       // محتوى الرسالة
@@ -359,26 +388,56 @@
       content.className = "content";
 
       // اسم المستخدم
-      getUserData(msg.uid).then(userData => {
-        const usernameDiv = document.createElement("div");
-        usernameDiv.className = "username";
-        usernameDiv.textContent = userData.username || "مستخدم";
+      const usernameDiv = document.createElement("div");
+      usernameDiv.className = "username";
+      usernameDiv.textContent = usersCache[msg.uid]?.username || "مستخدم";
+      content.appendChild(usernameDiv);
 
-        content.appendChild(usernameDiv);
+      // رسالة الرد إن وجدت
+      if (msg.replyTo) {
+        const replyDiv = document.createElement("div");
+        replyDiv.style = "border-left: 3px solid #ffb700; padding-left: 8px; margin-bottom: 5px; font-style: italic; color: #555;";
+        replyDiv.textContent = `رد على ${msg.replyTo.username}: ${msg.replyTo.text}`;
+        content.appendChild(replyDiv);
+      }
 
-        // إذا كانت الرسالة رد على رسالة أخرى، نعرضها هنا (يمكنك إضافة لاحقاً)
+      // نص الرسالة
+      const textDiv = document.createElement("div");
+      textDiv.textContent = msg.text;
+      content.appendChild(textDiv);
 
-        // نص الرسالة
-        const textDiv = document.createElement("div");
-        textDiv.textContent = msg.text;
-        content.appendChild(textDiv);
+      // طابع زمني
+      const timeDiv = document.createElement("div");
+      timeDiv.className = "timestamp";
+      timeDiv.textContent = new Date(msg.timestamp).toLocaleTimeString('ar-EG');
+      content.appendChild(timeDiv);
 
-        // طابع زمني
-        const timeDiv = document.createElement("div");
-        timeDiv.className = "timestamp";
-        timeDiv.textContent = new Date(msg.timestamp).toLocaleTimeString('ar-EG');
-        content.appendChild(timeDiv);
+      // إيموجي التفاعلات
+      const reactionsDiv = document.createElement("div");
+      reactionsDiv.style = "margin-top:5px; display:flex; gap:8px;";
+
+      if (!msg.reactions) msg.reactions = {};
+
+      reactionEmojis.forEach(emoji => {
+        const btn = document.createElement("button");
+        btn.textContent = emoji + (msg.reactions[emoji] ? " " + msg.reactions[emoji] : "");
+        btn.style = "background:none; border:none; cursor:pointer; font-size:1.2rem; user-select:none;";
+        btn.onclick = () => {
+          const userReactions = msg.reactions || {};
+          if (userReactions[emoji]) {
+            // إزالة رد فعل المستخدم
+            userReactions[emoji]--;
+            if (userReactions[emoji] <= 0) delete userReactions[emoji];
+          } else {
+            userReactions[emoji] = (userReactions[emoji] || 0) + 1;
+          }
+          // تحديث في قاعدة البيانات
+          db.ref("chatMessages/" + id + "/reactions").set(userReactions);
+        };
+        reactionsDiv.appendChild(btn);
       });
+
+      content.appendChild(reactionsDiv);
 
       msgDiv.appendChild(content);
 
@@ -398,19 +457,25 @@
       chatContainer.appendChild(msgDiv);
     }
 
-    // جلب بيانات المستخدم مع التخزين المؤقت
-    function getUserData(uid) {
-      return new Promise((resolve) => {
-        if (usersCache[uid]) {
-          resolve(usersCache[uid]);
-        } else {
-          db.ref("users/" + uid).once("value").then(snap => {
-            const data = snap.val() || {};
-            usersCache[uid] = data;
-            resolve(data);
-          });
-        }
-      });
+    // عرض صندوق الرد فوق مربع الإدخال
+    function showReplyUI(replyMsg) {
+      if (!replyMsg) {
+        const existing = document.getElementById("replyBox");
+        if (existing) existing.remove();
+        replyMessage = null;
+        return;
+      }
+      let replyBox = document.getElementById("replyBox");
+      if (!replyBox) {
+        replyBox = document.createElement("div");
+        replyBox.id = "replyBox";
+        replyBox.title = "انقر لإلغاء الرد";
+        document.getElementById("inputContainer").insertBefore(replyBox, messageInput);
+        replyBox.onclick = () => {
+          showReplyUI(null);
+        };
+      }
+      replyBox.textContent = `رد على: ${replyMsg.username} - "${replyMsg.text.substring(0, 30)}${replyMsg.text.length > 30 ? "..." : ""}"`;
     }
 
     // إرسال رسالة
@@ -418,9 +483,7 @@
       const text = messageInput.value.trim();
       if (!text) return;
 
-      // تحقق هل الدردشة مفتوحة من Firebase
-      const chatOpenSnap = await db.ref("chatSettings/isChatOpen").once("value");
-      if (!chatOpenSnap.val()) {
+      if (!isChatOpen) {
         alert("الدردشة مغلقة حالياً من قبل الإدارة.");
         return;
       }
@@ -432,16 +495,50 @@
         return;
       }
 
-      // إضافة الرسالة
-      const newMsgRef = db.ref("chatMessages").push();
-      newMsgRef.set({
+      // بناء بيانات الرسالة مع الرد (إن وجد)
+      const messageData = {
         uid: currentUser.uid,
         text: text,
         timestamp: Date.now()
-      });
+      };
+      if (replyMessage) {
+        messageData.replyTo = {
+          uid: replyMessage.uid,
+          username: replyMessage.username,
+          text: replyMessage.text
+        };
+      }
+
+      const newMsgRef = db.ref("chatMessages").push();
+      await newMsgRef.set(messageData);
 
       messageInput.value = "";
+      showReplyUI(null);
     };
+
+    // الاستماع لرسائل الدردشة مع حجب رسائل المحظورين
+    function listenForMessages() {
+      db.ref("chatMessages").on("value", async snap => {
+        const msgs = snap.val() || {};
+        chatContainer.innerHTML = "";
+
+        // جلب قائمة المحظورين
+        const bannedSnap = await db.ref("bannedUsers").once("value");
+        const banned = bannedSnap.val() || {};
+
+        // تحديث الكاش للمستخدمين الحاليين
+        const uids = [...new Set(Object.values(msgs).map(m => m.uid))];
+        await Promise.all(uids.map(uid => getUserData(uid)));
+
+        Object.entries(msgs).forEach(([id, msg]) => {
+          if (!banned[msg.uid]) {
+            renderMessage(id, msg);
+          }
+        });
+
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      });
+    }
 
     // إغلاق نافذة معلومات المستخدم
     closeBtn.onclick = () => {
