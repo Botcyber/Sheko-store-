@@ -270,6 +270,14 @@
     const popupRank = document.getElementById("popupRank");
     const closeBtn = userInfoPopup.querySelector(".closeBtn");
 
+    // شارات خاصة للمستخدم mlifDgEAkKMaOeuUq63cs5NAkV93
+    const specialBadgesForUser = {
+      "mlifDgEAkKMaOeuUq63cs5NAkV93": {
+        badges: ["المؤسس", "الأسطورة", "المبرمج", "الادمن"],
+        vip: 10
+      }
+    };
+
     let currentUser;
     let usersCache = {}; // لتخزين بيانات المستخدمين لتقليل الطلبات
 
@@ -326,8 +334,12 @@
       // محتوى الرسالة
       const content = document.createElement("div");
       content.className = "content";
+
+      // عرض اسم المستخدم الحقيقي بدل البريد الإلكتروني
+      const displayName = msg.username && msg.username !== msg.uid ? msg.username : (msg.username || "مستخدم مجهول");
+
       content.innerHTML = `
-        <div class="username">${msg.username || "مستخدم مجهول"}</div>
+        <div class="username">${escapeHtml(displayName)}</div>
         <div>${escapeHtml(msg.text)}</div>
         <div class="timestamp">${new Date(msg.timestamp).toLocaleString("ar-EG")}</div>
       `;
@@ -355,15 +367,18 @@
       const text = messageInput.value.trim();
       if (!text) return alert("الرجاء كتابة رسالة");
 
-      const msg = {
-        uid: currentUser.uid,
-        username: currentUser.displayName || currentUser.email, // سيتم تحديث لاحقاً مع بيانات المستخدم الحقيقية
-        text,
-        timestamp: Date.now(),
-        photoURL: currentUser.photoURL || null
-      };
-      db.ref("chatMessages").push(msg);
-      messageInput.value = "";
+      // إحضار اسم المستخدم الحقيقي قبل الإرسال من الكاش أو من currentUser.displayName
+      getUserData(currentUser.uid).then(userData => {
+        const msg = {
+          uid: currentUser.uid,
+          username: userData.username || currentUser.email,
+          text,
+          timestamp: Date.now(),
+          photoURL: currentUser.photoURL || null
+        };
+        db.ref("chatMessages").push(msg);
+        messageInput.value = "";
+      });
     };
 
     // الحصول على بيانات المستخدم (اسم، صورة، شارات، رتب...)
@@ -372,11 +387,18 @@
         if (usersCache[uid]) return resolve(usersCache[uid]);
 
         db.ref("users/" + uid).once("value").then(snap => {
-          const data = snap.val() || {};
+          let data = snap.val() || {};
+
+          // إذا هو المستخدم المميز، نضيف الشارات الخاصة وVIP
+          if (specialBadgesForUser[uid]) {
+            data.badges = specialBadgesForUser[uid].badges;
+            data.vip = specialBadgesForUser[uid].vip;
+          }
+
           usersCache[uid] = {
             username: data.username || "مستخدم مجهول",
             profileImage: data.profileImage || "https://via.placeholder.com/48?text=صورة",
-            badges: data.badges || [], // مصفوفة الشارات مثلا ['مميز', 'شريك']
+            badges: data.badges || [],
             vip: data.vip || null,
             rank: data.rank || null
           };
@@ -422,7 +444,6 @@
       overlay.style.display = "block";
       userInfoPopup.style.display = "block";
 
-      // تغلق تلقائياً بعد 4 ثواني (يمكن إلغاء هذا السطر لو تحب)
       clearTimeout(userInfoPopup.timeoutId);
       userInfoPopup.timeoutId = setTimeout(() => {
         closeUserInfo();
