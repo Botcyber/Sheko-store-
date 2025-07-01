@@ -4,55 +4,15 @@
   <meta charset="UTF-8" />
   <title>لوحة التحكم - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    crossorigin="anonymous"
-    referrerpolicy="no-referrer"
-  />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      margin: 0;
-      background: #f1f1f1;
-    }
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #222;
-      padding: 10px 20px;
-      color: white;
-      flex-wrap: wrap;
-    }
-    .nav-icons {
-      display: flex;
-      gap: 25px;
-      flex-direction: row;
-      flex-wrap: wrap;
-    }
-    .nav-icons a {
-      color: white;
-      text-decoration: none;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      font-size: 14px;
-      position: relative;
-      transition: color 0.3s ease;
-      gap: 8px;
-      padding: 5px 10px;
-      border-radius: 5px;
-    }
-    .nav-icons a i {
-      font-size: 20px;
-      margin: 0;
-    }
-    .nav-icons a:hover {
-      color: #ffb700;
-      background: rgba(255, 183, 0, 0.1);
-    }
-    #notifBadge {
+    body { font-family: 'Cairo', sans-serif; margin: 0; background: #f1f1f1; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; background: #222; padding: 10px 20px; color: white; flex-wrap: wrap; }
+    .nav-icons { display: flex; gap: 25px; flex-direction: column; }
+    .nav-icons a { color: white; text-decoration: none; display: flex; flex-direction: row; align-items: center; font-size: 14px; position: relative; transition: color 0.3s ease; gap: 8px; }
+    .nav-icons a i { font-size: 20px; margin: 0; }
+    .nav-icons a:hover { color: #ffb700; }
+    #notifBadge, #chatBadge {
       position: absolute;
       top: 0;
       left: 5px;
@@ -67,134 +27,19 @@
       user-select: none;
       pointer-events: none;
     }
-    .user-area {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      font-size: 15px;
-    }
-    #balance {
-      font-weight: bold;
-    }
-    button {
-      background: #444;
-      border: none;
-      color: white;
-      padding: 8px 15px;
-      border-radius: 5px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: bold;
-      transition: background 0.3s ease;
-      font-size: 14px;
-    }
-    button i {
-      font-size: 16px;
-    }
-    button:hover {
-      background: #ffb700;
-      color: #222;
-    }
-    .dashboard {
-      max-width: 800px;
-      margin: auto;
-      padding: 20px;
-      background: white;
-      border-radius: 12px;
-      margin-top: 30px;
-      position: relative;
-    }
-    label,
-    select,
-    input {
-      display: block;
-      width: 100%;
-      margin: 10px 0;
-      padding: 8px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    button.order-btn {
-      background: #222;
-      color: white;
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-    button.order-btn:hover {
-      background: #444;
-    }
-    .note {
-      font-size: 14px;
-      color: #666;
-      text-align: center;
-      margin-top: 20px;
-    }
-    .footer-contact {
-      max-width: 800px;
-      margin: 30px auto 20px;
-      text-align: center;
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
-    .btn-share,
-    .btn-copy {
-      background: #222;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      min-width: 180px;
-    }
-    .btn-share:hover,
-    .btn-copy:hover {
-      background: #ffb700;
-      color: #222;
-    }
-    /* زر الدردشة */
-    #chatButton {
-      background: #ffb700;
-      color: #222;
-      border: none;
-      padding: 8px 15px;
-      border-radius: 5px;
-      font-weight: bold;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 14px;
-      transition: background 0.3s ease;
-      position: relative;
-    }
-    #chatButton i {
-      font-size: 18px;
-    }
-    #chatNotifCount {
-      position: absolute;
-      top: -6px;
-      right: -6px;
-      background: red;
-      color: white;
-      font-size: 12px;
-      font-weight: bold;
-      border-radius: 50%;
-      padding: 2px 6px;
-      display: none;
-      user-select: none;
-      pointer-events: none;
-    }
+    .user-area { display: flex; align-items: center; gap: 15px; font-size: 15px; }
+    #balance { font-weight: bold; }
+    button { background: #444; border: none; color: white; padding: 8px 15px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: bold; transition: background 0.3s ease; font-size: 14px; }
+    button i { font-size: 16px; }
+    button:hover { background: #ffb700; color: #222; }
+    .dashboard { max-width: 800px; margin: auto; padding: 20px; background: white; border-radius: 12px; margin-top: 30px; position: relative; }
+    label, select, input { display: block; width: 100%; margin: 10px 0; padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
+    button.order-btn { background: #222; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }
+    button.order-btn:hover { background: #444; }
+    .note { font-size: 14px; color: #666; text-align: center; margin-top: 20px; }
+    .footer-contact { max-width: 800px; margin: 30px auto 20px; text-align: center; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+    .btn-share, .btn-copy { background: #222; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.3s ease; min-width: 180px; }
+    .btn-share:hover, .btn-copy:hover { background: #ffb700; color: #222; }
   </style>
 </head>
 <body>
@@ -211,15 +56,14 @@
       <a href="vote-event.html"><i class="fa fa-bolt"></i><span>الفعاليات</span></a>
       <a href="support_chat.html"><i class="fa fa-headset"></i><span>فريق الدعم والشكاوى</span></a>
       <a href="wheel.html"><i class="fa fa-dharmachakra"></i><span>عجلة الحظ</span></a>
+      <!-- زر الدردشة -->
+      <a href="chat.html" id="chatLink" style="position: relative;">
+        <i class="fa fa-comments"></i><span>الدردشة</span><span id="chatBadge">0</span>
+      </a>
     </nav>
-    <div class="user-area" style="gap:10px;">
+    <div class="user-area">
       <span id="balance">رصيدك: ...</span>
       <button onclick="logout()"><i class="fa fa-sign-out-alt"></i> خروج</button>
-      <!-- زر الدردشة الجديد -->
-      <button id="chat.html" title="الدردشة">
-        <i class="fa fa-comments"></i> دردشة
-        <span id="chatNotifCount">0</span>
-      </button>
     </div>
   </div>
   <div class="dashboard">
@@ -244,10 +88,12 @@
     <button class="btn-share" onclick="shareSite()">مشاركة الموقع مع أصدقائك</button>
     <button class="btn-copy" onclick="copyLink()">نسخ رابط الموقع</button>
   </div>
+
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <script>
+    // تهيئة Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -261,11 +107,8 @@
     const auth = firebase.auth();
     const db = firebase.database();
     let currentUser = null;
-    let chatOpen = false;
-    const chatButton = document.getElementById("chatButton");
-    const chatNotifCount = document.getElementById("chatNotifCount");
 
-    // الكود الخاص بالأسعار والخدمات (كما هو سابقاً)
+    // الأسعار (نقلتها كما هي بدون تغيير)
     const prices = {
       "ألعاب": {
         "ببجي موبايل": {
@@ -391,7 +234,10 @@
     const accountInput = document.getElementById("accountInput");
     const accountLabel = document.getElementById("accountLabel");
     const balanceEl = document.getElementById("balance");
+    const notifBadge = document.getElementById("notifBadge");
+    const chatBadge = document.getElementById("chatBadge");
 
+    // تغيير الخدمات بناءً على النوع
     mainService.addEventListener("change", () => {
       subService.innerHTML = "";
       packageEl.innerHTML = "";
@@ -405,11 +251,12 @@
       }
       updatePackage();
 
+      // تغيير نص وعناصر الإدخال حسب النوع
       if (mainService.value === "ألعاب") {
         accountLabel.textContent = "ID فقط:";
         accountInput.placeholder = "أدخل رقم الـ ID فقط";
         accountInput.type = "text";
-        accountInput.pattern = "\\d*"; // يسمح بأرقام فقط
+        accountInput.pattern = "\\d*"; // أرقام فقط
         accountInput.title = "يرجى إدخال أرقام فقط";
       } else if (mainService.value === "سوشيال") {
         accountLabel.textContent = "اسم الحساب:";
@@ -446,15 +293,41 @@
       }
     }
 
+    // مراقبة حالة المصادقة والبيانات
     auth.onAuthStateChanged(user => {
-      if (!user) return (location.href = "index.html");
+      if (!user) return location.href = "index.html";
       currentUser = user;
-      db.ref("users/" + user.uid + "/balance").on("value", (snapshot) => {
+
+      // تحديث الرصيد
+      db.ref("users/" + user.uid + "/balance").on("value", snapshot => {
         const balance = snapshot.val();
         balanceEl.textContent = `رصيدك: ${balance !== null ? balance : 0} جنيه`;
       });
+
+      // تحديث عداد الإشعارات
+      db.ref("notifications/" + user.uid).on("value", snapshot => {
+        const count = snapshot.numChildren();
+        if (count > 0) {
+          notifBadge.style.display = "inline-block";
+          notifBadge.textContent = count > 99 ? "99+" : count;
+        } else {
+          notifBadge.style.display = "none";
+        }
+      });
+
+      // تحديث عداد رسائل الدردشة الغير مقروءة
+      db.ref(`chat-messages/${user.uid}/unreadCount`).on("value", snapshot => {
+        const count = snapshot.val() || 0;
+        if (count > 0) {
+          chatBadge.style.display = "inline-block";
+          chatBadge.textContent = count > 99 ? "99+" : count;
+        } else {
+          chatBadge.style.display = "none";
+        }
+      });
     });
 
+    // إرسال الطلب
     function submitOrder() {
       const service = mainService.value;
       const sub = subService.value;
