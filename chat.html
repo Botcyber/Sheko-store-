@@ -179,11 +179,31 @@
       height: 40px;
       margin-bottom: 6px;
       filter: drop-shadow(0 0 1px #0003);
+      /* تأثيرات من script */
     }
     #noBadgesText {
       color: #888;
       font-style: italic;
       margin-top: 15px;
+    }
+
+    /* حركات وتأثيرات الشارات */
+    @keyframes glow {
+      0%, 100% {
+        filter: drop-shadow(0 0 6px gold);
+      }
+      50% {
+        filter: drop-shadow(0 0 20px gold);
+      }
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
     }
   </style>
 </head>
@@ -247,28 +267,33 @@
     let currentUser = null;
     let usersData = {};
 
-    // شارات المستخدم mlifDgEAkKMaOeuUq63cs5NAkV93
+    // شارات المستخدم mlifDgEAkKMaOeuUq63cs5NAkV93 مع صور وتاثيرات حركية
     const specialUID = "mlifDgEAkKMaOeuUq63cs5NAkV93";
     const specialBadges = [
       {
         name: "الأدمن",
-        icon: "https://cdn-icons-png.flaticon.com/512/1828/1828919.png"
+        icon: "https://i.imgur.com/jTqY7eP.gif", // تاج لامع مع توهج (مثال GIF)
+        style: "filter: drop-shadow(0 0 8px gold); animation: glow 2s ease-in-out infinite;"
       },
       {
         name: "المطور",
-        icon: "https://cdn-icons-png.flaticon.com/512/2331/2331941.png"
+        icon: "https://i.imgur.com/y8RnF3H.gif", // لابتوب برمجي مع بيانات متحركة (مثال GIF)
+        style: ""
       },
       {
         name: "الأسطورة",
-        icon: "https://cdn-icons-png.flaticon.com/512/616/616408.png"
+        icon: "https://i.imgur.com/AwDiS4g.gif", // فارس يحمل سيف ذهبي يلمع ويتحرك (مثال GIF)
+        style: ""
       },
       {
         name: "VIP 10",
-        icon: "https://cdn-icons-png.flaticon.com/512/616/616408.png"
+        icon: "https://i.imgur.com/9i8N1qL.png", // ماسي متوهج (PNG شفاف)
+        style: "animation: spin 5s linear infinite; filter: drop-shadow(0 0 5px cyan);"
       },
       {
         name: "المؤسس",
-        icon: "https://cdn-icons-png.flaticon.com/512/190/190411.png"
+        icon: "https://cdn-icons-png.flaticon.com/512/190/190411.png", // أيقونة المؤسس الأصلية
+        style: ""
       },
     ];
 
@@ -420,6 +445,7 @@
           img.src = badge.icon;
           img.alt = badge.name;
           img.title = badge.name;
+          if(badge.style) img.style.cssText = badge.style;
 
           const span = document.createElement('span');
           span.textContent = badge.name;
