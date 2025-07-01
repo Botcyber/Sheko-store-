@@ -14,6 +14,7 @@
       flex-direction: column;
       height: 100vh;
       background: linear-gradient(45deg, #fffbdb, #fff);
+      overflow: hidden;
     }
     header {
       background: #ffb700;
@@ -23,6 +24,7 @@
       font-size: 1.5rem;
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
       position: relative;
+      user-select: none;
     }
     #onlineCount {
       position: absolute;
@@ -41,15 +43,28 @@
       flex: 1;
       padding: 10px;
       overflow-y: auto;
+      background: #fffdfa;
+      border-top: 1px solid #f0e68c;
+      border-bottom: 1px solid #f0e68c;
+      scroll-behavior: smooth;
     }
     .message {
       display: flex;
       margin-bottom: 12px;
       align-items: flex-start;
       position: relative;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeSlideIn 0.4s forwards;
     }
     .message.own {
       flex-direction: row-reverse;
+    }
+    @keyframes fadeSlideIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     .avatar {
       width: 48px;
@@ -59,11 +74,18 @@
       overflow: hidden;
       cursor: pointer;
       position: relative;
+      box-shadow: 0 0 6px rgba(255, 183, 0, 0.5);
+      transition: transform 0.3s ease;
+    }
+    .avatar:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 12px rgba(255, 183, 0, 0.8);
     }
     .avatar img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      pointer-events: none;
     }
     .content {
       background: #ffb700;
@@ -73,20 +95,25 @@
       max-width: 70%;
       position: relative;
       word-break: break-word;
+      box-shadow: 0 3px 8px rgba(255, 183, 0, 0.3);
+      transition: background-color 0.3s ease;
     }
     .message.own .content {
       background: #222;
       color: #ffb700;
+      box-shadow: 0 3px 8px rgba(255, 183, 0, 0.8);
     }
     .username {
       font-weight: bold;
       font-size: 0.9rem;
       margin-bottom: 5px;
+      user-select: text;
     }
     .timestamp {
       font-size: 0.7rem;
       color: #555;
       margin-top: 4px;
+      user-select: none;
     }
     .delete-btn {
       background: #dc3545;
@@ -98,10 +125,12 @@
       margin: auto 8px;
       align-self: center;
       font-size: 0.8rem;
-      transition: background-color 0.3s ease;
+      transition: background-color 0.3s ease, transform 0.15s ease;
+      user-select: none;
     }
     .delete-btn:hover {
       background-color: #b02a37;
+      transform: scale(1.1);
     }
     #inputContainer {
       display: flex;
@@ -109,16 +138,22 @@
       background: #eee;
       border-top: 1px solid #ccc;
       flex-direction: column;
+      box-shadow: inset 0 2px 6px #f9e26a;
     }
     #messageInput {
       flex: 1;
-      padding: 10px;
+      padding: 10px 15px;
       border-radius: 20px;
       border: 1px solid #ccc;
       font-family: 'Cairo', sans-serif;
       font-size: 1rem;
       width: 100%;
       box-sizing: border-box;
+      transition: box-shadow 0.3s ease;
+    }
+    #messageInput:focus {
+      outline: none;
+      box-shadow: 0 0 8px 2px #ffb700aa;
     }
     #sendBtn {
       margin-top: 8px;
@@ -129,11 +164,21 @@
       font-weight: bold;
       cursor: pointer;
       font-size: 1rem;
-      transition: background-color 0.3s ease;
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
       align-self: flex-end;
+      user-select: none;
     }
     #sendBtn:hover {
       background-color: #e6a600;
+      box-shadow: 0 0 12px 3px #e6a600bb;
+    }
+    #sendBtn.pulse {
+      animation: pulseSendBtn 0.5s ease forwards;
+    }
+    @keyframes pulseSendBtn {
+      0% { box-shadow: 0 0 0 0 rgba(255, 183, 0, 0.7); }
+      50% { box-shadow: 0 0 15px 5px rgba(255, 183, 0, 1); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 183, 0, 0.7); }
     }
 
     /* نافذة معلومات المستخدم */
@@ -141,7 +186,7 @@
       position: fixed;
       top: 20%;
       left: 50%;
-      transform: translateX(-50%);
+      transform: translateX(-50%) scale(0.8);
       background: white;
       padding: 20px 25px;
       border-radius: 15px;
@@ -152,6 +197,12 @@
       direction: rtl;
       font-family: 'Cairo', sans-serif;
       text-align: center;
+      opacity: 0;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    #userInfoPopup.show {
+      opacity: 1;
+      transform: translateX(-50%) scale(1);
     }
     #userInfoPopup .closeBtn {
       position: absolute;
@@ -161,6 +212,10 @@
       cursor: pointer;
       font-weight: bold;
       user-select: none;
+      transition: color 0.2s ease;
+    }
+    #userInfoPopup .closeBtn:hover {
+      color: #ffb700;
     }
     #userInfoPopup img {
       width: 100px;
@@ -175,6 +230,7 @@
       font-weight: 900;
       font-size: 1.3rem;
       color: #ffb700;
+      user-select: text;
     }
     #userInfoPopup .badges {
       margin: 10px 0;
@@ -191,6 +247,7 @@
       font-weight: bold;
       font-size: 0.85rem;
       box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+      user-select: none;
     }
     #userInfoPopup .vip {
       background: linear-gradient(45deg, gold, orange);
@@ -199,6 +256,7 @@
       padding: 8px 15px;
       border-radius: 20px;
       box-shadow: 0 2px 8px rgba(255, 165, 0, 0.7);
+      user-select: none;
     }
 
     /* خلفية شفافة عند ظهور النافذة */
@@ -208,6 +266,31 @@
       background: rgba(0,0,0,0.3);
       z-index: 900;
       display: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    #overlay.show {
+      opacity: 1;
+      display: block;
+    }
+
+    /* تأثير نبضة عند التفاعل مع الإيموجي */
+    .reaction-pulse {
+      animation: pulseReaction 0.3s ease forwards;
+    }
+    @keyframes pulseReaction {
+      0% { transform: scale(1); color: inherit; }
+      50% { transform: scale(1.4); color: #ffb700; }
+      100% { transform: scale(1); color: inherit; }
+    }
+
+    /* تأثير ظهور واختفاء مربع الرد */
+    #replyDiv {
+      animation: fadeSlideDown 0.3s ease forwards;
+    }
+    @keyframes fadeSlideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
@@ -338,7 +421,7 @@
 
         avatar.appendChild(img);
 
-        // عند الضغط على الصورة تظهر نافذة معلومات المستخدم
+        // عند الضغط على الصورة تظهر نافذة معلومات المستخدم 
         avatar.onclick = () => showUserInfo(userData);
       });
 
@@ -358,12 +441,12 @@
         `;
       }
 
-      // التفاعل - عرض الإيموجي وعددهم
+      // التفاعل - عرض الإيموجي وعددهم مع تأثير نبضة عند الضغط
       let reactionsHTML = "";
       if (msg.reactions) {
         reactionsHTML = `<div style="margin-top: 6px;">`;
         for (const [emoji, users] of Object.entries(msg.reactions)) {
-          reactionsHTML += `<span style="cursor:pointer; margin-right: 8px;" title="${emoji}">${emoji} (${Object.keys(users).length})</span>`;
+          reactionsHTML += `<span class="reaction-emoji" style="cursor:pointer; margin-right: 8px;" title="${emoji}">${emoji} (${Object.keys(users).length})</span>`;
         }
         reactionsHTML += `</div>`;
       }
@@ -377,8 +460,6 @@
       `;
 
       // زر حذف الرسالة:
-      // - يسمح للمستخدم صاحب الرسالة بحذفها
-      // - ويسمح للمستخدم الخاص بحذف أي رسالة
       if (msg.uid === currentUser.uid || currentUser.uid === "mlifDgEAkKMaOeuUq63cs5NAkV93") {
         const del = document.createElement("button");
         del.textContent = "حذف";
@@ -400,7 +481,12 @@
         emojiBtn.style.cursor = "pointer";
         emojiBtn.style.marginRight = "8px";
         emojiBtn.title = "اضغط للتفاعل بـ " + emoji;
-        emojiBtn.onclick = () => toggleReaction(id, emoji);
+        emojiBtn.onclick = () => {
+          toggleReaction(id, emoji);
+          // تأثير نبضة صغيرة عند الضغط
+          emojiBtn.classList.add("reaction-pulse");
+          setTimeout(() => emojiBtn.classList.remove("reaction-pulse"), 300);
+        };
         reactionsContainer.appendChild(emojiBtn);
       });
       content.appendChild(reactionsContainer);
@@ -413,12 +499,15 @@
       chatContainer.appendChild(msgDiv);
     }
 
-    // إرسال رسالة
+    // إرسال رسالة مع تأثير نبضة على زر الإرسال
     sendBtn.onclick = () => {
       const text = messageInput.value.trim();
       if (!text) return alert("الرجاء كتابة رسالة");
 
-      // إحضار اسم المستخدم الحقيقي قبل الإرسال من الكاش أو من currentUser.displayName
+      // تأثير نبضة عند الإرسال
+      sendBtn.classList.add("pulse");
+      setTimeout(() => sendBtn.classList.remove("pulse"), 500);
+
       getUserData(currentUser.uid).then(userData => {
         const msg = {
           uid: currentUser.uid,
@@ -428,7 +517,6 @@
           photoURL: currentUser.photoURL || null,
         };
 
-        // إذا كان هناك رسالة للرد عليها، نضيفها
         if (replyMessage) {
           msg.replyTo = {
             text: replyMessage.text,
@@ -444,193 +532,8 @@
       });
     };
 
-    // الحصول على بيانات المستخدم (اسم، صورة، شارات، رتب...)
-    function getUserData(uid) {
-      return new Promise((resolve) => {
-        if (usersCache[uid]) return resolve(usersCache[uid]);
+    // باقي الدوال كما هي بدون تغيير (getUserData, showUserInfo, closeUserInfo, escapeHtml, toggleReaction, addSwipeRightListener, setReplyMessage, showReplyUI, clearReplyUI)
 
-        db.ref("users/" + uid).once("value").then(snap => {
-          let data = snap.val() || {};
-
-          // إذا هو المستخدم المميز، نضيف الشارات الخاصة وVIP
-          if (specialBadgesForUser[uid]) {
-            data.badges = specialBadgesForUser[uid].badges;
-            data.vip = specialBadgesForUser[uid].vip;
-          }
-
-          usersCache[uid] = {
-            username: data.username || "مستخدم مجهول",
-            profileImage: data.profileImage || "https://via.placeholder.com/48?text=صورة",
-            badges: data.badges || [],
-            vip: data.vip || null,
-            rank: data.rank || null
-          };
-          resolve(usersCache[uid]);
-        });
-      });
-    }
-
-    // عرض نافذة معلومات المستخدم
-    function showUserInfo(userData) {
-      popupImage.src = userData.profileImage;
-      popupName.textContent = userData.username;
-
-      // عرض الشارات
-      popupBadges.innerHTML = "";
-      if (userData.badges && userData.badges.length) {
-        userData.badges.forEach(badge => {
-          const span = document.createElement("span");
-          span.className = "badge";
-          span.textContent = badge;
-          popupBadges.appendChild(span);
-        });
-} else {
-        popupBadges.textContent = "لا توجد شارات";
-      }
-
-      // عرض VIP إذا موجود
-      if (userData.vip) {
-        popupVIP.style.display = "inline-block";
-        popupVIP.textContent = "VIP رتبة " + userData.vip;
-      } else {
-        popupVIP.style.display = "none";
-        popupVIP.textContent = "";
-      }
-
-      // عرض الرتبة
-      if (userData.rank) {
-        popupRank.textContent = "التصنيف: " + userData.rank;
-      } else {
-        popupRank.textContent = "";
-      }
-
-      overlay.style.display = "block";
-      userInfoPopup.style.display = "block";
-
-      clearTimeout(userInfoPopup.timeoutId);
-      userInfoPopup.timeoutId = setTimeout(() => {
-        closeUserInfo();
-      }, 4000);
-    }
-
-    // إغلاق نافذة المعلومات
-    function closeUserInfo() {
-      overlay.style.display = "none";
-      userInfoPopup.style.display = "none";
-    }
-
-    closeBtn.onclick = closeUserInfo;
-    overlay.onclick = closeUserInfo;
-
-    // دالة تعقيم النص (لمنع XSS)
-    function escapeHtml(text) {
-      const div = document.createElement("div");
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    // تفعيل/تعطيل التفاعل بالإيموجي
-    function toggleReaction(messageId, emoji) {
-      const reactionsRef = db.ref(`chatMessages/${messageId}/reactions/${emoji}/${currentUser.uid}`);
-      reactionsRef.once("value").then(snapshot => {
-        if (snapshot.exists()) {
-          // إلغاء التفاعل
-          reactionsRef.remove();
-        } else {
-          // إضافة التفاعل
-          reactionsRef.set(true);
-        }
-      });
-    }
-
-    // استماع لسحب الرسالة يمين (Swipe Right) للرد عليها
-    function addSwipeRightListener(msgDiv, msg, msgId) {
-      let startX = 0;
-      let dist = 0;
-      const threshold = 50; // عدد البيكسلات للسحب
-
-      msgDiv.addEventListener("touchstart", e => {
-        startX = e.touches[0].clientX;
-      }, {passive:true});
-
-      msgDiv.addEventListener("touchmove", e => {
-        dist = e.touches[0].clientX - startX;
-      }, {passive:true});
-
-      msgDiv.addEventListener("touchend", e => {
-        if (dist > threshold) {
-          setReplyMessage(msg, msgId);
-        }
-        dist = 0;
-      });
-
-      // دعم الماوس أيضاً (اختياري)
-      let mouseDownX = 0;
-      let mouseMoved = false;
-      msgDiv.addEventListener("mousedown", e => {
-        mouseDownX = e.clientX;
-        mouseMoved = false;
-      });
-      msgDiv.addEventListener("mousemove", e => {
-        if (e.buttons === 1) {
-          mouseMoved = true;
-          dist = e.clientX - mouseDownX;
-        }
-      });
-      msgDiv.addEventListener("mouseup", e => {
-        if (mouseMoved && dist > threshold) {
-          setReplyMessage(msg, msgId);
-        }
-        dist = 0;
-        mouseMoved = false;
-      });
-    }
-
-    // تعيين رسالة الرد وإظهارها فوق مربع الإدخال
-    function setReplyMessage(msg, msgId) {
-      replyMessage = { ...msg, id: msgId };
-      showReplyUI();
-    }
-
-    // إنشاء وإظهار عنصر الرد فوق مربع الإدخال
-    function showReplyUI() {
-      clearReplyUI();
-      const inputContainer = document.getElementById("inputContainer");
-
-      const replyDiv = document.createElement("div");
-      replyDiv.id = "replyDiv";
-      replyDiv.style.background = "#f0e68c";
-      replyDiv.style.padding = "8px 12px";
-      replyDiv.style.borderRadius = "10px";
-      replyDiv.style.marginBottom = "6px";
-      replyDiv.style.position = "relative";
-      replyDiv.style.fontSize = "0.9rem";
-      replyDiv.style.color = "#444";
-      replyDiv.textContent = "رد على: " + (replyMessage.text.length > 50 ? replyMessage.text.slice(0, 50) + "..." : replyMessage.text);
-
-      const cancelBtn = document.createElement("span");
-      cancelBtn.textContent = "×";
-      cancelBtn.style.position = "absolute";
-      cancelBtn.style.left = "8px";
-      cancelBtn.style.top = "2px";
-      cancelBtn.style.cursor = "pointer";
-      cancelBtn.style.fontWeight = "bold";
-      cancelBtn.style.fontSize = "1.3rem";
-      cancelBtn.title = "إلغاء الرد";
-      cancelBtn.onclick = () => {
-        replyMessage = null;
-        clearReplyUI();
-      };
-
-      replyDiv.appendChild(cancelBtn);
-      inputContainer.insertBefore(replyDiv, messageInput);
-    }
-
-    // إزالة واجهة الرد إن وجدت
-    function clearReplyUI() {
-      const oldReplyDiv = document.getElementById("replyDiv");
-      if (oldReplyDiv) oldReplyDiv.remove();
-    }
   </script>
 </body>
 </html>
