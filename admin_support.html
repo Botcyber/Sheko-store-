@@ -43,11 +43,10 @@
       flex-grow: 1;
       overflow-y: auto;
       padding-right: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
       border: 1px solid #ccc;
       border-radius: 8px;
       background: #f9f9f9;
-      height: calc(100% - 90px);
       white-space: pre-wrap;
     }
     .message {
@@ -75,25 +74,29 @@
       display: flex;
       gap: 10px;
       align-items: center;
-      margin-top: 10px;
+      margin-top: 5px;
+      padding-bottom: 5px;
     }
     #replyInput {
       flex-grow: 1;
-      padding: 10px;
+      padding: 8px 12px;
       border-radius: 25px;
       border: 1px solid #ccc;
       font-size: 16px;
       outline: none;
+      box-sizing: border-box;
     }
     #sendBtn {
       background: #222;
       border: none;
       color: white;
-      padding: 10px 20px;
+      padding: 8px 16px;
       border-radius: 25px;
       cursor: pointer;
       font-weight: bold;
       transition: background 0.3s;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     #sendBtn:hover {
       background: #ffb700;
@@ -123,11 +126,13 @@
       font-size: 14px;
       background: #eee;
       border: none;
-      border-radius: 10px;
-      padding: 2px 8px;
+      border-radius: 12px;
+      padding: 4px 10px;
       cursor: pointer;
       transition: background 0.2s;
       min-width: 70px;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     .status-btn.open {
       background: #4caf50;
@@ -136,24 +141,6 @@
     .status-btn.closed {
       background: #f44336;
       color: white;
-    }
-    #logoutBtn {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      background: #222;
-      color: white;
-      border: none;
-      padding: 8px 15px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background 0.3s;
-      z-index: 1000;
-    }
-    #logoutBtn:hover {
-      background: #ffb700;
-      color: #222;
     }
     @media (max-width: 768px) {
       #conversationsList {
@@ -182,7 +169,7 @@
   </style>
 </head>
 <body>
-  <button id="logoutBtn">خروج</button>
+
   <header>لوحة إدارة الدعم والشكاوى</header>
 
   <div id="chatContainer">
@@ -220,7 +207,6 @@
     const auth = firebase.auth();
     const db = firebase.database();
 
-    const logoutBtn = document.getElementById('logoutBtn');
     const conversationsList = document.getElementById('conversationsList');
     const messagesEl = document.getElementById('messages');
     const inputArea = document.getElementById('inputArea');
@@ -241,12 +227,6 @@
         currentUser = user;
         loadConversations();
       }
-    });
-
-    logoutBtn.addEventListener('click', () => {
-      auth.signOut().then(() => {
-        location.href = "index.html";
-      });
     });
 
     // تحميل قائمة المحادثات (الشكاوى)
@@ -274,13 +254,9 @@
         div.classList.add('conversation-item');
         if (convId === selectedConversationId) div.classList.add('active');
         div.textContent = conv.userName || `مستخدم (${conv.userId})`;
-
-        // زر حالة المحادثة (فتح/إغلاق) تم نقله لأعلى المحادثة، لذا هنا لا نضيفه
-
         div.onclick = () => {
           selectConversation(convId);
         };
-
         conversationsList.appendChild(div);
       }
     }
