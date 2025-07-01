@@ -87,6 +87,7 @@
     }
     .message .content {
       flex: 1;
+      position: relative;
     }
     .username {
       font-weight: 700;
@@ -242,6 +243,32 @@
       z-index: 9999;
       display: none;
     }
+
+    /* زر حذف الرسالة */
+    .delete-btn {
+      position: absolute;
+      top: 10px;
+      background: transparent;
+      border: none;
+      font-size: 1.3rem;
+      cursor: pointer;
+      user-select: none;
+      padding: 4px 6px;
+      border-radius: 6px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .message.own .delete-btn {
+      left: 16px;
+      color: white;
+    }
+    .message:not(.own) .delete-btn {
+      right: 16px;
+      color: #0077cc;
+    }
+    .delete-btn:hover {
+      background-color: rgba(0, 119, 204, 0.15);
+      color: #004a75;
+    }
   </style>
 </head>
 <body>
@@ -303,7 +330,6 @@
 
     const reactionEmojis = ["♥️", "👍", "👎", "💯", "🌟"];
 
-    // تخزين بيانات المستخدمين لعدم طلبهم مرارا
     let usersCache = {};
 
     auth.onAuthStateChanged(user => {
@@ -355,7 +381,6 @@
       });
     }
 
-    // جلب بيانات المستخدم مع الصورة والشارات من قاعدة البيانات أو من الكاش
     function getUserData(uid) {
       return new Promise((resolve) => {
         if (usersCache[uid]) {
@@ -363,10 +388,9 @@
         } else {
           db.ref("users/" + uid).once("value").then(snapshot => {
             const data = snapshot.val() || {};
-            // جلب الشارات كصفيف، نفترض موجودة في users/{uid}/badges
             const userData = {
               username: data.username || "مستخدم",
-              photoURL: data.photoURL || "https://i.pravatar.cc/150?u=" + uid, // صورة افتراضية
+              photoURL: data.photoURL || "https://i.pravatar.cc/150?u=" + uid,
               badges: data.badges || []
             };
             usersCache[uid] = userData;
@@ -382,7 +406,6 @@
         div.classList.add('message');
         if (msg.uid === currentUser.uid) div.classList.add('own');
 
-        // بناء الرسالة مع صورة الحساب والتفاعل
         div.innerHTML = `
           <div class="avatar" tabindex="0" role="button" aria-label="معلومات المستخدم ${userData.username}" data-uid="${msg.uid}">
             <img src="${userData.photoURL}" alt="صورة ${userData.username}" />
@@ -392,13 +415,13 @@
             <div class="text">${escapeHtml(msg.text)}</div>
             <div class="time">${new Date(msg.timestamp).toLocaleTimeString('ar-EG', {hour: '2-digit', minute: '2-digit'})}</div>
             <div class="reactions" data-msgid="${id}"></div>
+            ${msg.uid === currentUser.uid ? '<button class="delete-btn" title="حذف الرسالة" aria-label="حذف الرسالة">×</button>' : ''}
           </div>
         `;
 
         messagesDiv.appendChild(div);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
-        // إضافة أزرار التفاعل
         const reactionsDiv = div.querySelector('.reactions');
         reactionEmojis.forEach(emoji => {
           const btn = document.createElement('button');
@@ -409,15 +432,12 @@
           reactionsDiv.appendChild(btn);
         });
 
-        // تحميل التفاعلات من قاعدة البيانات وعرضها
         listenReactions(id, reactionsDiv);
 
-        // حدث الضغط على صورة الحساب لفتح نافذة معلومات المستخدم
         const avatar = div.querySelector('.avatar');
         avatar.addEventListener('click', () => {
           showUserInfo(msg.uid);
         });
-        // يمكن دعم الضغط عبر لوحة المفاتيح (Enter أو Space)
         avatar.addEventListener('keydown', e => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
@@ -425,16 +445,24 @@
           }
         });
 
-        // حدث التفاعل على الإيموجي
         reactionsDiv.querySelectorAll('.reaction-btn').forEach(btn => {
           btn.addEventListener('click', () => {
             toggleReaction(id, btn.dataset.emoji);
           });
         });
+
+        // زر الحذف
+        const deleteBtn = div.querySelector('.delete-btn');
+        if (deleteBtn) {
+          deleteBtn.addEventListener('click', () => {
+            if (confirm('هل أنت متأكد من حذف هذه الرسالة؟')) {
+              db.ref("newsMessages/" + id).remove();
+            }
+          });
+        }
       });
     }
 
-    // تابع لإظهار نافذة معلومات المستخدم
     function showUserInfo(uid) {
       getUserData(uid).then(data => {
         popupImage.src = data.photoURL;
@@ -463,7 +491,6 @@
       overlay.style.display = "none";
     }
 
-    // دالة الهروب من html
     function escapeHtml(text) {
       return text.replace(/[&<>"']/g, function(m) {
         return ({
@@ -476,36 +503,28 @@
       });
     }
 
-    // التفاعل بالإيموجي: بيانات في قاعدة البيانات: reactions/{messageId}/{emoji}/{uid} = true
     function toggleReaction(msgId, emoji) {
       const userReactionRef = db.ref(`reactions/${msgId}/${emoji}/${currentUser.uid}`);
       userReactionRef.once('value').then(snap => {
         if (snap.exists()) {
-          // إزالة التفاعل
           userReactionRef.remove();
         } else {
-          // إضافة التفاعل
           userReactionRef.set(true);
         }
       });
     }
 
-    // الاستماع للتفاعلات وتحديث العرض
     function listenReactions(msgId, container) {
       const reactionsRef = db.ref(`reactions/${msgId}`);
       reactionsRef.on('value', snapshot => {
         const data = snapshot.val() || {};
-        // إزالة المحتوى السابق
         container.querySelectorAll('.reaction-count').forEach(el => el.remove());
 
-        // لكل إيموجي حساب عدد التفاعلات وعرضه بجانب الزر
         reactionEmojis.forEach(emoji => {
           const emojiUsers = data[emoji] || {};
           const count = Object.keys(emojiUsers).length;
-          // إزالة أي عداد قديم
           let btn = Array.from(container.children).find(b => b.dataset.emoji === emoji);
           if (!btn) return;
-          // أزل عداد قديم إذا وجد
           const oldCount = btn.querySelector('.reaction-count');
           if (oldCount) oldCount.remove();
 
