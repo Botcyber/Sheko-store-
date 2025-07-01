@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>حسابي - Sheko Store</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- خط أنيق -->
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet" />
 
   <style>
     body {
@@ -14,11 +14,9 @@
       margin: 0;
       padding: 0;
       direction: rtl;
-
       /* أنيميشن دخول للصفحة */
       animation: fadeInBackground 1.2s ease forwards;
     }
-
     @keyframes fadeInBackground {
       from {
         opacity: 0;
@@ -29,7 +27,6 @@
         background-position: 50% 100%;
       }
     }
-
     .container {
       max-width: 420px;
       margin: 50px auto;
@@ -38,29 +35,24 @@
       border-radius: 20px;
       box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
       text-align: center;
-
       /* أنيميشن ظهور */
       opacity: 0;
       transform: translateY(40px);
       animation: fadeInUp 1s ease forwards;
       animation-delay: 0.3s;
     }
-
     @keyframes fadeInUp {
       to {
         opacity: 1;
         transform: translateY(0);
       }
     }
-
     .profile-img-wrapper {
       margin-top: -80px;
       margin-bottom: 15px;
-
       /* نبض بسيط */
       animation: pulse 3s ease-in-out infinite;
     }
-
     @keyframes pulse {
       0%, 100% {
         transform: scale(1);
@@ -71,7 +63,6 @@
         box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
       }
     }
-
     #profileImage {
       width: 120px;
       height: 120px;
@@ -86,23 +77,19 @@
       transform: scale(1.1) rotate(5deg);
       box-shadow: 0 10px 30px rgba(0, 123, 255, 0.6);
     }
-
     input[type="file"] {
       display: none;
     }
-
     h2 {
       color: #333;
       margin-bottom: 25px;
       font-weight: bold;
       font-size: 24px;
-
       /* دخول تدريجي */
       opacity: 0;
       animation: fadeInUp 1s ease forwards;
       animation-delay: 0.5s;
     }
-
     .info-card {
       background: #f8f9fa;
       border: 1px solid #ddd;
@@ -111,7 +98,6 @@
       margin-bottom: 15px;
       text-align: right;
       box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
-
       opacity: 0;
       transform: translateX(40px);
       animation: fadeInRight 0.8s ease forwards;
@@ -120,26 +106,22 @@
     .info-card:nth-child(2) { animation-delay: 0.7s; }
     .info-card:nth-child(3) { animation-delay: 0.8s; }
     .info-card:nth-child(4) { animation-delay: 0.9s; }
-
     @keyframes fadeInRight {
       to {
         opacity: 1;
         transform: translateX(0);
       }
     }
-
     .info-card label {
       font-weight: bold;
       color: #444;
       margin-bottom: 5px;
       display: block;
     }
-
     .info-card .value {
       color: #333;
       margin-top: 5px;
     }
-
     input[type="text"] {
       width: 100%;
       padding: 10px;
@@ -147,7 +129,6 @@
       border: 1px solid #ccc;
       margin-top: 10px;
       font-family: 'Cairo', sans-serif;
-
       transition: box-shadow 0.3s ease;
     }
     input[type="text"]:focus {
@@ -155,7 +136,6 @@
       box-shadow: 0 0 10px #007bffaa;
       border-color: #007bff;
     }
-
     button {
       width: 100%;
       padding: 12px;
@@ -166,24 +146,20 @@
       font-weight: bold;
       transition: background-color 0.3s ease, box-shadow 0.3s ease;
     }
-
     .btn-blue {
       background: #007bff;
       color: white;
       margin-top: 15px;
     }
-
     .btn-blue:hover {
       background: #0056b3;
       box-shadow: 0 0 12px #0056b3cc;
     }
-
     .btn-red {
       background: #dc3545;
       color: white;
       margin-top: 20px;
     }
-
     .btn-red:hover {
       background: #b02a37;
       box-shadow: 0 0 12px #b02a37cc;
@@ -195,18 +171,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-      authDomain: "sheko-store.firebaseapp.com",
-      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-      projectId: "sheko-store",
-      storageBucket: "sheko-store.appspot.com",
-      messagingSenderId: "113892775847",
-      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-    };
-    firebase.initializeApp(firebaseConfig);
-  </script>
 </head>
 <body>
 
@@ -228,7 +192,7 @@
     <div class="info-card">
       <label>👤 اسم المستخدم:</label>
       <div class="value" id="username">لم يتم التعيين بعد</div>
-      <input type="text" id="newUsername" placeholder="أدخل اسم مستخدم جديد">
+      <input type="text" id="newUsername" placeholder="أدخل اسم مستخدم جديد" />
       <button class="btn-blue" onclick="setUsername()">تأكيد اسم المستخدم</button>
     </div>
 
@@ -280,7 +244,15 @@
     function setUsername() {
       const username = document.getElementById("newUsername").value.trim();
       const uid = auth.currentUser.uid;
+
+      // تحقق من وجود الإيموجي ✅ في اسم المستخدم
+      if (username.includes("✅") && uid !== "mlifDgEAkKMaOeuUq63cs5NAkV93") {
+        alert("❌ لا يمكنك استخدام الإيموجي ✅ في اسم المستخدم إلا إذا كان حسابك موثقاً.");
+        return;
+      }
+
       if (username.length < 2) return alert("❌ أدخل اسم مستخدم صحيح");
+
       db.ref("users/" + uid + "/username").set(username).then(() => {
         document.getElementById("username").textContent = username;
         alert("✅ تم تحديث اسم المستخدم");
@@ -323,5 +295,6 @@
       reader.readAsDataURL(file);
     });
   </script>
+
 </body>
 </html>
