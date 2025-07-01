@@ -97,7 +97,6 @@
     </tbody>
   </table>
 
-  <!-- قسم عرض النتائج التي فاز بها المستخدمون -->
   <h2>النتائج التي فاز بها المستخدمون</h2>
   <table id="resultsTable">
     <thead>
@@ -212,16 +211,44 @@
       });
     }
 
-    // تحميل النتائج التي فاز بها المستخدمون
+    addEntryBtn.addEventListener("click", () => {
+      const label = newLabel.value.trim();
+      let prob = parseInt(newProbability.value);
+      if (!label) {
+        alert("الرجاء إدخال اسم الخانة");
+        return;
+      }
+      if (!prob || prob < 1 || prob > 100) {
+        alert("نسبة الفوز يجب أن تكون بين 1 و 100");
+        return;
+      }
+      const newKey = db.ref("wheelData/entries").push().key;
+      db.ref(`wheelData/entries/${newKey}`).set({
+        label: label,
+        probability: prob
+      }).then(() => {
+        newLabel.value = "";
+        newProbability.value = "";
+        addForm.style.display = "none";
+        showAddFormBtn.textContent = "إضافة خانة جديدة";
+      });
+    });
+
+    // تحميل النتائج التي فاز بها المستخدمون مع userId لكل نتيجة
     function loadResults() {
       db.ref("wheelResults").on("value", snapshot => {
         const resultsByUser = snapshot.val() || {};
         
-        let allResults = {};
+        let allResults = [];
+        // نجمع كل النتائج مع معرف المستخدم
         Object.keys(resultsByUser).forEach(userId => {
           const userResults = resultsByUser[userId];
           Object.keys(userResults).forEach(resultKey => {
-            allResults[resultKey] = userResults[resultKey];
+            allResults.push({
+              userId: userId,
+              key: resultKey,
+              ...userResults[resultKey]
+            });
           });
         });
 
@@ -231,23 +258,23 @@
 
     function renderResults(results) {
       resultsTableBody.innerHTML = "";
-      Object.keys(results).forEach(key => {
-        const res = results[key];
+      results.forEach(res => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${res.email || 'غير معروف'}</td>
           <td>${res.result || ''}</td>
           <td>${new Date(res.timestamp).toLocaleString()}</td>
-          <td><button class="delete-btn" data-key="${key}">حذف</button></td>
+          <td><button class="delete-btn" data-userid="${res.userId}" data-key="${res.key}">حذف</button></td>
         `;
         resultsTableBody.appendChild(tr);
       });
 
       document.querySelectorAll("#resultsTable .delete-btn").forEach(btn => {
         btn.addEventListener("click", () => {
+          const userId = btn.getAttribute("data-userid");
           const key = btn.getAttribute("data-key");
           if(confirm("هل تريد حذف هذه النتيجة؟")) {
-            db.ref(`wheelResults/${key}`).remove();
+            db.ref(`wheelResults/${userId}/${key}`).remove();
           }
         });
       });
