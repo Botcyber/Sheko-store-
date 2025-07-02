@@ -304,6 +304,17 @@
     let replyMessage = null;
 
     auth.onAuthStateChanged(user => {
+      let isUserBanned = false; // حالة الحظر
+
+// بعد التأكد من أن المستخدم سجّل الدخول
+db.ref("bannedUsers/" + user.uid).once("value").then(snap => {
+  if (snap.exists()) {
+    isUserBanned = true;
+    messageInput.disabled = true;
+    sendBtn.disabled = true;
+    sendBtn.textContent = "تم حظرك من الدردشة";
+  }
+})
       if (!user) return location.href = "index.html";
       currentUser = user;
 
@@ -327,6 +338,7 @@
       if (!isChatOpen) {
         messageInput.disabled = true;
         sendBtn.disabled = true;
+if (isUserBanned) return alert("تم حظرك من إرسال الرسائل.");
         sendBtn.textContent = "الدردشة مغلقة حالياً";
       } else {
         messageInput.disabled = false;
