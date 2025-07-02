@@ -2,8 +2,7 @@
 <!DOCTYPE html>  <html lang="ar" dir="rtl">  
 <head>  
   <meta charset="UTF-8" />  
-<title>دردشة Sheko Store</title>
-<button id="helpBtn" title="تعليمات الاستخدام">❔</button>  
+  <title>الدردشة - Sheko Store</title>  
   <meta name="viewport" content="width=device-width, initial-scale=1" />  
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet" />  
   <style>  
@@ -24,7 +23,7 @@
       font-size: 1.5rem;  
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);  
       position: relative;  
-    }
+    }  
     #onlineCount {  
       position: absolute;  
       left: 15px;  
@@ -137,43 +136,87 @@
       background-color: #e6a600;  
     }  
     /* نافذة معلومات المستخدم */  
-    #helpBtn {
-  background: none;
-  border: none;
-  font-size: 1.4rem;
-  cursor: pointer;
-  user-select: none;
-  margin-right: 10px;
-  color: #222;
-  vertical-align: middle;
-}
+    #userInfoPopup {  
+      position: fixed;  
+      top: 20%;  
+      left: 50%;  
+      transform: translateX(-50%);  
+      background: white;  
+      padding: 20px 25px;  
+      border-radius: 15px;  
+      box-shadow: 0 8px 25px rgba(0,0,0,0.25);  
+      max-width: 320px;  
+      z-index: 1000;  
+      display: none;  
+      direction: rtl;  
+      font-family: 'Cairo', sans-serif;  
+      text-align: center;  
+    }  
+    #userInfoPopup .closeBtn {  
+      position: absolute;  
+      top: 8px;  
+      left: 10px;  
+      font-size: 1.2rem;  
+      cursor: pointer;  
+      font-weight: bold;  
+      user-select: none;  
+    }  
+    #userInfoPopup img {  
+      width: 100px;  
+      height: 100px;  
+      border-radius: 50%;  
+      object-fit: cover;  
+      margin-bottom: 10px;  
+      box-shadow: 0 3px 10px rgba(0,0,0,0.2);  
+    }  
+    #userInfoPopup h3 {  
+      margin: 5px 0;  
+      font-weight: 900;  
+      font-size: 1.3rem;  
+      color: #ffb700;  
+    }  
+    #userInfoPopup .badges {  
+      margin: 10px 0;  
+      display: flex;  
+      justify-content: center;  
+      gap: 10px;  
+      flex-wrap: wrap;  
+    }  
+    #userInfoPopup .badge {  
+      background: #ffb700;  
+      color: #222;  
+      padding: 5px 10px;  
+      border-radius: 12px;  
+      font-weight: bold;  
+      font-size: 0.85rem;  
+      box-shadow: 0 1px 5px rgba(0,0,0,0.2);  
+    }  
+    #userInfoPopup .vip {  
+      background: linear-gradient(45deg, gold, orange);  
+      color: #111;  
+      font-size: 1rem;  
+      padding: 8px 15px;  
+      border-radius: 20px;  
+      box-shadow: 0 2px 8px rgba(255, 165, 0, 0.7);  
+    }  /* خلفية شفافة عند ظهور النافذة */  
+#overlay {  
+  position: fixed;  
+  top: 0; left: 0; right: 0; bottom: 0;  
+  background: rgba(0,0,0,0.3);  
+  z-index: 900;  
+  display: none;  
+}  
 
-#helpPopup {
-  position: fixed;
-  top: 20%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: white;
-  padding: 20px 25px;
-  border-radius: 15px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.25);
-  max-width: 350px;
-  z-index: 1001;
-  display: none;
-  direction: rtl;
-  font-family: 'Cairo', sans-serif;
-  text-align: center;
-  line-height: 1.6;
-}
-
-#helpPopup .closeHelpBtn {
-  position: absolute;
-  top: 8px;
-  left: 10px;
-  font-size: 1.2rem;
-  cursor: pointer;
-  font-weight: bold;
-  user-select: none;
+/* صندوق الرد */  
+#replyBox {  
+  background: #ffb700;  
+  padding: 8px 15px;  
+  border-radius: 20px;  
+  margin-bottom: 8px;  
+  color: #222;  
+  font-weight: bold;  
+  cursor: pointer;  
+  user-select: none;  
 }
 
   </style>  
@@ -191,12 +234,6 @@
     <button id="sendBtn">إرسال</button>  
   </div>      <!-- نافذة معلومات المستخدم -->    <div id="overlay"></div>  
   <div id="userInfoPopup">  
-    <!-- نافذة التعليمات -->
-<div id="helpPopup">
-  <div class="closeHelpBtn">×</div>
-  <h3>تعليمات استخدام الدردشة</h3>
-  <p id="helpContent">هذه الدردشه خاليه من السب والشتم وتبادل الكلمات السيئه يجب احترام الاخرين عندما تريد ان ترد علي مستخدم اخر انقر مرتين علي رسالته وسوف ترد عليه واذا تريد الغاء الرد انقر علي الرساله اسفل الصفحه يتم حظر من الدردشه في حاله السب او الشتم او الاحتيال او التنمر عند حظرك من الدردشه كلم خدمة العملاء لكي تعرف سبب حظرك من الدردشه اذا تريد ان تعرف بيانات المستخدم الاخر قم بالضغط علي صورته وسوف يظهر لك اسمه وصورته والشارات الحاصل عليها واذا وجدت شاره الرسمي ✅ فاهذا هوا مؤسس الموقع يتم توزيع الشارات حسب انفاقك من الرصيد ومدة استخدامك للموقع يتم غلق الدرحينما يوجد سوء الاستخدام لهذه الدردشه ويتم فتحها فيما بعد واذا يوجد اي شكاوي من المستخدم بخصوص الدردشه او مستخدم فاارجو الذهاب الي قسم فريق الدعم والشكاوي ونتمني لكم التوفيق</p>
-</div>
     <div class="closeBtn" title="إغلاق">×</div>  
     <img id="popupImage" src="" alt="صورة المستخدم" />  
     <h3 id="popupName">اسم المستخدم</h3>  
@@ -249,21 +286,12 @@
   
     // متغير لتخزين رسالة الرد (مقتبسة)  
     let replyMessage = null;  
-  
+      
     auth.onAuthStateChanged(user => {  
-      let isUserBanned = false; // حالة الحظر
-
-// بعد التأكد من أن المستخدم سجّل الدخول
-db.ref("bannedUsers/" + user.uid).once("value").then(snap => {
-  if (snap.exists()) {
-    isUserBanned = true;
-    messageInput.disabled = true;
-    sendBtn.disabled = true;
-    sendBtn.textContent = "تم حظرك من الدردشة";
-  }
-});
-      if (!user) return location.href = "index.html";  
-      currentUser = user;  
+  if (!user) return location.href = "index.html"; // ✅ أولاً تأكد من تسجيل الدخول  
+  currentUser = user; // ✅ بعدها خزن المستخدم  
+  
+});  
   
       // سجل دخول المستخدم في usersOnline  
       db.ref("usersOnline/" + user.uid).set(true);  
@@ -285,7 +313,7 @@ db.ref("bannedUsers/" + user.uid).once("value").then(snap => {
       if (!isChatOpen) {  
         messageInput.disabled = true;  
         sendBtn.disabled = true;  
-if (isUserBanned) return alert("تم حظرك من إرسال الرسائل.");
+if (isUserBanned) return alert("تم حظرك من إرسال الرسائل.");  
         sendBtn.textContent = "الدردشة مغلقة حالياً";  
       } else {  
         messageInput.disabled = false;  
@@ -456,27 +484,6 @@ if (isUserBanned) return alert("تم حظرك من إرسال الرسائل.");
       overlay.style.display = "none";  
       hideReplyUI();  
     };  
-    // زر التعليمات
-const helpBtn = document.getElementById("helpBtn");
-const helpPopup = document.getElementById("helpPopup");
-const helpClose = helpPopup.querySelector(".closeHelpBtn");
-
-helpBtn.onclick = () => {
-  helpPopup.style.display = "block";
-  overlay.style.display = "block";
-};
-
-helpClose.onclick = () => {
-  helpPopup.style.display = "none";
-  overlay.style.display = "none";
-};
-
-overlay.onclick = () => {
-  userInfoPopup.style.display = "none";
-  helpPopup.style.display = "none";
-  overlay.style.display = "none";
-  hideReplyUI();
-};
   
     // إظهار صندوق الرد  
     function showReplyUI(replyMsg) {  
@@ -545,4 +552,4 @@ overlay.onclick = () => {
       });  
     }  
   </script>  </body>  
-</html>  
+</html>
