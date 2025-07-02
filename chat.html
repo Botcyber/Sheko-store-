@@ -285,12 +285,21 @@
   
     // متغير لتخزين رسالة الرد (مقتبسة)  
     let replyMessage = null;  
-      
-    auth.onAuthStateChanged(user => {  
-  if (!user) return location.href = "index.html"; // ✅ أولاً تأكد من تسجيل الدخول  
-  currentUser = user; // ✅ بعدها خزن المستخدم  
   
-});  
+    auth.onAuthStateChanged(user => {  
+      let isUserBanned = false; // حالة الحظر
+
+// بعد التأكد من أن المستخدم سجّل الدخول
+db.ref("bannedUsers/" + user.uid).once("value").then(snap => {
+  if (snap.exists()) {
+    isUserBanned = true;
+    messageInput.disabled = true;
+    sendBtn.disabled = true;
+    sendBtn.textContent = "تم حظرك من الدردشة";
+  }
+});
+      if (!user) return location.href = "index.html";  
+      currentUser = user;  
   
       // سجل دخول المستخدم في usersOnline  
       db.ref("usersOnline/" + user.uid).set(true);  
@@ -312,7 +321,7 @@
       if (!isChatOpen) {  
         messageInput.disabled = true;  
         sendBtn.disabled = true;  
-if (isUserBanned) return alert("تم حظرك من إرسال الرسائل.");  
+if (isUserBanned) return alert("تم حظرك من إرسال الرسائل.");
         sendBtn.textContent = "الدردشة مغلقة حالياً";  
       } else {  
         messageInput.disabled = false;  
@@ -551,4 +560,4 @@ if (isUserBanned) return alert("تم حظرك من إرسال الرسائل.");
       });  
     }  
   </script>  </body>  
-</html>
+</html>  
