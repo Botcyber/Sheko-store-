@@ -219,11 +219,51 @@
   user-select: none;  
 }
 
+    #helpBtn {
+  position: absolute;
+  right: 15px;
+  top: 10px;
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  user-select: none;
+  color: #222;
+}
+
+#helpPopup {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 20px 25px;
+  border-radius: 15px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+  max-width: 350px;
+  z-index: 1001;
+  display: none;
+  direction: rtl;
+  font-family: 'Cairo', sans-serif;
+  text-align: center;
+}
+
+#helpPopup .closeHelpBtn {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  font-weight: bold;
+  user-select: none;
+}
+
   </style>  
 </head>  
 <body>  
   <header>  
     <div id="onlineCount">  
+      <button id="helpBtn" title="تعليمات الاستخدام">❔</button>
       <div class="eye" title="المستخدمون المتصلون">👁</div>  
       <div id="onlineNumber">0</div>  
     </div>  
@@ -234,6 +274,12 @@
     <button id="sendBtn">إرسال</button>  
   </div>      <!-- نافذة معلومات المستخدم -->    <div id="overlay"></div>  
   <div id="userInfoPopup">  
+    <!-- نافذة التعليمات -->
+<div id="helpPopup">
+  <div class="closeHelpBtn">×</div>
+  <h3>تعليمات استخدام الدردشة</h3>
+  <p id="helpContent">هذه الدردشه خاليه من السب والشتم وتبادل الكلمات السيئه يجب احترام الاخرين عندما تريد ان ترد علي مستخدم اخر انقر مرتين علي رسالته وسوف ترد عليه واذا تريد الغاء الرد انقر علي الرساله اسفل الصفحه يتم حظر من الدردشه في حاله السب او الشتم او الاحتيال او التنمر عند حظرك من الدردشه كلم خدمة العملاء لكي تعرف سبب حظرك من الدردشه اذا تريد ان تعرف بيانات المستخدم الاخر قم بالضغط علي صورته وسوف يظهر لك اسمه وصورته والشارات الحاصل عليها واذا وجدت شاره الرسمي ✅ فاهذا هوا مؤسس الموقع يتم توزيع الشارات حسب انفاقك من الرصيد ومدة استخدامك للموقع يتم غلق الدرحينما يوجد سوء الاستخدام لهذه الدردشه ويتم فتحها فيما بعد واذا يوجد اي شكاوي من المستخدم بخصوص الدردشه او مستخدم فاارجو الذهاب الي قسم فريق الدعم والشكاوي ونتمني لكم التوفيق</p>
+</div>
     <div class="closeBtn" title="إغلاق">×</div>  
     <img id="popupImage" src="" alt="صورة المستخدم" />  
     <h3 id="popupName">اسم المستخدم</h3>  
@@ -493,6 +539,27 @@ if (isUserBanned) return alert("تم حظرك من إرسال الرسائل.");
       overlay.style.display = "none";  
       hideReplyUI();  
     };  
+    // زر التعليمات
+const helpBtn = document.getElementById("helpBtn");
+const helpPopup = document.getElementById("helpPopup");
+const helpClose = helpPopup.querySelector(".closeHelpBtn");
+
+helpBtn.onclick = () => {
+  helpPopup.style.display = "block";
+  overlay.style.display = "block";
+};
+
+helpClose.onclick = () => {
+  helpPopup.style.display = "none";
+  overlay.style.display = "none";
+};
+
+overlay.onclick = () => {
+  userInfoPopup.style.display = "none";
+  helpPopup.style.display = "none";
+  overlay.style.display = "none";
+  hideReplyUI();
+};
   
     // إظهار صندوق الرد  
     function showReplyUI(replyMsg) {  
