@@ -2,7 +2,9 @@
 <!DOCTYPE html>  <html lang="ar" dir="rtl">  
 <head>  
   <meta charset="UTF-8" />  
-  <title>الدردشة - Sheko Store</title>  
+<span>دردشة Sheko Store</span>
+  }
+<button id="helpBtn" title="تعليمات الاستخدام">❔</button>  
   <meta name="viewport" content="width=device-width, initial-scale=1" />  
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet" />  
   <style>  
@@ -23,7 +25,7 @@
       font-size: 1.5rem;  
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);  
       position: relative;  
-    }  
+    }
     #onlineCount {  
       position: absolute;  
       left: 15px;  
@@ -136,99 +138,15 @@
       background-color: #e6a600;  
     }  
     /* نافذة معلومات المستخدم */  
-    #userInfoPopup {  
-      position: fixed;  
-      top: 20%;  
-      left: 50%;  
-      transform: translateX(-50%);  
-      background: white;  
-      padding: 20px 25px;  
-      border-radius: 15px;  
-      box-shadow: 0 8px 25px rgba(0,0,0,0.25);  
-      max-width: 320px;  
-      z-index: 1000;  
-      display: none;  
-      direction: rtl;  
-      font-family: 'Cairo', sans-serif;  
-      text-align: center;  
-    }  
-    #userInfoPopup .closeBtn {  
-      position: absolute;  
-      top: 8px;  
-      left: 10px;  
-      font-size: 1.2rem;  
-      cursor: pointer;  
-      font-weight: bold;  
-      user-select: none;  
-    }  
-    #userInfoPopup img {  
-      width: 100px;  
-      height: 100px;  
-      border-radius: 50%;  
-      object-fit: cover;  
-      margin-bottom: 10px;  
-      box-shadow: 0 3px 10px rgba(0,0,0,0.2);  
-    }  
-    #userInfoPopup h3 {  
-      margin: 5px 0;  
-      font-weight: 900;  
-      font-size: 1.3rem;  
-      color: #ffb700;  
-    }  
-    #userInfoPopup .badges {  
-      margin: 10px 0;  
-      display: flex;  
-      justify-content: center;  
-      gap: 10px;  
-      flex-wrap: wrap;  
-    }  
-    #userInfoPopup .badge {  
-      background: #ffb700;  
-      color: #222;  
-      padding: 5px 10px;  
-      border-radius: 12px;  
-      font-weight: bold;  
-      font-size: 0.85rem;  
-      box-shadow: 0 1px 5px rgba(0,0,0,0.2);  
-    }  
-    #userInfoPopup .vip {  
-      background: linear-gradient(45deg, gold, orange);  
-      color: #111;  
-      font-size: 1rem;  
-      padding: 8px 15px;  
-      border-radius: 20px;  
-      box-shadow: 0 2px 8px rgba(255, 165, 0, 0.7);  
-    }  /* خلفية شفافة عند ظهور النافذة */  
-#overlay {  
-  position: fixed;  
-  top: 0; left: 0; right: 0; bottom: 0;  
-  background: rgba(0,0,0,0.3);  
-  z-index: 900;  
-  display: none;  
-}  
-
-/* صندوق الرد */  
-#replyBox {  
-  background: #ffb700;  
-  padding: 8px 15px;  
-  border-radius: 20px;  
-  margin-bottom: 8px;  
-  color: #222;  
-  font-weight: bold;  
-  cursor: pointer;  
-  user-select: none;  
-}
-
     #helpBtn {
-  position: absolute;
-  left: 15px;
-  top: 10px;
   background: none;
   border: none;
   font-size: 1.4rem;
   cursor: pointer;
   user-select: none;
+  margin-right: 10px;
   color: #222;
+  vertical-align: middle;
 }
 
 #helpPopup {
@@ -246,6 +164,7 @@
   direction: rtl;
   font-family: 'Cairo', sans-serif;
   text-align: center;
+  line-height: 1.6;
 }
 
 #helpPopup .closeHelpBtn {
