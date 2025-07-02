@@ -302,33 +302,11 @@
 
     // متغير لتخزين رسالة الرد (مقتبسة)
     let replyMessage = null;
-
-    let isUserBanned = false;
-    let banReason = "";
     
     auth.onAuthStateChanged(user => {
   if (!user) return location.href = "index.html"; // ✅ أولاً تأكد من تسجيل الدخول
   currentUser = user; // ✅ بعدها خزن المستخدم
 
-  // ✅ ثم تحقق من إذا كان محظور
-  db.ref("bannedUsers/" + user.uid).on("value", snapshot => {
-    const data = snapshot.val();
-    if (data) {
-      isUserBanned = true;
-      banReason = data.reason || "تم حظرك من الدردشة.";
-      messageInput.disabled = true;
-      sendBtn.disabled = true;
-      sendBtn.textContent = banReason;
-    } else {
-      isUserBanned = false;
-      banReason = "";
-      messageInput.disabled = false;
-      sendBtn.disabled = false;
-      sendBtn.textContent = "إرسال";
-    }
-  });
-
-  // باقي الكود...
 });
 
       // سجل دخول المستخدم في usersOnline
