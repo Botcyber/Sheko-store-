@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>تسجيل دخول الأدمن - Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f5f5f5;
+      margin: 0; padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      direction: rtl;
+    }
+    #loginForm {
+      background: white;
+      padding: 20px 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.15);
+      width: 320px;
+      text-align: center;
+      transition: box-shadow 0.3s ease;
+    }
+    #loginForm:hover {
+      box-shadow: 0 0 25px rgba(0,0,0,0.3);
+    }
+    #loginForm h2 {
+      margin-bottom: 20px;
+      color: #222;
+    }
+    #loginForm input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      box-sizing: border-box;
+      transition: border-color 0.3s ease;
+    }
+    #loginForm input:focus {
+      border-color: #ffb700;
+      outline: none;
+    }
+    #loginForm button {
+      width: 100%;
+      padding: 12px;
+      background: #222;
+      color: white;
+      font-size: 18px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+    #loginForm button:hover {
+      background: #ffb700;
+      color: #222;
+    }
+    #errorMsg {
+      color: red;
+      margin-bottom: 10px;
+      min-height: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loginForm">
+    <h2>تسجيل دخول الأدمن</h2>
+    <div id="errorMsg"></div>
+    <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="off" />
+    <input type="password" id="password" placeholder="كلمة السر" autocomplete="off" />
+    <button onclick="login()">دخول</button>
+  </div>
+
+  <script>
+    const allowedUsername = "sheko";
+    const password = "Admin2526";
+
+    function login() {
+      const usernameInput = document.getElementById('username').value.trim();
+      const passwordInput = document.getElementById('password').value.trim();
+      const errorMsg = document.getElementById('errorMsg');
+
+      if (!usernameInput || !passwordInput) {
+        errorMsg.textContent = "يرجى إدخال اسم المستخدم وكلمة السر";
+        return;
+      }
+
+      if (usernameInput === allowedUsername && passwordInput === password) {
+        errorMsg.textContent = "";
+        localStorage.setItem('adminName', usernameInput);
+        window.location.href = "admin-chat.html"; // رابط صفحة الدردشة الخاصة بالأدمن
+      } else {
+        errorMsg.textContent = "اسم المستخدم أو كلمة السر غير صحيحة";
+      }
+    }
+  </script>
+
+</body>
+</html>
