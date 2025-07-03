@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>دردشة الأدمن - Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      margin: 0;
+      background: #121212;
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      background: #ffb700;
+      color: #222;
+      padding: 15px 20px;
+      font-size: 22px;
+      font-weight: 700;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+    }
+    #chatArea {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: linear-gradient(135deg, #222, #333);
+    }
+    .message {
+      max-width: 70%;
+      padding: 12px 15px;
+      border-radius: 15px;
+      position: relative;
+      animation: fadeInUp 0.3s ease forwards;
+      cursor: pointer;
+      user-select: none;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+    @keyframes fadeInUp {
+      from {opacity: 0; transform: translateY(10px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+    .message.admin {
+      background-color: #ffb700;
+      color: #222;
+      margin-left: auto;
+      border-bottom-right-radius: 5px;
+    }
+    .message.user {
+      background-color: #444;
+      color: #eee;
+      margin-right: auto;
+      border-bottom-left-radius: 5px;
+    }
+    .msg-header {
+      font-weight: 600;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    .msg-time {
+      font-size: 10px;
+      opacity: 0.6;
+      margin-top: 5px;
+      text-align: left;
+    }
+    #inputArea {
+      background: #222;
+      padding: 10px 15px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.5);
+    }
+    #replyInput {
+      flex-grow: 1;
+      padding: 10px 15px;
+      font-size: 16px;
+      border-radius: 25px;
+      border: none;
+      outline: none;
+      background: #333;
+      color: #eee;
+      resize: none;
+      height: 40px;
+    }
+    #sendBtn {
+      background: #ffb700;
+      border: none;
+      color: #222;
+      padding: 10px 20px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s;
+      white-space: nowrap;
+    }
+    #sendBtn:hover {
+      background: #e6a300;
+    }
+    .actions {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 5px;
+      background: #222;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.6);
+      display: flex;
+      gap: 8px;
+      padding: 5px 10px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 10;
+    }
+    .message:hover .actions {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .action-btn {
+      cursor: pointer;
+      font-size: 18px;
+      user-select: none;
+      background: transparent;
+      border: none;
+      color: #eee;
+      transition: color 0.3s ease;
+    }
+    .action-btn:hover {
+      color: #ffb700;
+    }
+    .reaction {
+      display: inline-block;
+      margin-left: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.2s ease;
+    }
+    .reaction:hover {
+      transform: scale(1.3);
+    }
+    .reactions-container {
+      margin-top: 6px;
+      font-size: 16px;
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+    .reply-box {
+      margin-top: 5px;
+      padding: 8px 12px;
+      background: #333;
+      border-radius: 10px;
+      font-size: 14px;
+      color: #ccc;
+      font-style: italic;
+      max-width: 70%;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+
+<header>دردشة الأدمن - مرحباً <span id="adminNameDisplay"></span></header>
+
+<div id="chatArea"></div>
+
+<div id="inputArea">
+  <textarea id="replyInput" placeholder="اكتب رسالتك هنا..." autocomplete="off"></textarea>
+  <button id="sendBtn">إرسال</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+    authDomain: "sheko-store.firebaseapp.com",
+    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+    projectId: "sheko-store",
+    storageBucket: "sheko-store.appspot.com",
+    messagingSenderId: "113892775847",
+    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  const adminName = localStorage.getItem('adminName') || 'unknown';
+  document.getElementById('adminNameDisplay').textContent = adminName;
+
+  const chatArea = document.getElementById('chatArea');
+  const replyInput = document.getElementById('replyInput');
+  const sendBtn = document.getElementById('sendBtn');
+
+  let messages = {};
+  let replyToMsgId = null;
+
+  // تحميل الرسائل
+  function loadMessages() {
+    db.ref('adminChatMessages').off();
+    db.ref('adminChatMessages').on('value', snapshot => {
+      messages = snapshot.val() || {};
+      renderMessages();
+      scrollToBottom();
+    });
+  }
+
+  // عرض الرسائل
+  function renderMessages() {
+    chatArea.innerHTML = '';
+    for (const msgId in messages) {
+      const msg = messages[msgId];
+      const msgDiv = document.createElement('div');
+      msgDiv.classList.add('message');
+      msgDiv.classList.add(msg.sender === adminName ? 'admin' : 'user');
+      msgDiv.dataset.msgId = msgId;
+
+      let replyHtml = '';
+      if (msg.replyTo && messages[msg.replyTo]) {
+        const replyMsg = messages[msg.replyTo];
+        replyHtml = `<div class="reply-box">${replyMsg.text.substring(0, 50)}${replyMsg.text.length > 50 ? '...' : ''}</div>`;
+      }
+
+      // تفاعلات الرسالة
+      const reactions = msg.reactions || {};
+      const reactionHtml = Object.entries(reactions).map(([user, reaction]) => {
+        return `<span class="reaction" title="${user}">${reaction}</span>`;
+      }).join('');
+
+      msgDiv.innerHTML = `
+        <div class="msg-header">${msg.sender}</div>
+        <div>${msg.text}</div>
+        ${replyHtml}
+        <div class="reactions-container">${reactionHtml}</div>
+        <div class="msg-time">${new Date(msg.timestamp).toLocaleString()}</div>
+        <div class="actions">
+          ${adminName === 'sheko' ? `<button class="action-btn delete-btn" data-id="${msgId}" title="حذف الرسالة">🗑️</button>` : ''}
+          <button class="action-btn reply-btn" data-id="${msgId}" title="الرد على الرسالة">↩️</button>
+          <button class="action-btn react-btn" data-id="${msgId}" data-reaction="👍" title="إضافة 👍">👍</button>
+          <button class="action-btn react-btn" data-id="${msgId}" data-reaction="♥️" title="إضافة ♥️">♥️</button>
+        </div>
+      `;
+
+      chatArea.appendChild(msgDiv);
+    }
+
+    addActionListeners();
+  }
+
+  // إضافة أحداث الأزرار
+  function addActionListeners() {
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+      btn.onclick = e => {
+        const msgId = e.target.dataset.id;
+        if (confirm('هل أنت متأكد من حذف هذه الرسالة؟')) {
+          db.ref(`adminChatMessages/${msgId}`).remove();
+        }
+      };
+    });
+
+    document.querySelectorAll('.reply-btn').forEach(btn => {
+      btn.onclick = e => {
+        replyToMsgId = e.target.dataset.id;
+        const msg = messages[replyToMsgId];
+        replyInput.value = `↪️ ${msg.text.substring(0, 50)}${msg.text.length > 50 ? '...' : ''}\n`;
+        replyInput.focus();
+      };
+    });
+
+    document.querySelectorAll('.react-btn').forEach(btn => {
+      btn.onclick = e => {
+        const msgId = e.target.dataset.id;
+        const reaction = e.target.dataset.reaction;
+        const userReactionPath = `adminChatMessages/${msgId}/reactions/${adminName}`;
+        db.ref(userReactionPath).set(reaction);
+      };
+    });
+  }
+
+  // إرسال رسالة
+  sendBtn.onclick = () => {
+    sendMessage();
+  };
+  replyInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  function sendMessage() {
+    let text = replyInput.value.trim();
+    if (!text) return;
+
+    const newMsg = {
+      sender: adminName,
+      text,
+      timestamp: Date.now(),
+      replyTo: replyToMsgId,
+      reactions: {}
+    };
+    db.ref('adminChatMessages').push(newMsg);
+    replyInput.value = '';
+    replyToMsgId = null;
+  }
+
+  // تمرير الشات لأسفل
+  function scrollToBottom() {
+    setTimeout(() => {
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }, 100);
+  }
+
+  loadMessages();
+</script>
+
+</body>
+</html>
