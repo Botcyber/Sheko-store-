@@ -12,21 +12,21 @@
     .nav-icons a { color: white; text-decoration: none; display: flex; flex-direction: row; align-items: center; font-size: 14px; position: relative; transition: color 0.3s ease; gap: 8px; }
     .nav-icons a i { font-size: 20px; margin: 0; }
     .nav-icons a:hover { color: #ffb700; }
-    #notifBadge, #chatBadge {
-      position: absolute;
-      top: 0;
-      left: 5px;
-      background: red;
-      color: white;
-      font-size: 12px;
-      font-weight: bold;
-      border-radius: 50%;
-      padding: 2px 6px;
-      display: none;
-      transform: translate(-50%, 50%);
-      user-select: none;
-      pointer-events: none;
-    }
+    #notifBadge, #chatBadge, #supportBadge {
+  position: absolute;
+  top: 0;
+  left: 5px;
+  background: red;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 50%;
+  padding: 2px 6px;
+  display: none;
+  transform: translate(-50%, 50%);
+  user-select: none;
+  pointer-events: none;
+}
     .user-area { display: flex; align-items: center; gap: 15px; font-size: 15px; }
     #balance { font-weight: bold; }
     button { background: #444; border: none; color: white; padding: 8px 15px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: bold; transition: background 0.3s ease; font-size: 14px; }
@@ -54,7 +54,11 @@
     </a>
     <a href="ranking.html"><i class="fa fa-crown"></i><span>التصنيف</span></a>
     <a href="vote-event.html"><i class="fa fa-bolt"></i><span>الفعاليات</span></a>
-    <a href="support_chat.html"><i class="fa fa-headset"></i><span>فريق الدعم والشكاوى</span></a>
+    <a href="support_chat.html" style="position: relative;">
+  <i class="fa fa-headset"></i>
+  <span>فريق الدعم والشكاوى</span>
+  <span id="supportBadge">0</span>
+</a>
     <a href="wheel.html"><i class="fa fa-dharmachakra"></i><span>عجلة الحظ</span></a>
     <a href="chat.html" id="chatLink" style="position: relative;">
       <i class="fa fa-comments"></i><span>الدردشة</span><span id="chatBadge">0</span>
@@ -331,7 +335,18 @@
           chatBadge.style.display = "none";
         }
       });
-    });
+      
+      // تحديث عداد رسائل الدعم
+db.ref("supportMessages/" + user.uid).on("value", snapshot => {
+  const count = snapshot.numChildren();
+  const supportBadge = document.getElementById("supportBadge");
+  if (count > 0) {
+    supportBadge.style.display = "inline-block";
+    supportBadge.textContent = count > 99 ? "99+" : count;
+  } else {
+    supportBadge.style.display = "none";
+  }
+});
 
     // إرسال الطلب
     function submitOrder() {
