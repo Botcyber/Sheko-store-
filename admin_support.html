@@ -171,21 +171,16 @@
       background: #f44336;
       color: white;
     }
-
-    /* عداد التنبيه بجانب اسم المحادثة */
     .new-msg-count {
       background: #f44336;
       color: white;
-      font-size: 12px;
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      margin-left: 8px;
+      font-size: 14px;
+      padding: 2px 8px;
+      border-radius: 12px;
+      min-width: 22px;
+      text-align: center;
       flex-shrink: 0;
+      margin-left: 10px;
     }
 
     /* Responsive adjustments */
@@ -276,7 +271,7 @@
     let currentUser = null;
     let selectedConversationId = null;
     let conversationsData = {};
-    let newMessagesCount = {};
+    let newMessagesCount = {}; // لتخزين عدد الرسائل الجديدة لكل محادثة
 
     auth.onAuthStateChanged(user => {
       if (!user) {
@@ -296,6 +291,28 @@
       const convRef = db.ref('supportChats');
       convRef.on('value', snapshot => {
         conversationsData = snapshot.val() || {};
+        // إفراغ العداد
+        newMessagesCount = {};
+
+        // الاستماع لكل محادثة لحساب عدد الرسائل الجديدة
+        for (const convId in conversationsData) {
+          db.ref(`supportChats/${convId}/messages`).off();
+          db.ref(`supportChats/${convId}/messages`).on('value', snap => {
+            const messages = snap.val() || {};
+            if (convId !== selectedConversationId) {
+              let count = 0;
+              Object.values(messages).forEach(msg => {
+                if (msg.sender !== 'admin') count++;
+              });
+              if(count > 0) {
+                newMessagesCount[convId] = count;
+              } else {
+                delete newMessagesCount[convId];
+              }
+              renderConversationsList();
+            }
+          });
+        }
         renderConversationsList();
       });
     }
@@ -372,32 +389,11 @@
       db.ref(`supportChats/${convId}/messages`).off();
       db.ref(`supportChats/${convId}/messages`).on('value', snapshot => {
         const messages = snapshot.val() || {};
-        updateNewMessagesCount(convId, messages);
         renderMessages(messages);
       });
       inputArea.style.display = 'flex';
       replyInput.value = '';
       replyInput.focus();
-    }
-
-    function updateNewMessagesCount(convId, messages) {
-      if (convId !== selectedConversationId) {
-        let count = 0;
-        Object.values(messages).forEach(msg => {
-          if (msg.sender !== 'admin') count++;
-        });
-        if(count > 0) {
-          newMessagesCount[convId] = count;
-        } else {
-          delete newMessagesCount[convId];
-        }
-        renderConversationsList();
-      } else {
-        if(newMessagesCount[convId]) {
-          delete newMessagesCount[convId];
-          renderConversationsList();
-        }
-      }
     }
 
     function renderMessages(messages) {
@@ -414,12 +410,11 @@
         div.classList.add('message');
         div.classList.add(msg.sender === 'admin' ? 'admin' : 'user');
 
-        // محتوى الرسالة مع زر الحذف للآدمن فقط
         div.innerHTML = `
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span>${msg.text}<br><small>${new Date(msg.timestamp).toLocaleString()}</small></span>
             ${
-              currentUser && currentUser.email === 'shehabh441@gmail.com' ? // عدل هنا إلى بريد الآدمن الحقيقي
+              currentUser && currentUser.email === 'shehabh441@gmail.com' ?
               `<button class="deleteMsgBtn" data-msgid="${key}" title="حذف الرسالة" style="background:#f44336;color:#fff;border:none;padding:2px 8px;border-radius:5px;cursor:pointer;">حذف</button>`
               : ''
             }
@@ -431,14 +426,13 @@
       messagesEl.scrollTop = messagesEl.scrollHeight;
 
       // إضافة حدث حذف الرسالة فقط للآدمن
-      if (currentUser && currentUser.email === 'shehabh441@gmail.com') { // عدل هذا البريد إلى بريد الآدمن الحقيقي
+      if (currentUser && currentUser.email === 'shehabh441@gmail.com') {
         const deleteButtons = messagesEl.querySelectorAll('.deleteMsgBtn');
         deleteButtons.forEach(btn => {
           btn.addEventListener('click', e => {
             const msgId = e.target.getAttribute('data-msgid');
             if (!msgId || !selectedConversationId) return;
             if (confirm('هل أنت متأكد من حذف هذه الرسالة؟')) {
-              // حذف الرسالة من قاعدة البيانات (لدى الطرفين لأن الرسائل مخزنة في مكان واحد)
               db.ref(`supportChats/${selectedConversationId}/messages/${msgId}`).remove()
                 .then(() => {
                   showToast('تم حذف الرسالة.');
