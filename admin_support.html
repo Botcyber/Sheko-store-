@@ -172,6 +172,22 @@
       color: white;
     }
 
+    /* عداد التنبيه بجانب اسم المحادثة */
+    .new-msg-count {
+      background: #f44336;
+      color: white;
+      font-size: 12px;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin-left: 8px;
+      flex-shrink: 0;
+    }
+
     /* Responsive adjustments */
     @media (min-width: 992px) {
       #conversationsList {
@@ -260,6 +276,7 @@
     let currentUser = null;
     let selectedConversationId = null;
     let conversationsData = {};
+    let newMessagesCount = {};
 
     auth.onAuthStateChanged(user => {
       if (!user) {
@@ -298,12 +315,21 @@
         const div = document.createElement('div');
         div.classList.add('conversation-item');
         if (convId === selectedConversationId) div.classList.add('active');
-        div.textContent = conv.userName || `مستخدم (${conv.userId})`;
+
+        div.innerHTML = `
+          <span>${conv.userName || `مستخدم (${conv.userId})`}</span>
+          ${newMessagesCount[convId] ? `<span class="new-msg-count">${newMessagesCount[convId]}</span>` : ''}
+        `;
+
         div.onclick = () => {
           selectConversation(convId);
           if(window.innerWidth < 992){
             conversationsList.classList.remove('visible');
             chatContainer.classList.remove('with-sidebar');
+          }
+          if (newMessagesCount[convId]) {
+            delete newMessagesCount[convId];
+            renderConversationsList();
           }
         };
         conversationsList.appendChild(div);
@@ -346,11 +372,32 @@
       db.ref(`supportChats/${convId}/messages`).off();
       db.ref(`supportChats/${convId}/messages`).on('value', snapshot => {
         const messages = snapshot.val() || {};
+        updateNewMessagesCount(convId, messages);
         renderMessages(messages);
       });
       inputArea.style.display = 'flex';
       replyInput.value = '';
       replyInput.focus();
+    }
+
+    function updateNewMessagesCount(convId, messages) {
+      if (convId !== selectedConversationId) {
+        let count = 0;
+        Object.values(messages).forEach(msg => {
+          if (msg.sender !== 'admin') count++;
+        });
+        if(count > 0) {
+          newMessagesCount[convId] = count;
+        } else {
+          delete newMessagesCount[convId];
+        }
+        renderConversationsList();
+      } else {
+        if(newMessagesCount[convId]) {
+          delete newMessagesCount[convId];
+          renderConversationsList();
+        }
+      }
     }
 
     function renderMessages(messages) {
@@ -366,16 +413,6 @@
         const div = document.createElement('div');
         div.classList.add('message');
         div.classList.add(msg.sender === 'admin' ? 'admin' : 'user');
-
-        const content = `
-          <span>${msg.text}<br><small>${new Date(msg.timestamp).toLocaleString()}</small></span>
-        `;
-
-        if (msg.sender === 'admin') {
-          div.classList.add('admin');
-        } else {
-          div.classList.add('user');
-        }
 
         // محتوى الرسالة مع زر الحذف للآدمن فقط
         div.innerHTML = `
