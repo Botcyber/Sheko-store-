@@ -41,14 +41,14 @@
       flex-grow: 1;
       overflow-y: auto;
       padding-right: 10px;
-      margin-bottom: 15px;
+      margin-bottom: 10px;
       border-radius: 10px;
       background: #222;
       scrollbar-width: thin;
       scrollbar-color: #ffb700 #333;
       animation: fadeIn 1s ease forwards;
       display: flex;
-      flex-direction: column; /* اجعل الرسائل تحت بعضها */
+      flex-direction: column;
       gap: 8px;
     }
     #messages::-webkit-scrollbar {
@@ -74,8 +74,9 @@
       user-select: none;
       box-shadow: 0 1px 5px rgba(0,0,0,0.3);
       font-size: 16px;
-      display: block; /* مهم لجعل كل رسالة تأخذ سطرها */
+      display: block;
       clear: both;
+      background-clip: padding-box;
     }
     .message.admin {
       background: #007acc;
@@ -112,7 +113,7 @@
       gap: 10px;
       align-items: center;
       margin-top: 0;
-      margin-bottom: 20px; /* رفع الزر قليلاً */
+      margin-bottom: 15px;
     }
     #replyInput {
       flex-grow: 1;
@@ -124,6 +125,7 @@
       background: #333;
       color: #eee;
       transition: box-shadow 0.3s;
+      white-space: pre-wrap;
     }
     #replyInput:focus {
       box-shadow: 0 0 10px #ffb700;
@@ -142,6 +144,7 @@
       align-items: center;
       justify-content: center;
       font-size: 18px;
+      margin-bottom: 10px; /* رفع الزر قليلا */
     }
     #sendBtn:hover {
       background: #ffaa00;
@@ -196,7 +199,7 @@
     }
     #replyModal textarea {
       width: 100%;
-      height: 80px;
+      height: 100px;
       background: #333;
       border: none;
       border-radius: 10px;
@@ -204,9 +207,21 @@
       font-size: 16px;
       padding: 10px;
       resize: none;
+      white-space: pre-wrap;
+    }
+    #replyModal .reply-info {
+      background: #111;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      color: #aad8ff;
+      max-height: 60px;
+      overflow-y: auto;
+      white-space: pre-wrap;
     }
     #replyModal button {
-      margin-top: 10px;
+      margin-top: 5px;
       background: #00bfff;
       border: none;
       padding: 10px 15px;
@@ -214,6 +229,10 @@
       color: white;
       font-weight: bold;
       cursor: pointer;
+      transition: background 0.3s;
+    }
+    #replyModal button:hover {
+      background: #0099dd;
     }
     #replyModal #cancelReply {
       background: #ff5555;
@@ -244,8 +263,9 @@
 
 <!-- نافذة الرد المنبثقة -->
 <div id="replyModal">
+  <div class="reply-info" id="replyInfo"></div>
   <textarea id="replyText" placeholder="اكتب ردك هنا..."></textarea>
-  <div style="text-align: right;">
+  <div style="text-align: right; margin-top: 10px;">
     <button id="sendReplyBtn">إرسال الرد</button>
     <button id="cancelReply">إلغاء</button>
   </div>
@@ -273,19 +293,24 @@
   const replyInput = document.getElementById('replyInput');
   const sendBtn = document.getElementById('sendBtn');
 
-  // نافذة الرد
   const replyModal = document.getElementById('replyModal');
   const replyText = document.getElementById('replyText');
   const sendReplyBtn = document.getElementById('sendReplyBtn');
   const cancelReply = document.getElementById('cancelReply');
+  const replyInfo = document.getElementById('replyInfo');
 
-  // صوت الادمن عند إرسال الرسالة
-  const shekoSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-positive-notification-951.mp3");
-
-  // اسم الآدمن المخزن
   let adminName = localStorage.getItem('adminName') || 'Admin';
 
   let replyingToMsgId = null;
+  let replyingToMsgText = '';
+
+  // تفاعل واحد لكل رسالة لكل مستخدم (يتم حفظه في localStorage)
+  function hasReacted(msgId, reactionType) {
+    return localStorage.getItem(msgId + '_' + reactionType) === 'true';
+  }
+  function setReacted(msgId, reactionType) {
+    localStorage.setItem(msgId + '_' + reactionType, 'true');
+  }
 
   function renderMessages(messages) {
     messagesEl.innerHTML = '';
@@ -296,7 +321,6 @@
       div.classList.add('message');
       div.classList.add(msg.sender === adminName ? 'admin' : 'user');
 
-      // اسم المستخدم مع تمييز الآدمن
       let senderHTML = `<span class="sender-name">${msg.sender === adminName ? `<strong style="color:#FFD700; text-shadow:0 0 10px gold;">${escapeHtml(msg.sender)}</strong>` : escapeHtml(msg.sender)}</span>`;
 
       let content = `
@@ -343,6 +367,8 @@
         const msgId = e.currentTarget.dataset.msgid;
         if (confirm('هل تريد حذف هذه الرسالة؟')) {
           db.ref(`adminChatMessages/${msgId}`).remove();
+          localStorage.removeItem(msgId + '_like');
+          localStorage.removeItem(msgId + '_love');
         }
       };
     });
@@ -350,22 +376,41 @@
     document.querySelectorAll('.btn-reply').forEach(btn => {
       btn.onclick = e => {
         replyingToMsgId = e.currentTarget.dataset.msgid;
-        replyModal.style.display = 'block';
-        replyText.focus();
+        db.ref(`adminChatMessages/${replyingToMsgId}`).get().then(snapshot => {
+          if (!snapshot.exists()) {
+            alert('الرسالة التي تريد الرد عليها غير موجودة!');
+            return;
+          }
+          replyingToMsgText = snapshot.val().text;
+          replyInfo.textContent = `الرد على: "${replyingToMsgText}"`;
+          replyModal.style.display = 'block';
+          replyText.value = '';
+          replyText.focus();
+        });
       };
     });
 
     document.querySelectorAll('.btn-like').forEach(btn => {
       btn.onclick = e => {
         const msgId = e.currentTarget.dataset.msgid;
+        if (hasReacted(msgId, 'like')) {
+          alert('لقد قمت بالتفاعل بـ "أعجبني" على هذه الرسالة مسبقًا.');
+          return;
+        }
         reactToMessage(msgId, 'like');
+        setReacted(msgId, 'like');
       };
     });
 
     document.querySelectorAll('.btn-love').forEach(btn => {
       btn.onclick = e => {
         const msgId = e.currentTarget.dataset.msgid;
+        if (hasReacted(msgId, 'love')) {
+          alert('لقد قمت بالتفاعل بـ "أحببت" على هذه الرسالة مسبقًا.');
+          return;
+        }
         reactToMessage(msgId, 'love');
+        setReacted(msgId, 'love');
       };
     });
   }
@@ -400,51 +445,64 @@
     });
   }
 
-  function sendMessage() {
+  // إرسال رسالة جديدة
+  sendBtn.onclick = () => {
     const text = replyInput.value.trim();
-    if (!text) return;
-    const newMsg = {
+    if (!text) return alert('الرجاء كتابة رسالة');
+    const newMsgRef = db.ref('adminChatMessages').push();
+    newMsgRef.set({
       sender: adminName,
-      text,
-      timestamp: Date.now()
-    };
-    db.ref('adminChatMessages').push(newMsg).then(() => {
-      replyInput.value = '';
-      shekoSound.play();
+      text: text,
+      timestamp: Date.now(),
+      reactions: {}
     });
-  }
+    replyInput.value = '';
+    // تشغيل صوت عند الإرسال
+    const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg');
+    audio.play();
+  };
 
-  sendBtn.addEventListener('click', sendMessage);
-  replyInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  });
-
+  // إرسال الرد من نافذة الرد
   sendReplyBtn.onclick = () => {
     const replyContent = replyText.value.trim();
-    if (!replyContent || !replyingToMsgId) return alert('الرد فارغ!');
-    const replyMsg = {
+    if (!replyContent) return alert('الرجاء كتابة الرد');
+    if (!replyingToMsgId) return alert('لا توجد رسالة محددة للرد عليها');
+
+    const fullText = `رد على: "${replyingToMsgText}"\n${replyContent}`;
+    const newMsgRef = db.ref('adminChatMessages').push();
+    newMsgRef.set({
       sender: adminName,
-      text: `رد على الرسالة: "${replyContent}"`,
-      timestamp: Date.now()
-    };
-    db.ref('adminChatMessages').push(replyMsg).then(() => {
-      shekoSound.play();
-      replyText.value = '';
-      replyingToMsgId = null;
-      replyModal.style.display = 'none';
+      text: fullText,
+      timestamp: Date.now(),
+      reactions: {}
     });
-  };
-
-  cancelReply.onclick = () => {
-    replyText.value = '';
-    replyingToMsgId = null;
     replyModal.style.display = 'none';
+    replyingToMsgId = null;
+    replyingToMsgText = '';
+    replyText.value = '';
+    // تشغيل صوت الإرسال
+    const audio = new Audio('https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg');
+    audio.play();
   };
 
+  // إغلاق نافذة الرد
+  cancelReply.onclick = () => {
+    replyModal.style.display = 'none';
+    replyingToMsgId = null;
+    replyingToMsgText = '';
+    replyText.value = '';
+  };
+
+  // تحميل الرسائل فوراً عند فتح الصفحة
   loadMessages();
+
+  // حفظ اسم الأدمن لو لم يكن محفوظ
+  if (!localStorage.getItem('adminName')) {
+    let name = prompt('ادخل اسم الادمن الخاص بك:', 'sheko');
+    if (!name) name = 'Admin';
+    localStorage.setItem('adminName', name);
+    adminName = name;
+  }
 </script>
 
 </body>
