@@ -2,9 +2,9 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>دردشة الأدمن - Sheko Store</title>
+  <title>دردشة الآدمن - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
   <style>
     body {
       font-family: 'Cairo', sans-serif;
@@ -14,170 +14,183 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
+      overflow: hidden;
     }
     header {
       background: #ffb700;
       color: #222;
       padding: 15px 20px;
-      font-size: 22px;
-      font-weight: 700;
+      font-weight: bold;
+      font-size: 24px;
       text-align: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      user-select: none;
     }
-    #chatArea {
-      flex: 1;
-      padding: 15px;
-      overflow-y: auto;
+    #chatContainer {
+      flex-grow: 1;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      background: linear-gradient(135deg, #222, #333);
+      padding: 15px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #1f1f1f, #2e2e2e);
+      border-radius: 8px;
+      margin: 10px;
+      box-shadow: 0 0 15px #ffb700aa;
+    }
+    #messages {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding-right: 10px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      background: #222;
+      scrollbar-width: thin;
+      scrollbar-color: #ffb700 #333;
+      animation: fadeIn 1s ease forwards;
+    }
+    #messages::-webkit-scrollbar {
+      width: 8px;
+    }
+    #messages::-webkit-scrollbar-track {
+      background: #333;
+      border-radius: 10px;
+    }
+    #messages::-webkit-scrollbar-thumb {
+      background-color: #ffb700;
+      border-radius: 10px;
     }
     .message {
+      margin: 8px 0;
       max-width: 70%;
-      padding: 12px 15px;
-      border-radius: 15px;
+      padding: 12px 18px;
+      border-radius: 25px;
+      line-height: 1.4;
       position: relative;
-      animation: fadeInUp 0.3s ease forwards;
+      word-wrap: break-word;
+      animation: slideUp 0.3s ease forwards;
       cursor: pointer;
       user-select: none;
-      word-wrap: break-word;
-      white-space: pre-wrap;
-    }
-    @keyframes fadeInUp {
-      from {opacity: 0; transform: translateY(10px);}
-      to {opacity: 1; transform: translateY(0);}
+      display: inline-block;
     }
     .message.admin {
-      background-color: #ffb700;
+      background: #ffb700;
       color: #222;
       margin-left: auto;
-      border-bottom-right-radius: 5px;
+      border-bottom-right-radius: 6px;
     }
     .message.user {
-      background-color: #444;
+      background: #444;
       color: #eee;
       margin-right: auto;
-      border-bottom-left-radius: 5px;
+      border-bottom-left-radius: 6px;
     }
-    .msg-header {
-      font-weight: 600;
-      margin-bottom: 5px;
-      font-size: 14px;
-    }
-    .msg-time {
+    .message .timestamp {
+      display: block;
       font-size: 10px;
-      opacity: 0.6;
-      margin-top: 5px;
-      text-align: left;
+      color: #ccc;
+      margin-top: 4px;
     }
     #inputArea {
-      background: #222;
-      padding: 10px 15px;
       display: flex;
       gap: 10px;
       align-items: center;
-      box-shadow: 0 -2px 5px rgba(0,0,0,0.5);
+      margin-top: 10px;
     }
     #replyInput {
       flex-grow: 1;
       padding: 10px 15px;
-      font-size: 16px;
-      border-radius: 25px;
+      border-radius: 30px;
       border: none;
+      font-size: 16px;
       outline: none;
       background: #333;
       color: #eee;
-      resize: none;
-      height: 40px;
+      transition: box-shadow 0.3s;
+    }
+    #replyInput:focus {
+      box-shadow: 0 0 10px #ffb700;
     }
     #sendBtn {
       background: #ffb700;
       border: none;
       color: #222;
       padding: 10px 20px;
-      border-radius: 25px;
+      border-radius: 30px;
       cursor: pointer;
       font-weight: bold;
       transition: background 0.3s;
-      white-space: nowrap;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
     }
     #sendBtn:hover {
-      background: #e6a300;
+      background: #ffaa00;
     }
-    .actions {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      margin-top: 5px;
-      background: #222;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.6);
-      display: flex;
-      gap: 8px;
-      padding: 5px 10px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-      z-index: 10;
-    }
-    .message:hover .actions {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .action-btn {
-      cursor: pointer;
-      font-size: 18px;
-      user-select: none;
+    .btn-reply, .btn-delete, .btn-like, .btn-love {
       background: transparent;
       border: none;
-      color: #eee;
-      transition: color 0.3s ease;
+      cursor: pointer;
+      margin-left: 6px;
+      font-size: 18px;
+      color: #222;
+      border-radius: 50%;
+      padding: 4px;
+      transition: background 0.3s, color 0.3s;
     }
-    .action-btn:hover {
+    .btn-reply:hover, .btn-delete:hover {
+      background: #222;
       color: #ffb700;
     }
-    .reaction {
-      display: inline-block;
-      margin-left: 8px;
-      font-size: 16px;
-      cursor: pointer;
+    .btn-like:hover {
+      color: #4caf50;
+    }
+    .btn-love:hover {
+      color: #e91e63;
+    }
+    .reactions {
+      margin-top: 4px;
+      font-size: 20px;
       user-select: none;
+    }
+    .reactions span {
+      margin-left: 10px;
+      cursor: pointer;
       transition: transform 0.2s ease;
     }
-    .reaction:hover {
-      transform: scale(1.3);
-    }
-    .reactions-container {
-      margin-top: 6px;
-      font-size: 16px;
-      display: flex;
-      gap: 5px;
-      flex-wrap: wrap;
+    .reactions span:hover {
+      transform: scale(1.2);
     }
     .reply-box {
-      margin-top: 5px;
-      padding: 8px 12px;
       background: #333;
-      border-radius: 10px;
-      font-size: 14px;
+      border-radius: 15px;
+      padding: 6px 10px;
+      margin-top: 5px;
+      font-size: 13px;
       color: #ccc;
-      font-style: italic;
-      max-width: 70%;
-      overflow-wrap: break-word;
-      white-space: pre-wrap;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+    @keyframes slideUp {
+      from {transform: translateY(15px); opacity: 0;}
+      to {transform: translateY(0); opacity: 1;}
     }
   </style>
 </head>
 <body>
 
-<header>دردشة الأدمن - مرحباً <span id="adminNameDisplay"></span></header>
+<header>دردشة إدارة الموقع</header>
 
-<div id="chatArea"></div>
+<div id="chatContainer">
+  <div id="messages">جارٍ تحميل الرسائل...</div>
 
-<div id="inputArea">
-  <textarea id="replyInput" placeholder="اكتب رسالتك هنا..." autocomplete="off"></textarea>
-  <button id="sendBtn">إرسال</button>
+  <div id="inputArea">
+    <input type="text" id="replyInput" placeholder="اكتب رسالتك هنا..." autocomplete="off" />
+    <button id="sendBtn" title="إرسال"><i class="fa fa-paper-plane"></i></button>
+  </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -195,133 +208,161 @@
     appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
   };
   firebase.initializeApp(firebaseConfig);
+
   const db = firebase.database();
 
-  const adminName = localStorage.getItem('adminName') || 'unknown';
-  document.getElementById('adminNameDisplay').textContent = adminName;
-
-  const chatArea = document.getElementById('chatArea');
+  const messagesEl = document.getElementById('messages');
   const replyInput = document.getElementById('replyInput');
   const sendBtn = document.getElementById('sendBtn');
 
-  let messages = {};
-  let replyToMsgId = null;
+  // تعريف اسم الآدمن المسجل حاليا (يتم تخزينه من صفحة تسجيل الدخول في localStorage)
+  let adminName = localStorage.getItem('adminName') || 'Admin';
 
-  // تحميل الرسائل
-  function loadMessages() {
-    db.ref('adminChatMessages').off();
-    db.ref('adminChatMessages').on('value', snapshot => {
-      messages = snapshot.val() || {};
-      renderMessages();
-      scrollToBottom();
-    });
-  }
+  // كود الدردشة
+  function renderMessages(messages) {
+    messagesEl.innerHTML = '';
+    const msgKeys = Object.keys(messages);
+    msgKeys.forEach(key => {
+      const msg = messages[key];
+      const div = document.createElement('div');
+      div.classList.add('message');
+      div.classList.add(msg.sender === adminName ? 'admin' : 'user');
 
-  // عرض الرسائل
-  function renderMessages() {
-    chatArea.innerHTML = '';
-    for (const msgId in messages) {
-      const msg = messages[msgId];
-      const msgDiv = document.createElement('div');
-      msgDiv.classList.add('message');
-      msgDiv.classList.add(msg.sender === adminName ? 'admin' : 'user');
-      msgDiv.dataset.msgId = msgId;
-
-      let replyHtml = '';
-      if (msg.replyTo && messages[msg.replyTo]) {
-        const replyMsg = messages[msg.replyTo];
-        replyHtml = `<div class="reply-box">${replyMsg.text.substring(0, 50)}${replyMsg.text.length > 50 ? '...' : ''}</div>`;
-      }
-
-      // تفاعلات الرسالة
-      const reactions = msg.reactions || {};
-      const reactionHtml = Object.entries(reactions).map(([user, reaction]) => {
-        return `<span class="reaction" title="${user}">${reaction}</span>`;
-      }).join('');
-
-      msgDiv.innerHTML = `
-        <div class="msg-header">${msg.sender}</div>
-        <div>${msg.text}</div>
-        ${replyHtml}
-        <div class="reactions-container">${reactionHtml}</div>
-        <div class="msg-time">${new Date(msg.timestamp).toLocaleString()}</div>
-        <div class="actions">
-          ${adminName === 'sheko' ? `<button class="action-btn delete-btn" data-id="${msgId}" title="حذف الرسالة">🗑️</button>` : ''}
-          <button class="action-btn reply-btn" data-id="${msgId}" title="الرد على الرسالة">↩️</button>
-          <button class="action-btn react-btn" data-id="${msgId}" data-reaction="👍" title="إضافة 👍">👍</button>
-          <button class="action-btn react-btn" data-id="${msgId}" data-reaction="♥️" title="إضافة ♥️">♥️</button>
-        </div>
+      // محتوى الرسالة مع التفاعل وأزرار الرد والحذف للآدمن فقط
+      let content = `
+        <span>${escapeHtml(msg.text)}<br><small class="timestamp">${new Date(msg.timestamp).toLocaleString()}</small></span>
       `;
 
-      chatArea.appendChild(msgDiv);
-    }
+      if (msg.sender === adminName) {
+        content += `
+          <button class="btn-reply" data-msgid="${key}" title="الرد"><i class="fa fa-reply"></i></button>
+          <button class="btn-delete" data-msgid="${key}" title="حذف"><i class="fa fa-trash"></i></button>
+          <div class="reactions">
+            <span class="btn-like" data-msgid="${key}" title="أعجبني">👍</span>
+            <span class="btn-love" data-msgid="${key}" title="أحببت">♥️</span>
+          </div>
+        `;
+      } else {
+        content += `
+          <div class="reactions">
+            <span class="btn-like" data-msgid="${key}" title="أعجبني">👍</span>
+            <span class="btn-love" data-msgid="${key}" title="أحببت">♥️</span>
+          </div>
+        `;
+      }
 
+      div.innerHTML = content;
+      messagesEl.appendChild(div);
+    });
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+
+    // إضافة الأحداث لأزرار الرد، الحذف، والتفاعل
     addActionListeners();
   }
 
-  // إضافة أحداث الأزرار
+  // هروب النص لمنع الثغرات
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // إضافة الأحداث للأزرار
   function addActionListeners() {
-    document.querySelectorAll('.delete-btn').forEach(btn => {
+    // حذف الرسالة (للآدمن فقط)
+    document.querySelectorAll('.btn-delete').forEach(btn => {
       btn.onclick = e => {
-        const msgId = e.target.dataset.id;
-        if (confirm('هل أنت متأكد من حذف هذه الرسالة؟')) {
+        const msgId = e.currentTarget.dataset.msgid;
+        if (confirm('هل تريد حذف هذه الرسالة؟')) {
           db.ref(`adminChatMessages/${msgId}`).remove();
         }
       };
     });
 
-    document.querySelectorAll('.reply-btn').forEach(btn => {
+    // الرد على رسالة
+    document.querySelectorAll('.btn-reply').forEach(btn => {
       btn.onclick = e => {
-        replyToMsgId = e.target.dataset.id;
-        const msg = messages[replyToMsgId];
-        replyInput.value = `↪️ ${msg.text.substring(0, 50)}${msg.text.length > 50 ? '...' : ''}\n`;
-        replyInput.focus();
+        const msgId = e.currentTarget.dataset.msgid;
+        db.ref(`adminChatMessages/${msgId}`).get().then(snapshot => {
+          if (!snapshot.exists()) return;
+          const msgText = snapshot.val().text;
+          replyInput.value = `@رد على: "${msgText}"\n`;
+          replyInput.focus();
+        });
       };
     });
 
-    document.querySelectorAll('.react-btn').forEach(btn => {
+    // تفاعل إعجاب
+    document.querySelectorAll('.btn-like').forEach(btn => {
       btn.onclick = e => {
-        const msgId = e.target.dataset.id;
-        const reaction = e.target.dataset.reaction;
-        const userReactionPath = `adminChatMessages/${msgId}/reactions/${adminName}`;
-        db.ref(userReactionPath).set(reaction);
+        const msgId = e.currentTarget.dataset.msgid;
+        reactToMessage(msgId, 'like');
+      };
+    });
+
+    // تفاعل حب
+    document.querySelectorAll('.btn-love').forEach(btn => {
+      btn.onclick = e => {
+        const msgId = e.currentTarget.dataset.msgid;
+        reactToMessage(msgId, 'love');
       };
     });
   }
 
-  // إرسال رسالة
-  sendBtn.onclick = () => {
-    sendMessage();
-  };
+  // حفظ التفاعل على الرسالة
+  function reactToMessage(msgId, reaction) {
+    const reactionsRef = db.ref(`adminChatMessages/${msgId}/reactions`);
+    reactionsRef.transaction(current => {
+      if (current === null) current = {};
+      if (!current[reaction]) current[reaction] = 0;
+      current[reaction]++;
+      return current;
+    });
+  }
+
+  // تحميل وعرض الرسائل مع التفاعلات
+  function loadMessages() {
+    db.ref('adminChatMessages').on('value', snapshot => {
+      const msgsObj = snapshot.val() || {};
+      const messages = {};
+      // دمج النص مع التفاعلات بشكل نصي مع التفاعل
+      Object.entries(msgsObj).forEach(([key, val]) => {
+        // بناء نص التفاعل
+        let reactionText = '';
+        if (val.reactions) {
+          if (val.reactions.like) reactionText += ` 👍${val.reactions.like}`;
+          if (val.reactions.love) reactionText += ` ♥️${val.reactions.love}`;
+        }
+        messages[key] = {
+          sender: val.sender,
+          text: val.text + reactionText,
+          timestamp: val.timestamp
+        };
+      });
+      renderMessages(messages);
+    });
+  }
+
+  // إرسال رسالة جديدة
+  function sendMessage() {
+    const text = replyInput.value.trim();
+    if (!text) return;
+    const newMsg = {
+      sender: adminName,
+      text,
+      timestamp: Date.now()
+    };
+    db.ref('adminChatMessages').push(newMsg);
+    replyInput.value = '';
+  }
+
+  sendBtn.addEventListener('click', sendMessage);
   replyInput.addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
   });
-
-  function sendMessage() {
-    let text = replyInput.value.trim();
-    if (!text) return;
-
-    const newMsg = {
-      sender: adminName,
-      text,
-      timestamp: Date.now(),
-      replyTo: replyToMsgId,
-      reactions: {}
-    };
-    db.ref('adminChatMessages').push(newMsg);
-    replyInput.value = '';
-    replyToMsgId = null;
-  }
-
-  // تمرير الشات لأسفل
-  function scrollToBottom() {
-    setTimeout(() => {
-      chatArea.scrollTop = chatArea.scrollHeight;
-    }, 100);
-  }
 
   loadMessages();
 </script>
