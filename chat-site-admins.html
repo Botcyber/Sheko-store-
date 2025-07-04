@@ -1,623 +1,509 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="UTF-8" />
-  <title>دردشة الآدمن - Sheko Store</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
-  <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      margin: 0;
-      background: #121212;
-      color: #eee;
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-    }
-    header {
-      background: #ffb700;
-      color: #222;
-      padding: 15px 20px;
-      font-weight: bold;
-      font-size: 24px;
-      text-align: center;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      user-select: none;
-      position: relative;
-    }
-    #hamburgerBtn {
-      position: absolute;
-      top: 50%;
-      left: 15px; /* لأن الصفحة RTL */
-      transform: translateY(-50%);
-      font-size: 28px;
-      color: #222;
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      z-index: 20000;
-    }
-    #sidebar {
-      position: fixed;
-      top: 0;
-      right: -280px; /* مخفية */
-      width: 280px;
-      height: 100vh;
-      background: #222;
-      box-shadow: -2px 0 8px rgba(0,0,0,0.7);
-      transition: right 0.3s ease;
-      padding: 15px 20px;
-      overflow-y: auto;
-      z-index: 15000;
-      direction: rtl;
-    }
-    #sidebar.open {
-      right: 0;
-    }
-    #sidebar h3 {
-      margin-top: 0;
-      color: #ffb700;
-      font-weight: bold;
-      margin-bottom: 15px;
-      font-size: 22px;
-      user-select: none;
-    }
-    #adminList {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    #adminList li {
-      display: flex;
-      align-items: center;
-      margin-bottom: 12px;
-      font-size: 18px;
-      cursor: default;
-      user-select: none;
-      color: #eee;
-    }
-    .status-dot {
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      margin-left: 10px;
-      border: 2px solid #444;
-      flex-shrink: 0;
-    }
-    .online {
-      background-color: #4caf50;
-      box-shadow: 0 0 6px #4caf50aa;
-    }
-    .offline {
-      background-color: #f44336;
-      box-shadow: 0 0 6px #f44336aa;
-    }
-    /* باقي التنسيقات الأصلية */
-    #chatContainer {
-      flex-grow: 1;
-      display: flex;
-      flex-direction: column;
-      padding: 15px;
-      overflow: hidden;
-      background: linear-gradient(135deg, #1f1f1f, #2e2e2e);
-      border-radius: 8px;
-      margin: 10px;
-      box-shadow: 0 0 15px #ffb700aa;
-      height: calc(100vh - 80px);
-    }
-    #messages {
-      flex-grow: 1;
-      overflow-y: auto;
-      padding-right: 10px;
-      margin-bottom: 10px;
-      border-radius: 10px;
-      background: #222;
-      scrollbar-width: thin;
-      scrollbar-color: #ffb700 #333;
-      animation: fadeIn 1s ease forwards;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      max-height: calc(100vh - 140px);
-    }
-    #messages::-webkit-scrollbar {
-      width: 8px;
-    }
-    #messages::-webkit-scrollbar-track {
-      background: #333;
-      border-radius: 10px;
-    }
-    #messages::-webkit-scrollbar-thumb {
-      background-color: #ffb700;
-      border-radius: 10px;
-    }
-    .message {
-      max-width: 70%;
-      padding: 14px 20px;
-      border-radius: 20px;
-      line-height: 1.5;
-      position: relative;
-      word-wrap: break-word;
-      animation: slideUp 0.3s ease forwards;
-      cursor: pointer;
-      user-select: none;
-      box-shadow: 0 1px 5px rgba(0,0,0,0.3);
-      font-size: 16px;
-      display: block;
-      clear: both;
-      background-clip: padding-box;
-    }
-    .message.admin {
-      background: #007acc;
-      color: white;
-      margin-left: auto;
-      border-bottom-right-radius: 6px;
-      box-shadow: 0 0 8px #00aaff99;
-    }
-    .message.user {
-      background: #444;
-      color: #eee;
-      margin-right: auto;
-      border-bottom-left-radius: 6px;
-    }
-    .sender-name {
-      font-weight: bold;
-      display: block;
-      margin-bottom: 5px;
-      position: relative;
-      padding: 3px 12px;
-      border-radius: 15px;
-      background: rgba(255, 255, 255, 0.1);
-      box-shadow: 0 0 8px rgba(255, 215, 0, 0.7), inset 0 0 10px rgba(255, 215, 0, 0.5);
-      color: #ffd700;
-      text-shadow: 0 0 8px #ffd700;
-      font-size: 17px;
-      font-weight: 900;
-    }
-    .sender-name .admin-tag {
-      background: linear-gradient(45deg, #ffd700, #ffaa00);
-      padding: 2px 8px;
-      border-radius: 10px;
-      color: #222;
-      font-weight: bold;
-      font-size: 14px;
-      box-shadow: 0 0 10px #ffaa00, 0 0 20px #ffd700;
-      user-select: none;
-      white-space: nowrap;
-    }
-    .message .timestamp {
-      display: block;
-      font-size: 10px;
-      color: #ccc;
-      margin-top: 4px;
-    }
-    #inputArea {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      margin-top: 0;
-      margin-bottom: 10px;
-    }
-    #replyInput {
-      flex-grow: 1;
-      padding: 10px 15px;
-      border-radius: 30px;
-      border: none;
-      font-size: 16px;
-      outline: none;
-      background: #333;
-      color: #eee;
-      transition: box-shadow 0.3s;
-      white-space: pre-wrap;
-    }
-    #replyInput:focus {
-      box-shadow: 0 0 10px #ffb700;
-    }
-    #sendBtn {
-      background: #ffb700;
-      border: none;
-      color: #222;
-      padding: 10px 20px;
-      border-radius: 30px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background 0.3s;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      margin-bottom: 0;
-      margin-top: -6px;
-    }
-    #sendBtn:hover {
-      background: #ffaa00;
-    }
-    .btn-reply, .btn-delete, .btn-like, .btn-love {
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      margin-left: 6px;
-      font-size: 18px;
-      color: #222;
-      border-radius: 50%;
-      padding: 4px;
-      transition: background 0.3s, color 0.3s;
-    }
-    .btn-reply:hover, .btn-delete:hover {
-      background: #222;
-      color: #ffb700;
-    }
-    .btn-like:hover {
-      color: #4caf50;
-    }
-    .btn-love:hover {
-      color: #e91e63;
-    }
-    .reactions {
-      margin-top: 4px;
-      font-size: 20px;
-      user-select: none;
-    }
-    .reactions span {
-      margin-left: 10px;
-      cursor: pointer;
-      transition: transform 0.2s ease;
-    }
-    .reactions span:hover {
-      transform: scale(1.2);
-    }
-    #replyModal {
-      position: fixed;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      background: #222;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 20px #00ffffaa;
-      display: none;
-      z-index: 10000;
-      width: 90%;
-      max-width: 400px;
-    }
-    #replyModal textarea {
-      width: 100%;
-      height: 100px;
-      background: #333;
-      border: none;
-      border-radius: 10px;
-      color: #eee;
-      font-size: 16px;
-      padding: 10px;
-      resize: none;
-      white-space: pre-wrap;
-    }
-    #replyModal .reply-info {
-      background: #111;
-      border-radius: 8px;
-      padding: 8px 12px;
-      margin-bottom: 10px;
-      font-size: 14px;
-      color: #aad8ff;
-      max-height: 60px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-    }
-    #replyModal button {
-      margin-top: 5px;
-      background: #00bfff;
-      border: none;
-      padding: 10px 15px;
-      border-radius: 10px;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    #replyModal button:hover {
-      background: #0099dd;
-    }
-    #replyModal #cancelReply {
-      background: #ff5555;
-      margin-left: 10px;
-    }
-    @keyframes fadeIn {
-      from {opacity: 0;}
-      to {opacity: 1;}
-    }
-    @keyframes slideUp {
-      from {transform: translateY(15px); opacity: 0;}
-      to {transform: translateY(0); opacity: 1;}
-    }
-  </style>
-</head>
-<body>
-  <header>
-    دردشة إدارة الموقع
-    <button id="hamburgerBtn" title="قائمة الأدمن"><i class="fa fa-bars"></i></button>
-  </header>
+<!DOCTYPE html>  <html lang="ar" dir="rtl">    <head>    
+  <meta charset="UTF-8" />    
+  <title>دردشة الآدمن - Sheko Store</title>    
+  <meta name="viewport" content="width=device-width, initial-scale=1" />    
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />    
+  <style>    
+    body {    
+      font-family: 'Cairo', sans-serif;    
+      margin: 0;    
+      background: #121212;    
+      color: #eee;    
+      display: flex;    
+      flex-direction: column;    
+      height: 100vh;    
+      overflow: hidden;    
+    }    
+    header {    
+      background: #ffb700;    
+      color: #222;    
+      padding: 15px 20px;    
+      font-weight: bold;    
+      font-size: 24px;    
+      text-align: center;    
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);    
+      user-select: none;    
+    }    
+    #chatContainer {    
+      display: flex;    
+      flex-direction: column;    
+      padding: 15px;    
+      overflow: hidden;    
+      background: linear-gradient(135deg, #1f1f1f, #2e2e2e);    
+      border-radius: 8px;    
+      margin: 10px;    
+      box-shadow: 0 0 15px #ffb700aa;    
+      height: calc(100vh - 150px); /* تم التعديل هنا */    
+    }    
+    #messages {    
+      flex-grow: 1;    
+      overflow-y: auto;    
+      padding-right: 10px;    
+      margin-bottom: 10px;    
+      border-radius: 10px;    
+      background: #222;    
+      scrollbar-width: thin;    
+      scrollbar-color: #ffb700 #333;    
+      animation: fadeIn 1s ease forwards;    
+      display: flex;    
+      flex-direction: column;    
+      gap: 8px;    
+      max-height: calc(100vh - 250px); /* تم التعديل هنا */    
+    }    
+    #messages::-webkit-scrollbar {    
+      width: 8px;    
+    }    
+    #messages::-webkit-scrollbar-track {    
+      background: #333;    
+      border-radius: 10px;    
+    }    
+    #messages::-webkit-scrollbar-thumb {    
+      background-color: #ffb700;    
+      border-radius: 10px;    
+    }    
+    .message {    
+      max-width: 70%;    
+      padding: 14px 20px;    
+      border-radius: 20px;    
+      line-height: 1.5;    
+      position: relative;    
+      word-wrap: break-word;    
+      animation: slideUp 0.3s ease forwards;    
+      cursor: pointer;    
+      user-select: none;    
+      box-shadow: 0 1px 5px rgba(0,0,0,0.3);    
+      font-size: 16px;    
+      display: block;    
+      clear: both;    
+      background-clip: padding-box;    
+    }    
+    .message.admin {    
+      background: #007acc;    
+      color: white;    
+      margin-left: auto;    
+      border-bottom-right-radius: 6px;    
+      box-shadow: 0 0 8px #00aaff99;    
+    }    
+    .message.user {    
+      background: #444;    
+      color: #eee;    
+      margin-right: auto;    
+      border-bottom-left-radius: 6px;    
+    }    
+    .sender-name {    
+      font-weight: bold;    
+      display: block;    
+      margin-bottom: 5px;    
+      position: relative;    
+      padding: 3px 12px;    
+      border-radius: 15px;    
+      background: rgba(255, 255, 255, 0.1);    
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.7), inset 0 0 10px rgba(255, 215, 0, 0.5);    
+      color: #ffd700;    
+      text-shadow: 0 0 8px #ffd700;    
+      font-size: 17px;    
+      font-weight: 900;    
+    }    
+    .sender-name .admin-tag {    
+      background: linear-gradient(45deg, #ffd700, #ffaa00);    
+      padding: 2px 8px;    
+      border-radius: 10px;    
+      color: #222;    
+      font-weight: bold;    
+      font-size: 14px;    
+      box-shadow: 0 0 10px #ffaa00, 0 0 20px #ffd700;    
+      user-select: none;    
+      white-space: nowrap;    
+    }    
+    .message .timestamp {    
+      display: block;    
+      font-size: 10px;    
+      color: #ccc;    
+      margin-top: 4px;    
+    }    
+    #inputArea {    
+      display: flex;    
+      gap: 10px;    
+      align-items: center;    
+      margin-top: 0;    
+      margin-bottom: 10px;    
+    }    
+    #replyInput {    
+      flex-grow: 1;    
+      padding: 10px 15px;    
+      border-radius: 30px;    
+      border: none;    
+      font-size: 16px;    
+      outline: none;    
+      background: #333;    
+      color: #eee;    
+      transition: box-shadow 0.3s;    
+      white-space: pre-wrap;    
+    }    
+    #replyInput:focus {    
+      box-shadow: 0 0 10px #ffb700;    
+    }    
+    #sendBtn {    
+      background: #ffb700;    
+      border: none;    
+      color: #222;    
+      padding: 10px 20px;    
+      border-radius: 30px;    
+      cursor: pointer;    
+      font-weight: bold;    
+      transition: background 0.3s;    
+      flex-shrink: 0;    
+      display: flex;    
+      align-items: center;    
+      justify-content: center;    
+      font-size: 18px;    
+      margin-bottom: 0;    
+      margin-top: -6px;    
+    }    
+    #sendBtn:hover {    
+      background: #ffaa00;    
+    }    
+    .btn-reply, .btn-delete, .btn-like, .btn-love {    
+      background: transparent;    
+      border: none;    
+      cursor: pointer;    
+      margin-left: 6px;    
+      font-size: 18px;    
+      color: #222;    
+      border-radius: 50%;    
+      padding: 4px;    
+      transition: background 0.3s, color 0.3s;    
+    }    
+    .btn-reply:hover, .btn-delete:hover {    
+      background: #222;    
+      color: #ffb700;    
+    }    
+    .btn-like:hover {    
+      color: #4caf50;    
+    }    
+    .btn-love:hover {    
+      color: #e91e63;    
+    }    
+    .reactions {    
+      margin-top: 4px;    
+      font-size: 20px;    
+      user-select: none;    
+    }    
+    .reactions span {    
+      margin-left: 10px;    
+      cursor: pointer;    
+      transition: transform 0.2s ease;    
+    }    
+    .reactions span:hover {    
+      transform: scale(1.2);    
+    }    
+    #replyModal {    
+      position: fixed;    
+      top: 50%; left: 50%;    
+      transform: translate(-50%, -50%);    
+      background: #222;    
+      padding: 20px;    
+      border-radius: 10px;    
+      box-shadow: 0 0 20px #00ffffaa;    
+      display: none;    
+      z-index: 10000;    
+      width: 90%;    
+      max-width: 400px;    
+    }    
+    #replyModal textarea {    
+      width: 100%;    
+      height: 100px;    
+      background: #333;    
+      border: none;    
+      border-radius: 10px;    
+      color: #eee;    
+      font-size: 16px;    
+      padding: 10px;    
+      resize: none;    
+      white-space: pre-wrap;    
+    }    
+    #replyModal .reply-info {    
+      background: #111;    
+      border-radius: 8px;    
+      padding: 8px 12px;    
+      margin-bottom: 10px;    
+      font-size: 14px;    
+      color: #aad8ff;    
+      max-height: 60px;    
+      overflow-y: auto;    
+      white-space: pre-wrap;    
+    }    
+    #replyModal button {    
+      margin-top: 5px;    
+      background: #00bfff;    
+      border: none;    
+      padding: 10px 15px;    
+      border-radius: 10px;    
+      color: white;    
+      font-weight: bold;    
+      cursor: pointer;    
+      transition: background 0.3s;    
+    }    
+    #replyModal button:hover {    
+      background: #0099dd;    
+    }    
+    #replyModal #cancelReply {    
+      background: #ff5555;    
+      margin-left: 10px;    
+    }    
+    @keyframes fadeIn {    
+      from {opacity: 0;}    
+      to {opacity: 1;}    
+    }    
+    @keyframes slideUp {    
+      from {transform: translateY(15px); opacity: 0;}    
+      to {transform: translateY(0); opacity: 1;}    
+    }    
+  </style>    
+</head>  <body>  <header>دردشة إدارة الموقع</header>  <div id="chatContainer">    
+  <div id="messages">جارٍ تحميل الرسائل...</div>    <div id="inputArea">    
+    <input type="text" id="replyInput" placeholder="اكتب رسالتك هنا..." autocomplete="off" />    
+    <button id="sendBtn" title="إرسال"><i class="fa fa-paper-plane"></i></button>    
+  </div>    
+</div>  <!-- نافذة الرد المنبثقة -->  <div id="replyModal">    
+  <div class="reply-info" id="replyInfo"></div>    
+  <textarea id="replyText" placeholder="اكتب ردك هنا..."></textarea>    
+  <div style="text-align: right; margin-top: 10px;">    
+    <button id="sendReplyBtn">إرسال الرد</button>    
+    <button id="cancelReply">إلغاء</button>    
+  </div>    
+</div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script>    
+  // الكود البرمجي ل Firebase مع تحميل الرسائل    
+  const firebaseConfig = {    
+    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",    
+    authDomain: "sheko-store.firebaseapp.com",    
+    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",    
+    projectId: "sheko-store",    
+    storageBucket: "sheko-store.appspot.com",    
+    messagingSenderId: "113892775847",    
+    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"    
+  };    
+  firebase.initializeApp(firebaseConfig);    const db = firebase.database();
 
-  <div id="sidebar" aria-hidden="true">
-    <h3>الأدمن المتصلون</h3>
-    <ul id="adminList">
-      <li>جارٍ التحميل...</li>
-    </ul>
-  </div>
+const messagesEl = document.getElementById('messages');
+const replyInput = document.getElementById('replyInput');
+const sendBtn = document.getElementById('sendBtn');
 
-  <div id="chatContainer">
-    <div id="messages">جارٍ تحميل الرسائل...</div>
-    <div id="inputArea">
-      <input type="text" id="replyInput" placeholder="اكتب رسالتك هنا..." autocomplete="off" />
-      <button id="sendBtn" title="إرسال"><i class="fa fa-paper-plane"></i></button>
-    </div>
-  </div>
+const replyModal = document.getElementById('replyModal');
+const replyText = document.getElementById('replyText');
+const sendReplyBtn = document.getElementById('sendReplyBtn');
+const cancelReply = document.getElementById('cancelReply');
+const replyInfo = document.getElementById('replyInfo');
 
-  <div id="replyModal" role="dialog" aria-modal="true" aria-labelledby="replyModalTitle">
-    <div class="reply-info" id="replyInfo"></div>
-    <textarea id="replyText" placeholder="اكتب ردك هنا..."></textarea>
-    <div style="text-align: right; margin-top: 10px;">
-      <button id="sendReplyBtn">إرسال الرد</button>
-      <button id="cancelReply">إلغاء</button>
-    </div>
-  </div>
+let adminName = localStorage.getItem('adminName') || 'Admin';
 
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <script>
-  // إعداد Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-    authDomain: "sheko-store.firebaseapp.com",
-    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-    projectId: "sheko-store",
-    storageBucket: "sheko-store.appspot.com",
-    messagingSenderId: "113892775847",
-    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+let replyingToMsgId = null;
+let replyingToMsgText = '';
 
-  // عناصر DOM
-  const messagesEl = document.getElementById('messages');
-  const replyInput = document.getElementById('replyInput');
-  const sendBtn = document.getElementById('sendBtn');
-  const replyModal = document.getElementById('replyModal');
-  const replyText = document.getElementById('replyText');
-  const sendReplyBtn = document.getElementById('sendReplyBtn');
-  const cancelReply = document.getElementById('cancelReply');
-  const replyInfo = document.getElementById('replyInfo');
+// تفاعل واحد لكل رسالة لكل مستخدم (يتم حفظه في localStorage)
+function hasReacted(msgId, reactionType) {
+return localStorage.getItem(msgId + '' + reactionType) === 'true';
+}
+function setReacted(msgId, reactionType) {
+localStorage.setItem(msgId + '' + reactionType, 'true');
+}
 
-  const hamburgerBtn = document.getElementById('hamburgerBtn');
-  const sidebar = document.getElementById('sidebar');
-  const adminList = document.getElementById('adminList');
+function renderMessages(messages) {
+messagesEl.innerHTML = '';
+const msgKeys = Object.keys(messages);
+msgKeys.forEach(key => {
+const msg = messages[key];
+const div = document.createElement('div');
+div.classList.add('message');
+div.classList.add(msg.sender === adminName ? 'admin' : 'user');
 
-  let adminName = localStorage.getItem('adminName') || 'Admin';
+let senderNameHTML = '';    
+  if(msg.sender === adminName){    
+    senderNameHTML = `    
+    <span class="sender-name">    
+      ${escapeHtml(msg.sender)}    
+      <span class="admin-tag">ADMIN</span>    
+    </span>`;    
+  } else {    
+    senderNameHTML = `<span class="sender-name">${escapeHtml(msg.sender)}</span>`;    
+  }    
 
-  let replyingToMsgId = null;
-  let replyingToMsgText = '';
+  let content = `    
+    ${senderNameHTML}    
+    <br>    
+    <span>${escapeHtml(msg.text)}</span>    
+    <br>    
+    <small class="timestamp">${new Date(msg.timestamp).toLocaleString()}</small>    
+  `;    
 
-  // فتح/غلق القائمة الجانبية
-  hamburgerBtn.addEventListener('click', () => {
-    sidebar.classList.toggle('open');
-    sidebar.setAttribute('aria-hidden', !sidebar.classList.contains('open'));
-  });
+  if (msg.sender === adminName) {    
+    content += `    
+      <button class="btn-reply" data-msgid="${key}" title="الرد"><i class="fa fa-reply"></i></button>    
+      <button class="btn-delete" data-msgid="${key}" title="حذف"><i class="fa fa-trash"></i></button>    
+      <div class="reactions">    
+        <span class="btn-like" data-msgid="${key}" title="أعجبني">👍</span>    
+        <span class="btn-love" data-msgid="${key}" title="أحببت">♥️</span>    
+      </div>    
+    `;    
+  } else {    
+    content += `    
+      <div class="reactions">    
+        <span class="btn-like" data-msgid="${key}" title="أعجبني">👍</span>    
+        <span class="btn-love" data-msgid="${key}" title="أحببت">♥️</span>    
+      </div>    
+    `;    
+  }    
 
-  // دالة الهروب من النصوص (لتجنب ثغرات XSS)
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
+  div.innerHTML = content;    
+  messagesEl.appendChild(div);    
+});    
+messagesEl.scrollTop = messagesEl.scrollHeight;    
+addActionListeners();
 
-  // عرض الرسائل
-  function renderMessages(messages) {
-    messagesEl.innerHTML = '';
-    const keys = Object.keys(messages);
-    if(keys.length === 0) {
-      messagesEl.textContent = 'لا توجد رسائل.';
-      return;
-    }
-    keys.forEach(key => {
-      const msg = messages[key];
-      const div = document.createElement('div');
-      div.classList.add('message');
-      div.classList.add(msg.sender === adminName ? 'admin' : 'user');
+}
 
-      let senderHTML = msg.sender === adminName
-        ? `<span class="sender-name">${escapeHtml(msg.sender)} <span class="admin-tag">ADMIN</span></span>`
-        : `<span class="sender-name">${escapeHtml(msg.sender)}</span>`;
+function escapeHtml(text) {
+const div = document.createElement('div');
+div.textContent = text;
+return div.innerHTML;
+}
 
-      let content = `
-        ${senderHTML}
-        <br>
-        <span>${escapeHtml(msg.text)}</span>
-        <br>
-        <small class="timestamp">${new Date(msg.timestamp).toLocaleString()}</small>
-      `;
+function addActionListeners() {
+document.querySelectorAll('.btn-delete').forEach(btn => {
+btn.onclick = e => {
+const msgId = e.currentTarget.dataset.msgid;
+if (confirm('هل تريد حذف هذه الرسالة؟')) {
+db.ref(adminChatMessages/${msgId}).remove();
+localStorage.removeItem(msgId + '_like');
+localStorage.removeItem(msgId + '_love');
+}
+};
+});
 
-      if (msg.sender === adminName) {
-        content += `
-          <button class="btn-reply" data-msgid="${key}" title="الرد"><i class="fa fa-reply"></i></button>
-          <button class="btn-delete" data-msgid="${key}" title="حذف"><i class="fa fa-trash"></i></button>
-          <div class="reactions">
-            <span class="btn-like" data-msgid="${key}" title="أعجبني">👍</span>
-            <span class="btn-love" data-msgid="${key}" title="أحببت">♥️</span>
-          </div>
-        `;
-      } else {
-        content += `
-          <div class="reactions">
-            <span class="btn-like" data-msgid="${key}" title="أعجبني">👍</span>
-            <span class="btn-love" data-msgid="${key}" title="أحببت">♥️</span>
-          </div>
-        `;
-      }
+document.querySelectorAll('.btn-reply').forEach(btn => {    
+  btn.onclick = e => {    
+    replyingToMsgId = e.currentTarget.dataset.msgid;    
+    db.ref(`adminChatMessages/${replyingToMsgId}`).get().then(snapshot => {    
+      if (!snapshot.exists()) {    
+        alert('الرسالة التي تريد الرد عليها غير موجودة!');    
+        return;    
+      }    
+      replyingToMsgText = snapshot.val().text;    
+      replyInfo.textContent = `الرد على: "${replyingToMsgText}"`;    
+      replyModal.style.display = 'block';    
+      replyText.value = '';    
+      replyText.focus();    
+    });    
+  };    
+});    
 
-      div.innerHTML = content;
-      messagesEl.appendChild(div);
-    });
-    messagesEl.scrollTop = messagesEl.scrollHeight;
-    addActionListeners();
-  }
+document.querySelectorAll('.btn-like').forEach(btn => {    
+  btn.onclick = e => {    
+    const msgId = e.currentTarget.dataset.msgid;    
+    if (hasReacted(msgId, 'like')) {    
+      alert('لقد قمت بالتفاعل بـ "أعجبني" على هذه الرسالة مسبقًا.');    
+      return;    
+    }    
+    reactToMessage(msgId, 'like');    
+    setReacted(msgId, 'like');    
+  };    
+});    
 
-  // أزرار التفاعل، الحذف، والرد
-  function addActionListeners() {
-    document.querySelectorAll('.btn-delete').forEach(btn => {
-      btn.onclick = e => {
-        const msgId = e.currentTarget.dataset.msgid;
-        if (confirm('هل تريد حذف هذه الرسالة؟')) {
-          db.ref(`adminChatMessages/${msgId}`).remove();
-          localStorage.removeItem(msgId + '_like');
-          localStorage.removeItem(msgId + '_love');
-        }
-      };
-    });
+document.querySelectorAll('.btn-love').forEach(btn => {    
+  btn.onclick = e => {    
+    const msgId = e.currentTarget.dataset.msgid;    
+    if (hasReacted(msgId, 'love')) {    
+      alert('لقد قمت بالتفاعل بـ "أحببت" على هذه الرسالة مسبقًا.');    
+      return;    
+    }    
+    reactToMessage(msgId, 'love');    
+    setReacted(msgId, 'love');    
+  };    
+});
 
-    document.querySelectorAll('.btn-reply').forEach(btn => {
-      btn.onclick = e => {
-        replyingToMsgId = e.currentTarget.dataset.msgid;
-        db.ref(`adminChatMessages/${replyingToMsgId}`).get().then(snapshot => {
-          if (!snapshot.exists()) {
-            alert('الرسالة التي تريد الرد عليها غير موجودة!');
-            return;
-          }
-          replyingToMsgText = snapshot.val().text;
-          replyInfo.textContent = `الرد على: "${replyingToMsgText}"`;
-          replyModal.style.display = 'block';
-          replyText.value = '';
-          replyText.focus();
-        });
-      };
-    });
+}
 
-    document.querySelectorAll('.btn-like').forEach(btn => {
-      btn.onclick = e => {
-        const msgId = e.currentTarget.dataset.msgid;
-        if (hasReacted(msgId, 'like')) {
-          alert('لقد قمت بالتفاعل بـ "أعجبني" على هذه الرسالة مسبقًا.');
-          return;
-        }
-        reactToMessage(msgId, 'like');
-        setReacted(msgId, 'like');
-      };
-    });
+function reactToMessage(msgId, reaction) {
+const reactionsRef = db.ref(adminChatMessages/${msgId}/reactions);
+reactionsRef.transaction(current => {
+if (current === null) current = {};
+if (!current[reaction]) current[reaction] = 0;
+current[reaction]++;
+return current;
+});
+}
 
-    document.querySelectorAll('.btn-love').forEach(btn => {
-      btn.onclick = e => {
-        const msgId = e.currentTarget.dataset.msgid;
-        if (hasReacted(msgId, 'love')) {
-          alert('لقد قمت بالتفاعل بـ "أحببت" على هذه الرسالة مسبقًا.');
-          return;
-        }
-        reactToMessage(msgId, 'love');
-        setReacted(msgId, 'love');
-      };
-    });
-  }
+function loadMessages() {
+db.ref('adminChatMessages').on('value', snapshot => {
+const msgsObj = snapshot.val() || {};
+const messages = {};
+Object.entries(msgsObj).forEach(([key, val]) => {
+let reactionText = '';
+if (val.reactions) {
+if (val.reactions.like) reactionText +=  👍${val.reactions.like};
+if (val.reactions.love) reactionText +=  ♥️${val.reactions.love};
+}
+messages[key] = {
+sender: val.sender,
+text: val.text + reactionText,
+timestamp: val.timestamp
+};
+});
+renderMessages(messages);
+});
+}
 
-  // تخزين هل تم التفاعل لتجنب التكرار (في localStorage)
-  function hasReacted(msgId, type) {
-    return localStorage.getItem(`${msgId}_${type}`) === 'true';
-  }
-  function setReacted(msgId, type) {
-    localStorage.setItem(`${msgId}_${type}`, 'true');
-  }
+sendBtn.onclick = () => {
+const text = replyInput.value.trim();
+if (!text) return alert('الرجاء كتابة رسالة');
+const newMsgRef = db.ref('adminChatMessages').push();
+newMsgRef.set({
+sender: adminName,
+text: text,
+timestamp: Date.now(),
+reactions: {}
+});
+replyInput.value = '';
+};
 
-  // إضافة التفاعل إلى قاعدة البيانات
-  function reactToMessage(msgId, reactionType) {
-    const reactionRef = db.ref(`adminChatMessages/${msgId}/reactions/${reactionType}`);
-    reactionRef.transaction(current => (current || 0) + 1);
-  }
+sendReplyBtn.onclick = () => {
+const replyContent = replyText.value.trim();
+if (!replyContent) return alert('الرجاء كتابة الرد');
+if (!replyingToMsgId) return alert('لا توجد رسالة محددة للرد عليها');
 
-  // تحميل الرسائل من Firebase وعرضها مع التحديث التلقائي
-  db.ref('adminChatMessages').on('value', snapshot => {
-    const data = snapshot.val() || {};
-    renderMessages(data);
-  });
+const fullText = `رد على: "${replyingToMsgText}"\n${replyContent}`;    
+const newMsgRef = db.ref('adminChatMessages').push();    
+newMsgRef.set({    
+  sender: adminName,    
+  text: fullText,    
+  timestamp: Date.now(),    
+  reactions: {}    
+});    
+replyModal.style.display = 'none';    
+replyingToMsgId = null;    
+replyingToMsgText = '';    
+replyText.value = '';
 
-  // تحميل الأدمن المتصلين وتحديث القائمة
-  function loadAdmins() {
-    adminList.innerHTML = '<li>جارٍ التحميل...</li>';
-    db.ref('adminsOnline').once('value').then(snapshot => {
-      const admins = snapshot.val() || {};
-      adminList.innerHTML = '';
-      const keys = Object.keys(admins);
-      if (keys.length === 0) {
-        adminList.innerHTML = '<li>لا يوجد أدمن متصل حالياً</li>';
-        return;
-      }
-      keys.forEach(uid => {
-        const admin = admins[uid];
-        const li = document.createElement('li');
-        const statusClass = admin.online ? 'online' : 'offline';
-        li.innerHTML = `
-          <span class="status-dot ${statusClass}"></span>
-          ${admin.name || 'غير معروف'}
-        `;
-        adminList.appendChild(li);
-      });
-    }).catch(() => {
-      adminList.innerHTML = '<li>فشل تحميل الأدمن</li>';
-    });
-  }
+};
 
-  // استدعاء تحميل الأدمن عند بدء الصفحة وأيضاً كل 10 ثواني
-  loadAdmins();
-  setInterval(loadAdmins, 10000);
+// إغلاق نافذة الرد
+cancelReply.onclick = () => {
+replyModal.style.display = 'none';
+replyingToMsgId = null;
+replyingToMsgText = '';
+replyText.value = '';
+};
 
-  // إرسال رسالة جديدة
-  sendBtn.addEventListener('click', () => {
-    const text = replyInput.value.trim();
-    if (!text) return;
-    const newMsgRef = db.ref('adminChatMessages').push();
-    newMsgRef.set({
-      sender: adminName,
-      text: text,
-      timestamp: Date.now(),
-      reactions: {}
-    });
-    replyInput.value = '';
-  });
+// تحميل الرسائل عند فتح الصفحة
+loadMessages();
 
-  // إرسال الرد من المودال
-  sendReplyBtn.addEventListener('click', () => {
-    const text = replyText.value.trim();
-    if (!text) {
-      alert('الرجاء كتابة نص الرد');
-      return;
-    }
-    if (!replyingToMsgId) {
-      alert('لا توجد رسالة محددة للرد عليها');
-      return;
-    }
-    const newMsgRef = db.ref('adminChatMessages').push();
-    newMsgRef.set({
-      sender: adminName,
-      text: `رد: "${replyingToMsgText}"\n${text}`,
-      timestamp: Date.now(),
-      reactions: {}
-    });
-    replyingToMsgId = null;
-    replyingToMsgText = '';
-    replyModal.style.display = 'none';
-  });
+// حفظ اسم الأدمن المحلي في localStorage إذا لم يكن محفوظًا
+if (!localStorage.getItem('adminName')) {
+let name = prompt('ادخل اسم الادمن الخاص بك:', 'sheko');
+if (!name) name = 'Admin';
+localStorage.setItem('adminName', name);
+adminName = name;
+}
+</script>  </body>
 
-  // إلغاء الرد وإغلاق المودال
-  cancelReply.addEventListener('click', () => {
-    replyingToMsgId = null;
-    replyingToMsgText = '';
-    replyModal.style.display = 'none';
-  });
-
-  // فتح قائمة الأدمن بالهامبرغر أو إغلاقها
-  hamburgerBtn.addEventListener('click', () => {
-    sidebar.classList.toggle('open');
-    sidebar.setAttribute('aria-hidden', !sidebar.classList.contains('open'));
-  });
-
-  </script>
-</body>
-</html>
+</html>  
