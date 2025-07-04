@@ -1,9 +1,8 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>تسجيل دخول الأدمن - Sheko Store</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: 'Cairo', sans-serif;
@@ -68,44 +67,51 @@
     }
   </style>
 </head>
-<body>
-
-  <div id="loginForm">
+<body>  <div id="loginForm">
     <h2>تسجيل دخول الأدمن</h2>
     <div id="errorMsg"></div>
     <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="off" />
     <input type="password" id="password" placeholder="كلمة السر" autocomplete="off" />
     <button onclick="login()">دخول</button>
-  </div>
-
-  <script>
-    const admins = [
-  { username: "sheko", password: "Admin2526" },
-  { username: "admin", password: "admin1234" },
-  { username: "sara", password: "sarah482003" }
-];
+  </div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
     function login() {
-  const usernameInput = document.getElementById('username').value.trim();
-  const passwordInput = document.getElementById('password').value.trim();
-  const errorMsg = document.getElementById('errorMsg');
+      const usernameInput = document.getElementById('username').value.trim();
+      const passwordInput = document.getElementById('password').value.trim();
+      const errorMsg = document.getElementById('errorMsg');
 
-  if (!usernameInput || !passwordInput) {
-    errorMsg.textContent = "يرجى إدخال اسم المستخدم وكلمة السر";
-    return;
-  }
+      if (!usernameInput || !passwordInput) {
+        errorMsg.textContent = "يرجى إدخال اسم المستخدم وكلمة السر";
+        return;
+      }
 
-  const matchedAdmin = admins.find(admin => admin.username === usernameInput && admin.password === passwordInput);
-
-  if (matchedAdmin) {
-    errorMsg.textContent = "";
-    localStorage.setItem('adminName', matchedAdmin.username);
-    window.location.href = "chat-site-admins.html"; // رابط صفحة الدردشة الخاصة بالأدمن
-  } else {
-    errorMsg.textContent = "اسم المستخدم أو كلمة السر غير صحيحة";
-  }
+      db.ref('admins').once('value', snapshot => {
+        const admins = snapshot.val();
+        let found = false;
+        for (let id in admins) {
+          if (admins[id].name === usernameInput && admins[id].password === passwordInput) {
+            found = true;
+            localStorage.setItem('adminName', admins[id].name);
+            localStorage.setItem('adminRole', admins[id].role);
+            window.location.href = "chat-site-admins.html";
+            break;
+          }
+        }
+        if (!found) {
+          errorMsg.textContent = "اسم المستخدم أو كلمة السر غير صحيحة";
+        }
+      });
     }
-  </script>
-
-</body>
+  </script></body>
 </html>
