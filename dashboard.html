@@ -418,7 +418,7 @@
     db.ref("users/" + currentUser.uid + "/balance").once("value").then(snapshot => {
       const balance = snapshot.val() || 0;
       if (balance < cost) {
-        showCustomAlert("رصيدك لا يكفي لإتمام هذا الطلب", "error");
+        showCustomAlert("رصيدك لا يكفي لإتمام هذا الطلب لشحن رصيد اذهب الي صفحه إضافة الأموال", "error");
         return;
       }
       const order = {
@@ -436,7 +436,7 @@
       newOrderRef.set(order).then(() => {
         return db.ref("users/" + currentUser.uid).update({ balance: balance - cost });
       }).then(() => {
-        showCustomAlert("تم إرسال الطلب وخصم الرصيد بنجاح", "success");
+        showCustomAlert("تم إرسال الطلب وخصم الرصيد بنجاح اذهب الي صفحه الطلبات لتتابع طلبك", "success");
         mainService.value = "";
         subService.innerHTML = "";
         packageEl.innerHTML = "";
