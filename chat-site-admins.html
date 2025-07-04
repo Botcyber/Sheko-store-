@@ -96,6 +96,7 @@
     }
     /* باقي التنسيقات الأصلية */
     #chatContainer {
+      flex-grow: 1;
       display: flex;
       flex-direction: column;
       padding: 15px;
@@ -104,7 +105,7 @@
       border-radius: 8px;
       margin: 10px;
       box-shadow: 0 0 15px #ffb700aa;
-      height: calc(100vh - 150px);
+      height: calc(100vh - 80px);
     }
     #messages {
       flex-grow: 1;
@@ -119,7 +120,7 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      max-height: calc(100vh - 250px);
+      max-height: calc(100vh - 140px);
     }
     #messages::-webkit-scrollbar {
       width: 8px;
@@ -338,7 +339,7 @@
     <button id="hamburgerBtn" title="قائمة الأدمن"><i class="fa fa-bars"></i></button>
   </header>
 
-  <div id="sidebar">
+  <div id="sidebar" aria-hidden="true">
     <h3>الأدمن المتصلون</h3>
     <ul id="adminList">
       <li>جارٍ التحميل...</li>
@@ -353,7 +354,7 @@
     </div>
   </div>
 
-  <div id="replyModal">
+  <div id="replyModal" role="dialog" aria-modal="true" aria-labelledby="replyModalTitle">
     <div class="reply-info" id="replyInfo"></div>
     <textarea id="replyText" placeholder="اكتب ردك هنا..."></textarea>
     <div style="text-align: right; margin-top: 10px;">
@@ -379,7 +380,7 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // المتغيرات DOM
+  // عناصر DOM
   const messagesEl = document.getElementById('messages');
   const replyInput = document.getElementById('replyInput');
   const sendBtn = document.getElementById('sendBtn');
@@ -398,41 +399,39 @@
   let replyingToMsgId = null;
   let replyingToMsgText = '';
 
-  // فتح وغلق القائمة الجانبية عند الضغط على زر الهامبرجر
+  // فتح/غلق القائمة الجانبية
   hamburgerBtn.addEventListener('click', () => {
     sidebar.classList.toggle('open');
+    sidebar.setAttribute('aria-hidden', !sidebar.classList.contains('open'));
   });
 
-  // دالة الهروب من النصوص لتجنب حقن أكواد
+  // دالة الهروب من النصوص (لتجنب ثغرات XSS)
   function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
   }
 
-  // عرض الرسائل في الصفحة
+  // عرض الرسائل
   function renderMessages(messages) {
     messagesEl.innerHTML = '';
-    const msgKeys = Object.keys(messages);
-    msgKeys.forEach(key => {
+    const keys = Object.keys(messages);
+    if(keys.length === 0) {
+      messagesEl.textContent = 'لا توجد رسائل.';
+      return;
+    }
+    keys.forEach(key => {
       const msg = messages[key];
       const div = document.createElement('div');
       div.classList.add('message');
       div.classList.add(msg.sender === adminName ? 'admin' : 'user');
 
-      let senderNameHTML = '';
-      if(msg.sender === adminName){
-        senderNameHTML = `
-          <span class="sender-name">
-            ${escapeHtml(msg.sender)}
-            <span class="admin-tag">ADMIN</span>
-          </span>`;
-      } else {
-        senderNameHTML = `<span class="sender-name">${escapeHtml(msg.sender)}</span>`;
-      }
+      let senderHTML = msg.sender === adminName
+        ? `<span class="sender-name">${escapeHtml(msg.sender)} <span class="admin-tag">ADMIN</span></span>`
+        : `<span class="sender-name">${escapeHtml(msg.sender)}</span>`;
 
       let content = `
-        ${senderNameHTML}
+        ${senderHTML}
         <br>
         <span>${escapeHtml(msg.text)}</span>
         <br>
@@ -464,7 +463,7 @@
     addActionListeners();
   }
 
-  // إضافة مستمعات الأحداث لأزرار الرسائل
+  // أزرار التفاعل، الحذف، والرد
   function addActionListeners() {
     document.querySelectorAll('.btn-delete').forEach(btn => {
       btn.onclick = e => {
@@ -519,131 +518,105 @@
     });
   }
 
-  // التحقق هل المستخدم تفاعل مسبقًا مع الرسالة
-  function hasReacted(msgId, reactionType) {
-    return localStorage.getItem(`${msgId}_${reactionType}`) === 'true';
+  // تخزين هل تم التفاعل لتجنب التكرار (في localStorage)
+  function hasReacted(msgId, type) {
+    return localStorage.getItem(`${msgId}_${type}`) === 'true';
+  }
+  function setReacted(msgId, type) {
+    localStorage.setItem(`${msgId}_${type}`, 'true');
   }
 
-  // تعيين أن المستخدم تفاعل مع الرسالة
-  function setReacted(msgId, reactionType) {
-    localStorage.setItem(`${msgId}_${reactionType}`, 'true');
-  }
-
-  // إضافة تفاعل إلى الرسالة في قاعدة البيانات
+  // إضافة التفاعل إلى قاعدة البيانات
   function reactToMessage(msgId, reactionType) {
     const reactionRef = db.ref(`adminChatMessages/${msgId}/reactions/${reactionType}`);
     reactionRef.transaction(current => (current || 0) + 1);
   }
 
-  // تحميل الرسائل بشكل مباشر مع الاستماع للتحديثات الحية
+  // تحميل الرسائل من Firebase وعرضها مع التحديث التلقائي
   db.ref('adminChatMessages').on('value', snapshot => {
     const data = snapshot.val() || {};
     renderMessages(data);
   });
 
-  // تحميل قائمة الأدمن المتصلين
+  // تحميل الأدمن المتصلين وتحديث القائمة
   function loadAdmins() {
-    db.ref('admins').once('value').then(snapshot => {
+    adminList.innerHTML = '<li>جارٍ التحميل...</li>';
+    db.ref('adminsOnline').once('value').then(snapshot => {
       const admins = snapshot.val() || {};
       adminList.innerHTML = '';
-      Object.keys(admins).forEach(uid => {
+      const keys = Object.keys(admins);
+      if (keys.length === 0) {
+        adminList.innerHTML = '<li>لا يوجد أدمن متصل حالياً</li>';
+        return;
+      }
+      keys.forEach(uid => {
         const admin = admins[uid];
         const li = document.createElement('li');
-        li.textContent = admin.name || 'غير معروف';
-        const dot = document.createElement('span');
-        dot.classList.add('status-dot');
-        if(admin.online) {
-          dot.classList.add('online');
-        } else {
-          dot.classList.add('offline');
-        }
-        li.prepend(dot);
+        const statusClass = admin.online ? 'online' : 'offline';
+        li.innerHTML = `
+          <span class="status-dot ${statusClass}"></span>
+          ${admin.name || 'غير معروف'}
+        `;
         adminList.appendChild(li);
       });
+    }).catch(() => {
+      adminList.innerHTML = '<li>فشل تحميل الأدمن</li>';
     });
   }
 
-  // تحديث حالة الأدمن عند الدخول والخروج
-  function updateAdminStatus(online) {
-    const user = firebase.auth().currentUser;
-    if (!user) return;
-
-    const adminRef = db.ref(`admins/${user.uid}`);
-    adminRef.update({ online });
-
-    // إزالة الحالة عند قطع الاتصال
-    if (online) {
-      adminRef.onDisconnect().update({ online: false });
-    }
-  }
-
-  // تسجيل الدخول تلقائيًا للأدمن (أو يمكن تعديل طريقة الدخول هنا)
-  firebase.auth().signInAnonymously()
-  .then(() => {
-    const user = firebase.auth().currentUser;
-    if(user) {
-      localStorage.setItem('adminName', `Admin-${user.uid.substring(0,5)}`);
-      adminName = localStorage.getItem('adminName');
-      updateAdminStatus(true);
-      loadAdmins();
-    }
-  })
-  .catch(error => {
-    console.error('خطأ في تسجيل الدخول:', error);
-  });
+  // استدعاء تحميل الأدمن عند بدء الصفحة وأيضاً كل 10 ثواني
+  loadAdmins();
+  setInterval(loadAdmins, 10000);
 
   // إرسال رسالة جديدة
-  sendBtn.onclick = () => {
+  sendBtn.addEventListener('click', () => {
     const text = replyInput.value.trim();
-    if (!text) return alert('الرجاء كتابة رسالة');
-
-    const msg = {
+    if (!text) return;
+    const newMsgRef = db.ref('adminChatMessages').push();
+    newMsgRef.set({
       sender: adminName,
-      text,
+      text: text,
       timestamp: Date.now(),
       reactions: {}
-    };
-
-    db.ref('adminChatMessages').push(msg);
+    });
     replyInput.value = '';
-  };
+  });
 
-  // إغلاق نافذة الرد
-  cancelReply.onclick = () => {
-    replyingToMsgId = null;
-    replyingToMsgText = '';
-    replyModal.style.display = 'none';
-  };
-
-  // إرسال رد على رسالة
-  sendReplyBtn.onclick = () => {
-    const reply = replyText.value.trim();
-    if (!reply) return alert('الرجاء كتابة الرد');
-
-    if (!replyingToMsgId) {
-      alert('لم يتم تحديد رسالة للرد عليها');
+  // إرسال الرد من المودال
+  sendReplyBtn.addEventListener('click', () => {
+    const text = replyText.value.trim();
+    if (!text) {
+      alert('الرجاء كتابة نص الرد');
       return;
     }
-
-    const replyMsg = {
+    if (!replyingToMsgId) {
+      alert('لا توجد رسالة محددة للرد عليها');
+      return;
+    }
+    const newMsgRef = db.ref('adminChatMessages').push();
+    newMsgRef.set({
       sender: adminName,
-      text: `رد على: "${replyingToMsgText}"\n${reply}`,
+      text: `رد: "${replyingToMsgText}"\n${text}`,
       timestamp: Date.now(),
       reactions: {}
-    };
-
-    db.ref('adminChatMessages').push(replyMsg);
-    replyText.value = '';
-    replyInfo.textContent = '';
-    replyModal.style.display = 'none';
+    });
     replyingToMsgId = null;
     replyingToMsgText = '';
-  };
+    replyModal.style.display = 'none';
+  });
 
-  // تحديث قائمة الأدمن كل 30 ثانية (لتحديث حالة الاتصال)
-  setInterval(() => {
-    loadAdmins();
-  }, 30000);
+  // إلغاء الرد وإغلاق المودال
+  cancelReply.addEventListener('click', () => {
+    replyingToMsgId = null;
+    replyingToMsgText = '';
+    replyModal.style.display = 'none';
+  });
+
+  // فتح قائمة الأدمن بالهامبرغر أو إغلاقها
+  hamburgerBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    sidebar.setAttribute('aria-hidden', !sidebar.classList.contains('open'));
+  });
 
   </script>
 </body>
