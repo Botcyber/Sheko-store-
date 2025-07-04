@@ -79,26 +79,31 @@
   </div>
 
   <script>
-    const allowedUsername = "sheko";
-    const password = "Admin2526";
+    const admins = [
+  { username: "sheko", password: "Admin2526" },
+  { username: "admin", password: "admin1234" },
+  { username: "sara", password: "sarah482003" }
+];
 
     function login() {
-      const usernameInput = document.getElementById('username').value.trim();
-      const passwordInput = document.getElementById('password').value.trim();
-      const errorMsg = document.getElementById('errorMsg');
+  const usernameInput = document.getElementById('username').value.trim();
+  const passwordInput = document.getElementById('password').value.trim();
+  const errorMsg = document.getElementById('errorMsg');
 
-      if (!usernameInput || !passwordInput) {
-        errorMsg.textContent = "يرجى إدخال اسم المستخدم وكلمة السر";
-        return;
-      }
+  if (!usernameInput || !passwordInput) {
+    errorMsg.textContent = "يرجى إدخال اسم المستخدم وكلمة السر";
+    return;
+  }
 
-      if (usernameInput === allowedUsername && passwordInput === password) {
-        errorMsg.textContent = "";
-        localStorage.setItem('adminName', usernameInput);
-        window.location.href = "chat-site-admins.html"; // رابط صفحة الدردشة الخاصة بالأدمن
-      } else {
-        errorMsg.textContent = "اسم المستخدم أو كلمة السر غير صحيحة";
-      }
+  const matchedAdmin = admins.find(admin => admin.username === usernameInput && admin.password === passwordInput);
+
+  if (matchedAdmin) {
+    errorMsg.textContent = "";
+    localStorage.setItem('adminName', matchedAdmin.username);
+    window.location.href = "chat-site-admins.html"; // رابط صفحة الدردشة الخاصة بالأدمن
+  } else {
+    errorMsg.textContent = "اسم المستخدم أو كلمة السر غير صحيحة";
+  }
     }
   </script>
 
