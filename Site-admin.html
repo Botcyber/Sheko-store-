@@ -1,204 +1,165 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>تسجيل دخول الأدمن - Sheko Store</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
       font-family: 'Cairo', sans-serif;
       background: #f5f5f5;
-      margin: 0;
+      margin: 0; padding: 0;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
       direction: rtl;
     }
-    #loginBox {
+    #loginForm {
       background: white;
-      padding: 30px 40px;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      padding: 20px 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.15);
       width: 320px;
       text-align: center;
     }
-    #loginBox h2 {
-      margin-bottom: 25px;
-      color: #222;
-    }
-    input {
+    #loginForm input {
       width: 100%;
-      padding: 12px 15px;
-      margin: 10px 0 20px;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
       border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
-      box-sizing: border-box;
-      outline: none;
-      transition: border-color 0.3s;
     }
-    input:focus {
-      border-color: #ffb700;
-    }
-    button {
+    #loginForm button {
       width: 100%;
-      padding: 12px 15px;
+      padding: 10px;
       background: #222;
       color: white;
-      font-size: 18px;
       border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s;
+      border-radius: 5px;
       font-weight: bold;
+      cursor: pointer;
     }
-    button:hover {
+    #loginForm button:hover {
       background: #ffb700;
       color: #222;
     }
     #errorMsg {
       color: red;
-      margin-top: 10px;
-      min-height: 20px;
+      margin-bottom: 10px;
     }
-    #adminPanel {
+    #roleDisplay {
+      color: green;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    #accessButton {
       display: none;
-      text-align: center;
-      margin-top: 20px;
-    }
-    #adminPanel h3 {
-      color: #222;
-      margin-bottom: 15px;
-    }
-    #buttonsContainer button {
-      display: block;
-      width: 100%;
-      margin: 10px 0;
+      margin-top: 10px;
+      padding: 10px;
       background: #ffb700;
-      color: #222;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
 
-<div id="loginBox">
-  <h2>تسجيل دخول الأدمن</h2>
-  <input type="text" id="usernameInput" placeholder="اسم الأدمن" required />
-  <input type="password" id="passwordInput" placeholder="كلمة المرور" required />
-  <button onclick="login()">دخول</button>
-  <div id="errorMsg"></div>
-
-  <div id="adminPanel">
-    <h3 id="welcomeTitle">مرحبًا</h3>
-    <div id="buttonsContainer"></div>
-    <button onclick="logout()" style="background: #f44336; color: white;">تسجيل الخروج</button>
+  <div id="loginForm">
+    <h2>تسجيل دخول الأدمن</h2>
+    <div id="errorMsg"></div>
+    <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="off" />
+    <input type="password" id="password" placeholder="كلمة السر" autocomplete="off" />
+    <div id="roleDisplay"></div>
+    <button onclick="login()">دخول</button>
+    <button id="accessButton" onclick="goToPage()">الذهاب للوحة الخاصة بك</button>
   </div>
-</div>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-    authDomain: "sheko-store.firebaseapp.com",
-    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-    projectId: "sheko-store",
-    storageBucket: "sheko-store.appspot.com",
-    messagingSenderId: "113892775847",
-    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-  const usernameInput = document.getElementById('usernameInput');
-  const passwordInput = document.getElementById('passwordInput');
-  const errorMsg = document.getElementById('errorMsg');
-  const adminPanel = document.getElementById('adminPanel');
-  const welcomeTitle = document.getElementById('welcomeTitle');
-  const buttonsContainer = document.getElementById('buttonsContainer');
+    let redirectPage = "";
 
-  const pages = {
-    "أدمن فريق الدعم": { text: "إدارة الدعم والشكاوى", link: "admin_support.html" },
-    "أدمن الدردشة": { text: "دردشة الإدارة", link: "admin-chat.html" },
-    "أدمن عجلة الحظ": { text: "إدارة عجلة الحظ", link: "wheel_admin.html" },
-    "أدمن التصويت": { text: "إدارة التصويت", link: "admin_vote.html" },
-    "أدمن الموقع والمؤسس": [
-      { text: "إدارة الدعم والشكاوى", link: "admin_support.html" },
-      { text: "دردشة الإدارة", link: "admin-chat.html" },
-      { text: "لوحة الإدارة الرئيسية", link: "admin.html" },
-      { text: "إدارة التصويت", link: "admin_vote.html" },
-      { text: "إدارة عجلة الحظ", link: "wheel_admin.html" },
-      { text: "إدارة الإعلانات", link: "announcement.html" },
-      { text: "إضافة أدمن إلى الموقع", link: "add-admin-site.html" }
-    ]
-  };
+    function login() {
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const errorMsg = document.getElementById('errorMsg');
+      const roleDisplay = document.getElementById('roleDisplay');
+      const accessButton = document.getElementById('accessButton');
 
-  function login() {
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value.trim();
+      errorMsg.textContent = "";
+      roleDisplay.textContent = "";
+      accessButton.style.display = "none";
 
-    if (!username || !password) {
-      errorMsg.textContent = "يرجى إدخال اسم المستخدم وكلمة المرور";
-      return;
-    }
+      if (!username || !password) {
+        errorMsg.textContent = "يرجى إدخال اسم المستخدم وكلمة السر";
+        return;
+      }
 
-    db.ref("admins").once("value", snapshot => {
-      const admins = snapshot.val();
-      let found = false;
+      db.ref('admins').once('value', snapshot => {
+        const admins = snapshot.val();
+        let found = false;
 
-      for (let id in admins) {
-        const admin = admins[id];
-        if (admin.name === username && admin.password === password) {
-          found = true;
-          renderPanel(admin.role, admin.name);
-          break;
+        for (let id in admins) {
+          const admin = admins[id];
+          if (admin.name === username && admin.password === password) {
+            found = true;
+            const role = admin.role?.trim() || "غير محدد";
+
+            roleDisplay.textContent = `✅ أنت ${role}`;
+            redirectPage = getPageForRole(role);
+            if (redirectPage) {
+              accessButton.style.display = "inline-block";
+            } else {
+              errorMsg.textContent = "❌ لا يوجد صلاحيات لهذا الأدمن.";
+            }
+            break;
+          }
         }
-      }
 
-      if (!found) {
-        errorMsg.textContent = "اسم المستخدم أو كلمة المرور غير صحيحة";
-      }
-    });
-  }
-
-  function renderPanel(role, name) {
-    usernameInput.style.display = "none";
-    passwordInput.style.display = "none";
-    document.querySelector("button").style.display = "none";
-    errorMsg.style.display = "none";
-
-    adminPanel.style.display = "block";
-    welcomeTitle.textContent = `مرحبًا ${name} - ${role}`;
-    buttonsContainer.innerHTML = "";
-
-    const roleButton = pages[role];
-
-    if (Array.isArray(roleButton)) {
-      roleButton.forEach(btnData => {
-        const btn = document.createElement("button");
-        btn.textContent = btnData.text;
-        btn.onclick = () => window.open(btnData.link, "_blank");
-        buttonsContainer.appendChild(btn);
+        if (!found) {
+          errorMsg.textContent = "❌ اسم المستخدم أو كلمة المرور غير صحيحة.";
+        }
       });
-    } else if (roleButton) {
-      const btn = document.createElement("button");
-      btn.textContent = roleButton.text;
-      btn.onclick = () => window.open(roleButton.link, "_blank");
-      buttonsContainer.appendChild(btn);
-    } else {
-      const msg = document.createElement("p");
-      msg.textContent = "لا توجد صلاحيات متاحة لهذا المستخدم.";
-      msg.style.color = "gray";
-      buttonsContainer.appendChild(msg);
     }
-  }
 
-  function logout() {
-    location.reload();
-  }
-</script>
+    function getPageForRole(role) {
+      switch (role) {
+        case "أدمن فريق الدعم":
+          return "admin_support.html";
+        case "أدمن الدردشة":
+          return "admin-chat.html";
+        case "أدمن عجلة الحظ":
+          return "wheel_admin.html";
+        case "أدمن التصويت":
+          return "admin_vote.html";
+        case "أدمن الموقع والمؤسس":
+          return "admin.html"; // أو صفحة كاملة للمؤسس
+        default:
+          return "";
+      }
+    }
+
+    function goToPage() {
+      if (redirectPage) {
+        window.location.href = redirectPage;
+      }
+    }
+  </script>
 
 </body>
 </html>
