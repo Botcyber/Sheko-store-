@@ -96,7 +96,7 @@
       color: #cc8400;
     }
     .hidden {
-      display: none;
+      display: none !important;
     }
     .history {
       background: #fff;
@@ -169,7 +169,62 @@
       letter-spacing: 0.8px;
       font-family: 'Cairo', sans-serif;
     }
+
+    /* === كود التنبيهات المخصصة === */
+    #customAlert {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #333;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+      font-family: 'Cairo', sans-serif;
+      font-weight: 700;
+      font-size: 17px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 9999;
+      user-select: none;
+      max-width: 90%;
+      cursor: pointer;
+    }
+    #customAlert.hidden {
+      display: none !important;
+    }
+    #customAlert.success-alert {
+      background-color: #28a745 !important;
+      color: white !important;
+    }
+    #customAlert.error-alert {
+      background-color: #dc3545 !important;
+      color: white !important;
+    }
+    #customAlert.info-alert {
+      background-color: #007bff !important;
+      color: white !important;
+    }
+    #customAlert i {
+      font-size: 22px;
+    }
+    #alertCloseBtn {
+      background: transparent;
+      border: none;
+      color: white;
+      font-weight: 900;
+      font-size: 18px;
+      margin-left: auto;
+      cursor: pointer;
+      user-select: none;
+    }
   </style>
+
+  <!-- مكتبة FontAwesome للأيقونات -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+
 </head>
 <body>
 
@@ -200,6 +255,13 @@
 <div class="history">
   <h3>سجل تحويلاتك</h3>
   <div id="topupHistory">جاري التحميل...</div>
+</div>
+
+<!-- نافذة التنبيه المخصصة -->
+<div id="customAlert" class="hidden">
+  <i id="alertIcon" class="fa fa-info-circle"></i>
+  <span id="alertMsg"></span>
+  <button id="alertCloseBtn">حسناً</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -247,18 +309,51 @@
     loadTopupHistory();
   });
 
+  // دالة التنبيه المخصص
+  function showCustomAlert(message, type = "info") {
+    const alertBox = document.getElementById("customAlert");
+    const alertMsg = document.getElementById("alertMsg");
+    const alertIcon = document.getElementById("alertIcon");
+    const closeBtn = document.getElementById("alertCloseBtn");
+
+    alertMsg.textContent = message;
+
+    alertBox.className = ""; // إعادة تعيين الكلاسات
+    alertBox.classList.add(type + "-alert");
+
+    alertIcon.className = "fa"; // إعادة تعيين أيقونة التنبيه
+    if(type === "success") alertIcon.classList.add("fa-check-circle");
+    else if(type === "error") alertIcon.classList.add("fa-times-circle");
+    else alertIcon.classList.add("fa-info-circle");
+
+    alertBox.classList.remove("hidden");
+
+    function hideAlert() {
+      alertBox.classList.add("hidden");
+      closeBtn.removeEventListener("click", hideAlert);
+    }
+    closeBtn.addEventListener("click", hideAlert);
+
+    // إخفاء تلقائي بعد 4 ثواني
+    setTimeout(() => {
+      if(!alertBox.classList.contains("hidden")){
+        hideAlert();
+      }
+    }, 4000);
+  }
+
   function submitTopup() {
     const method = methodEl.value;
     const sender = senderEl.value.trim();
     const amount = parseFloat(amountEl.value);
 
     if (!method || !sender || isNaN(amount) || amount <= 0) {
-      alert("يرجى ملء جميع الحقول بشكل صحيح");
+      showCustomAlert("يرجى ملء جميع الحقول بشكل صحيح", "error");
       return;
     }
 
     if (!currentUser) {
-      alert("يجب تسجيل الدخول أولاً");
+      showCustomAlert("يجب تسجيل الدخول أولاً", "error");
       return;
     }
 
@@ -277,7 +372,7 @@
     updates['/transactions/' + newTopupKey] = topupData;
 
     db.ref().update(updates).then(() => {
-      alert("تم إرسال طلب إضافة الأموال بنجاح");
+      showCustomAlert("تم إرسال طلب إضافة الأموال بنجاح", "success");
       senderEl.value = "";
       amountEl.value = "";
       methodEl.value = "";
@@ -286,7 +381,7 @@
       loadTopupHistory();
     }).catch((error) => {
       console.error("خطأ في الإرسال:", error);
-      alert("حدث خطأ أثناء الإرسال: " + error.message);
+      showCustomAlert("حدث خطأ أثناء الإرسال: " + error.message, "error");
     });
   }
 
