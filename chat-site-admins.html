@@ -519,143 +519,132 @@
     });
   }
 
-  // تفاعل مستخدم مع رسالة (تم حفظه محليًا)
+  // التحقق هل المستخدم تفاعل مسبقًا مع الرسالة
   function hasReacted(msgId, reactionType) {
-    return localStorage.getItem(msgId + '_' + reactionType) === 'true';
+    return localStorage.getItem(`${msgId}_${reactionType}`) === 'true';
   }
+
+  // تعيين أن المستخدم تفاعل مع الرسالة
   function setReacted(msgId, reactionType) {
-    localStorage.setItem(msgId + '_' + reactionType, 'true');
+    localStorage.setItem(`${msgId}_${reactionType}`, 'true');
   }
-  function reactToMessage(msgId, reaction) {
-    const reactionsRef = db.ref(`adminChatMessages/${msgId}/reactions`);
-    reactionsRef.transaction(current => {
-      if (current === null) current = {};
-      if (!current[reaction]) current[reaction] = 0;
-      current[reaction]++;
-      return current;
+
+  // إضافة تفاعل إلى الرسالة في قاعدة البيانات
+  function reactToMessage(msgId, reactionType) {
+    const reactionRef = db.ref(`adminChatMessages/${msgId}/reactions/${reactionType}`);
+    reactionRef.transaction(current => (current || 0) + 1);
+  }
+
+  // تحميل الرسائل بشكل مباشر مع الاستماع للتحديثات الحية
+  db.ref('adminChatMessages').on('value', snapshot => {
+    const data = snapshot.val() || {};
+    renderMessages(data);
+  });
+
+  // تحميل قائمة الأدمن المتصلين
+  function loadAdmins() {
+    db.ref('admins').once('value').then(snapshot => {
+      const admins = snapshot.val() || {};
+      adminList.innerHTML = '';
+      Object.keys(admins).forEach(uid => {
+        const admin = admins[uid];
+        const li = document.createElement('li');
+        li.textContent = admin.name || 'غير معروف';
+        const dot = document.createElement('span');
+        dot.classList.add('status-dot');
+        if(admin.online) {
+          dot.classList.add('online');
+        } else {
+          dot.classList.add('offline');
+        }
+        li.prepend(dot);
+        adminList.appendChild(li);
+      });
     });
   }
 
-  // تحميل الرسائل من Firebase
-  function loadMessages() {
-    db.ref('adminChatMessages').on('value', snapshot => {
-      const msgsObj = snapshot.val() || {};
-      const messages = {};
-      Object.entries(msgsObj).forEach(([key, val]) => {
-        let reactionText = '';
-        if (val.reactions) {
-          if (val.reactions.like) reactionText += ` 👍${val.reactions.like}`;
-          if (val.reactions.love) reactionText += ` ♥️${val.reactions.love}`;
-        }
-        messages[key] = {
-          sender: val.sender,
-          text: val.text + reactionText,
-          timestamp: val.timestamp
-        };
-      });
-      renderMessages(messages);
-    });
+  // تحديث حالة الأدمن عند الدخول والخروج
+  function updateAdminStatus(online) {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+
+    const adminRef = db.ref(`admins/${user.uid}`);
+    adminRef.update({ online });
+
+    // إزالة الحالة عند قطع الاتصال
+    if (online) {
+      adminRef.onDisconnect().update({ online: false });
+    }
   }
+
+  // تسجيل الدخول تلقائيًا للأدمن (أو يمكن تعديل طريقة الدخول هنا)
+  firebase.auth().signInAnonymously()
+  .then(() => {
+    const user = firebase.auth().currentUser;
+    if(user) {
+      localStorage.setItem('adminName', `Admin-${user.uid.substring(0,5)}`);
+      adminName = localStorage.getItem('adminName');
+      updateAdminStatus(true);
+      loadAdmins();
+    }
+  })
+  .catch(error => {
+    console.error('خطأ في تسجيل الدخول:', error);
+  });
 
   // إرسال رسالة جديدة
   sendBtn.onclick = () => {
     const text = replyInput.value.trim();
     if (!text) return alert('الرجاء كتابة رسالة');
-    const newMsgRef = db.ref('adminChatMessages').push();
-    newMsgRef.set({
-      sender: adminName,
-      text: text,
-      timestamp: Date.now(),
-      reactions: {}
-    });
-    replyInput.value = '';
-  };
 
-  // إرسال رد على رسالة
-  sendReplyBtn.onclick = () => {
-    const replyContent = replyText.value.trim();
-    if (!replyContent) return alert('الرجاء كتابة الرد');
-    if (!replyingToMsgId) return alert('لا توجد رسالة محددة للرد عليها');
-    
-    const fullText = `رد على: "${replyingToMsgText}"\n${replyContent}`;
-    const newMsgRef = db.ref('adminChatMessages').push();
-    newMsgRef.set({
+    const msg = {
       sender: adminName,
-      text: fullText,
+      text,
       timestamp: Date.now(),
       reactions: {}
-    });
-    replyModal.style.display = 'none';
-    replyingToMsgId = null;
-    replyingToMsgText = '';
-    replyText.value = '';
+    };
+
+    db.ref('adminChatMessages').push(msg);
+    replyInput.value = '';
   };
 
   // إغلاق نافذة الرد
   cancelReply.onclick = () => {
-    replyModal.style.display = 'none';
     replyingToMsgId = null;
     replyingToMsgText = '';
-    replyText.value = '';
+    replyModal.style.display = 'none';
   };
 
-  // *** الجزء الخاص بالقائمة الجانبية - قائمة الأدمن ***
+  // إرسال رد على رسالة
+  sendReplyBtn.onclick = () => {
+    const reply = replyText.value.trim();
+    if (!reply) return alert('الرجاء كتابة الرد');
 
-  // تحديث قائمة الأدمن المتصلين
-  function updateAdminList(admins) {
-    adminList.innerHTML = ''; // امسح القديم أولاً
-
-    if (!admins || Object.keys(admins).length === 0) {
-      adminList.innerHTML = '<li>لا يوجد آدمن متصل حاليًا</li>';
+    if (!replyingToMsgId) {
+      alert('لم يتم تحديد رسالة للرد عليها');
       return;
     }
 
-    Object.entries(admins).forEach(([adminId, adminData]) => {
-      // adminData = { name: "الاسم", online: true/false }
+    const replyMsg = {
+      sender: adminName,
+      text: `رد على: "${replyingToMsgText}"\n${reply}`,
+      timestamp: Date.now(),
+      reactions: {}
+    };
 
-      const li = document.createElement('li');
+    db.ref('adminChatMessages').push(replyMsg);
+    replyText.value = '';
+    replyInfo.textContent = '';
+    replyModal.style.display = 'none';
+    replyingToMsgId = null;
+    replyingToMsgText = '';
+  };
 
-      // الدائرة مع اللون حسب الحالة
-      const dot = document.createElement('span');
-      dot.classList.add('status-dot');
-      if(adminData.online) {
-        dot.classList.add('online');
-      } else {
-        dot.classList.add('offline');
-      }
+  // تحديث قائمة الأدمن كل 30 ثانية (لتحديث حالة الاتصال)
+  setInterval(() => {
+    loadAdmins();
+  }, 30000);
 
-      li.textContent = adminData.name;
-      li.prepend(dot); // الدائرة قبل الاسم (في اليمين بسبب RTL)
-
-      adminList.appendChild(li);
-    });
-  }
-
-  // جلب بيانات الأدمن المتصلين من Firebase (مثال بسيط)
-  function listenToAdminsStatus() {
-    // نفترض أن بيانات الأدمن محفوظة في المسار: adminStatus
-    // كل مدخل: adminStatus/{adminId} = { name: "اسم", online: true/false }
-
-    db.ref('adminStatus').on('value', snapshot => {
-      const admins = snapshot.val();
-      updateAdminList(admins);
-    });
-  }
-
-  // إذا لم يكن اسم الأدمن محفوظًا نسأله
-  if (!localStorage.getItem('adminName')) {
-    let name = prompt('ادخل اسم الادمن الخاص بك:', 'sheko');
-    if (!name) name = 'Admin';
-    localStorage.setItem('adminName', name);
-    adminName = name;
-  }
-
-  // تحميل الرسائل عند فتح الصفحة
-  loadMessages();
-
-  // استمع لتغييرات حالة الأدمن
-  listenToAdminsStatus();
-
-</script>
+  </script>
 </body>
-</html>  
+</html>
