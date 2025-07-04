@@ -2,8 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>تسجيل دخول المؤسس - Sheko Store</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>تسجيل دخول الأدمن - Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     body {
@@ -14,106 +14,114 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
-      direction: rtl;
     }
+
     #loginBox {
       background: white;
       padding: 30px 40px;
       border-radius: 12px;
       box-shadow: 0 0 15px rgba(0,0,0,0.1);
-      width: 320px;
+      width: 350px;
       text-align: center;
     }
+
     #loginBox h2 {
-      margin-bottom: 25px;
+      margin-bottom: 20px;
       color: #222;
     }
+
     input {
       width: 100%;
-      padding: 12px 15px;
-      margin: 10px 0 20px;
+      padding: 12px;
+      margin-bottom: 15px;
       border: 1px solid #ccc;
       border-radius: 8px;
       font-size: 16px;
       box-sizing: border-box;
-      outline: none;
-      transition: border-color 0.3s;
     }
-    input:focus {
-      border-color: #ffb700;
-    }
+
     button {
       width: 100%;
-      padding: 12px 15px;
+      padding: 12px;
       background: #222;
       color: white;
       font-size: 18px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      transition: background 0.3s;
       font-weight: bold;
     }
+
     button:hover {
       background: #ffb700;
       color: #222;
     }
+
     #errorMsg {
       color: red;
-      margin-top: 15px;
+      margin-bottom: 15px;
       min-height: 20px;
     }
+
     #adminPanel {
       display: none;
-      text-align: center;
     }
-    #adminPanel h3 {
-      margin-bottom: 20px;
-      color: #222;
-    }
-    .admin-btn {
-      margin: 8px;
-      padding: 12px 20px;
+
+    .panel-button {
+      margin: 6px 0;
+      padding: 10px;
+      width: 100%;
+      border-radius: 6px;
       font-size: 16px;
-      border-radius: 8px;
+      font-weight: bold;
       background: #ffb700;
       border: none;
-      cursor: pointer;
       color: #222;
-      font-weight: bold;
-      min-width: 180px;
+      cursor: pointer;
+      transition: background 0.3s;
     }
-    .admin-btn.locked {
-      background: #ccc;
-      color: #888;
-      cursor: not-allowed;
+
+    .panel-button:hover {
+      background: #e6a700;
     }
+
+    .locked {
+      background: #ccc !important;
+      color: #777 !important;
+      cursor: not-allowed !important;
+    }
+
     #logoutBtn {
-      background:#f44336;
-      color:white;
-      margin-top: 20px;
+      background: #f44336;
+      color: white;
+    }
+
+    #welcomeText {
+      margin: 15px 0;
+      font-weight: bold;
+      color: #222;
     }
   </style>
 </head>
 <body>
 
   <div id="loginBox">
-    <h2>تسجيل دخول المؤسس / الأدمن</h2>
-    <input type="text" id="nameInput" placeholder="الاسم" />
-    <input type="password" id="passInput" placeholder="كلمة المرور" />
-    <button id="loginBtn">دخول</button>
+    <h2>تسجيل دخول الأدمن</h2>
+    <input type="text" id="nameInput" placeholder="اسم الأدمن">
+    <input type="password" id="passInput" placeholder="كلمة المرور">
     <div id="errorMsg"></div>
+    <button id="loginBtn">دخول</button>
 
     <div id="adminPanel">
-      <h3 id="welcomeText">مرحبًا بك في لوحة الإدارة</h3>
-      <button class="admin-btn" id="btn-support" onclick="openPage('admin_support.html')">إدارة الدعم والشكاوى</button>
-      <button class="admin-btn" id="btn-chat" onclick="openPage('admin-chat.html')">دردشة الإدارة</button>
-      <button class="admin-btn" id="btn-main" onclick="openPage('admin.html')">لوحة الإدارة الرئيسية</button>
-      <button class="admin-btn" id="btn-vote" onclick="openPage('admin_vote.html')">إدارة التصويت</button>
-      <button class="admin-btn" id="btn-wheel" onclick="openPage('wheel_admin.html')">إدارة عجلة الحظ</button>
-      <button class="admin-btn" id="btn-ann" onclick="openPage('announcement.html')">إدارة الإعلانات</button>
-      <button class="admin-btn" id="btn-addadmin" onclick="openPage('add-admin-site.html')">إضافة أدمن</button>
-      <button class="admin-btn" id="logoutBtn">تسجيل الخروج</button>
+      <div id="welcomeText"></div>
+      <button class="panel-button" id="supportBtn" onclick="openPage('admin_support.html')">إدارة الدعم والشكاوى</button>
+      <button class="panel-button" id="chatBtn" onclick="openPage('admin-chat.html')">دردشة الإدارة</button>
+      <button class="panel-button" id="mainAdminBtn" onclick="openPage('admin.html')">لوحة الإدارة الرئيسية</button>
+      <button class="panel-button" id="voteBtn" onclick="openPage('admin_vote.html')">إدارة التصويت</button>
+      <button class="panel-button" id="wheelBtn" onclick="openPage('wheel_admin.html')">إدارة عجلة الحظ</button>
+      <button class="panel-button" id="annBtn" onclick="openPage('announcement.html')">إدارة الإعلانات</button>
+      <button class="panel-button" id="addAdminBtn" onclick="openPage('add-admin-site.html')">إضافة أدمن للموقع</button>
+      <button class="panel-button" id="logoutBtn">تسجيل الخروج</button>
     </div>
   </div>
 
@@ -138,73 +146,80 @@
     const errorMsg = document.getElementById('errorMsg');
     const adminPanel = document.getElementById('adminPanel');
     const welcomeText = document.getElementById('welcomeText');
+    const logoutBtn = document.getElementById('logoutBtn');
 
     const buttons = {
-      "فريق الدعم": "btn-support",
-      "الدردشة": "btn-chat",
-      "الرئيسية": "btn-main",
-      "التصويت": "btn-vote",
-      "عجلة الحظ": "btn-wheel",
-      "الإعلانات": "btn-ann",
-      "الموقع والمؤسس": "btn-addadmin"
+      "فريق الدعم": "supportBtn",
+      "الدردشة": "chatBtn",
+      "الرئيسية": "mainAdminBtn",
+      "التصويت": "voteBtn",
+      "عجلة الحظ": "wheelBtn",
+      "الإعلانات": "annBtn",
+      "الموقع والمؤسس": "addAdminBtn"
     };
 
-    loginBtn.addEventListener('click', () => {
+    loginBtn.onclick = () => {
       const name = nameInput.value.trim();
       const pass = passInput.value.trim();
+
       if (!name || !pass) {
         errorMsg.textContent = "يرجى إدخال الاسم وكلمة المرور";
         return;
       }
 
-      if (name === "shehabh441@gmail.com" && pass === "AdminPassword") {
-        showPanel("الموقع والمؤسس");
-        return;
-      }
-
-      db.ref('admins').once('value').then(snapshot => {
-        const data = snapshot.val();
+      db.ref("admins").once("value").then(snapshot => {
+        const admins = snapshot.val();
         let found = false;
-        for (let id in data) {
-          if (data[id].name === name && data[id].password === pass) {
-            showPanel(data[id].role);
+        for (let id in admins) {
+          const admin = admins[id];
+          if (admin.name === name && admin.password === pass) {
             found = true;
+            showPanel(admin.role);
             break;
           }
         }
+
         if (!found) {
-          errorMsg.textContent = "البيانات غير صحيحة";
+          errorMsg.textContent = "اسم المستخدم أو كلمة السر غير صحيحة";
         }
       });
-    });
+    };
 
     function showPanel(role) {
-      document.getElementById('loginBtn').style.display = 'none';
-      document.getElementById('nameInput').style.display = 'none';
-      document.getElementById('passInput').style.display = 'none';
-      errorMsg.style.display = 'none';
+      nameInput.style.display = "none";
+      passInput.style.display = "none";
+      loginBtn.style.display = "none";
+      errorMsg.style.display = "none";
 
-      welcomeText.textContent = `مرحبًا، ${role.startsWith("أدمن") ? role : "أدمن " + role}`;
-      adminPanel.style.display = 'block';
+      welcomeText.textContent = `مرحبًا، ${role === "الموقع والمؤسس" ? "أدمن الموقع والمؤسس" : "أنت أدمن " + role}`;
+      adminPanel.style.display = "block";
 
-      // قفل الأزرار الأخرى
-      for (let key in buttons) {
-        const btn = document.getElementById(buttons[key]);
-        if (key !== role && role !== "الموقع والمؤسس") {
-          btn.classList.add('locked');
-          btn.disabled = true;
-          btn.removeAttribute('onclick');
+      if (role === "الموقع والمؤسس") {
+        // فتح جميع الأزرار
+        for (let key in buttons) {
+          const btn = document.getElementById(buttons[key]);
+          btn.classList.remove("locked");
+          btn.disabled = false;
+          btn.setAttribute("onclick", `openPage('${btn.getAttribute("onclick").split("'")[1]}')`);
+        }
+      } else {
+        // قفل كل شيء عدا الزر الخاص به
+        for (let key in buttons) {
+          const btn = document.getElementById(buttons[key]);
+          if (key !== role) {
+            btn.classList.add("locked");
+            btn.disabled = true;
+            btn.removeAttribute("onclick");
+          }
         }
       }
     }
 
-    function openPage(url) {
-      window.open(url, '_blank');
-    }
+    logoutBtn.onclick = () => location.reload();
 
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      location.reload();
-    });
+    function openPage(url) {
+      window.open(url, "_blank");
+    }
   </script>
 </body>
 </html>
