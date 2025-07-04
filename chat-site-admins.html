@@ -35,7 +35,7 @@
       border-radius: 8px;
       margin: 10px;
       box-shadow: 0 0 15px #ffb700aa;
-      height: 100%;
+      height: calc(100vh - 150px); /* تم التعديل هنا */
     }
     #messages {
       flex-grow: 1;
@@ -50,6 +50,7 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
+      max-height: calc(100vh - 250px); /* تم التعديل هنا */
     }
     #messages::-webkit-scrollbar {
       width: 8px;
@@ -93,7 +94,7 @@
     }
     .sender-name {
       font-weight: bold;
-      display: block; 
+      display: block;
       margin-bottom: 5px;
       position: relative;
       padding: 3px 12px;
@@ -127,7 +128,7 @@
       gap: 10px;
       align-items: center;
       margin-top: 0;
-      margin-bottom: 10px; 
+      margin-bottom: 10px;
     }
     #replyInput {
       flex-grow: 1;
@@ -159,7 +160,7 @@
       justify-content: center;
       font-size: 18px;
       margin-bottom: 0;
-      margin-top: -6px; 
+      margin-top: -6px;
     }
     #sendBtn:hover {
       background: #ffaa00;
@@ -198,7 +199,6 @@
     .reactions span:hover {
       transform: scale(1.2);
     }
-    /* نافذة الرد المنبثقة */
     #replyModal {
       position: fixed;
       top: 50%; left: 50%;
@@ -263,6 +263,7 @@
     }
   </style>
 </head>
+
 <body>
 
 <header>دردشة إدارة الموقع</header>
@@ -524,4 +525,4 @@
 </script>
 
 </body>
-</html>
+</html>  
