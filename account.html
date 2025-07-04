@@ -5,7 +5,7 @@
   <title>حسابي - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet" />
-
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
     body {
       font-family: 'Cairo', sans-serif;
@@ -139,13 +139,72 @@
       background: #b02a37;
       box-shadow: 0 0 12px #b02a37cc;
     }
+
+    /* التنبيه المخصص */
+    .custom-alert {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #007bff;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 123, 255, 0.5);
+      font-weight: bold;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 9999;
+      min-width: 280px;
+      max-width: 90vw;
+      animation: slideUp 0.5s ease forwards;
+      user-select: none;
+    }
+    .custom-alert.hidden {
+      display: none;
+    }
+    .custom-alert i {
+      font-size: 22px;
+    }
+    .custom-alert.success {
+      background: #28a745;
+      box-shadow: 0 8px 20px rgba(40, 167, 69, 0.5);
+    }
+    .custom-alert.error {
+      background: #dc3545;
+      box-shadow: 0 8px 20px rgba(220, 53, 69, 0.5);
+    }
+    .custom-alert.info {
+      background: #007bff;
+      box-shadow: 0 8px 20px rgba(0, 123, 255, 0.5);
+    }
+    #alertCloseBtn {
+      background: transparent;
+      border: 2px solid white;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    #alertCloseBtn:hover {
+      background-color: white;
+      color: #007bff;
+    }
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translate(-50%, 40px);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+    }
   </style>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
 </head>
 <body>
 
@@ -184,6 +243,19 @@
     <button class="btn-red" id="btnDeleteAccount">🗑️ حذف الحساب نهائيًا</button>
   </div>
 
+  <!-- نافذة التنبيه المخصصة -->
+  <div id="customAlert" class="custom-alert hidden">
+    <div class="alert-content">
+      <i id="alertIcon" class="fa fa-info-circle"></i>
+      <span id="alertMessage">نص التنبيه هنا</span>
+    </div>
+    <button id="alertCloseBtn">حسناً</button>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
   <script>
     // إعداد Firebase
     const firebaseConfig = {
@@ -200,112 +272,149 @@
     const auth = firebase.auth();
     const db = firebase.database();
 
-    // تحميل بيانات المستخدم وعرضها
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        const uid = user.uid;
-        document.getElementById("email").textContent = user.email;
+    // دالة عرض التنبيه المخصص
+    function showCustomAlert(message, type = "info") {
+      const alertBox = document.getElementById("customAlert");
+      const alertMessage = document.getElementById("alertMessage");
+      const alertIcon = document.getElementById("alertIcon");
+      const closeBtn = document.getElementById("alertCloseBtn");
 
-        db.ref("users/" + uid + "/profileImage").once("value").then(snap => {
-          if (snap.exists()) {
-            document.getElementById("profileImage").src = snap.val();
-          }
-        });
+      alertMessage.textContent = message;
 
-        db.ref("users/" + uid + "/username").once("value").then(snap => {
-          document.getElementById("username").textContent = snap.val() || "لم يتم التعيين بعد";
-        });
+      alertBox.classList.remove("success", "error", "info");
+      alertBox.classList.add(type);
 
-        db.ref("users/" + uid + "/balance").on("value", snap => {
-          document.getElementById("balance").textContent = `${snap.val() || 0} جنيه`;
-        });
-
-        db.ref("users/" + uid + "/points").on("value", snap => {
-          document.getElementById("points").textContent = `${snap.val() || 0} نقطة`;
-        });
-
-      } else {
-        location.href = "index.html";
-      }
-    });
-
-    // دالة تعيين اسم المستخدم مع التحقق من الإيموجي ✅
-    function setUsername() {
-      const username = document.getElementById("newUsername").value.trim();
-      const user = auth.currentUser;
-      if (!user) {
-        alert("❌ يجب تسجيل الدخول أولاً");
-        return;
-      }
-      const uid = user.uid;
-
-      if (username.includes("✅") && uid !== "mlifDgEAkKMaOeuUq63cs5NAkV93") {
-        alert("❌ لا يمكنك استخدام الإيموجي ✅ في اسم المستخدم إلا إذا كان حسابك موثقاً.");
-        return;
-      }
-      if (username.length < 2) {
-        alert("❌ أدخل اسم مستخدم صحيح");
-        return;
-      }
-
-      db.ref("users/" + uid + "/username").set(username)
-        .then(() => {
-          document.getElementById("username").textContent = username;
-          alert("✅ تم تحديث اسم المستخدم");
-          document.getElementById("newUsername").value = "";
-        })
-        .catch(err => {
-          alert("❌ حدث خطأ أثناء تحديث اسم المستخدم: " + err.message);
-        });
+      alertIcon.className = "fa";
+      if (type === "success") {
+        alertIcon.classList.add("fa-check-circle");
+    } else if (type === "error") {
+      alertIcon.classList.add("fa-times-circle");
+    } else {
+      alertIcon.classList.add("fa-info-circle");
     }
 
-    // دالة حذف الحساب
-    function deleteAccount() {
-      if (!confirm("هل أنت متأكد أنك تريد حذف الحساب نهائيًا؟")) return;
+    alertBox.classList.remove("hidden");
 
-      const user = auth.currentUser;
-      if (!user) {
-        alert("❌ يجب تسجيل الدخول أولاً");
-        return;
-      }
-      const uid = user.uid;
-
-      db.ref("users/" + uid).remove()
-        .then(() => user.delete())
-        .then(() => {
-          alert("✅ تم حذف الحساب نهائيًا.");
-          location.href = "index.html";
-        })
-        .catch(err => {
-          alert("❌ حدث خطأ أثناء حذف الحساب: " + err.message);
-        });
+    function hideAlert() {
+      alertBox.classList.add("hidden");
+      closeBtn.removeEventListener("click", hideAlert);
     }
+    closeBtn.addEventListener("click", hideAlert);
 
-    // رفع الصورة وتخزينها
-    document.getElementById("profileImageInput").addEventListener("change", function(event) {
-      const file = event.target.files[0];
-      if (!file) return;
+    // إخفاء تلقائي بعد 4 ثواني
+    setTimeout(() => {
+      if (!alertBox.classList.contains("hidden")) {
+        hideAlert();
+      }
+    }, 4000);
+  }
 
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const base64Image = e.target.result;
-        document.getElementById("profileImage").src = base64Image;
+  // تحميل بيانات المستخدم وعرضها
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      const uid = user.uid;
+      document.getElementById("email").textContent = user.email;
 
-        const user = auth.currentUser;
-        if (user) {
-          db.ref("users/" + user.uid + "/profileImage").set(base64Image)
-            .then(() => console.log("✅ تم حفظ الصورة"))
-            .catch(err => alert("❌ فشل حفظ الصورة: " + err.message));
+      db.ref("users/" + uid + "/profileImage").once("value").then(snap => {
+        if (snap.exists()) {
+          document.getElementById("profileImage").src = snap.val();
         }
-      };
-      reader.readAsDataURL(file);
-    });
+      });
 
-    // ربط الأزرار بعد تحميل الصفحة (لتجنب مشاكل الـ onclick)
-    window.addEventListener("load", () => {
-      document.getElementById("btnSetUsername").addEventListener("click", setUsername);
-      document.getElementById("btnDeleteAccount").addEventListener("click", deleteAccount);
-    });
+      db.ref("users/" + uid + "/username").once("value").then(snap => {
+        document.getElementById("username").textContent = snap.val() || "لم يتم التعيين بعد";
+      });
+
+      db.ref("users/" + uid + "/balance").on("value", snap => {
+        document.getElementById("balance").textContent = `${snap.val() || 0} جنيه`;
+      });
+
+      db.ref("users/" + uid + "/points").on("value", snap => {
+        document.getElementById("points").textContent = `${snap.val() || 0} نقطة`;
+      });
+
+    } else {
+      location.href = "index.html";
+    }
+  });
+
+  // دالة تعيين اسم المستخدم مع التحقق من الإيموجي ✅
+  function setUsername() {
+    const username = document.getElementById("newUsername").value.trim();
+    const user = auth.currentUser;
+    if (!user) {
+      showCustomAlert("❌ يجب تسجيل الدخول أولاً", "error");
+      return;
+    }
+    const uid = user.uid;
+
+    if (username.includes("✅") && uid !== "mlifDgEAkKMaOeuUq63cs5NAkV93") {
+      showCustomAlert("❌ لا يمكنك استخدام الإيموجي ✅ في اسم المستخدم إلا إذا كان حسابك موثقاً.", "error");
+      return;
+    }
+    if (username.length < 2) {
+      showCustomAlert("❌ أدخل اسم مستخدم صحيح", "error");
+      return;
+    }
+
+    db.ref("users/" + uid + "/username").set(username)
+      .then(() => {
+        document.getElementById("username").textContent = username;
+        showCustomAlert("✅ تم تحديث اسم المستخدم", "success");
+        document.getElementById("newUsername").value = "";
+      })
+      .catch(err => {
+        showCustomAlert("❌ حدث خطأ أثناء تحديث اسم المستخدم: " + err.message, "error");
+      });
+  }
+
+  // دالة حذف الحساب
+  function deleteAccount() {
+    if (!confirm("هل أنت متأكد أنك تريد حذف الحساب نهائيًا؟")) return;
+
+    const user = auth.currentUser;
+    if (!user) {
+      showCustomAlert("❌ يجب تسجيل الدخول أولاً", "error");
+      return;
+    }
+    const uid = user.uid;
+
+    db.ref("users/" + uid).remove()
+      .then(() => user.delete())
+      .then(() => {
+        showCustomAlert("✅ تم حذف الحساب نهائيًا.", "success");
+        location.href = "index.html";
+      })
+      .catch(err => {
+        showCustomAlert("❌ حدث خطأ أثناء حذف الحساب: " + err.message, "error");
+      });
+  }
+
+  // رفع الصورة وتخزينها
+  document.getElementById("profileImageInput").addEventListener("change", function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const base64Image = e.target.result;
+      document.getElementById("profileImage").src = base64Image;
+
+      const user = auth.currentUser;
+      if (user) {
+        db.ref("users/" + user.uid + "/profileImage").set(base64Image)
+          .then(() => showCustomAlert("✅ تم حفظ الصورة", "success"))
+          .catch(err => showCustomAlert("❌ فشل حفظ الصورة: " + err.message, "error"));
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // ربط الأزرار بعد تحميل الصفحة (لتجنب مشاكل الـ onclick)
+  window.addEventListener("load", () => {
+    document.getElementById("btnSetUsername").addEventListener("click", setUsername);
+    document.getElementById("btnDeleteAccount").addEventListener("click", deleteAccount);
+  });
   </script>
 </body>
 </html>
