@@ -372,7 +372,7 @@
     updates['/transactions/' + newTopupKey] = topupData;
 
     db.ref().update(updates).then(() => {
-      showCustomAlert("تم إرسال طلب إضافة الأموال بنجاح", "success");
+      showCustomAlert("تم إرسال طلب إضافة الأموال بنجاح تابع طلبك في سجل التحويلات اسفل الصفحه", "success");
       senderEl.value = "";
       amountEl.value = "";
       methodEl.value = "";
