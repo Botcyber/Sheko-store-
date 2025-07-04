@@ -93,9 +93,7 @@
     }
     .sender-name {
       font-weight: bold;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
+      display: block; /* تم تغييره من inline-flex إلى block */
       margin-bottom: 5px;
       position: relative;
       padding: 3px 12px;
@@ -132,7 +130,7 @@
       gap: 10px;
       align-items: center;
       margin-top: 0;
-      margin-bottom: 20px; /* زيادة الرفع قليلاً */
+      margin-bottom: 10px; /* تم تقليل الهامش السفلي */
     }
     #replyInput {
       flex-grow: 1;
@@ -163,7 +161,8 @@
       align-items: center;
       justify-content: center;
       font-size: 18px;
-      margin-bottom: 0; /* رفع الزر */
+      margin-bottom: 0;
+      margin-top: -6px; /* رفع الزر أعلى قليلاً */
     }
     #sendBtn:hover {
       background: #ffaa00;
@@ -332,192 +331,191 @@
   }
 
   function renderMessages(messages) {
-  messagesEl.innerHTML = '';
-  const msgKeys = Object.keys(messages);
-  msgKeys.forEach(key => {
-    const msg = messages[key];
+    messagesEl.innerHTML = '';
+    const msgKeys = Object.keys(messages);
+    msgKeys.forEach(key => {
+      const msg = messages[key];
+      const div = document.createElement('div');
+      div.classList.add('message');
+      div.classList.add(msg.sender === adminName ? 'admin' : 'user');
+
+      let senderNameHTML = '';
+      if(msg.sender === adminName){
+        senderNameHTML = `
+        <span class="sender-name">
+          ${escapeHtml(msg.sender)}
+          <span class="admin-tag">ADMIN</span>
+        </span>`;
+      } else {
+        senderNameHTML = `<span class="sender-name">${escapeHtml(msg.sender)}</span>`;
+      }
+
+      let content = `
+        ${senderNameHTML}
+        <br>
+        <span>${escapeHtml(msg.text)}</span>
+        <br>
+        <small class="timestamp">${new Date(msg.timestamp).toLocaleString()}</small>
+      `;
+
+      if (msg.sender === adminName) {
+        content += `
+          <button class="btn-reply" data-msgid="${key}" title="الرد"><i class="fa fa-reply"></i></button>
+          <button class="btn-delete" data-msgid="${key}" title="حذف"><i class="fa fa-trash"></i></button>
+          <div class="reactions">
+            <span class="btn-like" data-msgid="${key}" title="أعجبني">👍</span>
+            <span class="btn-love" data-msgid="${key}" title="أحببت">♥️</span>
+          </div>
+        `;
+      } else {
+        content += `
+          <div class="reactions">
+            <span class="btn-like" data-msgid="${key}" title="أعجبني">👍</span>
+            <span class="btn-love" data-msgid="${key}" title="أحببت">♥️</span>
+          </div>
+        `;
+      }
+
+      div.innerHTML = content;
+      messagesEl.appendChild(div);
+    });
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    addActionListeners();
+  }
+
+  function escapeHtml(text) {
     const div = document.createElement('div');
-    div.classList.add('message');
-    div.classList.add(msg.sender === adminName ? 'admin' : 'user');
+    div.textContent = text;
+    return div.innerHTML;
+  }
 
-    let senderNameHTML = '';
-    if(msg.sender === adminName){
-      // اسم الادمن مع تاج متوهج وخلفية شفافة
-      senderNameHTML = `
-      <span class="sender-name">
-        ${escapeHtml(msg.sender)}
-        <span class="admin-tag">ADMIN</span>
-      </span>`;
-    } else {
-      senderNameHTML = `<span class="sender-name">${escapeHtml(msg.sender)}</span>`;
-    }
-
-    let content = `
-      ${senderNameHTML}
-      <span>${escapeHtml(msg.text)}</span><br>
-      <small class="timestamp">${new Date(msg.timestamp).toLocaleString()}</small>
-    `;
-
-    if (msg.sender === adminName) {
-      content += `
-        <button class="btn-reply" data-msgid="${key}" title="الرد"><i class="fa fa-reply"></i></button>
-        <button class="btn-delete" data-msgid="${key}" title="حذف"><i class="fa fa-trash"></i></button>
-        <div class="reactions">
-          <span class="btn-like" data-msgid="${key}" title="أعجبني">👍</span>
-          <span class="btn-love" data-msgid="${key}" title="أحببت">♥️</span>
-        </div>
-      `;
-    } else {
-      content += `
-        <div class="reactions">
-          <span class="btn-like" data-msgid="${key}" title="أعجبني">👍</span>
-          <span class="btn-love" data-msgid="${key}" title="أحببت">♥️</span>
-        </div>
-      `;
-    }
-
-    div.innerHTML = content;
-    messagesEl.appendChild(div);
-  });
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-  addActionListeners();
-}
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function addActionListeners() {
-  document.querySelectorAll('.btn-delete').forEach(btn => {
-    btn.onclick = e => {
-      const msgId = e.currentTarget.dataset.msgid;
-      if (confirm('هل تريد حذف هذه الرسالة؟')) {
-        db.ref(`adminChatMessages/${msgId}`).remove();
-        localStorage.removeItem(msgId + '_like');
-        localStorage.removeItem(msgId + '_love');
-      }
-    };
-  });
-
-  document.querySelectorAll('.btn-reply').forEach(btn => {
-    btn.onclick = e => {
-      replyingToMsgId = e.currentTarget.dataset.msgid;
-      db.ref(`adminChatMessages/${replyingToMsgId}`).get().then(snapshot => {
-        if (!snapshot.exists()) {
-          alert('الرسالة التي تريد الرد عليها غير موجودة!');
-          return;
+  function addActionListeners() {
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+      btn.onclick = e => {
+        const msgId = e.currentTarget.dataset.msgid;
+        if (confirm('هل تريد حذف هذه الرسالة؟')) {
+          db.ref(`adminChatMessages/${msgId}`).remove();
+          localStorage.removeItem(msgId + '_like');
+          localStorage.removeItem(msgId + '_love');
         }
-        replyingToMsgText = snapshot.val().text;
-        replyInfo.textContent = `الرد على: "${replyingToMsgText}"`;
-        replyModal.style.display = 'block';
-        replyText.value = '';
-        replyText.focus();
-      });
-    };
-  });
-
-  document.querySelectorAll('.btn-like').forEach(btn => {
-    btn.onclick = e => {
-      const msgId = e.currentTarget.dataset.msgid;
-      if (hasReacted(msgId, 'like')) {
-        alert('لقد قمت بالتفاعل بـ "أعجبني" على هذه الرسالة مسبقًا.');
-        return;
-      }
-      reactToMessage(msgId, 'like');
-      setReacted(msgId, 'like');
-    };
-  });
-
-  document.querySelectorAll('.btn-love').forEach(btn => {
-    btn.onclick = e => {
-      const msgId = e.currentTarget.dataset.msgid;
-      if (hasReacted(msgId, 'love')) {
-        alert('لقد قمت بالتفاعل بـ "أحببت" على هذه الرسالة مسبقًا.');
-        return;
-      }
-      reactToMessage(msgId, 'love');
-      setReacted(msgId, 'love');
-    };
-  });
-}
-
-function reactToMessage(msgId, reaction) {
-  const reactionsRef = db.ref(`adminChatMessages/${msgId}/reactions`);
-  reactionsRef.transaction(current => {
-    if (current === null) current = {};
-    if (!current[reaction]) current[reaction] = 0;
-    current[reaction]++;
-    return current;
-  });
-}
-
-function loadMessages() {
-  db.ref('adminChatMessages').on('value', snapshot => {
-    const msgsObj = snapshot.val() || {};
-    const messages = {};
-    Object.entries(msgsObj).forEach(([key, val]) => {
-      let reactionText = '';
-      if (val.reactions) {
-        if (val.reactions.like) reactionText += ` 👍${val.reactions.like}`;
-        if (val.reactions.love) reactionText += ` ♥️${val.reactions.love}`;
-      }
-      messages[key] = {
-        sender: val.sender,
-        text: val.text + reactionText,
-        timestamp: val.timestamp
       };
     });
-    renderMessages(messages);
-  });
-}
 
-// إرسال رسالة جديدة
-sendBtn.onclick = () => {
-  const text = replyInput.value.trim();
-  if (!text) return alert('الرجاء كتابة رسالة');
-  const newMsgRef = db.ref('adminChatMessages').push();
-  newMsgRef.set({
-    sender: adminName,
-    text: text,
-    timestamp: Date.now(),
-    reactions: {}
-  });
-  replyInput.value = '';
-  // حذف صوت الإرسال كما طلبت
-};
+    document.querySelectorAll('.btn-reply').forEach(btn => {
+      btn.onclick = e => {
+        replyingToMsgId = e.currentTarget.dataset.msgid;
+        db.ref(`adminChatMessages/${replyingToMsgId}`).get().then(snapshot => {
+          if (!snapshot.exists()) {
+            alert('الرسالة التي تريد الرد عليها غير موجودة!');
+            return;
+          }
+          replyingToMsgText = snapshot.val().text;
+          replyInfo.textContent = `الرد على: "${replyingToMsgText}"`;
+          replyModal.style.display = 'block';
+          replyText.value = '';
+          replyText.focus();
+        });
+      };
+    });
 
-// إرسال الرد من نافذة الرد
-sendReplyBtn.onclick = () => {
-  const replyContent = replyText.value.trim();
-  if (!replyContent) return alert('الرجاء كتابة الرد');
-  if (!replyingToMsgId) return alert('لا توجد رسالة محددة للرد عليها');
+    document.querySelectorAll('.btn-like').forEach(btn => {
+      btn.onclick = e => {
+        const msgId = e.currentTarget.dataset.msgid;
+        if (hasReacted(msgId, 'like')) {
+          alert('لقد قمت بالتفاعل بـ "أعجبني" على هذه الرسالة مسبقًا.');
+          return;
+        }
+        reactToMessage(msgId, 'like');
+        setReacted(msgId, 'like');
+      };
+    });
 
-  const fullText = `رد على: "${replyingToMsgText}"\n${replyContent}`;
-  const newMsgRef = db.ref('adminChatMessages').push();
-  newMsgRef.set({
-    sender: adminName,
-    text: fullText,
-    timestamp: Date.now(),
-    reactions: {}
-  });
-  replyModal.style.display = 'none';
-  replyingToMsgId = null;
-  replyingToMsgText = '';
-  replyText.value = '';
-  // حذف صوت الإرسال هنا أيضاً
-};
+    document.querySelectorAll('.btn-love').forEach(btn => {
+      btn.onclick = e => {
+        const msgId = e.currentTarget.dataset.msgid;
+        if (hasReacted(msgId, 'love')) {
+          alert('لقد قمت بالتفاعل بـ "أحببت" على هذه الرسالة مسبقًا.');
+          return;
+        }
+        reactToMessage(msgId, 'love');
+        setReacted(msgId, 'love');
+      };
+    });
+  }
 
-// إغلاق نافذة الرد
-cancelReply.onclick = () => {
-  replyModal.style.display = 'none';
-  replyingToMsgId = null;
-  replyingToMsgText = '';
-  replyText.value = '';
-};
+  function reactToMessage(msgId, reaction) {
+    const reactionsRef = db.ref(`adminChatMessages/${msgId}/reactions`);
+    reactionsRef.transaction(current => {
+      if (current === null) current = {};
+      if (!current[reaction]) current[reaction] = 0;
+      current[reaction]++;
+      return current;
+    });
+  }
 
-// تحميل الرسائل فوراً عند فتح الصفحة
+  function loadMessages() {
+    db.ref('adminChatMessages').on('value', snapshot => {
+      const msgsObj = snapshot.val() || {};
+      const messages = {};
+      Object.entries(msgsObj).forEach(([key, val]) => {
+        let reactionText = '';
+        if (val.reactions) {
+          if (val.reactions.like) reactionText += ` 👍${val.reactions.like}`;
+          if (val.reactions.love) reactionText += ` ♥️${val.reactions.love}`;
+        }
+        messages[key] = {
+          sender: val.sender,
+          text: val.text + reactionText,
+          timestamp: val.timestamp
+        };
+      });
+      renderMessages(messages);
+    });
+  }
+
+  // إرسال رسالة جديدة
+  sendBtn.onclick = () => {
+    const text = replyInput.value.trim();
+    if (!text) return alert('الرجاء كتابة رسالة');
+    const newMsgRef = db.ref('adminChatMessages').push();
+    newMsgRef.set({
+      sender: adminName,
+      text: text,
+      timestamp: Date.now(),
+      reactions: {}
+    });
+    replyInput.value = '';
+  };
+
+  // إرسال الرد من نافذة الرد
+  sendReplyBtn.onclick = () => {
+    const replyContent = replyText.value.trim();
+    if (!replyContent) return alert('الرجاء كتابة الرد');
+    if (!replyingToMsgId) return alert('لا توجد رسالة محددة للرد عليها');
+
+    const fullText = `رد على: "${replyingToMsgText}"\n${replyContent}`;
+    const newMsgRef = db.ref('adminChatMessages').push();
+    newMsgRef.set({
+      sender: adminName,
+      text: fullText,
+      timestamp: Date.now(),
+      reactions: {}
+    });
+    replyModal.style.display = 'none';
+    replyingToMsgId = null;
+    replyingToMsgText = '';
+    replyText.value = '';
+  };
+
+  // إغلاق نافذة الرد
+  cancelReply.onclick = () => {
+    replyModal.style.display = 'none';
+    replyingToMsgId = null;
+    replyingToMsgText = '';
+    replyText.value = '';
+  };
+
+  // تحميل الرسائل فوراً عند فتح الصفحة
 loadMessages();
 
 // حفظ اسم الأدمن لو لم يكن محفوظ
@@ -528,6 +526,5 @@ if (!localStorage.getItem('adminName')) {
   adminName = name;
 }
   </script>
-
 </body>
 </html>
