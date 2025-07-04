@@ -190,7 +190,62 @@
       0%, 100% { transform: scale(1); }
       50% { transform: scale(1.3); }
     }
+
+    /* === كود التنبيهات المخصصة === */
+    #customAlert {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #333;
+      color: white;
+      padding: 15px 25px;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+      font-family: 'Cairo', sans-serif;
+      font-weight: 700;
+      font-size: 17px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 9999;
+      user-select: none;
+      max-width: 90%;
+      cursor: pointer;
+    }
+    #customAlert.hidden {
+      display: none !important;
+    }
+    #customAlert.success-alert {
+      background-color: #28a745 !important;
+      color: white !important;
+    }
+    #customAlert.error-alert {
+      background-color: #dc3545 !important;
+      color: white !important;
+    }
+    #customAlert.info-alert {
+      background-color: #007bff !important;
+      color: white !important;
+    }
+    #customAlert i {
+      font-size: 22px;
+    }
+    #alertCloseBtn {
+      background: transparent;
+      border: none;
+      color: white;
+      font-weight: 900;
+      font-size: 18px;
+      margin-left: auto;
+      cursor: pointer;
+      user-select: none;
+    }
   </style>
+
+  <!-- مكتبة FontAwesome للأيقونات -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+
 </head>
 <body>
   <div class="container">
@@ -211,6 +266,13 @@
       <h2>⭐ تقييمات المستخدمين</h2>
       <div id="reviewsList">جار التحميل...</div>
     </div>
+  </div>
+
+  <!-- نافذة التنبيه المخصصة -->
+  <div id="customAlert" class="hidden" role="alert" aria-live="assertive" aria-atomic="true" tabindex="0">
+    <i id="alertIcon" class="fa fa-info-circle" aria-hidden="true"></i>
+    <span id="alertMsg"></span>
+    <button id="alertCloseBtn" aria-label="إغلاق التنبيه">حسناً</button>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -266,20 +328,54 @@
       });
     }
 
+    // دالة التنبيه المخصص
+    function showCustomAlert(message, type = "info") {
+      const alertBox = document.getElementById("customAlert");
+      const alertMsg = document.getElementById("alertMsg");
+      const alertIcon = document.getElementById("alertIcon");
+      const closeBtn = document.getElementById("alertCloseBtn");
+
+      alertMsg.textContent = message;
+
+      alertBox.className = ""; // إعادة تعيين الكلاسات
+      alertBox.classList.add(type + "-alert");
+
+      alertIcon.className = "fa"; // إعادة تعيين أيقونة التنبيه
+      if(type === "success") alertIcon.classList.add("fa-check-circle");
+      else if(type === "error") alertIcon.classList.add("fa-times-circle");
+      else alertIcon.classList.add("fa-info-circle");
+
+      alertBox.classList.remove("hidden");
+      alertBox.focus();
+
+      function hideAlert() {
+        alertBox.classList.add("hidden");
+        closeBtn.removeEventListener("click", hideAlert);
+      }
+      closeBtn.addEventListener("click", hideAlert);
+
+      // إخفاء تلقائي بعد 4 ثواني
+      setTimeout(() => {
+        if(!alertBox.classList.contains("hidden")){
+          hideAlert();
+        }
+      }, 4000);
+    }
+
     function submitReview() {
       const name = document.getElementById("reviewerName").value.trim();
       const text = document.getElementById("reviewText").value.trim();
 
       if (!name) {
-        alert("يرجى كتابة اسمك.");
+        showCustomAlert("يرجى كتابة اسمك.", "error");
         return;
       }
       if (!selectedStars || !text) {
-        alert("يرجى اختيار عدد النجوم وكتابة تعليقك.");
+        showCustomAlert("يرجى اختيار عدد النجوم وكتابة تعليقك.", "error");
         return;
       }
       if (containsBadWords(name) || containsBadWords(text)) {
-        alert("❌ يرجى تجنب استخدام كلمات مسيئة أو غير لائقة.");
+        showCustomAlert("❌ يرجى تجنب استخدام كلمات مسيئة أو غير لائقة.", "error");
         return;
       }
 
@@ -293,7 +389,7 @@
       };
       const key = db.ref().child("reviews").push().key;
       db.ref("reviews/" + key).set(data).then(() => {
-        alert("✅ تم إرسال التقييم.");
+        showCustomAlert("✅ تم إرسال التقييم.", "success");
         document.getElementById("reviewerName").value = "";
         document.getElementById("reviewText").value = "";
         selectedStars = 0;
