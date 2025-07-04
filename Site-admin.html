@@ -184,25 +184,36 @@
     });
 
     function renderPanel(role, name) {
-      emailInput.style.display = 'none';
-      passwordInput.style.display = 'none';
-      loginBtn.style.display = 'none';
-      errorMsg.style.display = 'none';
-      adminPanel.style.display = 'block';
+  emailInput.style.display = 'none';
+  passwordInput.style.display = 'none';
+  loginBtn.style.display = 'none';
+  errorMsg.style.display = 'none';
+  adminPanel.style.display = 'block';
 
-      welcomeTitle.innerHTML = `مرحبًا ${name} - ${role}`;
+  welcomeTitle.innerHTML = `مرحبًا ${name} - ${role}`;
+  buttonsContainer.innerHTML = "";
 
-      buttonsContainer.innerHTML = "";
+  const roleButton = pages[role];
 
-      const btns = Array.isArray(pages[role]) ? pages[role] : [pages[role]];
-
-      btns.forEach(p => {
-        const btn = document.createElement("button");
-        btn.textContent = p.text;
-        btn.onclick = () => window.open(p.link, "_blank");
-        buttonsContainer.appendChild(btn);
-      });
-    }
+  if (Array.isArray(roleButton)) {
+    roleButton.forEach(btnData => {
+      const btn = document.createElement("button");
+      btn.textContent = btnData.text;
+      btn.onclick = () => window.open(btnData.link, "_blank");
+      buttonsContainer.appendChild(btn);
+    });
+  } else if (roleButton) {
+    const btn = document.createElement("button");
+    btn.textContent = roleButton.text;
+    btn.onclick = () => window.open(roleButton.link, "_blank");
+    buttonsContainer.appendChild(btn);
+  } else {
+    const msg = document.createElement("p");
+    msg.textContent = "لا يوجد صلاحيات لهذا الأدمن.";
+    msg.style.color = "gray";
+    buttonsContainer.appendChild(msg);
+  }
+}
 
     logoutBtn.addEventListener('click', () => {
       auth.signOut().then(() => location.reload());
