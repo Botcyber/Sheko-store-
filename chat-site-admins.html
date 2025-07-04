@@ -321,15 +321,16 @@
       div.classList.add(msg.sender === adminName ? 'admin' : 'user');  
   
       let senderNameHTML = '';  
-      if(msg.sender === adminName){  
-        senderNameHTML = `  
-        <span class="sender-name">  
-          ${escapeHtml(msg.sender)}  
-          <span class="admin-tag">ADMIN</span>  
-        </span>`;  
-      } else {  
-        senderNameHTML = `<span class="sender-name">${escapeHtml(msg.sender)}</span>`;  
-      }  
+      let senderNameHTML = '';
+if(msg.sender === 'sheko'){
+  senderNameHTML = `
+  <span class="sender-name">
+    ${escapeHtml(msg.sender)}
+    <span class="admin-tag">ADMIN</span>
+  </span>`;
+} else {
+  senderNameHTML = `<span class="sender-name">${escapeHtml(msg.sender)}</span>`;
+}
   
       let content = `  
         ${senderNameHTML}  
@@ -341,20 +342,14 @@
   
       if (msg.sender === adminName) {  
         content += `  
-          <button class="btn-reply" data-msgid="${key}" title="الرد"><i class="fa fa-reply"></i></button>  
-          <button class="btn-delete" data-msgid="${key}" title="حذف"><i class="fa fa-trash"></i></button>  
-          <div class="reactions">  
-            <span class="btn-like" data-msgid="${key}" title="أعجبني">👍</span>  
-            <span class="btn-love" data-msgid="${key}" title="أحببت">♥️</span>  
-          </div>  
-        `;  
-      } else {  
-        content += `  
-          <div class="reactions">  
-            <span class="btn-like" data-msgid="${key}" title="أعجبني">👍</span>  
-            <span class="btn-love" data-msgid="${key}" title="أحببت">♥️</span>  
-          </div>  
-        `;  
+        content += `
+  <button class="btn-reply" data-msgid="${key}" title="الرد"><i class="fa fa-reply"></i></button>
+  ${adminName === 'sheko' ? `<button class="btn-delete" data-msgid="${key}" title="حذف"><i class="fa fa-trash"></i></button>` : ''}
+  <div class="reactions">
+    <span class="btn-like" data-msgid="${key}" title="أعجبني">👍</span>
+    <span class="btn-love" data-msgid="${key}" title="أحببت">♥️</span>
+  </div>
+`;
       }  
   
       div.innerHTML = content;  
