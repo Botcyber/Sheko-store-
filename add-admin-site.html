@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>إضافة أدمن - Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #121212;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 50px;
+    }
+    h1 {
+      color: #ffb700;
+      margin-bottom: 30px;
+    }
+    form, .admin-list {
+      background: #222;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px #ffb70088;
+      width: 90%;
+      max-width: 400px;
+      margin-bottom: 30px;
+    }
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 20px;
+      border: none;
+      border-radius: 5px;
+      background: #333;
+      color: #fff;
+    }
+    button {
+      background: #ffb700;
+      color: #000;
+      font-weight: bold;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #ffaa00;
+    }
+    .hidden {
+      display: none;
+    }
+    .admin-item {
+      background: #333;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .admin-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .delete-btn {
+      background: #ff4d4d;
+      border: none;
+      padding: 6px 12px;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .delete-btn:hover {
+      background: #ff0000;
+    }
+  </style>
+</head>
+<body>
+  <h1>إضافة أدمن جديد</h1>
+
+  <form id="adminForm" class="hidden">
+    <label for="adminName">اسم الأدمن</label>
+    <input type="text" id="adminName" required>
+
+    <label for="adminPassword">كلمة المرور</label>
+    <input type="password" id="adminPassword" required>
+
+    <label for="adminRole">وظيفة الأدمن</label>
+    <select id="adminRole" required>
+      <option value="" disabled selected>اختر الوظيفة</option>
+      <option value="فريق الدعم">أدمن فريق الدعم</option>
+      <option value="الدردشة">أدمن الدردشة</option>
+      <option value="عجلة الحظ">أدمن عجلة الحظ</option>
+      <option value="التصويت">أدمن التصويت</option>
+    </select>
+
+    <button type="submit">إضافة الأدمن</button>
+  </form>
+
+  <div class="admin-list hidden" id="adminList">
+    <h2 style="color:#ffb700;">قائمة الأدمنات</h2>
+    <div id="adminsContainer"></div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script>
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    const form = document.getElementById('adminForm');
+    const list = document.getElementById('adminList');
+    const container = document.getElementById('adminsContainer');
+
+    auth.onAuthStateChanged(user => {
+      if (user && user.uid === "mlifDgEAkKMaOeuUq63cs5NAkV93") {
+        form.classList.remove('hidden');
+        list.classList.remove('hidden');
+        loadAdmins();
+      } else {
+        alert("غير مصرح لك بدخول هذه الصفحة.");
+        window.location.href = "index.html";
+      }
+    });
+
+    // إضافة الأدمن
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const name = document.getElementById('adminName').value.trim();
+      const password = document.getElementById('adminPassword').value.trim();
+      const role = document.getElementById('adminRole').value;
+
+      if (!name || !password || !role) return alert("يرجى تعبئة جميع الحقول.");
+
+      const newRef = db.ref('admins').push();
+      newRef.set({
+        name, password, role, createdAt: Date.now()
+      }).then(() => {
+        alert("✅ تم إضافة الأدمن بنجاح.");
+        form.reset();
+        loadAdmins();
+      });
+    });
+
+    // تحميل الأدمنات
+    function loadAdmins() {
+      db.ref('admins').once('value', snap => {
+        const data = snap.val();
+        container.innerHTML = "";
+        if (data) {
+          Object.entries(data).forEach(([id, admin]) => {
+            const div = document.createElement('div');
+            div.className = 'admin-item';
+            div.innerHTML = `
+              <div class="admin-info">
+                <strong>${admin.name}</strong>
+                <small>الوظيفة: ${admin.role}</small>
+              </div>
+              <button class="delete-btn" onclick="deleteAdmin('${id}')">حذف</button>
+            `;
+            container.appendChild(div);
+          });
+        } else {
+          container.innerHTML = "<p>لا يوجد أدمنات حتى الآن.</p>";
+        }
+      });
+    }
+
+    // حذف أدمن
+    function deleteAdmin(id) {
+      if (confirm("هل أنت متأكد أنك تريد حذف هذا الأدمن؟")) {
+        db.ref('admins/' + id).remove().then(() => {
+          alert("✅ تم الحذف بنجاح");
+          loadAdmins();
+        });
+      }
+    }
+
+    window.deleteAdmin = deleteAdmin;
+  </script>
+</body>
+</html>
