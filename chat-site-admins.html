@@ -25,7 +25,76 @@
       text-align: center;
       box-shadow: 0 2px 5px rgba(0,0,0,0.3);
       user-select: none;
+      position: relative;
     }
+    #hamburgerBtn {
+      position: absolute;
+      top: 50%;
+      left: 15px; /* لأن الصفحة RTL */
+      transform: translateY(-50%);
+      font-size: 28px;
+      color: #222;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      z-index: 20000;
+    }
+    #sidebar {
+      position: fixed;
+      top: 0;
+      right: -280px; /* مخفية */
+      width: 280px;
+      height: 100vh;
+      background: #222;
+      box-shadow: -2px 0 8px rgba(0,0,0,0.7);
+      transition: right 0.3s ease;
+      padding: 15px 20px;
+      overflow-y: auto;
+      z-index: 15000;
+      direction: rtl;
+    }
+    #sidebar.open {
+      right: 0;
+    }
+    #sidebar h3 {
+      margin-top: 0;
+      color: #ffb700;
+      font-weight: bold;
+      margin-bottom: 15px;
+      font-size: 22px;
+      user-select: none;
+    }
+    #adminList {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    #adminList li {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 18px;
+      cursor: default;
+      user-select: none;
+      color: #eee;
+    }
+    .status-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      margin-left: 10px;
+      border: 2px solid #444;
+      flex-shrink: 0;
+    }
+    .online {
+      background-color: #4caf50;
+      box-shadow: 0 0 6px #4caf50aa;
+    }
+    .offline {
+      background-color: #f44336;
+      box-shadow: 0 0 6px #f44336aa;
+    }
+    /* باقي التنسيقات الأصلية */
     #chatContainer {
       display: flex;
       flex-direction: column;
@@ -35,7 +104,7 @@
       border-radius: 8px;
       margin: 10px;
       box-shadow: 0 0 15px #ffb700aa;
-      height: calc(100vh - 150px); /* تم التعديل هنا */
+      height: calc(100vh - 150px);
     }
     #messages {
       flex-grow: 1;
@@ -50,7 +119,7 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      max-height: calc(100vh - 250px); /* تم التعديل هنا */
+      max-height: calc(100vh - 250px);
     }
     #messages::-webkit-scrollbar {
       width: 8px;
@@ -263,36 +332,41 @@
     }
   </style>
 </head>
-
 <body>
+  <header>
+    دردشة إدارة الموقع
+    <button id="hamburgerBtn" title="قائمة الأدمن"><i class="fa fa-bars"></i></button>
+  </header>
 
-<header>دردشة إدارة الموقع</header>
-
-<div id="chatContainer">
-  <div id="messages">جارٍ تحميل الرسائل...</div>
-
-  <div id="inputArea">
-    <input type="text" id="replyInput" placeholder="اكتب رسالتك هنا..." autocomplete="off" />
-    <button id="sendBtn" title="إرسال"><i class="fa fa-paper-plane"></i></button>
+  <div id="sidebar">
+    <h3>الأدمن المتصلون</h3>
+    <ul id="adminList">
+      <li>جارٍ التحميل...</li>
+    </ul>
   </div>
-</div>
 
-<!-- نافذة الرد المنبثقة -->
-<div id="replyModal">
-  <div class="reply-info" id="replyInfo"></div>
-  <textarea id="replyText" placeholder="اكتب ردك هنا..."></textarea>
-  <div style="text-align: right; margin-top: 10px;">
-    <button id="sendReplyBtn">إرسال الرد</button>
-    <button id="cancelReply">إلغاء</button>
+  <div id="chatContainer">
+    <div id="messages">جارٍ تحميل الرسائل...</div>
+    <div id="inputArea">
+      <input type="text" id="replyInput" placeholder="اكتب رسالتك هنا..." autocomplete="off" />
+      <button id="sendBtn" title="إرسال"><i class="fa fa-paper-plane"></i></button>
+    </div>
   </div>
-</div>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <div id="replyModal">
+    <div class="reply-info" id="replyInfo"></div>
+    <textarea id="replyText" placeholder="اكتب ردك هنا..."></textarea>
+    <div style="text-align: right; margin-top: 10px;">
+      <button id="sendReplyBtn">إرسال الرد</button>
+      <button id="cancelReply">إلغاء</button>
+    </div>
+  </div>
 
-<script>
-  // الكود البرمجي ل Firebase مع تحميل الرسائل
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script>
+  // إعداد Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
     authDomain: "sheko-store.firebaseapp.com",
@@ -303,32 +377,40 @@
     appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
   };
   firebase.initializeApp(firebaseConfig);
-
   const db = firebase.database();
 
+  // المتغيرات DOM
   const messagesEl = document.getElementById('messages');
   const replyInput = document.getElementById('replyInput');
   const sendBtn = document.getElementById('sendBtn');
-
   const replyModal = document.getElementById('replyModal');
   const replyText = document.getElementById('replyText');
   const sendReplyBtn = document.getElementById('sendReplyBtn');
   const cancelReply = document.getElementById('cancelReply');
   const replyInfo = document.getElementById('replyInfo');
 
+  const hamburgerBtn = document.getElementById('hamburgerBtn');
+  const sidebar = document.getElementById('sidebar');
+  const adminList = document.getElementById('adminList');
+
   let adminName = localStorage.getItem('adminName') || 'Admin';
 
   let replyingToMsgId = null;
   let replyingToMsgText = '';
 
-  // تفاعل واحد لكل رسالة لكل مستخدم (يتم حفظه في localStorage)
-  function hasReacted(msgId, reactionType) {
-    return localStorage.getItem(msgId + '_' + reactionType) === 'true';
-  }
-  function setReacted(msgId, reactionType) {
-    localStorage.setItem(msgId + '_' + reactionType, 'true');
+  // فتح وغلق القائمة الجانبية عند الضغط على زر الهامبرجر
+  hamburgerBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+  });
+
+  // دالة الهروب من النصوص لتجنب حقن أكواد
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
   }
 
+  // عرض الرسائل في الصفحة
   function renderMessages(messages) {
     messagesEl.innerHTML = '';
     const msgKeys = Object.keys(messages);
@@ -341,10 +423,10 @@
       let senderNameHTML = '';
       if(msg.sender === adminName){
         senderNameHTML = `
-        <span class="sender-name">
-          ${escapeHtml(msg.sender)}
-          <span class="admin-tag">ADMIN</span>
-        </span>`;
+          <span class="sender-name">
+            ${escapeHtml(msg.sender)}
+            <span class="admin-tag">ADMIN</span>
+          </span>`;
       } else {
         senderNameHTML = `<span class="sender-name">${escapeHtml(msg.sender)}</span>`;
       }
@@ -382,12 +464,7 @@
     addActionListeners();
   }
 
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
-
+  // إضافة مستمعات الأحداث لأزرار الرسائل
   function addActionListeners() {
     document.querySelectorAll('.btn-delete').forEach(btn => {
       btn.onclick = e => {
@@ -442,6 +519,13 @@
     });
   }
 
+  // تفاعل مستخدم مع رسالة (تم حفظه محليًا)
+  function hasReacted(msgId, reactionType) {
+    return localStorage.getItem(msgId + '_' + reactionType) === 'true';
+  }
+  function setReacted(msgId, reactionType) {
+    localStorage.setItem(msgId + '_' + reactionType, 'true');
+  }
   function reactToMessage(msgId, reaction) {
     const reactionsRef = db.ref(`adminChatMessages/${msgId}/reactions`);
     reactionsRef.transaction(current => {
@@ -452,6 +536,7 @@
     });
   }
 
+  // تحميل الرسائل من Firebase
   function loadMessages() {
     db.ref('adminChatMessages').on('value', snapshot => {
       const msgsObj = snapshot.val() || {};
@@ -472,6 +557,7 @@
     });
   }
 
+  // إرسال رسالة جديدة
   sendBtn.onclick = () => {
     const text = replyInput.value.trim();
     if (!text) return alert('الرجاء كتابة رسالة');
@@ -485,11 +571,12 @@
     replyInput.value = '';
   };
 
+  // إرسال رد على رسالة
   sendReplyBtn.onclick = () => {
     const replyContent = replyText.value.trim();
     if (!replyContent) return alert('الرجاء كتابة الرد');
     if (!replyingToMsgId) return alert('لا توجد رسالة محددة للرد عليها');
-  
+    
     const fullText = `رد على: "${replyingToMsgText}"\n${replyContent}`;
     const newMsgRef = db.ref('adminChatMessages').push();
     newMsgRef.set({
@@ -512,17 +599,63 @@
     replyText.value = '';
   };
 
-  // تحميل الرسائل عند فتح الصفحة
-  loadMessages();
+  // *** الجزء الخاص بالقائمة الجانبية - قائمة الأدمن ***
 
-  // حفظ اسم الأدمن المحلي في localStorage إذا لم يكن محفوظًا
+  // تحديث قائمة الأدمن المتصلين
+  function updateAdminList(admins) {
+    adminList.innerHTML = ''; // امسح القديم أولاً
+
+    if (!admins || Object.keys(admins).length === 0) {
+      adminList.innerHTML = '<li>لا يوجد آدمن متصل حاليًا</li>';
+      return;
+    }
+
+    Object.entries(admins).forEach(([adminId, adminData]) => {
+      // adminData = { name: "الاسم", online: true/false }
+
+      const li = document.createElement('li');
+
+      // الدائرة مع اللون حسب الحالة
+      const dot = document.createElement('span');
+      dot.classList.add('status-dot');
+      if(adminData.online) {
+        dot.classList.add('online');
+      } else {
+        dot.classList.add('offline');
+      }
+
+      li.textContent = adminData.name;
+      li.prepend(dot); // الدائرة قبل الاسم (في اليمين بسبب RTL)
+
+      adminList.appendChild(li);
+    });
+  }
+
+  // جلب بيانات الأدمن المتصلين من Firebase (مثال بسيط)
+  function listenToAdminsStatus() {
+    // نفترض أن بيانات الأدمن محفوظة في المسار: adminStatus
+    // كل مدخل: adminStatus/{adminId} = { name: "اسم", online: true/false }
+
+    db.ref('adminStatus').on('value', snapshot => {
+      const admins = snapshot.val();
+      updateAdminList(admins);
+    });
+  }
+
+  // إذا لم يكن اسم الأدمن محفوظًا نسأله
   if (!localStorage.getItem('adminName')) {
     let name = prompt('ادخل اسم الادمن الخاص بك:', 'sheko');
     if (!name) name = 'Admin';
     localStorage.setItem('adminName', name);
     adminName = name;
   }
-</script>
 
+  // تحميل الرسائل عند فتح الصفحة
+  loadMessages();
+
+  // استمع لتغييرات حالة الأدمن
+  listenToAdminsStatus();
+
+</script>
 </body>
 </html>  
