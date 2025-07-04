@@ -2,8 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>تسجيل دخول المؤسس - Sheko Store</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>تسجيل دخول الأدمن - Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     body {
@@ -24,7 +24,11 @@
       width: 320px;
       text-align: center;
     }
-    input[type="email"], input[type="password"], input[type="text"] {
+    #loginBox h2 {
+      margin-bottom: 25px;
+      color: #222;
+    }
+    input {
       width: 100%;
       padding: 12px 15px;
       margin: 10px 0 20px;
@@ -56,168 +60,145 @@
     }
     #errorMsg {
       color: red;
-      margin-top: 15px;
+      margin-top: 10px;
       min-height: 20px;
     }
     #adminPanel {
       display: none;
       text-align: center;
+      margin-top: 20px;
     }
     #adminPanel h3 {
-      margin-bottom: 20px;
       color: #222;
+      margin-bottom: 15px;
     }
-    #adminPanel button {
-      margin: 8px;
-      padding: 12px 20px;
-      font-size: 16px;
-      border-radius: 8px;
+    #buttonsContainer button {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
       background: #ffb700;
-      border: none;
-      cursor: pointer;
-      transition: background 0.3s;
       color: #222;
-      font-weight: bold;
-      min-width: 180px;
-    }
-    #adminPanel button:hover {
-      background: #e6a700;
     }
   </style>
 </head>
 <body>
 
-  <div id="loginBox">
-    <h2>تسجيل دخول المؤسس أو الأدمن</h2>
-    <input type="text" id="emailInput" placeholder="البريد أو الاسم" required />
-    <input type="password" id="passwordInput" placeholder="كلمة المرور" required />
-    <button id="loginBtn">دخول</button>
-    <div id="errorMsg"></div>
+<div id="loginBox">
+  <h2>تسجيل دخول الأدمن</h2>
+  <input type="text" id="usernameInput" placeholder="اسم الأدمن" required />
+  <input type="password" id="passwordInput" placeholder="كلمة المرور" required />
+  <button onclick="login()">دخول</button>
+  <div id="errorMsg"></div>
 
-    <div id="adminPanel">
-      <h3 id="welcomeTitle">مرحبًا بك في لوحة الإدارة</h3>
-      <div id="buttonsContainer"></div>
-      <button id="logoutBtn" style="background:#f44336; color:white; margin-top: 20px;">تسجيل الخروج</button>
-    </div>
+  <div id="adminPanel">
+    <h3 id="welcomeTitle">مرحبًا</h3>
+    <div id="buttonsContainer"></div>
+    <button onclick="logout()" style="background: #f44336; color: white;">تسجيل الخروج</button>
   </div>
+</div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-      authDomain: "sheko-store.firebaseapp.com",
-      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-      projectId: "sheko-store",
-      storageBucket: "sheko-store.appspot.com",
-      messagingSenderId: "113892775847",
-      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.database();
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+    authDomain: "sheko-store.firebaseapp.com",
+    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+    projectId: "sheko-store",
+    storageBucket: "sheko-store.appspot.com",
+    messagingSenderId: "113892775847",
+    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-    const emailInput = document.getElementById('emailInput');
-    const passwordInput = document.getElementById('passwordInput');
-    const loginBtn = document.getElementById('loginBtn');
-    const errorMsg = document.getElementById('errorMsg');
-    const adminPanel = document.getElementById('adminPanel');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const buttonsContainer = document.getElementById('buttonsContainer');
-    const welcomeTitle = document.getElementById('welcomeTitle');
+  const usernameInput = document.getElementById('usernameInput');
+  const passwordInput = document.getElementById('passwordInput');
+  const errorMsg = document.getElementById('errorMsg');
+  const adminPanel = document.getElementById('adminPanel');
+  const welcomeTitle = document.getElementById('welcomeTitle');
+  const buttonsContainer = document.getElementById('buttonsContainer');
 
-    const pages = {
-      "أدمن فريق الدعم": { text: "إدارة الدعم والشكاوى", link: "admin_support.html" },
-      "أدمن الدردشة": { text: "دردشة الإدارة", link: "admin-chat.html" },
-      "أدمن التصويت": { text: "إدارة التصويت", link: "admin_vote.html" },
-      "أدمن عجلة الحظ": { text: "إدارة عجلة الحظ", link: "wheel_admin.html" },
-      "أدمن الموقع والمؤسس": [
-        { text: "إدارة الدعم والشكاوى", link: "admin_support.html" },
-        { text: "دردشة الإدارة", link: "admin-chat.html" },
-        { text: "لوحة الإدارة الرئيسية", link: "admin.html" },
-        { text: "إدارة التصويت", link: "admin_vote.html" },
-        { text: "إدارة عجلة الحظ", link: "wheel_admin.html" },
-        { text: "إدارة الإعلانات", link: "announcement.html" },
-        { text: "إضافة أدمن إلى الموقع", link: "add-admin-site.html" },
-      ]
-    };
+  const pages = {
+    "أدمن فريق الدعم": { text: "إدارة الدعم والشكاوى", link: "admin_support.html" },
+    "أدمن الدردشة": { text: "دردشة الإدارة", link: "admin-chat.html" },
+    "أدمن عجلة الحظ": { text: "إدارة عجلة الحظ", link: "wheel_admin.html" },
+    "أدمن التصويت": { text: "إدارة التصويت", link: "admin_vote.html" },
+    "أدمن الموقع والمؤسس": [
+      { text: "إدارة الدعم والشكاوى", link: "admin_support.html" },
+      { text: "دردشة الإدارة", link: "admin-chat.html" },
+      { text: "لوحة الإدارة الرئيسية", link: "admin.html" },
+      { text: "إدارة التصويت", link: "admin_vote.html" },
+      { text: "إدارة عجلة الحظ", link: "wheel_admin.html" },
+      { text: "إدارة الإعلانات", link: "announcement.html" },
+      { text: "إضافة أدمن إلى الموقع", link: "add-admin-site.html" }
+    ]
+  };
 
-    loginBtn.addEventListener('click', () => {
-      const usernameOrEmail = emailInput.value.trim();
-      const password = passwordInput.value.trim();
-      errorMsg.textContent = '';
+  function login() {
+    const username = usernameInput.value.trim();
+    const password = passwordInput.value.trim();
 
-      if (!usernameOrEmail || !password) {
-        errorMsg.textContent = 'يرجى ملء الحقول.';
-        return;
+    if (!username || !password) {
+      errorMsg.textContent = "يرجى إدخال اسم المستخدم وكلمة المرور";
+      return;
+    }
+
+    db.ref("admins").once("value", snapshot => {
+      const admins = snapshot.val();
+      let found = false;
+
+      for (let id in admins) {
+        const admin = admins[id];
+        if (admin.name === username && admin.password === password) {
+          found = true;
+          renderPanel(admin.role, admin.name);
+          break;
+        }
       }
 
-      // إذا كان بريد المؤسس
-      if (usernameOrEmail === "shehabh441@gmail.com") {
-        auth.signInWithEmailAndPassword(usernameOrEmail, password)
-          .then(() => {
-            renderPanel("أدمن الموقع والمؤسس", "المؤسس");
-          })
-          .catch(() => {
-            errorMsg.textContent = "البريد أو كلمة المرور غير صحيحة";
-          });
-      } else {
-        // التحقق من قاعدة بيانات الأدمنات
-        db.ref("admins").once("value").then(snapshot => {
-          const admins = snapshot.val();
-          let matched = null;
-          for (let key in admins) {
-            const admin = admins[key];
-            if (admin.name === usernameOrEmail && admin.password === password) {
-              matched = admin;
-              break;
-            }
-          }
-          if (matched) {
-            renderPanel(matched.role, matched.name);
-          } else {
-            errorMsg.textContent = "الاسم أو كلمة المرور غير صحيحة.";
-          }
-        });
+      if (!found) {
+        errorMsg.textContent = "اسم المستخدم أو كلمة المرور غير صحيحة";
       }
     });
-
-    function renderPanel(role, name) {
-  emailInput.style.display = 'none';
-  passwordInput.style.display = 'none';
-  loginBtn.style.display = 'none';
-  errorMsg.style.display = 'none';
-  adminPanel.style.display = 'block';
-
-  welcomeTitle.innerHTML = `مرحبًا ${name} - ${role}`;
-  buttonsContainer.innerHTML = "";
-
-  const roleButton = pages[role];
-
-  if (Array.isArray(roleButton)) {
-    roleButton.forEach(btnData => {
-      const btn = document.createElement("button");
-      btn.textContent = btnData.text;
-      btn.onclick = () => window.open(btnData.link, "_blank");
-      buttonsContainer.appendChild(btn);
-    });
-  } else if (roleButton) {
-    const btn = document.createElement("button");
-    btn.textContent = roleButton.text;
-    btn.onclick = () => window.open(roleButton.link, "_blank");
-    buttonsContainer.appendChild(btn);
-  } else {
-    const msg = document.createElement("p");
-    msg.textContent = "لا يوجد صلاحيات لهذا الأدمن.";
-    msg.style.color = "gray";
-    buttonsContainer.appendChild(msg);
   }
-}
 
-    logoutBtn.addEventListener('click', () => {
-      auth.signOut().then(() => location.reload());
-    });
-  </script>
+  function renderPanel(role, name) {
+    usernameInput.style.display = "none";
+    passwordInput.style.display = "none";
+    document.querySelector("button").style.display = "none";
+    errorMsg.style.display = "none";
+
+    adminPanel.style.display = "block";
+    welcomeTitle.textContent = `مرحبًا ${name} - ${role}`;
+    buttonsContainer.innerHTML = "";
+
+    const roleButton = pages[role];
+
+    if (Array.isArray(roleButton)) {
+      roleButton.forEach(btnData => {
+        const btn = document.createElement("button");
+        btn.textContent = btnData.text;
+        btn.onclick = () => window.open(btnData.link, "_blank");
+        buttonsContainer.appendChild(btn);
+      });
+    } else if (roleButton) {
+      const btn = document.createElement("button");
+      btn.textContent = roleButton.text;
+      btn.onclick = () => window.open(roleButton.link, "_blank");
+      buttonsContainer.appendChild(btn);
+    } else {
+      const msg = document.createElement("p");
+      msg.textContent = "لا توجد صلاحيات متاحة لهذا المستخدم.";
+      msg.style.color = "gray";
+      buttonsContainer.appendChild(msg);
+    }
+  }
+
+  function logout() {
+    location.reload();
+  }
+</script>
+
 </body>
 </html>
