@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <title>تسجيل دخول الأدمن - Sheko Store</title>
@@ -65,15 +66,27 @@
       margin-bottom: 10px;
       min-height: 20px;
     }
+    #adminRoleDisplay {
+      color: #008000;
+      margin-bottom: 10px;
+      font-weight: bold;
+      min-height: 20px;
+    }
   </style>
 </head>
-<body>  <div id="loginForm">
+<body>
+  <div id="loginForm">
     <h2>تسجيل دخول الأدمن</h2>
     <div id="errorMsg"></div>
     <input type="text" id="username" placeholder="اسم المستخدم" autocomplete="off" />
     <input type="password" id="password" placeholder="كلمة السر" autocomplete="off" />
+    <div id="adminRoleDisplay"></div>
     <button onclick="login()">دخول</button>
-  </div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -86,9 +99,42 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    const usernameEl = document.getElementById('username');
+    const passwordEl = document.getElementById('password');
+    const roleDisplay = document.getElementById('adminRoleDisplay');
+    let adminsCache = {};
+
+    // تحميل الأدمنات من قاعدة البيانات مرة واحدة
+    db.ref('admins').once('value', snapshot => {
+      adminsCache = snapshot.val() || {};
+    });
+
+    // إظهار الوظيفة عند الكتابة
+    usernameEl.addEventListener('input', checkRole);
+    passwordEl.addEventListener('input', checkRole);
+
+    function checkRole() {
+      const name = usernameEl.value.trim();
+      const pass = passwordEl.value.trim();
+      let matched = null;
+
+      for (let id in adminsCache) {
+        if (adminsCache[id].name === name && adminsCache[id].password === pass) {
+          matched = adminsCache[id];
+          break;
+        }
+      }
+
+      if (matched) {
+        roleDisplay.textContent = `أنت ${matched.role.startsWith("أدمن") ? matched.role : "أدمن " + matched.role}`;
+      } else {
+        roleDisplay.textContent = "";
+      }
+    }
+
     function login() {
-      const usernameInput = document.getElementById('username').value.trim();
-      const passwordInput = document.getElementById('password').value.trim();
+      const usernameInput = usernameEl.value.trim();
+      const passwordInput = passwordEl.value.trim();
       const errorMsg = document.getElementById('errorMsg');
 
       if (!usernameInput || !passwordInput) {
@@ -96,22 +142,20 @@
         return;
       }
 
-      db.ref('admins').once('value', snapshot => {
-        const admins = snapshot.val();
-        let found = false;
-        for (let id in admins) {
-          if (admins[id].name === usernameInput && admins[id].password === passwordInput) {
-            found = true;
-            localStorage.setItem('adminName', admins[id].name);
-            localStorage.setItem('adminRole', admins[id].role);
-            window.location.href = "chat-site-admins.html";
-            break;
-          }
+      let found = false;
+      for (let id in adminsCache) {
+        if (adminsCache[id].name === usernameInput && adminsCache[id].password === passwordInput) {
+          found = true;
+          localStorage.setItem('adminName', adminsCache[id].name);
+          localStorage.setItem('adminRole', adminsCache[id].role);
+          window.location.href = "chat-site-admins.html";
+          break;
         }
-        if (!found) {
-          errorMsg.textContent = "اسم المستخدم أو كلمة السر غير صحيحة";
-        }
-      });
+      }
+      if (!found) {
+        errorMsg.textContent = "اسم المستخدم أو كلمة السر غير صحيحة";
+      }
     }
-  </script></body>
+  </script>
+</body>
 </html>
