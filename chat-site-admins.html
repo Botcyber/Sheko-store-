@@ -93,21 +93,18 @@
     }
     .sender-name {
       font-weight: bold;
-      display: block; /* تم تغييره من inline-flex إلى block */
+      display: block; 
       margin-bottom: 5px;
       position: relative;
       padding: 3px 12px;
       border-radius: 15px;
       background: rgba(255, 255, 255, 0.1);
-      box-shadow:
-        0 0 8px rgba(255, 215, 0, 0.7),
-        inset 0 0 10px rgba(255, 215, 0, 0.5);
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.7), inset 0 0 10px rgba(255, 215, 0, 0.5);
       color: #ffd700;
       text-shadow: 0 0 8px #ffd700;
       font-size: 17px;
       font-weight: 900;
     }
-    /* تاج متوهج بجانب اسم sheko */
     .sender-name .admin-tag {
       background: linear-gradient(45deg, #ffd700, #ffaa00);
       padding: 2px 8px;
@@ -130,7 +127,7 @@
       gap: 10px;
       align-items: center;
       margin-top: 0;
-      margin-bottom: 10px; /* تم تقليل الهامش السفلي */
+      margin-bottom: 10px; 
     }
     #replyInput {
       flex-grow: 1;
@@ -162,7 +159,7 @@
       justify-content: center;
       font-size: 18px;
       margin-bottom: 0;
-      margin-top: -6px; /* رفع الزر أعلى قليلاً */
+      margin-top: -6px; 
     }
     #sendBtn:hover {
       background: #ffaa00;
@@ -294,6 +291,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
 <script>
+  // الكود البرمجي ل Firebase مع تحميل الرسائل
   const firebaseConfig = {
     apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
     authDomain: "sheko-store.firebaseapp.com",
@@ -473,7 +471,6 @@
     });
   }
 
-  // إرسال رسالة جديدة
   sendBtn.onclick = () => {
     const text = replyInput.value.trim();
     if (!text) return alert('الرجاء كتابة رسالة');
@@ -487,12 +484,11 @@
     replyInput.value = '';
   };
 
-  // إرسال الرد من نافذة الرد
   sendReplyBtn.onclick = () => {
     const replyContent = replyText.value.trim();
     if (!replyContent) return alert('الرجاء كتابة الرد');
     if (!replyingToMsgId) return alert('لا توجد رسالة محددة للرد عليها');
-
+  
     const fullText = `رد على: "${replyingToMsgText}"\n${replyContent}`;
     const newMsgRef = db.ref('adminChatMessages').push();
     newMsgRef.set({
@@ -515,16 +511,17 @@
     replyText.value = '';
   };
 
-  // تحميل الرسائل فوراً عند فتح الصفحة
-loadMessages();
+  // تحميل الرسائل عند فتح الصفحة
+  loadMessages();
 
-// حفظ اسم الأدمن لو لم يكن محفوظ
-if (!localStorage.getItem('adminName')) {
-  let name = prompt('ادخل اسم الادمن الخاص بك:', 'sheko');
-  if (!name) name = 'Admin';
-  localStorage.setItem('adminName', name);
-  adminName = name;
-}
-  </script>
+  // حفظ اسم الأدمن المحلي في localStorage إذا لم يكن محفوظًا
+  if (!localStorage.getItem('adminName')) {
+    let name = prompt('ادخل اسم الادمن الخاص بك:', 'sheko');
+    if (!name) name = 'Admin';
+    localStorage.setItem('adminName', name);
+    adminName = name;
+  }
+</script>
+
 </body>
 </html>
