@@ -25,6 +25,7 @@
 <body>
   <h1>إدارة صلاحيات أزرار المستخدم</h1>
   <div class="button-control"><label>حسابك</label><input type="checkbox" id="account"></div>
+  <!-- طلباتك أصبحت قابلة للتحكم -->
   <div class="button-control"><label>طلباتك</label><input type="checkbox" id="orders"></div>
   <div class="button-control"><label>إضافة أموال</label><input type="checkbox" id="addMoney"></div>
   <div class="button-control"><label>التقييمات</label><input type="checkbox" id="reviews"></div>
@@ -34,7 +35,12 @@
   <div class="button-control"><label>فريق الدعم والشكاوى</label><input type="checkbox" id="support"></div>
   <div class="button-control"><label>عجلة الحظ</label><input type="checkbox" id="wheel"></div>
   <div class="button-control"><label>الدردشة</label><input type="checkbox" id="chat"></div>
-  <div class="button-control"><label>الأخبار</label><input type="checkbox" id="news"></div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script>
+  <div class="button-control"><label>الأخبار</label><input type="checkbox" id="news"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -48,6 +54,7 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
+    // أضفت "orders" هنا لتصبح قابلة للتحكم
     const buttons = ["account", "orders", "addMoney", "reviews", "notifications", "ranking", "events", "support", "wheel", "chat", "news"];
     const switches = {};
 
@@ -72,5 +79,6 @@
         });
       });
     });
-  </script></body>
+  </script>
+</body>
 </html>
