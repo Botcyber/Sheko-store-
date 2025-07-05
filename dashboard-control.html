@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>التحكم في أزرار الداشبورد</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #121212;
+      color: white;
+      padding: 20px;
+      direction: rtl;
+    }
+    h2 {
+      color: #ffb700;
+      text-align: center;
+    }
+    .control {
+      background: #1f1f1f;
+      border-radius: 10px;
+      padding: 20px;
+      max-width: 500px;
+      margin: 20px auto;
+      box-shadow: 0 0 10px #00000066;
+    }
+    .toggle-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 10px 0;
+      padding: 10px;
+      background: #2a2a2a;
+      border-radius: 6px;
+    }
+    label {
+      font-size: 16px;
+    }
+    input[type="checkbox"] {
+      width: 40px;
+      height: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>إدارة أزرار الداشبورد</h2>
+  <div class="control" id="controls">
+    <div class="toggle-item">
+      <label>زر الشحن</label>
+      <input type="checkbox" id="rechargeBtn">
+    </div>
+    <div class="toggle-item">
+      <label>زر رتب VIP</label>
+      <input type="checkbox" id="vipBtn">
+    </div>
+    <div class="toggle-item">
+      <label>زر الإنجازات</label>
+      <input type="checkbox" id="achievementsBtn">
+    </div>
+    <!-- أضف أي أزرار إضافية هنا -->
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    const btns = ['rechargeBtn', 'vipBtn', 'achievementsBtn'];
+
+    auth.onAuthStateChanged(user => {
+      if (!user || user.uid !== "mlifDgEAkKMaOeuUq63cs5NAkV93") {
+        alert("❌ غير مصرح لك بالدخول");
+        window.location.href = "index.html";
+      } else {
+        loadSettings();
+        btns.forEach(id => {
+          document.getElementById(id).addEventListener('change', () => {
+            const isChecked = document.getElementById(id).checked;
+            db.ref("dashboardLocks/" + id).set(!isChecked);
+          });
+        });
+      }
+    });
+
+    function loadSettings() {
+      db.ref("dashboardLocks").once("value").then(snapshot => {
+        const data = snapshot.val() || {};
+        btns.forEach(id => {
+          document.getElementById(id).checked = !data[id];
+        });
+      });
+    }
+  </script>
+</body>
+</html>
