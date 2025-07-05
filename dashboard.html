@@ -45,26 +45,53 @@
 <body>
 <div class="top-bar">
   <nav class="nav-icons">
-    <a href="account.html"><i class="fa fa-user"></i><span>حسابك</span></a>
-    <a href="orders.html"><i class="fa fa-box"></i><span>طلباتك</span></a>
-    <a href="add-money.html"><i class="fa fa-wallet"></i><span>إضافة أموال</span></a>
-    <a href="reviews_complaints.html"><i class="fa fa-comments"></i><span>التقييمات</span></a>
-    <a href="notifications.html" style="position: relative;">
-      <i class="fa fa-bell"></i><span>الإشعارات</span><span id="notifBadge">0</span>
-    </a>
-    <a href="ranking.html"><i class="fa fa-crown"></i><span>التصنيف</span></a>
-    <a href="vote-event.html"><i class="fa fa-bolt"></i><span>الفعاليات</span></a>
-    <a href="support_chat.html"><i class="fa fa-headset"></i><span>فريق الدعم والشكاوى</span></a>
-    <a href="wheel.html"><i class="fa fa-dharmachakra"></i><span>عجلة الحظ</span></a>
-    <a href="chat.html" id="chatLink" style="position: relative;">
-      <i class="fa fa-comments"></i><span>الدردشة</span><span id="chatBadge">0</span>
-    </a>
-    <!-- زر الأخبار -->
-    <a href="news.html" style="display: flex; align-items: center; gap: 5px; color: white; text-decoration: none;">
-      <i class="fa fa-newspaper"></i>
-      <span>الأخبار</span>
-    </a>
-  </nav>
+  <a href="account.html" id="accountLink" style="position: relative;">
+    <i class="fa fa-user"></i><span>حسابك</span>
+    <span class="lock-icon" style="display:none; margin-left:5px; font-size:14px;">🔒</span>
+  </a>
+  <a href="orders.html" id="ordersLink" style="position: relative;">
+    <i class="fa fa-box"></i><span>طلباتك</span>
+    <span class="lock-icon" style="display:none; margin-left:5px; font-size:14px;">🔒</span>
+  </a>
+  <a href="add-money.html" id="addMoneyLink" style="position: relative;">
+    <i class="fa fa-wallet"></i><span>إضافة أموال</span>
+    <span class="lock-icon" style="display:none; margin-left:5px; font-size:14px;">🔒</span>
+  </a>
+  <a href="reviews_complaints.html" id="reviewsLink" style="position: relative;">
+    <i class="fa fa-comments"></i><span>التقييمات</span>
+    <span class="lock-icon" style="display:none; margin-left:5px; font-size:14px;">🔒</span>
+  </a>
+  <a href="notifications.html" id="notificationsLink" style="position: relative;">
+    <i class="fa fa-bell"></i><span>الإشعارات</span>
+    <span class="lock-icon" style="display:none; margin-left:5px; font-size:14px;">🔒</span>
+    <span id="notifBadge">0</span>
+  </a>
+  <a href="ranking.html" id="rankingLink" style="position: relative;">
+    <i class="fa fa-crown"></i><span>التصنيف</span>
+    <span class="lock-icon" style="display:none; margin-left:5px; font-size:14px;">🔒</span>
+  </a>
+  <a href="vote-event.html" id="eventsLink" style="position: relative;">
+    <i class="fa fa-bolt"></i><span>الفعاليات</span>
+    <span class="lock-icon" style="display:none; margin-left:5px; font-size:14px;">🔒</span>
+  </a>
+  <a href="support_chat.html" id="supportLink" style="position: relative;">
+    <i class="fa fa-headset"></i><span>فريق الدعم والشكاوى</span>
+    <span class="lock-icon" style="display:none; margin-left:5px; font-size:14px;">🔒</span>
+  </a>
+  <a href="wheel.html" id="wheelLink" style="position: relative;">
+    <i class="fa fa-dharmachakra"></i><span>عجلة الحظ</span>
+    <span class="lock-icon" style="display:none; margin-left:5px; font-size:14px;">🔒</span>
+  </a>
+  <a href="chat.html" id="chatLink" style="position: relative;">
+    <i class="fa fa-comments"></i><span>الدردشة</span>
+    <span class="lock-icon" style="display:none; margin-left:5px; font-size:14px;">🔒</span>
+    <span id="chatBadge">0</span>
+  </a>
+  <a href="news.html" id="newsLink" style="position: relative;">
+    <i class="fa fa-newspaper"></i><span>الأخبار</span>
+    <span class="lock-icon" style="display:none; margin-left:5px; font-size:14px;">🔒</span>
+  </a>
+</nav>
   <div class="user-area">
     <span id="balance">رصيدك: ...</span>
     <button onclick="logout()"><i class="fa fa-sign-out-alt"></i> خروج</button>
@@ -124,7 +151,7 @@
     color: #222;
   ">حسناً</button>
 </div>
-
+  
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -479,6 +506,52 @@
       showCustomAlert("فشل في نسخ الرابط، يرجى نسخه يدوياً.", "error");
     });
   }
+<script>
+  // التحكم في تفعيل وتعطيل الأزرار بناءً على إعدادات Firebase
+  const buttonIds = [
+    "accountLink",
+    "ordersLink",
+    "addMoneyLink",
+    "reviewsLink",
+    "notificationsLink",
+    "rankingLink",
+    "eventsLink",
+    "supportLink",
+    "wheelLink",
+    "chatLink",
+    "newsLink"
+  ];
+
+  function updateButtonState(id, isEnabled) {
+    const button = document.getElementById(id);
+    if (!button) return;
+
+    const lockIcon = button.querySelector('.lock-icon');
+
+    if (isEnabled) {
+      button.classList.remove("disabled");
+      button.style.pointerEvents = "auto";
+      button.style.opacity = "1";
+      if (lockIcon) lockIcon.style.display = "none";
+    } else {
+      button.classList.add("disabled");
+      button.style.pointerEvents = "none";
+      button.style.opacity = "0.6";
+      if (lockIcon) lockIcon.style.display = "inline";
+    }
+  }
+
+  auth.onAuthStateChanged(user => {
+    if (!user) return;
+
+    db.ref("admin_buttons/" + user.uid).on("value", (snapshot) => {
+      const data = snapshot.val() || {};
+      buttonIds.forEach((id) => {
+        const isEnabled = data[id] !== false; // افتراضي مفعّل إذا لم يكن موجود
+        updateButtonState(id, isEnabled);
+      });
+    });
+  });
 </script>
 </body>
 </html>
