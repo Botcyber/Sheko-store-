@@ -22,7 +22,7 @@
     <h2 style="text-align:center;">🤖 دردشة الذكاء الاصطناعي - Sheko Store</h2>
     <div class="chat-box" id="chatBox"></div>
     <div class="input-area">
-      <input type="text" id="userInput" placeholder="اسأل أي شيء..." />
+      <input type="text" id="userInput" placeholder="اسأل أي شيء عن الموقع أو غيره..." />
       <button onclick="sendMessage()">إرسال</button>
     </div>
   </div>
@@ -67,7 +67,7 @@
             messages: [
               {
                 role: "system",
-                content: `أنت مساعد ذكي ودود تجيب على أي سؤال يطرحه المستخدم بشكل واضح ومفيد. يمكنك التحدث في أي موضوع سواء عن موقع Sheko Store أو غيره. كن مهذباً وشرحاً ومساعداً دائماً.`
+                content: "أنت مساعد ذكي لموقع Sheko Store. تجيب على جميع الأسئلة بشكل واضح سواء كانت عن الموقع أو أي موضوع آخر."
               },
               { role: "user", content: question }
             ],
@@ -75,21 +75,25 @@
           })
         });
 
-        const data = await response.json();
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error.message || "خطأ في استدعاء API");
+        }
 
-        const answer = data.choices?.[0]?.message?.content?.trim() || 
-          "عذرًا، حدث خطأ، يرجى المحاولة مرة أخرى.";
+        const data = await response.json();
+        const answer = data.choices?.[0]?.message?.content?.trim() || "عذرًا، لم أتمكن من إيجاد إجابة.";
 
         appendMessage("Sheko AI", answer, "ai");
 
-        // حفظ في قاعدة البيانات
+        // تخزين في Firebase
         db.ref("ai-chat-history").push({
-          question,
-          answer,
+          question: question,
+          answer: answer,
           timestamp: new Date().toISOString()
         });
+
       } catch (error) {
-        appendMessage("Sheko AI", "حدث خطأ في الاتصال بالخدمة، يرجى المحاولة لاحقًا.", "ai");
+        appendMessage("Sheko AI", "حدث خطأ: " + error.message, "ai");
         console.error(error);
       }
     }
