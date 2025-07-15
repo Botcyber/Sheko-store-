@@ -55,34 +55,48 @@
       appendMessage("أنت", question, "user");
       userInput.value = "";
 
-      // إرسال الطلب إلى OpenAI API
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer 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"
-        },
-        body: JSON.stringify({
-          model: "gpt-4",
-          messages: [
-            { role: "system", content: "أنت مساعد ذكي لموقع Sheko Store، تساعد المستخدمين في فهم خدمات الموقع، كيفية الاستخدام، الطلبات، الشحن، إلخ." },
-            { role: "user", content: question }
-          ],
-          temperature: 0.5
-        })
-      });
+      try {
+        // إرسال الطلب إلى OpenAI API
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer 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"
+          },
+          body: JSON.stringify({
+            model: "gpt-4",
+            messages: [
+              {
+                role: "system",
+                content: `أنت مساعد ذكي متخصص في موقع Sheko Store فقط.
+مهمتك هي الرد على أسئلة المستخدمين المتعلقة بالموقع وخدماته فقط، مثل الشحن، الطلبات، الحسابات، الدفع، العروض، الدعم، وأي شيء متعلق بالموقع.
+إذا كان السؤال خارج هذا النطاق أو غير واضح، يجب الرد: "عذرًا، لا يمكنني المساعدة في هذا الموضوع، يرجى السؤال عن خدمات Sheko Store فقط."
+لا ترد بجمل عامة مثل "لم أفهم سؤالك جيدًا" أو غيرها.
+كن ودودًا وواضحًا في الإجابة.`
+              },
+              { role: "user", content: question }
+            ],
+            temperature: 0.5
+          })
+        });
 
-      const data = await response.json();
-      const answer = data.choices?.[0]?.message?.content?.trim() || "عذرًا، لم أفهم سؤالك جيدًا.";
+        const data = await response.json();
 
-      appendMessage("Sheko AI", answer, "ai");
+        const answer = data.choices?.[0]?.message?.content?.trim() || 
+          "عذرًا، لا يمكنني المساعدة في هذا الموضوع، يرجى السؤال عن خدمات Sheko Store فقط.";
 
-      // حفظ في قاعدة البيانات
-      db.ref("ai-chat-history").push({
-        question,
-        answer,
-        timestamp: new Date().toISOString()
-      });
+        appendMessage("Sheko AI", answer, "ai");
+
+        // حفظ في قاعدة البيانات
+        db.ref("ai-chat-history").push({
+          question,
+          answer,
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        appendMessage("Sheko AI", "حدث خطأ في الاتصال بالخدمة، يرجى المحاولة لاحقًا.", "ai");
+        console.error(error);
+      }
     }
 
     function appendMessage(sender, text, type) {
