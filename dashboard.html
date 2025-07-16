@@ -315,12 +315,10 @@
     const selectedMain = prices[mainService.value];
     if (!selectedMain) return;
     for (let sub in selectedMain) {
-  //for (let sub in selectedMain) {
-  let opt = document.createElement("option");
-  opt.value = sub;
-  opt.textContent = sub;
-  subService.appendChild(opt);
-}
+      let opt = document.createElement("option");
+      opt.value = sub;
+      opt.textContent = sub;
+      subService.appendChild(opt);
     }
     updatePackage();
 
