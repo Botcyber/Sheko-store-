@@ -33,10 +33,13 @@
       overflow-y: auto;
       margin-bottom: 15px;
       box-shadow: 0 0 15px rgba(255, 183, 0, 0.4);
+      max-height: 50vh; /* تصغير ارتفاع المحادثة */
     }
 
     .chat-message {
       margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #444; /* فاصل بين الرسائل */
       opacity: 0;
       transform: translateY(20px);
       animation: fadeInUp 0.4s forwards;
@@ -44,7 +47,7 @@
     }
 
     .user {
-      color: #ffb700;
+      color: #cc8400; /* لون مستخدم برتقالي أغمق */
       font-weight: bold;
       display: block;
       margin-bottom: 5px;
@@ -109,9 +112,7 @@
 
   <div class="chat-box" id="chatBox"></div>
 
-  <div class="quick-replies" id="quickReplies">
-    <!-- الأزرار تُضاف تلقائيًا -->
-  </div>
+  <div class="quick-replies" id="quickReplies"></div>
 
 <script>
   const chatBox = document.getElementById("chatBox");
@@ -136,7 +137,6 @@
     "اخري؟": "انضم الينا لكي تتابع كل شئ<br><br>قناة التليجرام<br><a href='https://t.me/sheko_store_website' target='_blank' style='color:#ffb700;'>https://t.me/sheko_store_website</a><br><br>جروب الواتساب<br><a href='https://chat.whatsapp.com/EpJHhfUBTro8TZKx901A9S?mode=r_t' target='_blank' style='color:#ffb700;'>https://chat.whatsapp.com/EpJHhfUBTro8TZKx901A9S?mode=r_t</a>"
   };
 
-  // إضافة أزرار الأسئلة تلقائيًا من knowledgeBase
   Object.keys(knowledgeBase).forEach(question => {
     const btn = document.createElement("button");
     btn.textContent = question;
@@ -146,7 +146,6 @@
     quickReplies.appendChild(btn);
   });
 
-  // عرض الرسائل في صندوق الدردشة مع أنيميشن
   function appendMessage(sender, text, className) {
     const div = document.createElement("div");
     div.classList.add("chat-message", className);
@@ -158,16 +157,13 @@
   function sendMessage(question) {
     appendMessage("أنت", question, "user");
 
-    // تكرار السؤال كما هو للبحث المبسط
     const key = Object.keys(knowledgeBase).find(k => k.toLowerCase() === question.toLowerCase());
     const answer = key ? knowledgeBase[key] : "عذرًا، لم أفهم سؤالك. حاول سؤال شيء آخر أو تواصل مع الدعم.";
 
-    // تأخير بسيط لظهور الرسالة وكأن البوت يكتب
     setTimeout(() => {
       appendMessage("البوت", answer, "bot");
     }, 600);
   }
-
 </script>
 
 </body>
