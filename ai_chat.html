@@ -13,18 +13,18 @@
       color: #fff;
       margin: 0;
       padding: 0;
+      height: 100vh;
       display: flex;
       flex-direction: column;
-      height: 100vh;
       max-width: 480px;
       margin: auto;
-      overflow: hidden;
     }
 
     h2 {
       text-align: center;
-      font-size: 1.4rem;
-      margin: 15px 0 5px;
+      font-size: 1.3rem;
+      padding: 12px;
+      margin: 0;
     }
 
     .chat-box {
@@ -34,7 +34,6 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      max-height: 60vh;
     }
 
     .chat-message {
@@ -73,46 +72,66 @@
       font-weight: bold;
       border: none;
       border-radius: 30px;
-      padding: 14px 20px;
-      margin: 10px auto 5px;
-      cursor: pointer;
+      padding: 12px 20px;
       font-size: 16px;
-      transition: all 0.3s ease;
-      width: 90%;
-    }
-
-    .fab-button:hover {
-      background: #ffdd33;
+      cursor: pointer;
+      width: 95%;
+      margin: 10px auto;
+      position: fixed;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      box-shadow: 0 0 10px #00000055;
+      z-index: 1000;
     }
 
     .question-list {
       display: none;
       flex-direction: column;
       gap: 10px;
-      padding: 10px;
-      background: #1c1c1c;
-      border-top: 1px solid #333;
-      max-height: 45vh;
+      background: #1a1a1a;
+      padding: 15px;
       overflow-y: auto;
-      animation: slideUp 0.3s ease;
+      max-height: 60vh;
+      position: fixed;
+      bottom: 70px;
+      left: 0;
+      right: 0;
+      z-index: 999;
+      animation: fadeSlideIn 0.4s ease forwards;
+      border-top: 1px solid #333;
+      border-radius: 16px 16px 0 0;
     }
 
     .question-card {
-      background: #2a2a2a;
+      background: #292929;
       padding: 12px;
-      border-radius: 12px;
+      border-radius: 10px;
       cursor: pointer;
-      transition: background 0.3s;
-      border: 1px solid #333;
+      border: 1px solid #444;
+      transition: background 0.3s, transform 0.3s;
     }
 
     .question-card:hover {
-      background: #3a3a3a;
+      background: #383838;
+      transform: scale(1.02);
     }
 
-    @keyframes slideUp {
-      from { transform: translateY(10px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    img.bot-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
     }
   </style>
 </head>
@@ -160,7 +179,7 @@
       if (className === "bot") {
         msg.innerHTML = `
           <div style="display: flex; align-items: flex-start; gap: 10px;">
-            <img src="https://cdn-icons-png.flaticon.com/512/4712/4712106.png" alt="bot" style="width: 34px; height: 34px; border-radius: 50%;" />
+            <img src="https://cdn-icons-png.flaticon.com/512/4712/4712106.png" alt="bot" class="bot-icon" />
             <div>
               <div style="font-weight: bold; color: #00e0ff; margin-bottom: 4px;">بوت شيكو ستور ✅</div>
               <div>${text}</div>
