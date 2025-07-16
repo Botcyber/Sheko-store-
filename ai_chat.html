@@ -34,15 +34,16 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+      max-height: 60vh;
     }
 
     .chat-message {
       max-width: 85%;
       padding: 10px 14px;
       border-radius: 16px;
-      animation: fadeIn 0.4s ease-out forwards;
+      animation: slideFade 0.4s ease-out forwards;
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(15px);
     }
 
     .user {
@@ -59,7 +60,7 @@
       border-bottom-left-radius: 0;
     }
 
-    @keyframes fadeIn {
+    @keyframes slideFade {
       to {
         opacity: 1;
         transform: translateY(0);
@@ -159,7 +160,7 @@
       if (className === "bot") {
         msg.innerHTML = `
           <div style="display: flex; align-items: flex-start; gap: 10px;">
-            <img src="https://cdn-icons-png.flaticon.com/512/4712/4712107.png" alt="bot" style="width: 34px; height: 34px; border-radius: 50%;" />
+            <img src="https://cdn-icons-png.flaticon.com/512/4712/4712106.png" alt="bot" style="width: 34px; height: 34px; border-radius: 50%;" />
             <div>
               <div style="font-weight: bold; color: #00e0ff; margin-bottom: 4px;">بوت شيكو ستور ✅</div>
               <div>${text}</div>
@@ -182,7 +183,6 @@
       }, 400);
     }
 
-    // إنشاء الأسئلة في القائمة
     for (const question in knowledgeBase) {
       const btn = document.createElement("div");
       btn.className = "question-card";
