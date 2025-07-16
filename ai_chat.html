@@ -17,7 +17,7 @@
       background: #1e1e1e;
       border-radius: 10px;
       padding: 15px;
-      max-height: 70vh;
+      max-height: 65vh;
       overflow-y: auto;
       margin-bottom: 15px;
     }
@@ -35,6 +35,7 @@
     .input-area {
       display: flex;
       gap: 10px;
+      margin-bottom: 10px;
     }
     input[type="text"] {
       flex: 1;
@@ -54,17 +55,43 @@
     button:hover {
       background: #ffc733;
     }
+    .quick-replies {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .quick-replies button {
+      background: #333;
+      color: white;
+      border: 1px solid #555;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .quick-replies button:hover {
+      background: #444;
+    }
   </style>
 </head>
 <body>
 
-  <h2 style="text-align:center;">بوت دردشة بسيط - بدون خادم</h2>
+  <h2 style="text-align:center;">🤖 بوت دردشة بسيط - بدون خادم</h2>
 
   <div class="chat-box" id="chatBox"></div>
 
   <div class="input-area">
     <input type="text" id="userInput" placeholder="اكتب سؤالك هنا..." />
     <button onclick="sendMessage()">إرسال</button>
+  </div>
+
+  <!-- أزرار الأسئلة الجاهزة -->
+  <div class="quick-replies">
+    <button onclick="quickSend('ما هو sheko store؟')">ما هو Sheko Store؟</button>
+    <button onclick="quickSend('كيف أطلب من الموقع؟')">كيف أطلب من الموقع؟</button>
+    <button onclick="quickSend('ما هي طرق الدفع؟')">طرق الدفع</button>
+    <button onclick="quickSend('هل يمكنني استرجاع المال؟')">سياسة الاسترجاع</button>
+    <button onclick="quickSend('ما هو وقت التوصيل؟')">وقت التوصيل</button>
+    <button onclick="quickSend('السلام عليكم')">السلام عليكم</button>
   </div>
 
   <script>
@@ -82,14 +109,12 @@
     function getBotResponse(userText) {
       userText = userText.trim().toLowerCase();
 
-      // بحث بسيط في القاعدة المعرفية
       for (const question in knowledgeBase) {
         if (userText.includes(question.toLowerCase())) {
           return knowledgeBase[question];
         }
       }
 
-      // ردود عامة
       if (userText.includes("مرحبا") || userText.includes("أهلا")) {
         return "مرحبًا! كيف يمكنني مساعدتك؟";
       }
@@ -109,18 +134,22 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    function sendMessage() {
+    function sendMessage(text = null) {
       const input = document.getElementById("userInput");
-      const userText = input.value.trim();
+      const userText = text || input.value.trim();
       if (!userText) return;
 
       appendMessage("أنت", userText, "user");
-      input.value = "";
+      if (!text) input.value = "";
 
       const botReply = getBotResponse(userText);
       setTimeout(() => {
         appendMessage("البوت", botReply, "bot");
       }, 500);
+    }
+
+    function quickSend(text) {
+      sendMessage(text);
     }
   </script>
 
