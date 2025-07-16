@@ -37,7 +37,7 @@
     }
 
     .chat-message {
-      max-width: 80%;
+      max-width: 85%;
       padding: 10px 14px;
       border-radius: 16px;
       animation: fadeIn 0.4s ease-out forwards;
@@ -53,7 +53,7 @@
     }
 
     .bot {
-      background-color: #00bcd4;
+      background-color: #1f1f1f;
       color: #fff;
       align-self: flex-start;
       border-bottom-left-radius: 0;
@@ -66,40 +66,52 @@
       }
     }
 
-    .select-container {
-      background: #1a1a1a;
-      padding: 10px 12px;
-      border-top: 1px solid #333;
-      position: sticky;
-      bottom: 0;
-      z-index: 10;
-    }
-
-    select {
-      width: 100%;
-      padding: 12px 10px;
-      font-size: 1rem;
-      border-radius: 12px;
+    .fab-button {
+      background: #ffc107;
+      color: #000;
+      font-weight: bold;
       border: none;
-      background: #333;
-      color: #fff;
+      border-radius: 30px;
+      padding: 14px 20px;
+      margin: 10px auto 5px;
       cursor: pointer;
-      appearance: none;
-      background-image:
-        linear-gradient(45deg, transparent 50%, #ffc107 50%),
-        linear-gradient(135deg, #ffc107 50%, transparent 50%),
-        linear-gradient(to right, #444, #444);
-      background-position:
-        calc(100% - 20px) calc(1em + 2px),
-        calc(100% - 15px) calc(1em + 2px),
-        calc(100% - 25px) 0.5em;
-      background-size: 5px 5px, 5px 5px, 1px 1.5em;
-      background-repeat: no-repeat;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      width: 90%;
     }
 
-    option {
-      background: #1a1a1a;
-      color: white;
+    .fab-button:hover {
+      background: #ffdd33;
+    }
+
+    .question-list {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px;
+      background: #1c1c1c;
+      border-top: 1px solid #333;
+      max-height: 45vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s ease;
+    }
+
+    .question-card {
+      background: #2a2a2a;
+      padding: 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.3s;
+      border: 1px solid #333;
+    }
+
+    .question-card:hover {
+      background: #3a3a3a;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
   </style>
 </head>
@@ -109,15 +121,13 @@
 
   <div class="chat-box" id="chatBox" aria-live="polite"></div>
 
-  <div class="select-container">
-    <select id="questionSelect">
-      <option value="" disabled selected>📌 اختر سؤالك هنا...</option>
-    </select>
-  </div>
+  <button class="fab-button" onclick="toggleQuestions()">📌 اختر سؤالك</button>
+
+  <div class="question-list" id="questionList"></div>
 
   <script>
     const chatBox = document.getElementById("chatBox");
-    const questionSelect = document.getElementById("questionSelect");
+    const questionList = document.getElementById("questionList");
 
     const knowledgeBase = {
       "ماهوا موقع شيكو ستور": "هوا موقع لشحن الالعاب ومواقع التواصل الاجتماعي والشحن الالكتروني امن وسريع وبسيط.",
@@ -138,33 +148,50 @@
       "اخري؟": `انضم الينا لكي تتابع كل شئ<br><br>📢 <a href="https://t.me/sheko_store_website" target="_blank" style="color:#ffc107;">قناة التليجرام</a><br>💬 <a href="https://chat.whatsapp.com/EpJHhfUBTro8TZKx901A9S?mode=r_t" target="_blank" style="color:#ffc107;">جروب الواتساب</a>`
     };
 
-    Object.keys(knowledgeBase).forEach(question => {
-      const option = document.createElement("option");
-      option.value = question;
-      option.textContent = question;
-      questionSelect.appendChild(option);
-    });
-
-    questionSelect.addEventListener("change", () => {
-      const question = questionSelect.value;
-      if (!question) return;
-
-      appendMessage("أنت", question, "user");
-
-      const answer = knowledgeBase[question] || "عذرًا، لم أفهم سؤالك.";
-      setTimeout(() => {
-        appendMessage("البوت", answer, "bot");
-      }, 400);
-
-      questionSelect.selectedIndex = 0;
-    });
+    function toggleQuestions() {
+      questionList.style.display = questionList.style.display === "flex" ? "none" : "flex";
+    }
 
     function appendMessage(sender, text, className) {
       const msg = document.createElement("div");
       msg.classList.add("chat-message", className);
-      msg.innerHTML = `<strong>${sender}</strong><br>${text}`;
+
+      if (className === "bot") {
+        msg.innerHTML = `
+          <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <img src="https://cdn-icons-png.flaticon.com/512/4712/4712107.png" alt="bot" style="width: 34px; height: 34px; border-radius: 50%;" />
+            <div>
+              <div style="font-weight: bold; color: #00e0ff; margin-bottom: 4px;">بوت شيكو ستور ✅</div>
+              <div>${text}</div>
+            </div>
+          </div>
+        `;
+      } else {
+        msg.innerHTML = `<strong>${sender}</strong><br>${text}`;
+      }
+
       chatBox.appendChild(msg);
       chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function sendBotReply(question) {
+      appendMessage("أنت", question, "user");
+      const answer = knowledgeBase[question] || "عذرًا، لم أفهم سؤالك.";
+      setTimeout(() => {
+        appendMessage("البوت", answer, "bot");
+      }, 400);
+    }
+
+    // إنشاء الأسئلة في القائمة
+    for (const question in knowledgeBase) {
+      const btn = document.createElement("div");
+      btn.className = "question-card";
+      btn.textContent = question;
+      btn.onclick = () => {
+        sendBotReply(question);
+        questionList.style.display = "none";
+      };
+      questionList.appendChild(btn);
     }
   </script>
 
