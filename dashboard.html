@@ -315,9 +315,7 @@
     const selectedMain = prices[mainService.value];
     if (!selectedMain) return;
     for (let sub in selectedMain) {
-  // قفل تيك توك
-  if (mainService.value === "سوشيال" && sub === "تيك توك") continue;
-
+  //for (let sub in selectedMain) {
   let opt = document.createElement("option");
   opt.value = sub;
   opt.textContent = sub;
