@@ -2,7 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>بوت دردشة Sheko Store - بدون خادم</title>
+  <title>بوت دردشة Sheko Store - اختيار سؤال</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
 
@@ -11,18 +12,18 @@
       background: #121212;
       color: #fff;
       margin: 0;
-      padding: 20px;
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
+      padding: 15px;
+      height: 100vh;
       display: flex;
       flex-direction: column;
-      height: 100vh;
+      max-width: 480px;
+      margin: 0 auto;
     }
 
     h2 {
       text-align: center;
       margin-bottom: 15px;
+      font-size: 1.6rem;
     }
 
     .chat-box {
@@ -32,14 +33,16 @@
       flex-grow: 1;
       overflow-y: auto;
       margin-bottom: 15px;
-      box-shadow: 0 0 15px rgba(255, 183, 0, 0.4);
-      max-height: 50vh; /* تصغير ارتفاع المحادثة */
+      max-height: 60vh;
+      box-shadow: none;
+      font-size: 1.1rem;
+      line-height: 1.4;
     }
 
     .chat-message {
       margin-bottom: 15px;
       padding-bottom: 10px;
-      border-bottom: 1px solid #444; /* فاصل بين الرسائل */
+      border-bottom: 1px solid #444;
       opacity: 0;
       transform: translateY(20px);
       animation: fadeInUp 0.4s forwards;
@@ -47,10 +50,11 @@
     }
 
     .user {
-      color: #cc8400; /* لون مستخدم برتقالي أغمق */
+      color: #cc8400;
       font-weight: bold;
       display: block;
       margin-bottom: 5px;
+      font-size: 1.1rem;
     }
 
     .bot {
@@ -58,6 +62,7 @@
       font-weight: bold;
       display: block;
       margin-bottom: 5px;
+      font-size: 1.1rem;
     }
 
     @keyframes fadeInUp {
@@ -67,56 +72,47 @@
       }
     }
 
-    .quick-replies {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: center;
-    }
-
-    .quick-replies button {
-      background: #333;
-      color: white;
-      border: 1px solid #555;
-      padding: 10px 14px;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 15px;
-      transition: background-color 0.3s ease;
-      flex-grow: 1;
-      max-width: 48%;
-      min-width: 140px;
-      text-align: center;
-    }
-
-    .quick-replies button:hover {
-      background: #ffb700;
-      color: #121212;
-      border-color: #ffb700;
-      font-weight: bold;
-    }
-
-    /* Scrollbar */
-    .chat-box::-webkit-scrollbar {
-      width: 8px;
-    }
-    .chat-box::-webkit-scrollbar-thumb {
-      background-color: #ffb700aa;
+    select {
+      width: 100%;
+      padding: 14px 10px;
+      font-size: 1.1rem;
       border-radius: 10px;
+      border: none;
+      background: #333;
+      color: #fff;
+      cursor: pointer;
+      outline: none;
+      margin-bottom: 15px;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, #ffb700 50%),
+        linear-gradient(135deg, #ffb700 50%, transparent 50%),
+        linear-gradient(to right, #444, #444);
+      background-position:
+        calc(100% - 20px) calc(1em + 2px),
+        calc(100% - 15px) calc(1em + 2px),
+        calc(100% - 25px) 0.5em;
+      background-size: 5px 5px, 5px 5px, 1px 1.5em;
+      background-repeat: no-repeat;
     }
+
   </style>
 </head>
 <body>
 
   <h2>🤖 بوت دردشة Sheko Store</h2>
 
-  <div class="chat-box" id="chatBox"></div>
+  <select id="questionSelect" aria-label="اختر سؤالك">
+    <option value="" disabled selected>اختر سؤالك هنا...</option>
+  </select>
 
-  <div class="quick-replies" id="quickReplies"></div>
+  <div class="chat-box" id="chatBox" aria-live="polite" aria-atomic="true"></div>
 
 <script>
   const chatBox = document.getElementById("chatBox");
-  const quickReplies = document.getElementById("quickReplies");
+  const questionSelect = document.getElementById("questionSelect");
 
   const knowledgeBase = {
     "ماهوا موقع شيكو ستور": "هوا موقع لشحن الالعاب ومواقع التواصل الاجتماعي والشحن الالكتروني امن وسريع وبسيط.",
@@ -134,16 +130,31 @@
     "ماهي التقييمات": "لاضافه تقييم للموقع حسب تجربتك للموقع وتختار عدد النجوم ويستطيع المستخدمين ان يعرفو تقييمك وان تعرف تقييم الاخرين وهكذا.",
     "ماهي الاخبار": "هي صفحه مخصصه لاخبار الموقع وكل شئ يخص الموقع.",
     "كيف اضيف اسمي وصورتي بكي تظهر في التصنيفات والدردشه": "اذهب الي حسابك ومن هناك تستطيع ان تكتب اسمك وان تضع صورتك من اعلي الصفحه بكل سهوله مع تجنب اي صوره غير لائقه او اسم غير لائق.",
-    "اخري؟": "انضم الينا لكي تتابع كل شئ<br><br>قناة التليجرام<br><a href='https://t.me/sheko_store_website' target='_blank' style='color:#ffb700;'>https://t.me/sheko_store_website</a><br><br>جروب الواتساب<br><a href='https://chat.whatsapp.com/EpJHhfUBTro8TZKx901A9S?mode=r_t' target='_blank' style='color:#ffb700;'>https://chat.whatsapp.com/EpJHhfUBTro8TZKx901A9S?mode=r_t</a>"
+    "اخري؟": `انضم الينا لكي تتابع كل شئ<br><br>قناة التليجرام<br><a href="https://t.me/sheko_store_website" target="_blank" style="color:#ffb700;">https://t.me/sheko_store_website</a><br><br>جروب الواتساب<br><a href="https://chat.whatsapp.com/EpJHhfUBTro8TZKx901A9S?mode=r_t" target="_blank" style="color:#ffb700;">https://chat.whatsapp.com/EpJHhfUBTro8TZKx901A9S?mode=r_t</a>`
   };
 
+  // تعبئة القائمة بالأسئلة
   Object.keys(knowledgeBase).forEach(question => {
-    const btn = document.createElement("button");
-    btn.textContent = question;
-    btn.onclick = () => {
-      sendMessage(question);
-    };
-    quickReplies.appendChild(btn);
+    const option = document.createElement("option");
+    option.value = question;
+    option.textContent = question;
+    questionSelect.appendChild(option);
+  });
+
+  questionSelect.addEventListener("change", () => {
+    const question = questionSelect.value;
+    if (!question) return;
+
+    appendMessage("أنت", question, "user");
+
+    const answer = knowledgeBase[question] || "عذرًا، لم أفهم سؤالك. حاول سؤال شيء آخر أو تواصل مع الدعم.";
+
+    setTimeout(() => {
+      appendMessage("البوت", answer, "bot");
+    }, 400);
+
+    // إعادة تعيين اختيار القائمة
+    questionSelect.selectedIndex = 0;
   });
 
   function appendMessage(sender, text, className) {
@@ -152,17 +163,6 @@
     div.innerHTML = `<span>${sender}:</span> <span>${text}</span>`;
     chatBox.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
-  }
-
-  function sendMessage(question) {
-    appendMessage("أنت", question, "user");
-
-    const key = Object.keys(knowledgeBase).find(k => k.toLowerCase() === question.toLowerCase());
-    const answer = key ? knowledgeBase[key] : "عذرًا، لم أفهم سؤالك. حاول سؤال شيء آخر أو تواصل مع الدعم.";
-
-    setTimeout(() => {
-      appendMessage("البوت", answer, "bot");
-    }, 600);
   }
 </script>
 
