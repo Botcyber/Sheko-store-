@@ -2,156 +2,173 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>بوت دردشة بسيط - بدون خادم</title>
+  <title>بوت دردشة Sheko Store - بدون خادم</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
+
     body {
       font-family: 'Cairo', sans-serif;
       background: #121212;
       color: #fff;
-      margin: 0; padding: 20px;
+      margin: 0;
+      padding: 20px;
       max-width: 600px;
       margin-left: auto;
       margin-right: auto;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
     }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
     .chat-box {
       background: #1e1e1e;
       border-radius: 10px;
       padding: 15px;
-      max-height: 65vh;
+      flex-grow: 1;
       overflow-y: auto;
       margin-bottom: 15px;
+      box-shadow: 0 0 15px rgba(255, 183, 0, 0.4);
     }
+
     .chat-message {
       margin-bottom: 15px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.4s forwards;
+      animation-timing-function: ease-out;
     }
+
     .user {
       color: #ffb700;
       font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
     }
+
     .bot {
       color: #00e0ff;
       font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
     }
-    .input-area {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
-    input[type="text"] {
-      flex: 1;
-      padding: 10px;
-      border-radius: 6px;
-      border: none;
-      font-size: 16px;
-    }
-    button {
-      padding: 10px 20px;
-      background: #ffb700;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #ffc733;
-    }
+
     .quick-replies {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
+      justify-content: center;
     }
+
     .quick-replies button {
       background: #333;
       color: white;
       border: 1px solid #555;
-      padding: 8px 12px;
-      border-radius: 8px;
+      padding: 10px 14px;
+      border-radius: 12px;
       cursor: pointer;
+      font-size: 15px;
+      transition: background-color 0.3s ease;
+      flex-grow: 1;
+      max-width: 48%;
+      min-width: 140px;
+      text-align: center;
     }
+
     .quick-replies button:hover {
-      background: #444;
+      background: #ffb700;
+      color: #121212;
+      border-color: #ffb700;
+      font-weight: bold;
+    }
+
+    /* Scrollbar */
+    .chat-box::-webkit-scrollbar {
+      width: 8px;
+    }
+    .chat-box::-webkit-scrollbar-thumb {
+      background-color: #ffb700aa;
+      border-radius: 10px;
     }
   </style>
 </head>
 <body>
 
-  <h2 style="text-align:center;">🤖 بوت دردشة بسيط - بدون خادم</h2>
+  <h2>🤖 بوت دردشة Sheko Store</h2>
 
   <div class="chat-box" id="chatBox"></div>
 
-  <div class="input-area">
-    <input type="text" id="userInput" placeholder="اكتب سؤالك هنا..." />
-    <button onclick="sendMessage()">إرسال</button>
+  <div class="quick-replies" id="quickReplies">
+    <!-- الأزرار تُضاف تلقائيًا -->
   </div>
 
-  <!-- أزرار الأسئلة الجاهزة -->
-  <div class="quick-replies">
-    <button onclick="quickSend('ما هو sheko store؟')">ما هو Sheko Store؟</button>
-    <button onclick="quickSend('كيف أطلب من الموقع؟')">كيف أطلب من الموقع؟</button>
-    <button onclick="quickSend('ما هي طرق الدفع؟')">طرق الدفع</button>
-    <button onclick="quickSend('هل يمكنني استرجاع المال؟')">سياسة الاسترجاع</button>
-    <button onclick="quickSend('ما هو وقت التوصيل؟')">وقت التوصيل</button>
-    <button onclick="quickSend('السلام عليكم')">السلام عليكم</button>
-  </div>
+<script>
+  const chatBox = document.getElementById("chatBox");
+  const quickReplies = document.getElementById("quickReplies");
 
-  <script>
-    const chatBox = document.getElementById("chatBox");
+  const knowledgeBase = {
+    "ماهوا موقع شيكو ستور": "هوا موقع لشحن الالعاب ومواقع التواصل الاجتماعي والشحن الالكتروني امن وسريع وبسيط.",
+    "كيفية أضافه الاموال": "اذهب الي زر أضافه الاموال في لوحة التحكم واختار طريقه الدفع واكتب الرقم والمبلغ وانتظر حين يتم اضافة الاموال الي حسابك.",
+    "كيفية طلب خدمه": "اختار الخدمه من لوحة التحكم واختار نوع الخدمه التي تريدها واختار الباقه ومن ثم كتابه المطلوب في الاسفل واضفط علي ارسال الطلب.",
+    "كيف اراجع طلباتي": "اذهب الي زر طلباتك في لوحة التحكم وتابع طلبك واعرف طلباتك السابقه.",
+    "ماذا تعني قيد التنفيذ و تم و مرفوض": "قيد التنفيذ يعني طلبك قيد التنفيذ من الموقع. تم يعني طلبك قد تم ونجح. مرفوض يعني تم رفضه لاسباب تتعلق بي (id خطأ او الرابط خطأ او الرقم الهاتف خطأ وهكذا).",
+    "ماهوا الدردشه": "الدردشه هي وسيله للتحدث مع جميع المستخدمين الذين سجلو في الموقع يمكنك التحدث بحريه لكن تجنب اي كلام او وسيله قد تسبب في حظرك من الدردشه.",
+    "ماهي الشارات": "هي شارات تعطي للمستخدمين حسب انفاقهم في الموقع او الشركاء الذين قد شاركو في ترويج الموقع او مدة استخدامهم للموقع.",
+    "كيف اصبح من شركاء الموقع": "الترويج للموقع و انفاقهم الكثير من الرصيد و يمكن للشريك ومتأهل لاستخدام خدمات الموقع كأدمن دون حدوث اي اخطاء من الشريك او النصب.",
+    "ماهوا التصنيف": "هي قائمه تظهر فيها المستخدمين الاكثر إنفاقا للرصيد كلما انفقت رصيد اكتر يرتقي ترتيبك.",
+    "ماهي عجلة الحظ": "هي عجله تتيح للمستخدمين اداره العجله مره واحده يوميا للحصول علي الهدايا ويمكنك اداره العجله من النقاط التي لديك في حسابك.",
+    "كيف الحصول علي نقاط": "يمكنك الحصول علي النقاط عندما تنفق رصيد تأخذ نقاط حسب انفاقك.",
+    "ماذا افعل في فريق الدعم": "للشكاوي او الاستفسارات فقط وليس الدردشه الحره.",
+    "ماهي التقييمات": "لاضافه تقييم للموقع حسب تجربتك للموقع وتختار عدد النجوم ويستطيع المستخدمين ان يعرفو تقييمك وان تعرف تقييم الاخرين وهكذا.",
+    "ماهي الاخبار": "هي صفحه مخصصه لاخبار الموقع وكل شئ يخص الموقع.",
+    "كيف اضيف اسمي وصورتي بكي تظهر في التصنيفات والدردشه": "اذهب الي حسابك ومن هناك تستطيع ان تكتب اسمك وان تضع صورتك من اعلي الصفحه بكل سهوله مع تجنب اي صوره غير لائقه او اسم غير لائق.",
+    "اخري؟": "انضم الينا لكي تتابع كل شئ<br><br>قناة التليجرام<br><a href='https://t.me/sheko_store_website' target='_blank' style='color:#ffb700;'>https://t.me/sheko_store_website</a><br><br>جروب الواتساب<br><a href='https://chat.whatsapp.com/EpJHhfUBTro8TZKx901A9S?mode=r_t' target='_blank' style='color:#ffb700;'>https://chat.whatsapp.com/EpJHhfUBTro8TZKx901A9S?mode=r_t</a>"
+  };
 
-    const knowledgeBase = {
-      "ما هو sheko store؟": "Sheko Store هو متجر إلكتروني يقدم خدمات متعددة ومتنوعة لعملائه.",
-      "كيف أطلب من الموقع؟": "يمكنك اختيار المنتج الذي ترغب فيه ثم إضافته للسلة وإتمام الدفع.",
-      "ما هي طرق الدفع؟": "نقبل الدفع عن طريق البطاقات الائتمانية، الباي بال، والدفع عند الاستلام.",
-      "هل يمكنني استرجاع المال؟": "نعم، لدينا سياسة استرجاع واضحة، يرجى التواصل مع الدعم.",
-      "ما هو وقت التوصيل؟": "التوصيل عادة يستغرق من 3 إلى 5 أيام عمل.",
-      "السلام عليكم": "وعليكم السلام! كيف يمكنني مساعدتك اليوم؟"
+  // إضافة أزرار الأسئلة تلقائيًا من knowledgeBase
+  Object.keys(knowledgeBase).forEach(question => {
+    const btn = document.createElement("button");
+    btn.textContent = question;
+    btn.onclick = () => {
+      sendMessage(question);
     };
+    quickReplies.appendChild(btn);
+  });
 
-    function getBotResponse(userText) {
-      userText = userText.trim().toLowerCase();
+  // عرض الرسائل في صندوق الدردشة مع أنيميشن
+  function appendMessage(sender, text, className) {
+    const div = document.createElement("div");
+    div.classList.add("chat-message", className);
+    div.innerHTML = `<span>${sender}:</span> <span>${text}</span>`;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
 
-      for (const question in knowledgeBase) {
-        if (userText.includes(question.toLowerCase())) {
-          return knowledgeBase[question];
-        }
-      }
+  function sendMessage(question) {
+    appendMessage("أنت", question, "user");
 
-      if (userText.includes("مرحبا") || userText.includes("أهلا")) {
-        return "مرحبًا! كيف يمكنني مساعدتك؟";
-      }
+    // تكرار السؤال كما هو للبحث المبسط
+    const key = Object.keys(knowledgeBase).find(k => k.toLowerCase() === question.toLowerCase());
+    const answer = key ? knowledgeBase[key] : "عذرًا، لم أفهم سؤالك. حاول سؤال شيء آخر أو تواصل مع الدعم.";
 
-      if (userText.includes("شكرا") || userText.includes("شكراً")) {
-        return "على الرحب والسعة!";
-      }
+    // تأخير بسيط لظهور الرسالة وكأن البوت يكتب
+    setTimeout(() => {
+      appendMessage("البوت", answer, "bot");
+    }, 600);
+  }
 
-      return "عذرًا، لم أفهم سؤالك. حاول سؤال شيء آخر أو تواصل مع الدعم.";
-    }
-
-    function appendMessage(sender, text, className) {
-      const div = document.createElement("div");
-      div.classList.add("chat-message");
-      div.innerHTML = `<span class="${className}">${sender}:</span> ${text}`;
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    function sendMessage(text = null) {
-      const input = document.getElementById("userInput");
-      const userText = text || input.value.trim();
-      if (!userText) return;
-
-      appendMessage("أنت", userText, "user");
-      if (!text) input.value = "";
-
-      const botReply = getBotResponse(userText);
-      setTimeout(() => {
-        appendMessage("البوت", botReply, "bot");
-      }, 500);
-    }
-
-    function quickSend(text) {
-      sendMessage(text);
-    }
-  </script>
+</script>
 
 </body>
 </html>
