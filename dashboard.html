@@ -68,34 +68,35 @@
       100% { transform: translateY(0); }
     }
 
-    /* زر واتساب مثل زر البوت، فوقه */
-    #whatsappBtn {
-      position: fixed;
-      left: 20px;
-      bottom: 90px; /* فوق زر البوت */
-      background-color: #25d366;
-      color: white;
-      font-size: 22px;
-      padding: 12px 14px;
-      border-radius: 50%;
-      box-shadow: 0 0 15px rgba(0,0,0,0.2);
-      animation: floatUpDown 2s infinite ease-in-out;
-      z-index: 9999;
-      transition: transform 0.2s ease;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    #whatsappBtn:hover {
-      transform: scale(1.1);
-      background-color: #1ebe57;
-    }
+#whatsappBtn {
+  position: fixed;
+  left: 20px;
+  bottom: 90px; /* فوق زر البوت الذي عند 20px */
+  background-color: #25d366;
+  color: white;
+  font-size: 22px;
+  width: 54px;         /* نفس عرض زر البوت */
+  height: 54px;        /* نفس ارتفاع زر البوت */
+  padding: 0;          /* ازالة البادينج عشان يكون شكل الدائرة مضبوطة */
+  border-radius: 50%;  /* دائري بالكامل */
+  box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  animation: floatUpDown 2s infinite ease-in-out;
+  z-index: 9999;
+  transition: transform 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-    /* نص الزر داخل الواتساب */
-    #whatsappBtn i {
-      font-size: 24px;
-      margin: 0;
+#whatsappBtn:hover {
+  transform: scale(1.1);
+  background-color: #1ebe57;
+}
+
+#whatsappBtn i {
+  font-size: 28px; /* يمكن زيادة حجم الأيقونة قليلاً لتناسب حجم الزر */
+  margin: 0;
     }
   </style>
 </head>
