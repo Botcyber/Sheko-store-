@@ -158,19 +158,215 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script>  
   // تهيئة Firebase  
   const firebaseConfig = {  
-    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",  
-    authDomain: "sheko-store.firebaseapp.com",  
-    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",  
-    projectId: "sheko-store",  
-    storageBucket: "sheko-store.appspot.com",  
-    messagingSenderId: "113892775847",  
-    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"  
-  };  
-  firebase.initializeApp(firebaseConfig);  
-  const auth = firebase.auth();  
-  const db = firebase.database();  
-  let currentUser = null;  
-  
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>لوحة التحكم - Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    body { font-family: 'Cairo', sans-serif; margin: 0; background: #f1f1f1; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; background: #222; padding: 10px 20px; color: white; flex-wrap: wrap; }
+    .nav-icons { display: flex; gap: 25px; flex-direction: column; }
+    .nav-icons a { color: white; text-decoration: none; display: flex; flex-direction: row; align-items: center; font-size: 14px; position: relative; transition: color 0.3s ease; gap: 8px; }
+    .nav-icons a i { font-size: 20px; margin: 0; }
+    .nav-icons a:hover { color: #ffb700; }
+    #notifBadge, #chatBadge {
+      position: absolute;
+      top: 0;
+      left: 5px;
+      background: red;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 50%;
+      padding: 2px 6px;
+      display: none;
+      transform: translate(-50%, 50%);
+      user-select: none;
+      pointer-events: none;
+    }
+    .user-area { display: flex; align-items: center; gap: 15px; font-size: 15px; }
+    #balance { font-weight: bold; }
+    button { background: #444; border: none; color: white; padding: 8px 15px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: bold; transition: background 0.3s ease; font-size: 14px; }
+    button i { font-size: 16px; }
+    button:hover { background: #ffb700; color: #222; }
+    .dashboard { max-width: 800px; margin: auto; padding: 20px; background: white; border-radius: 12px; margin-top: 30px; position: relative; }
+    label, select, input { display: block; width: 100%; margin: 10px 0; padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
+    button.order-btn { background: #222; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }
+    button.order-btn:hover { background: #444; }
+    .note { font-size: 14px; color: #666; text-align: center; margin-top: 20px; }
+    .footer-contact { max-width: 800px; margin: 30px auto 20px; text-align: center; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+    .btn-share, .btn-copy { background: #222; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: background 0.3s ease; min-width: 180px; }
+    .btn-share:hover, .btn-copy:hover { background: #ffb700; color: #222; }
+
+    /* زر اسألني (ذكاء صناعي) */
+    #askMeBtn {
+      position: fixed;
+      left: 20px;
+      bottom: 20px;
+      background-color: #ffb700;
+      color: #222;
+      font-size: 22px;
+      padding: 12px 14px;
+      border-radius: 50%;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      animation: floatUpDown 2s infinite ease-in-out;
+      z-index: 9999;
+      transition: transform 0.2s ease;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #askMeBtn:hover {
+      transform: scale(1.1);
+      background-color: #ffd44d;
+    }
+    @keyframes floatUpDown {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+      100% { transform: translateY(0); }
+    }
+
+    /* زر واتساب */
+    #whatsappBtn {
+      position: fixed;
+      left: 20px;
+      bottom: 80px; /* فوق زر البوت */
+      background-color: #25D366;
+      color: white;
+      font-size: 22px;
+      padding: 12px 14px;
+      border-radius: 50%;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      animation: floatUpDown 2s infinite ease-in-out;
+      z-index: 9999;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      transition: transform 0.2s ease;
+    }
+    #whatsappBtn:hover {
+      transform: scale(1.1);
+      background-color: #1ebe57;
+    }
+  </style>
+</head>
+<body>
+<div class="top-bar">
+  <nav class="nav-icons">
+    <a href="account.html"><i class="fa fa-user"></i><span>حسابك</span></a>
+    <a href="orders.html"><i class="fa fa-box"></i><span>طلباتك</span></a>
+    <a href="add-money.html"><i class="fa fa-wallet"></i><span>إضافة أموال</span></a>
+    <a href="reviews_complaints.html"><i class="fa fa-comments"></i><span>التقييمات</span></a>
+    <a href="notifications.html" style="position: relative;">
+      <i class="fa fa-bell"></i><span>الإشعارات</span><span id="notifBadge">0</span>
+    </a>
+    <a href="ranking.html"><i class="fa fa-crown"></i><span>التصنيف</span></a>
+    <a href="#" style="pointer-events: none; opacity: 0.6;">
+      <i class="fa fa-lock"></i><span>الفعاليات</span>
+    </a>
+    <a href="support_chat.html"><i class="fa fa-headset"></i><span>فريق الدعم والشكاوى</span></a>
+    <a href="#" style="pointer-events: none; opacity: 0.6;">
+      <i class="fa fa-lock"></i><span>عجلة الحظ</span>
+    </a>
+    <a href="chat.html" id="chatLink" style="position: relative;">
+      <i class="fa fa-comments"></i><span>الدردشة</span><span id="chatBadge">0</span>
+    </a>
+    <!-- زر الأخبار -->
+    <a href="news.html" style="display: flex; align-items: center; gap: 5px; color: white; text-decoration: none;">
+      <i class="fa fa-newspaper"></i>
+      <span>الأخبار</span>
+    </a>
+  </nav>
+  <div class="user-area">
+    <span id="balance">رصيدك: ...</span>
+    <button onclick="logout()"><i class="fa fa-sign-out-alt"></i> خروج</button>
+  </div>
+</div>
+<div class="dashboard">
+  <h2>إرسال طلب</h2>
+  <label for="mainService">نوع الخدمة:</label>
+  <select id="mainService">
+    <option value="">اختر نوع الخدمة</option>
+    <option value="ألعاب">شحن ألعاب</option>
+    <option value="سوشيال">مواقع التواصل</option>
+    <option value="الشحن الالكتروني">الشحن الالكتروني</option>
+  </select>
+  <label for="subService">الخدمة:</label>
+  <select id="subService"></select>
+  <label for="package">الباقة:</label>
+  <select id="package"></select>
+  <label for="accountInput" id="accountLabel"> رابط الحساب - رابط الفيديو - رقم الهاتف - الايدي </label>
+  <input type="text" id="accountInput" />
+  <button class="order-btn" onclick="submitOrder()">إرسال الطلب</button>
+  <p class="note">إذا واجهت أي مشكلة كلم فريق الدعم</p>
+</div>
+<div class="footer-contact">
+  <button class="btn-share" onclick="shareSite()">مشاركة الموقع مع أصدقائك</button>
+  <button class="btn-copy" onclick="copyLink()">نسخ رابط الموقع</button>
+</div>
+<!-- تنبيه مخصص -->
+<div id="customAlert" style="
+  display:none;
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.4);
+  padding: 20px 30px;
+  max-width: 320px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 17px;
+  z-index: 9999;
+  color: #222;
+">
+  <i id="alertIcon" class="fa fa-info-circle" style="color: #007bff; font-size: 28px; margin-bottom: 10px;"></i>
+  <div id="alertText" style="margin-bottom: 15px;"></div>
+  <button onclick="hideCustomAlert()" style="
+    background: #ffb700;
+    border: none;
+    padding: 8px 20px;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
+    color: #222;
+  ">حسناً</button>
+</div>
+
+<!-- زر واتساب -->
+<button id="whatsappBtn" title="واتساب"><i class="fa fa-whatsapp"></i></button>
+
+<!-- زر اسألني -->
+<button id="askMeBtn" title="اسألني؟"><i class="fa fa-robot"></i></button>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script>
+  // تهيئة Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+    authDomain: "sheko-store.firebaseapp.com",
+    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+    projectId: "sheko-store",
+    storageBucket: "sheko-store.appspot.com",
+    messagingSenderId: "113892775847",
+    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+  let currentUser = null;
+
   // الأسعار (نقلتها كما هي بدون تغيير)  
   const prices = {  
     "ألعاب": {  
