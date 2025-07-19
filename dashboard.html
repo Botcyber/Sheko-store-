@@ -414,7 +414,7 @@
   function logout() {
     auth.signOut()
       .then(() => {
-        window.location.href = "login.html"; // إعادة توجيه لصفحة الدخول
+        window.location.href = "index.html"; // إعادة توجيه لصفحة الدخول
       })
       .catch(error => {
         showCustomAlert("حدث خطأ أثناء تسجيل الخروج: " + error.message, "fa-exclamation-triangle", "red");
