@@ -71,14 +71,14 @@
 #whatsappBtn {
   position: fixed;
   left: 20px;
-  bottom: 90px; /* فوق زر البوت الذي عند 20px */
+  bottom: 90px; /* يظهر فوق زر البوت */
   background-color: #25d366;
   color: white;
-  font-size: 22px;
-  width: 54px;         /* نفس عرض زر البوت */
-  height: 54px;        /* نفس ارتفاع زر البوت */
-  padding: 0;          /* ازالة البادينج عشان يكون شكل الدائرة مضبوطة */
-  border-radius: 50%;  /* دائري بالكامل */
+  font-size: 24px;
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  border-radius: 50%;
   box-shadow: 0 0 15px rgba(0,0,0,0.2);
   animation: floatUpDown 2s infinite ease-in-out;
   z-index: 9999;
@@ -188,8 +188,10 @@
 
   <!-- زر اسألني -->
   <button id="askMeBtn" title="اسألني؟"><i class="fa fa-robot"></i></button>
-  <!-- زر واتساب -->
-  <button id="whatsappBtn" title="انضم للواتساب"><i class="fab fa-whatsapp"></i></button>
+  <!-- زر واتساب دائري -->
+<button id="whatsappBtn" title="تواصل عبر واتساب">
+  <i class="fab fa-whatsapp"></i>
+</button>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
@@ -560,9 +562,11 @@
     window.location.href = "ai_chat.html";
   });
 
-  whatsappBtn.addEventListener("click", () => {
+  document.getElementById("whatsappBtn").addEventListener("click", () => {
     window.open("https://chat.whatsapp.com/EpJHhfUBTro8TZKx901A9S?mode=r_t", "_blank");
   });
+
+  
 
 </script>
 </body>
