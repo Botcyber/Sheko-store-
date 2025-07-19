@@ -84,6 +84,7 @@
 <body>
   <div class="container">
     <h2 id="formTitle">تسجيل الدخول</h2>
+    <input type="text" id="username" placeholder="الاسم" style="display:none;" />
     <input type="email" id="email" placeholder="البريد الإلكتروني" />
     <input type="password" id="password" placeholder="كلمة المرور" />
     <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور" style="display:none;" />
@@ -123,6 +124,7 @@
 
     let isRegister = false;
 
+    const username = document.getElementById("username");
     const email = document.getElementById("email");
     const password = document.getElementById("password");
     const confirmPassword = document.getElementById("confirmPassword");
@@ -135,6 +137,7 @@
       formTitle.textContent = isRegister ? "إنشاء حساب" : "تسجيل الدخول";
       actionBtn.textContent = isRegister ? "تسجيل" : "دخول";
       confirmPassword.style.display = isRegister ? "block" : "none";
+      username.style.display = isRegister ? "block" : "none";
       toggleForm.textContent = isRegister ? "لديك حساب؟ تسجيل الدخول" : "ليس لديك حساب؟ أنشئ الآن";
     };
 
@@ -142,17 +145,24 @@
       const userEmail = email.value.trim();
       const userPass = password.value;
       const confirmPass = confirmPassword.value;
+      const userName = username.value.trim();
 
       if (isRegister) {
         if (userPass !== confirmPass) {
           return showToast("كلمتا المرور غير متطابقتين", "error");
         }
+
+        if (userName === "") {
+          return showToast("الرجاء إدخال الاسم", "error");
+        }
+
         try {
           const userCredential = await createUserWithEmailAndPassword(auth, userEmail, userPass);
           const user = userCredential.user;
           await set(ref(db, 'users/' + user.uid), {
             uid: user.uid,
             email: user.email,
+            name: userName,
             balance: 0,
             points: 0
           });
