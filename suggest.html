@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <title>اقتراحات وتصحيح أخطاء</title>
@@ -12,75 +11,83 @@
       padding: 20px;
       text-align: center;
       animation: fadeIn 1s ease-in;
-    }
+    }@keyframes fadeIn {
+  from {opacity: 0; transform: translateY(20px);}
+  to {opacity: 1; transform: translateY(0);}
+}
 
-    @keyframes fadeIn {
-      from {opacity: 0; transform: translateY(20px);}
-      to {opacity: 1; transform: translateY(0);}
-    }
+h2 {
+  color: #00796b;
+  margin-bottom: 10px;
+}
 
-    h2 {
-      color: #00796b;
-      margin-bottom: 10px;
-    }
+textarea {
+  width: 80%;
+  height: 150px;
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  margin-bottom: 15px;
+}
 
-    textarea {
-      width: 80%;
-      height: 150px;
-      padding: 15px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      font-size: 16px;
-      margin-bottom: 15px;
-    }
+select {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  margin-bottom: 15px;
+  width: 82%;
+}
 
-    button {
-      padding: 10px 25px;
-      border: none;
-      border-radius: 8px;
-      background: #00796b;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
+button {
+  padding: 10px 25px;
+  border: none;
+  border-radius: 8px;
+  background: #00796b;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
 
-    button:hover {
-      background: #004d40;
-    }
+button:hover {
+  background: #004d40;
+}
 
-    #successMessage {
-      color: green;
-      margin-top: 15px;
-      font-weight: bold;
-      display: none;
-    }
+#successMessage {
+  color: green;
+  margin-top: 15px;
+  font-weight: bold;
+  display: none;
+}
 
-    #popup {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
-    }
+#popup {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
 
-    #popupContent {
-      background: white;
-      padding: 25px;
-      border-radius: 15px;
-      width: 80%;
-      max-width: 400px;
-      text-align: center;
-      animation: scaleIn 0.5s ease;
-    }
+#popupContent {
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  width: 80%;
+  max-width: 400px;
+  text-align: center;
+  animation: scaleIn 0.5s ease;
+}
 
-    @keyframes scaleIn {
-      from {transform: scale(0.8); opacity: 0;}
-      to {transform: scale(1); opacity: 1;}
-    }
+@keyframes scaleIn {
+  from {transform: scale(0.8); opacity: 0;}
+  to {transform: scale(1); opacity: 1;}
+}
+
   </style>
 </head>
 <body>
@@ -91,14 +98,15 @@
       <p>⚠️ ليست للدردشة أو الشكاوى.</p>
       <button onclick="closePopup()">حسناً</button>
     </div>
-  </div>
-
-  <h2>📨 إرسال تذكرة اقتراح / خطأ</h2>
+  </div>  <h2>📨 إرسال تذكرة اقتراح / خطأ</h2>
+  <select id="categorySelect" required>
+    <option value="">🔽 اختر نوع التذكرة</option>
+    <option value="خطأ">🚫 خطأ في الموقع</option>
+    <option value="اقتراح">💡 اقتراح ميزة</option>
+  </select><br>
   <textarea id="suggestionInput" placeholder="اكتب اقتراحك أو الخطأ الذي واجهته..."></textarea><br>
   <button onclick="submitSuggestion()">إرسال التذكرة</button>
-  <p id="successMessage">✅ تم إرسال التذكرة بنجاح! شكراً لك 💡</p>
-
-  <script type="module">
+  <p id="successMessage">✅ تم إرسال التذكرة بنجاح! شكراً لك 💡</p>  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -128,19 +136,24 @@
     });
 
     window.submitSuggestion = async () => {
-      const input = document.getElementById("suggestionInput");
-      const message = input.value.trim();
+      const message = document.getElementById("suggestionInput").value.trim();
+      const category = document.getElementById("categorySelect").value;
       const successMsg = document.getElementById("successMessage");
 
-      if (!message || !myUid) return alert("⚠️ الرجاء كتابة الرسالة.");
+      if (!message || !category || !myUid) {
+        alert("⚠️ الرجاء اختيار نوع التذكرة وكتابة الرسالة.");
+        return;
+      }
 
       const newRef = push(ref(db, "suggestions/" + myUid));
       await set(newRef, {
         message: message,
+        category: category,
         time: new Date().toISOString()
       });
 
-      input.value = "";
+      document.getElementById("suggestionInput").value = "";
+      document.getElementById("categorySelect").value = "";
       successMsg.style.display = "block";
 
       setTimeout(() => {
@@ -151,6 +164,5 @@
     window.closePopup = () => {
       document.getElementById("popup").style.display = "none";
     };
-  </script>
-</body>
+  </script></body>
 </html>
