@@ -8,51 +8,63 @@
     body { font-family: 'Cairo', sans-serif; background: #f1f1f1; margin: 0; padding: 20px; }
     h1 { text-align: center; }
     #createRoomBtn, #myRoomsBtn {
-      position: fixed; top: 20px;
+      position: fixed; top: 20px; left: 20px;
       font-size: 30px; cursor: pointer; background: #222; color: #fff;
       width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center;
       box-shadow: 0 0 10px #000;
       z-index: 1000;
     }
-    #createRoomBtn { left: 20px; }
-    #myRoomsBtn { right: 20px; }#createRoomModal, #myRoomsModal {
-  display: none;
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
-  justify-content: center; align-items: center;
-  z-index: 1100;
-}
-.modal-content {
-  background: white; padding: 20px; border-radius: 10px; width: 320px; position: relative;
-}
-input, select {
-  width: 100%; margin: 10px 0; padding: 8px; border-radius: 5px; border: 1px solid #ccc;
-}
-button {
-  background: #222; color: white; padding: 10px; width: 100%; border: none; border-radius: 5px; font-weight: bold;
-  cursor: pointer;
-}
-button:hover { background: #ffb700; color: #222; }
-.close-btn {
-  position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 20px;
-}
-.room {
-  background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px;
-  box-shadow: 0 0 5px rgba(0,0,0,0.1); cursor: pointer; display: flex; align-items: center;
-}
-.room img {
-  width: 50px; height: 50px; border-radius: 8px; margin-left: 10px;
-  object-fit: cover;
-}
-.room-info { flex-grow: 1; }
-.room-name { font-weight: bold; font-size: 18px; }
-.room-meta { font-size: 14px; color: #555; }
-
+    #myRoomsBtn {
+      left: 80px;
+    }
+    #createRoomModal, #myRoomsModal {
+      display: none;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      justify-content: center; align-items: center;
+      z-index: 1100;
+    }
+    .modal-content {
+      background: white; padding: 20px; border-radius: 10px; width: 320px; position: relative;
+    }
+    .modal-content input, .modal-content select {
+      width: 100%; margin: 10px 0; padding: 8px; border-radius: 5px; border: 1px solid #ccc;
+    }
+    .modal-content button {
+      background: #222; color: white; padding: 10px; width: 100%; border: none; border-radius: 5px; font-weight: bold;
+      cursor: pointer;
+    }
+    .modal-content button:hover { background: #ffb700; color: #222; }
+    .close-btn {
+      position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 20px;
+    }
+    .room {
+      background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1); cursor: pointer; display: flex; align-items: center;
+    }
+    .room img {
+      width: 50px; height: 50px; border-radius: 8px; margin-left: 10px;
+      object-fit: cover;
+    }
+    .room-info {
+      flex-grow: 1;
+    }
+    .room-name {
+      font-weight: bold; font-size: 18px;
+    }
+    .room-meta {
+      font-size: 14px; color: #555;
+    }
+    .invited-label {
+      background: orange; color: white; font-size: 12px; padding: 2px 5px; border-radius: 5px;
+      margin-right: 10px;
+    }
   </style>
 </head>
 <body>
-  <h1>كل غرف الدردشة</h1>  <div id="createRoomBtn" title="إنشاء غرفة جديدة"><i class="fa fa-plus"></i></div>
-  <div id="myRoomsBtn" title="غرفي"><i class="fa fa-user"></i></div>  <!-- نافذة إنشاء الغرفة -->  <div id="createRoomModal">
+  <h1>كل غرف الدردشة</h1>
+  <div id="createRoomBtn" title="إنشاء غرفة جديدة"><i class="fa fa-plus"></i></div>
+  <div id="myRoomsBtn" title="غرفي"><i class="fa fa-user"></i></div>  <div id="createRoomModal" class="modal">
     <div class="modal-content">
       <div class="close-btn" id="closeCreateModal">&times;</div>
       <h3>إنشاء غرفة جديدة مقابل 50 جنيه</h3>
@@ -76,30 +88,36 @@ button:hover { background: #ffb700; color: #222; }
       <input type="file" id="roomImage" accept="image/*" />
       <button id="createRoomConfirmBtn">إنشاء الغرفة</button>
     </div>
-  </div>  <!-- نافذة غرفي -->  <div id="myRoomsModal">
+  </div>  <div id="myRoomsModal" class="modal">
     <div class="modal-content">
       <div class="close-btn" id="closeMyRooms">&times;</div>
       <h3>غرفي</h3>
-      <div id="myRoomsContainer"></div>
+      <div id="myRoomsList">جاري التحميل...</div>
     </div>
   </div>  <div id="roomsContainer"></div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>  <script>
-    const firebaseConfig = { /* بياناتك هنا */ };
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
 
     let currentUser;
-
     const createRoomBtn = document.getElementById("createRoomBtn");
-    const myRoomsBtn = document.getElementById("myRoomsBtn");
     const createRoomModal = document.getElementById("createRoomModal");
-    const myRoomsModal = document.getElementById("myRoomsModal");
     const closeCreateModal = document.getElementById("closeCreateModal");
-    const closeMyRooms = document.getElementById("closeMyRooms");
     const createRoomConfirmBtn = document.getElementById("createRoomConfirmBtn");
-
     const roomsContainer = document.getElementById("roomsContainer");
-    const myRoomsContainer = document.getElementById("myRoomsContainer");
+    const myRoomsBtn = document.getElementById("myRoomsBtn");
+    const myRoomsModal = document.getElementById("myRoomsModal");
+    const closeMyRooms = document.getElementById("closeMyRooms");
+    const myRoomsList = document.getElementById("myRoomsList");
 
     auth.onAuthStateChanged(user => {
       if (!user) return window.location.href = "login.html";
@@ -111,80 +129,91 @@ button:hover { background: #ffb700; color: #222; }
       db.ref("chat_rooms").on("value", snapshot => {
         const allRooms = snapshot.val() || {};
         roomsContainer.innerHTML = "";
-        myRoomsContainer.innerHTML = "";
-
         for (const roomId in allRooms) {
           const room = allRooms[roomId];
+          const isOwner = room.adminUid === currentUser.uid;
           const isMember = room.users && room.users[currentUser.uid];
-          const userCount = room.users ? Object.keys(room.users).length : 0;
-          const imgSrc = room.approvedImage || "default-room.png";
 
-          const roomDiv = document.createElement("div");
-          roomDiv.className = "room";
-          roomDiv.innerHTML = `
-            <img src="${imgSrc}" />
-            <div class="room-info">
-              <div class="room-name">${room.name} ${room.flag || ""}</div>
-              <div class="room-meta">اللغة: ${room.language || "غير محددة"} - الأعضاء: ${userCount}</div>
-            </div>
-          `;
-          roomDiv.onclick = () => window.location.href = `Private-chat-room.html?roomId=${roomId}`;
-
-          if (isMember) myRoomsContainer.appendChild(roomDiv.cloneNode(true));
-          else roomsContainer.appendChild(roomDiv);
+          if (isOwner || isMember) {
+            const roomDiv = document.createElement("div");
+            roomDiv.className = "room";
+            roomDiv.innerHTML = `
+              <img src="${room.image || 'default-room.png'}" alt="صورة الغرفة" />
+              <div class="room-info">
+                <div class="room-name">${room.name} ${room.flag || ''}</div>
+                <div class="room-meta">اللغة: ${room.language || ''}</div>
+              </div>
+            `;
+            roomDiv.onclick = () => {
+              window.location.href = `Private-chat-room.html?roomId=${roomId}`;
+            };
+            roomsContainer.appendChild(roomDiv);
+          }
         }
       });
     }
 
     createRoomBtn.onclick = () => createRoomModal.style.display = "flex";
-    myRoomsBtn.onclick = () => myRoomsModal.style.display = "flex";
     closeCreateModal.onclick = () => createRoomModal.style.display = "none";
+    window.onclick = e => {
+      if (e.target === createRoomModal) createRoomModal.style.display = "none";
+      if (e.target === myRoomsModal) myRoomsModal.style.display = "none";
+    };
+
+    myRoomsBtn.onclick = () => {
+      myRoomsModal.style.display = "flex";
+      myRoomsList.innerHTML = "جاري التحميل...";
+      db.ref("chat_rooms").once("value").then(snapshot => {
+        const allRooms = snapshot.val() || {};
+        myRoomsList.innerHTML = "";
+        for (const roomId in allRooms) {
+          const room = allRooms[roomId];
+          if (room.users && room.users[currentUser.uid]) {
+            const div = document.createElement("div");
+            div.className = "room";
+            div.innerHTML = `
+              <img src="${room.image || 'default-room.png'}" alt="صورة" />
+              <div class="room-info">
+                <div class="room-name">${room.name}</div>
+                <div class="room-meta">${room.language || ''}</div>
+              </div>
+            `;
+            div.onclick = () => window.location.href = `Private-chat-room.html?roomId=${roomId}`;
+            myRoomsList.appendChild(div);
+          }
+        }
+      });
+    };
     closeMyRooms.onclick = () => myRoomsModal.style.display = "none";
 
-    // إنشاء غرفة جديدة
-    createRoomConfirmBtn.onclick = () => {
+    createRoomConfirmBtn.onclick = async () => {
       const name = document.getElementById("roomName").value.trim();
       const language = document.getElementById("language").value;
       const flag = document.getElementById("country").value;
-      const fileInput = document.getElementById("roomImage");
-      const file = fileInput.files[0];
+      const file = document.getElementById("roomImage").files[0];
+      if (!name || !language || !flag || !file) return alert("يرجى ملء جميع الحقول واختيار صورة.");
 
-      if (!name || !language || !flag) return alert("يرجى ملء جميع الحقول.");
-
-      db.ref(`users/${currentUser.uid}/balance`).once("value").then(snap => {
-        let balance = snap.val() || 0;
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const imageUrl = e.target.result;
+        const balanceSnap = await db.ref(`users/${currentUser.uid}/balance`).once("value");
+        let balance = balanceSnap.val() || 0;
         if (balance < 50) return alert("رصيدك غير كاف.");
-        db.ref(`users/${currentUser.uid}/balance`).set(balance - 50);
+        await db.ref(`users/${currentUser.uid}/balance`).set(balance - 50);
 
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = function(e) {
-            const imageUrl = e.target.result;
-            const newRoom = db.ref("chat_rooms").push();
-            newRoom.set({
-              name, language, flag,
-              adminUid: currentUser.uid,
-              approvedImage: imageUrl,
-              users: {
-                [currentUser.uid]: { name: "أنت", photo: "" }
-              }
-            });
+        const newRoomRef = db.ref("chat_rooms").push();
+        newRoomRef.set({
+          name, language, flag,
+          adminUid: currentUser.uid,
+          image: imageUrl,
+          users: {
+            [currentUser.uid]: { name: "أنت", photo: "" }
           }
-          reader.readAsDataURL(file);
-        } else {
-          const newRoom = db.ref("chat_rooms").push();
-          newRoom.set({
-            name, language, flag,
-            adminUid: currentUser.uid,
-            approvedImage: "",
-            users: {
-              [currentUser.uid]: { name: "أنت", photo: "" }
-            }
-          });
-        }
+        });
 
         createRoomModal.style.display = "none";
-      });
+      };
+      reader.readAsDataURL(file);
     };
   </script></body>
 </html>
