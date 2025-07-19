@@ -71,13 +71,11 @@
 #whatsappBtn {
   position: fixed;
   left: 20px;
-  bottom: 90px; /* يظهر فوق زر البوت */
-  background-color: #25d366;
+  bottom: 90px; /* فوق زر البوت */
+  background-color: #25d366; /* أخضر واتساب */
   color: white;
-  font-size: 24px;
-  width: 54px;
-  height: 54px;
-  padding: 0;
+  font-size: 22px;
+  padding: 12px 14px;
   border-radius: 50%;
   box-shadow: 0 0 15px rgba(0,0,0,0.2);
   animation: floatUpDown 2s infinite ease-in-out;
@@ -91,7 +89,7 @@
 
 #whatsappBtn:hover {
   transform: scale(1.1);
-  background-color: #1ebe57;
+  background-color: #1ebea5;
 }
 
 #whatsappBtn i {
@@ -189,10 +187,10 @@
   <!-- زر اسألني -->
   <button id="askMeBtn" title="اسألني؟"><i class="fa fa-robot"></i></button>
   <!-- زر واتساب دائري -->
-<button id="whatsappBtn" title="تواصل عبر واتساب">
+<a id="whatsappBtn" title="انضم لجروب واتساب" href="https://chat.whatsapp.com/EpJHhfUBTro8TZKx901A9S?mode=r_t" target="_blank">
   <i class="fab fa-whatsapp"></i>
-</button>
-
+</a>
+  
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
