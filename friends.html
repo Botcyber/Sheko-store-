@@ -7,72 +7,49 @@
   <style>
     body {
       font-family: 'Cairo', sans-serif;
-      background: linear-gradient(to top, #f0f2f5, #ffffff);
+      background: #f2f2f2;
       padding: 20px;
-      margin: 0;
+      text-align: center;
     }
-    .friend-box, .request-box {
-      background: #fff;
-      margin: 10px 0;
+    h2 { color: #333; }
+    .friend-card, .search-result {
+      background: white;
+      margin: 15px auto;
       padding: 15px;
       border-radius: 12px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      animation: fadeIn 0.5s ease-in-out;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 300px;
+      transition: 0.3s;
     }
-    .friend-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .friend-card:hover, .search-result:hover {
+      transform: scale(1.02);
     }
-    .friend-info img {
-      width: 45px;
-      height: 45px;
+    img {
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
-      object-fit: cover;
     }
-    .friend-actions button {
-      margin: 0 4px;
-      padding: 6px 10px;
+    input {
+      padding: 10px;
+      margin: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      width: 70%;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 5px;
       border: none;
       border-radius: 8px;
-      cursor: pointer;
-    }
-    .add-section {
-      margin-bottom: 20px;
-    }
-    .add-section input {
-      padding: 10px;
-      width: 70%;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-    }
-    .add-section button {
-      padding: 10px 15px;
       background: #007bff;
-      color: #fff;
-      border: none;
-      border-radius: 10px;
+      color: white;
       cursor: pointer;
     }
-    .my-id-box {
-      margin: 10px 0;
-      background: #e9f5ff;
-      padding: 10px;
-      border-radius: 12px;
-      text-align: center;
-      font-weight: bold;
-      animation: fadeInDown 0.6s;
+    button:hover {
+      background: #0056b3;
     }
-    @keyframes fadeIn {
-      from {opacity: 0; transform: translateY(20px);}
-      to {opacity: 1; transform: translateY(0);}
-    }
-    @keyframes fadeInDown {
-      from {opacity: 0; transform: translateY(-10px);}
-      to {opacity: 1; transform: translateY(0);}
+    .my-id {
+      margin-top: 20px;
     }
   </style>
 </head>
@@ -80,33 +57,26 @@
 
   <h2>👥 قائمة الأصدقاء</h2>
 
-  <div class="my-id-box">
-    ID الخاص بك: <span id="myId"></span>
-    <button onclick="copyMyId()">📋 نسخ</button>
-    <button onclick="shareMyId()">📤 مشاركة</button>
+  <div class="my-id">
+    <p id="myUidText">🔒 UID الخاص بك: جاري التحميل...</p>
+    <button onclick="copyMyUID()">📋 نسخ UID</button>
+    <button onclick="shareMyUID()">📤 مشاركة UID</button>
   </div>
 
-  <div class="add-section">
-    <input type="text" id="friendIdInput" placeholder="أدخل ID المستخدم" />
-    <button onclick="searchUser()">بحث</button>
+  <div>
+    <input type="text" id="searchInput" placeholder="اكتب UID لصديقك" />
+    <button onclick="searchUser()">🔍 بحث</button>
   </div>
 
   <div id="searchResult"></div>
-  <h3>طلبات الصداقة:</h3>
-  <div id="friendRequests"></div>
 
-  <h3>أصدقاؤك:</h3>
+  <h3>✅ أصدقاؤك الحاليون:</h3>
   <div id="friendsList"></div>
 
-  <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import {
-      getDatabase, ref, get, set, onValue, update, push, remove
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-    import {
-      getAuth, onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getDatabase, ref, get, set, child, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
@@ -122,154 +92,90 @@
     const db = getDatabase(app);
     const auth = getAuth(app);
 
-    let currentUid = null;
-    let currentUserId = null;
+    let myUid = null;
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        currentUid = user.uid;
-        const userRef = ref(db, `users/${currentUid}`);
-        onValue(userRef, snap => {
-          if (snap.exists()) {
-            currentUserId = snap.val().id || currentUid;
-            document.getElementById("myId").innerText = currentUserId;
-          }
-        });
-        loadFriendRequests();
-        loadFriendsList();
+        myUid = user.uid;
+        document.getElementById("myUidText").textContent = `🔒 UID الخاص بك: ${myUid}`;
+        loadFriends();
       }
     });
 
-    window.copyMyId = () => {
-      navigator.clipboard.writeText(currentUserId).then(() => {
-        alert("تم نسخ ID الخاص بك");
-      });
-    };
-
-    window.shareMyId = () => {
-      const text = `هذا هو ID الخاص بي على Sheko Store: ${currentUserId}`;
-      navigator.share ? navigator.share({text}) : alert(text);
-    };
-
+    // بحث عن المستخدم باستخدام UID
     window.searchUser = async () => {
-      const inputId = document.getElementById("friendIdInput").value.trim();
-      const usersRef = ref(db, "users");
-      const snap = await get(usersRef);
-      let found = false;
+      const uid = document.getElementById("searchInput").value.trim();
+      const resultDiv = document.getElementById("searchResult");
+      if (!uid) return;
 
-      if (snap.exists()) {
-        snap.forEach(child => {
-          const data = child.val();
-          if (data.id == inputId && child.key !== currentUid) {
-            found = true;
-            document.getElementById("searchResult").innerHTML = `
-              <div class="friend-box">
-                <div class="friend-info">
-                  <img src="${data.profileImage || 'https://via.placeholder.com/45'}" />
-                  <div>
-                    <strong>${data.username || 'مستخدم'}</strong><br/>
-                    <small>ID: ${data.id}</small>
-                  </div>
-                </div>
-                <div>
-                  <button onclick="sendRequest('${child.key}')">➕ إضافة</button>
-                </div>
-              </div>
-            `;
-          }
-        });
-      }
-      if (!found) {
-        document.getElementById("searchResult").innerHTML = "لم يتم العثور على المستخدم.";
+      const snapshot = await get(ref(db, "users/" + uid));
+      if (snapshot.exists()) {
+        const user = snapshot.val();
+        resultDiv.innerHTML = `
+          <div class="search-result">
+            <img src="${user.profileImage}" />
+            <h3>${user.username}</h3>
+            <p>${user.email}</p>
+            <button onclick="addFriend('${uid}')">➕ أضف كصديق</button>
+          </div>
+        `;
+      } else {
+        resultDiv.innerHTML = "<p>❌ لم يتم العثور على المستخدم</p>";
       }
     };
 
-    window.sendRequest = (toUid) => {
-      const reqRef = ref(db, `friendRequests/${toUid}/${currentUid}`);
-      set(reqRef, true);
-      alert("📤 تم إرسال طلب الصداقة!");
+    // إضافة صديق
+    window.addFriend = async (friendUid) => {
+      if (!myUid || !friendUid) return;
+      await set(ref(db, `friends/${myUid}/${friendUid}`), true);
+      alert("✅ تم إضافة الصديق!");
+      loadFriends();
     };
 
-    function loadFriendRequests() {
-      const reqRef = ref(db, `friendRequests/${currentUid}`);
-      onValue(reqRef, async snap => {
-        const container = document.getElementById("friendRequests");
-        container.innerHTML = "";
+    // عرض الأصدقاء الحاليين
+    async function loadFriends() {
+      const list = document.getElementById("friendsList");
+      list.innerHTML = "";
 
-        if (snap.exists()) {
-          for (const fromUid in snap.val()) {
-            const userSnap = await get(ref(db, `users/${fromUid}`));
-            if (userSnap.exists()) {
-              const data = userSnap.val();
-              const box = document.createElement("div");
-              box.className = "request-box";
-              box.innerHTML = `
-                <div class="friend-info">
-                  <img src="${data.photoURL || 'https://via.placeholder.com/45'}" />
-                  <div><strong>${data.username}</strong></div>
-                </div>
-                <div class="friend-actions">
-                  <button onclick="acceptRequest('${fromUid}')">✅ قبول</button>
-                  <button onclick="rejectRequest('${fromUid}')">❌ رفض</button>
-                </div>
-              `;
-              container.appendChild(box);
-            }
-          }
+      const friendsSnapshot = await get(ref(db, `friends/${myUid}`));
+      if (!friendsSnapshot.exists()) return list.innerHTML = "<p>لا يوجد أصدقاء.</p>";
+
+      const friends = friendsSnapshot.val();
+      for (let friendUid in friends) {
+        const userSnap = await get(ref(db, "users/" + friendUid));
+        if (userSnap.exists()) {
+          const user = userSnap.val();
+          const div = document.createElement("div");
+          div.className = "friend-card";
+          div.innerHTML = `
+            <img src="${user.profileImage}" />
+            <h3>${user.username}</h3>
+            <p>${user.email}</p>
+          `;
+          list.appendChild(div);
         }
-      });
+      }
     }
 
-    window.acceptRequest = async (fromUid) => {
-      await set(ref(db, `friends/${currentUid}/${fromUid}`), true);
-      await set(ref(db, `friends/${fromUid}/${currentUid}`), true);
-      await remove(ref(db, `friendRequests/${currentUid}/${fromUid}`));
-      alert("👍 تم قبول الطلب");
+    // نسخ UID
+    window.copyMyUID = () => {
+      navigator.clipboard.writeText(myUid)
+        .then(() => alert("📋 تم نسخ UID!"))
+        .catch(() => alert("❌ فشل النسخ"));
     };
 
-    window.rejectRequest = async (fromUid) => {
-      await remove(ref(db, `friendRequests/${currentUid}/${fromUid}`));
-      alert("🚫 تم رفض الطلب");
-    };
-
-    function loadFriendsList() {
-      const frRef = ref(db, `friends/${currentUid}`);
-      onValue(frRef, async snap => {
-        const container = document.getElementById("friendsList");
-        container.innerHTML = "";
-        if (snap.exists()) {
-          for (const fuid in snap.val()) {
-            const userSnap = await get(ref(db, `users/${fuid}`));
-            if (userSnap.exists()) {
-              const data = userSnap.val();
-              const box = document.createElement("div");
-              box.className = "friend-box";
-              box.innerHTML = `
-                <div class="friend-info">
-                  <img src="${data.photoURL || 'https://via.placeholder.com/45'}" />
-                  <div><strong>${data.username}</strong></div>
-                </div>
-                <div class="friend-actions">
-                  <button onclick="chatWith('${fuid}')">💬 دردشة</button>
-                  <button onclick="blockUser('${fuid}')">🚫 حظر</button>
-                </div>
-              `;
-              container.appendChild(box);
-            }
-          }
-        }
-      });
-    }
-
-    window.chatWith = (uid) => {
-      alert("سيفتح صفحة الدردشة مع: " + uid);
-      // redirect to: window.location.href = `chat.html?user=${uid}`;
-    };
-
-    window.blockUser = async (uid) => {
-      await remove(ref(db, `friends/${currentUid}/${uid}`));
-      await remove(ref(db, `friends/${uid}/${currentUid}`));
-      alert("🚫 تم الحظر وإزالة الصداقة");
+    // مشاركة UID
+    window.shareMyUID = () => {
+      const data = {
+        title: "هذا هو UID الخاص بي",
+        text: "ضيفني على Sheko Store! هذا هو UID الخاص بي:",
+        url: myUid
+      };
+      if (navigator.share) {
+        navigator.share(data).catch(() => alert("❌ فشل المشاركة"));
+      } else {
+        alert("جهازك لا يدعم المشاركة");
+      }
     };
   </script>
 </body>
