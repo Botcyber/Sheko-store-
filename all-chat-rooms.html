@@ -1,31 +1,31 @@
 <!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>غرف الدردشة - Sheko Store</title>
+  <meta charset="UTF-8">
+  <title>غرفتي - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body { font-family: 'Cairo', sans-serif; background: #f1f1f1; margin: 0; padding: 20px; }
+    body { font-family: 'Cairo', sans-serif; background: #f8f8f8; margin: 0; padding: 20px; }
     h1 { text-align: center; }
-    .room { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
-    .room img { width: 40px; height: 40px; border-radius: 50%; vertical-align: middle; }
-    .room-title { font-weight: bold; font-size: 18px; margin-bottom: 5px; }
-    .room-info { font-size: 14px; color: #555; }
-    .create-form { background: white; padding: 20px; border-radius: 10px; max-width: 500px; margin: 20px auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    .create-form input { width: 100%; padding: 10px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc; }
-    .create-form button { background: #222; color: white; padding: 10px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
-    .create-form button:hover { background: #ffb700; color: #222; }
+    .my-room, .other-room { background: white; padding: 15px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1); cursor: pointer; }
+    .chat-box { display: none; background: white; border-radius: 10px; padding: 15px; margin-top: 15px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    .message { margin: 10px 0; }
+    .admin-label { background: #ffb700; padding: 2px 8px; border-radius: 10px; color: white; font-weight: bold; margin-right: 5px; animation: glow 1s infinite alternate; }
+    @keyframes glow { from { box-shadow: 0 0 5px #ffb700; } to { box-shadow: 0 0 15px #ffb700; } }
+    .user { display: flex; align-items: center; margin-bottom: 10px; }
+    .user img { width: 35px; height: 35px; border-radius: 50%; margin-left: 10px; }
+    .other-room button { margin-top: 10px; background: #222; color: white; padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer; }
   </style>
 </head>
 <body>
-  <h1>غرف الدردشة</h1>  <div class="create-form">
-    <h3>إنشاء غرفة جديدة</h3>
-    <input type="text" id="roomName" placeholder="اسم الغرفة">
-    <input type="text" id="language" placeholder="اللغة">
-    <input type="text" id="country" placeholder="شعار الدولة (مثال: 🇪🇬)">
-    <input type="text" id="roomImage" placeholder="رابط صورة الغرفة (اختياري)">
-    <button onclick="createRoom()">إنشاء الغرفة مقابل 50 جنيه</button>
-  </div>  <div id="roomList"></div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>  <script>
+  <h1>غرفتي</h1>
+  <div id="myRoomContainer"></div>
+  <div class="chat-box" id="chatBox">
+    <div id="messages"></div>
+    <input type="text" id="messageInput" placeholder="اكتب رسالتك...">
+    <button onclick="sendMessage()">إرسال</button>
+  </div>  <h2>غرف المستخدمين الآخرين</h2>
+  <div id="otherRooms"></div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -39,6 +39,7 @@
     const db = firebase.database();
     const auth = firebase.auth();
     let currentUser;
+    let currentRoomId = null;
 
     auth.onAuthStateChanged(user => {
       if (user) {
@@ -50,57 +51,66 @@
     });
 
     function loadRooms() {
-      db.ref("chat_rooms").on("value", snapshot => {
-        const rooms = snapshot.val();
-        const roomList = document.getElementById("roomList");
-        roomList.innerHTML = "";
-        for (const roomId in rooms) {
-          const room = rooms[roomId];
-          const userCount = room.users ? Object.keys(room.users).length : 0;
-          const imgTag = room.approvedImage ? `<img src='${room.approvedImage}'>` : "";
-          roomList.innerHTML += `
-            <div class='room'>
-              ${imgTag}
-              <div class='room-title'>${room.name} ${room.flag || ""}</div>
-              <div class='room-info'>اللغة: ${room.language || "غير محددة"} - عدد الأعضاء: ${userCount}</div>
-            </div>`;
+      db.ref("chat_rooms").on("value", snap => {
+        const rooms = snap.val();
+        document.getElementById("myRoomContainer").innerHTML = "";
+        document.getElementById("otherRooms").innerHTML = "";
+        for (let id in rooms) {
+          const room = rooms[id];
+          if (room.adminUid === currentUser.uid) {
+            document.getElementById("myRoomContainer").innerHTML = `<div class='my-room' onclick='enterRoom("${id}")'>غرفتي: ${room.name}</div>`;
+          } else {
+            db.ref(`chat_rooms/${id}/invites/${currentUser.uid}`).once("value", inviteSnap => {
+              const invited = inviteSnap.val();
+              const accepted = invited && invited.status === "accepted";
+              const inviteBtn = accepted ? `<button onclick='enterRoom("${id}")'>دخول</button>` : invited ? "بانتظار الموافقة" : `<button onclick='sendInvite("${id}")'>طلب انضمام</button>`;
+              document.getElementById("otherRooms").innerHTML += `<div class='other-room'>${room.name} - ${room.language} ${inviteBtn}</div>`;
+            });
+          }
         }
       });
     }
 
-    function createRoom() {
-      const roomName = document.getElementById("roomName").value.trim();
-      const language = document.getElementById("language").value.trim();
-      const flag = document.getElementById("country").value.trim();
-      const imageLink = document.getElementById("roomImage").value.trim();
+    function enterRoom(roomId) {
+      currentRoomId = roomId;
+      document.getElementById("chatBox").style.display = "block";
+      loadMessages();
+    }
 
-      if (!roomName) return alert("يرجى إدخال اسم الغرفة.");
-
-      const uid = currentUser.uid;
-      db.ref("users/" + uid + "/balance").once("value").then(snap => {
-        let balance = snap.val() || 0;
-        if (balance < 50) return alert("رصيدك لا يكفي.");
-
-        db.ref("users/" + uid + "/balance").set(balance - 50);
-
-        const newRoom = db.ref("chat_rooms").push();
-        newRoom.set({
-          name: roomName,
-          language,
-          flag,
-          adminUid: uid,
-          requestedImage: imageLink || "",
-          approvedImage: "",
-          users: {
-            [uid]: {
-              name: "أنت",
-              photo: ""
-            }
-          }
-        });
-
-        alert("✅ تم إنشاء الغرفة وجاري انتظار الموافقة على الصورة (إن وجدت)");
+    function loadMessages() {
+      db.ref("chat_rooms/" + currentRoomId + "/messages").on("value", snap => {
+        const msgs = snap.val();
+        const msgBox = document.getElementById("messages");
+        msgBox.innerHTML = "";
+        for (let id in msgs) {
+          const msg = msgs[id];
+          const adminLabel = msg.uid === currentUser.uid && msg.uid === msg.adminUid ? '<span class="admin-label">admin</span>' : "";
+          msgBox.innerHTML += `<div class='message'><div class='user'><img src='${msg.photo}'><strong>${msg.name}</strong> ${adminLabel}</div>${msg.text}</div>`;
+        }
       });
+    }
+
+    function sendMessage() {
+      const msg = document.getElementById("messageInput").value;
+      if (!msg) return;
+      db.ref("users/" + currentUser.uid).once("value").then(userSnap => {
+        const data = userSnap.val();
+        db.ref("chat_rooms/" + currentRoomId + "/messages").push({
+          uid: currentUser.uid,
+          name: data.username,
+          photo: data.profileimage,
+          text: msg,
+          adminUid: currentUser.uid
+        });
+        document.getElementById("messageInput").value = "";
+      });
+    }
+
+    function sendInvite(roomId) {
+      db.ref(`chat_rooms/${roomId}/invites/${currentUser.uid}`).set({
+        status: "pending"
+      });
+      alert("تم إرسال طلب الانضمام للغرفة.");
     }
   </script></body>
 </html>
