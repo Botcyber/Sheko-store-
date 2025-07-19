@@ -1,0 +1,106 @@
+<!DOCTYPE html><html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>غرف الدردشة - Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { font-family: 'Cairo', sans-serif; background: #f1f1f1; margin: 0; padding: 20px; }
+    h1 { text-align: center; }
+    .room { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+    .room img { width: 40px; height: 40px; border-radius: 50%; vertical-align: middle; }
+    .room-title { font-weight: bold; font-size: 18px; margin-bottom: 5px; }
+    .room-info { font-size: 14px; color: #555; }
+    .create-form { background: white; padding: 20px; border-radius: 10px; max-width: 500px; margin: 20px auto; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    .create-form input { width: 100%; padding: 10px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc; }
+    .create-form button { background: #222; color: white; padding: 10px 15px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+    .create-form button:hover { background: #ffb700; color: #222; }
+  </style>
+</head>
+<body>
+  <h1>غرف الدردشة</h1>  <div class="create-form">
+    <h3>إنشاء غرفة جديدة</h3>
+    <input type="text" id="roomName" placeholder="اسم الغرفة">
+    <input type="text" id="language" placeholder="اللغة">
+    <input type="text" id="country" placeholder="شعار الدولة (مثال: 🇪🇬)">
+    <input type="text" id="roomImage" placeholder="رابط صورة الغرفة (اختياري)">
+    <button onclick="createRoom()">إنشاء الغرفة مقابل 50 جنيه</button>
+  </div>  <div id="roomList"></div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+    let currentUser;
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = user;
+        loadRooms();
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    function loadRooms() {
+      db.ref("chat_rooms").on("value", snapshot => {
+        const rooms = snapshot.val();
+        const roomList = document.getElementById("roomList");
+        roomList.innerHTML = "";
+        for (const roomId in rooms) {
+          const room = rooms[roomId];
+          const userCount = room.users ? Object.keys(room.users).length : 0;
+          const imgTag = room.approvedImage ? `<img src='${room.approvedImage}'>` : "";
+          roomList.innerHTML += `
+            <div class='room'>
+              ${imgTag}
+              <div class='room-title'>${room.name} ${room.flag || ""}</div>
+              <div class='room-info'>اللغة: ${room.language || "غير محددة"} - عدد الأعضاء: ${userCount}</div>
+            </div>`;
+        }
+      });
+    }
+
+    function createRoom() {
+      const roomName = document.getElementById("roomName").value.trim();
+      const language = document.getElementById("language").value.trim();
+      const flag = document.getElementById("country").value.trim();
+      const imageLink = document.getElementById("roomImage").value.trim();
+
+      if (!roomName) return alert("يرجى إدخال اسم الغرفة.");
+
+      const uid = currentUser.uid;
+      db.ref("users/" + uid + "/balance").once("value").then(snap => {
+        let balance = snap.val() || 0;
+        if (balance < 50) return alert("رصيدك لا يكفي.");
+
+        db.ref("users/" + uid + "/balance").set(balance - 50);
+
+        const newRoom = db.ref("chat_rooms").push();
+        newRoom.set({
+          name: roomName,
+          language,
+          flag,
+          adminUid: uid,
+          requestedImage: imageLink || "",
+          approvedImage: "",
+          users: {
+            [uid]: {
+              name: "أنت",
+              photo: ""
+            }
+          }
+        });
+
+        alert("✅ تم إنشاء الغرفة وجاري انتظار الموافقة على الصورة (إن وجدت)");
+      });
+    }
+  </script></body>
+</html>
