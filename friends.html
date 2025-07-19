@@ -11,79 +11,214 @@
       padding: 20px;
       text-align: center;
       animation: fadeIn 1s ease-in;
-    }@keyframes fadeIn {
-  from {opacity: 0; transform: translateY(20px);}
-  to {opacity: 1; transform: translateY(0);}
-}
+    }
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(20px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
 
-h2, h3 {
-  color: #333;
-}
+    h2, h3 {
+      color: #333;
+    }
 
-.friend-card, .search-result {
-  background: white;
-  margin: 15px auto;
-  padding: 15px;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  width: 320px;
-  transition: 0.3s ease;
-  animation: fadeIn 0.6s ease-in;
-}
+    .friend-card, .search-result {
+      background: white;
+      margin: 15px auto;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 320px;
+      transition: 0.3s ease;
+      animation: fadeIn 0.6s ease-in;
+      position: relative;
+    }
 
-.friend-card:hover, .search-result:hover {
-  transform: translateY(-5px);
-}
+    .friend-card:hover, .search-result:hover {
+      transform: translateY(-5px);
+    }
 
-img {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #007bff;
-}
+    img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #007bff;
+    }
 
-input {
-  padding: 10px;
-  margin: 10px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  width: 70%;
-}
+    input {
+      padding: 10px;
+      margin: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      width: 70%;
+    }
 
-button {
-  padding: 10px 15px;
-  margin: 5px;
-  border: none;
-  border-radius: 8px;
-  background: #007bff;
-  color: white;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
+    button {
+      padding: 10px 15px;
+      margin: 5px 3px;
+      border: none;
+      border-radius: 8px;
+      background: #007bff;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
 
-button:hover {
-  background: #0056b3;
-}
+    button:hover {
+      background: #0056b3;
+    }
 
-.my-id {
-  margin-top: 20px;
-}
+    .my-id {
+      margin-top: 20px;
+    }
+
+    /* أزرار إضافية صغيرة للحظر والدردشة */
+    .btn-small {
+      padding: 6px 10px;
+      font-size: 0.9rem;
+    }
+
+    /* نافذة الدردشة */
+    #chatWindow {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 350px;
+      max-height: 450px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 1000;
+      animation: fadeIn 0.3s ease;
+    }
+
+    #chatHeader {
+      background: #007bff;
+      color: white;
+      padding: 12px 15px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #chatMessages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      text-align: left;
+      background: #f7f9ff;
+    }
+
+    #chatInputArea {
+      display: flex;
+      border-top: 1px solid #ddd;
+    }
+
+    #chatInputArea input {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 0 0 0 15px;
+      font-size: 1rem;
+    }
+
+    #chatInputArea button {
+      border-radius: 0 0 15px 0;
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 0 20px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    #chatInputArea button:hover {
+      background: #0056b3;
+    }
+
+    /* قائمة طلبات الصداقة */
+    #friendRequests {
+      max-width: 320px;
+      margin: 10px auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      padding: 10px;
+      text-align: right;
+    }
+
+    #friendRequests h3 {
+      margin-top: 0;
+    }
+
+    .request-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 8px;
+    }
+
+    .request-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .request-info img {
+      width: 50px;
+      height: 50px;
+      border: 2px solid #007bff;
+    }
 
   </style>
 </head>
 <body>
-  <h2>👥 قائمة الأصدقاء</h2>  <div class="my-id">
+  <h2>👥 قائمة الأصدقاء</h2>  
+  <div class="my-id">
     <p id="myUidText">🔒 UID الخاص بك: جاري التحميل...</p>
     <button onclick="copyMyUID()">📋 نسخ UID</button>
     <button onclick="shareMyUID()">📤 مشاركة UID</button>
-  </div>  <div>
+  </div>  
+
+  <div>
     <input type="text" id="searchInput" placeholder="اكتب UID لصديقك" />
     <button onclick="searchUser()">🔍 بحث</button>
-  </div>  <div id="searchResult"></div>  <h3>✅ أصدقاؤك الحاليون:</h3>
-  <div id="friendsList"></div>  <script type="module">
+  </div>
+
+  <!-- قائمة طلبات الصداقة -->
+  <div id="friendRequests">
+    <h3>📩 طلبات الصداقة:</h3>
+    <div id="requestsList">لا توجد طلبات حالياً.</div>
+  </div>
+
+  <div id="searchResult"></div>  
+
+  <h3>✅ أصدقاؤك الحاليون:</h3>
+  <div id="friendsList"></div>  
+
+  <!-- نافذة الدردشة -->
+  <div id="chatWindow">
+    <div id="chatHeader">
+      <span id="chatFriendName">الدردشة</span>
+      <button onclick="closeChat()">✖️</button>
+    </div>
+    <div id="chatMessages"></div>
+    <div id="chatInputArea">
+      <input type="text" id="chatInput" placeholder="اكتب رسالة..." />
+      <button onclick="sendMessage()">إرسال</button>
+    </div>
+  </div>
+
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, get, set, onValue, remove, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const firebaseConfig = {
@@ -101,15 +236,18 @@ button:hover {
     const auth = getAuth(app);
 
     let myUid = null;
+    let currentChatUid = null;
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
         myUid = user.uid;
         document.getElementById("myUidText").textContent = `🔒 UID الخاص بك: ${myUid}`;
         loadFriends();
+        loadFriendRequests();
       }
     });
 
+    // البحث عن مستخدم
     window.searchUser = async () => {
       const uid = document.getElementById("searchInput").value.trim();
       const resultDiv = document.getElementById("searchResult");
@@ -123,7 +261,7 @@ button:hover {
             <img src="${user.profileImage}" />
             <h3>${user.username}</h3>
             <div id="badges-search">جاري تحميل الشارات...</div>
-            <button onclick="addFriend('${uid}')">➕ أضف كصديق</button>
+            <button onclick="sendFriendRequest('${uid}')">➕ إرسال طلب صداقة</button>
           </div>
         `;
         const badgeSnap = await get(ref(db, `userBadges/${uid}/badges`));
@@ -139,18 +277,67 @@ button:hover {
       }
     };
 
-    window.addFriend = async (friendUid) => {
-      if (!myUid || !friendUid || myUid === friendUid) return;
-      const already = await get(ref(db, `friends/${myUid}/${friendUid}`));
-      if (already.exists()) {
-        alert("⚠️ هذا المستخدم في قائمة أصدقائك بالفعل");
-        return;
-      }
-      await set(ref(db, `friends/${myUid}/${friendUid}`), true);
-      alert("✅ تم إضافة الصديق!");
-      loadFriends();
+    // إرسال طلب صداقة
+    window.sendFriendRequest = async (toUid) => {
+      if (!myUid || !toUid || myUid === toUid) return alert("⚠️ لا يمكنك إرسال طلب صداقة لنفسك");
+      // نتحقق إذا لم يتم إرسال طلب مسبقاً
+      const reqSnap = await get(ref(db, `friendRequests/${toUid}/${myUid}`));
+      if (reqSnap.exists()) return alert("⚠️ لقد أرسلت طلب صداقة مسبقاً");
+      await set(ref(db, `friendRequests/${toUid}/${myUid}`), true);
+      alert("✅ تم إرسال طلب الصداقة");
     };
 
+    // تحميل طلبات الصداقة
+    async function loadFriendRequests() {
+      const reqDiv = document.getElementById("requestsList");
+      reqDiv.innerHTML = "جارٍ تحميل طلبات الصداقة...";
+      const reqSnap = await get(ref(db, `friendRequests/${myUid}`));
+      if (!reqSnap.exists()) {
+        reqDiv.innerHTML = "لا توجد طلبات حالياً.";
+        return;
+      }
+      const requests = reqSnap.val();
+      reqDiv.innerHTML = "";
+      for (const requesterUid in requests) {
+        const userSnap = await get(ref(db, `users/${requesterUid}`));
+        if (!userSnap.exists()) continue;
+        const user = userSnap.val();
+        const div = document.createElement("div");
+        div.className = "request-card";
+        div.innerHTML = `
+          <div class="request-info">
+            <img src="${user.profileImage}" />
+            <strong>${user.username}</strong>
+          </div>
+          <div>
+            <button onclick="acceptFriendRequest('${requesterUid}')">قبول</button>
+            <button onclick="rejectFriendRequest('${requesterUid}')">رفض</button>
+          </div>
+        `;
+        reqDiv.appendChild(div);
+      }
+    }
+
+    // قبول طلب صداقة
+    window.acceptFriendRequest = async (requesterUid) => {
+      if (!myUid || !requesterUid) return;
+      await set(ref(db, `friends/${myUid}/${requesterUid}`), true);
+      await set(ref(db, `friends/${requesterUid}/${myUid}`), true);
+      await remove(ref(db, `friendRequests/${myUid}/${requesterUid}`));
+      alert("✅ تم قبول طلب الصداقة");
+      loadFriends();
+      loadFriendRequests();
+    };
+
+    // رفض طلب صداقة
+    window.rejectFriendRequest = async (requesterUid) => {
+      if (!myUid || !requesterUid) return;
+      await remove(ref(db, `friendRequests/${myUid}/${requesterUid}`));
+      alert("✅ تم رفض طلب الصداقة");
+      loadFriendRequests();
+    };
+
+    // تحميل الأصدقاء وعرضهم مع أزرار حظر ودردشة
     async function loadFriends() {
       const list = document.getElementById("friendsList");
       list.innerHTML = "";
@@ -169,11 +356,13 @@ button:hover {
             <img src="${user.profileImage}" />
             <h3>${user.username}</h3>
             <div id="badges-${friendUid}">جاري تحميل الشارات...</div>
+            <button class="btn-small" onclick="openChat('${friendUid}', '${user.username}')">💬 دردشة</button>
+            <button class="btn-small" style="background:#dc3545;" onclick="blockFriend('${friendUid}')">🚫 حظر</button>
           `;
           list.appendChild(div);
 
           const badgesSnap = await get(ref(db, `userBadges/${friendUid}/badges`));
-          const badgeDiv = document.getElementById(`badges-${friendUid}`);
+          const badgeDiv = div.querySelector(`#badges-${friendUid}`);
           if (badgesSnap.exists()) {
             const badges = badgesSnap.val();
             badgeDiv.innerHTML = Object.values(badges).map(b => `<span style="background:#eee;padding:5px 10px;margin:3px;border-radius:8px;display:inline-block;">${b}</span>`).join(" ");
@@ -183,6 +372,96 @@ button:hover {
         }
       }
     }
+
+    // حذف الصديق (حظر)
+    window.blockFriend = async (friendUid) => {
+      if (!confirm("هل أنت متأكد من حظر هذا المستخدم؟ سيُزال من قائمة أصدقائك.")) return;
+      await remove(ref(db, `friends/${myUid}/${friendUid}`));
+      // إذا أردت تحذف الصديق أيضاً من طرفه (اختياري)
+      // await remove(ref(db, `friends/${friendUid}/${myUid}`));
+      alert("✅ تم حظر المستخدم وإزالته من أصدقائك");
+      loadFriends();
+    };
+
+    // فتح نافذة الدردشة مع صديق
+    window.openChat = (friendUid, friendName) => {
+      currentChatUid = friendUid;
+      document.getElementById("chatFriendName").textContent = friendName;
+      document.getElementById("chatMessages").innerHTML = "";
+      document.getElementById("chatWindow").style.display = "flex";
+      loadChatMessages();
+    };
+
+    // إغلاق نافذة الدردشة
+    window.closeChat = () => {
+      currentChatUid = null;
+      document.getElementById("chatWindow").style.display = "none";
+      if (chatListener) chatListener();
+      chatListener = null;
+    };
+
+    let chatListener = null;
+
+    // تحميل الرسائل بيني وبين الصديق
+    function loadChatMessages() {
+      if (!currentChatUid) return;
+      const chatId = generateChatId(myUid, currentChatUid);
+      const messagesRef = ref(db, `chats/${chatId}/messages`);
+
+      // إزالة أي استماع سابق
+      if (chatListener) chatListener();
+
+      // الاستماع لتحديثات الرسائل
+      chatListener = onValue(messagesRef, (snapshot) => {
+        const messagesDiv = document.getElementById("chatMessages");
+        messagesDiv.innerHTML = "";
+        if (!snapshot.exists()) return;
+
+        const messages = snapshot.val();
+        Object.values(messages).forEach(msg => {
+          const msgDiv = document.createElement("div");
+          msgDiv.style.marginBottom = "8px";
+          msgDiv.style.padding = "6px 10px";
+          msgDiv.style.borderRadius = "10px";
+          msgDiv.style.maxWidth = "75%";
+          if (msg.sender === myUid) {
+            msgDiv.style.background = "#007bff";
+            msgDiv.style.color = "white";
+            msgDiv.style.marginLeft = "auto";
+          } else {
+            msgDiv.style.background = "#eee";
+            msgDiv.style.color = "#333";
+            msgDiv.style.marginRight = "auto";
+          }
+          msgDiv.textContent = msg.text;
+          messagesDiv.appendChild(msgDiv);
+        });
+
+        // تمرير الأسفل تلقائياً
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      });
+    }
+
+    // توليد معرف دردشة موحد بين مستخدمين
+    function generateChatId(uid1, uid2) {
+      return [uid1, uid2].sort().join("_");
+    }
+
+    // إرسال رسالة في الدردشة
+    window.sendMessage = async () => {
+      const input = document.getElementById("chatInput");
+      const text = input.value.trim();
+      if (!text || !currentChatUid) return;
+      const chatId = generateChatId(myUid, currentChatUid);
+      const messagesRef = ref(db, `chats/${chatId}/messages`);
+      const newMsgRef = push(messagesRef);
+      await set(newMsgRef, {
+        sender: myUid,
+        text,
+        timestamp: Date.now()
+      });
+      input.value = "";
+    };
 
     window.copyMyUID = () => {
       navigator.clipboard.writeText(myUid)
@@ -194,13 +473,14 @@ button:hover {
       const data = {
         title: "هذا هو UID الخاص بي",
         text: "ضيفني على Sheko Store! هذا هو UID الخاص بي:",
-        url: myUid
-      };
-      if (navigator.share) {
-        navigator.share(data).catch(() => alert("❌ فشل المشاركة"));
-      } else {
-        alert("جهازك لا يدعم المشاركة");
-      }
+      url: myUid
     };
-  </script></body>
+    if (navigator.share) {
+      navigator.share(data).catch(() => alert("❌ فشل المشاركة"));
+    } else {
+      alert("جهازك لا يدعم المشاركة");
+    }
+  };
+  </script>
+</body>
 </html>
