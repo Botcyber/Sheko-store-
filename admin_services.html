@@ -1,51 +1,41 @@
 <!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>إدارة الخدمات والباقات</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة إدارة الخدمات والباقات</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Cairo', sans-serif; background: #121212; color: #fff; padding: 20px; }
-    h1 { text-align: center; color: #ffb700; margin-bottom: 30px; }
-    .form-group { margin-bottom: 20px; }
-    label { display: block; margin-bottom: 5px; font-size: 16px; }
-    input, select { width: 100%; padding: 8px; font-size: 16px; border-radius: 5px; border: none; }
-    button { padding: 10px 20px; font-size: 16px; background-color: #ffb700; color: #222; border: none; border-radius: 5px; cursor: pointer; }
-    table { width: 100%; border-collapse: collapse; margin-top: 30px; }
-    th, td { border: 1px solid #444; padding: 10px; text-align: center; }
-    th { background-color: #333; }
-    .actions button { margin: 0 5px; }
+    body { font-family: 'Cairo', sans-serif; background: #f4f4f4; padding: 20px; }
+    h1 { text-align: center; color: #222; margin-bottom: 30px; }
+    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    label, input, select, button { width: 100%; margin: 10px 0; padding: 8px; border-radius: 6px; border: 1px solid #ccc; }
+    button { background: #222; color: white; font-weight: bold; cursor: pointer; }
+    button:hover { background: #ffb700; color: #222; }
+    .service-list { margin-top: 20px; }
+    .service-list h3 { margin: 10px 0; }
+    .service-box { background: #f9f9f9; padding: 10px; margin: 10px 0; border-radius: 8px; }
+    .delete-btn { background: red; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; float: left; }
   </style>
 </head>
 <body>
-  <h1>إدارة الخدمات والباقات</h1>
-  <div class="form-group">
-    <label>نوع الخدمة</label>
-    <input type="text" id="mainService" placeholder="مثال: ألعاب / سوشيال / شحن الكتروني" />
-  </div>
-  <div class="form-group">
-    <label>الخدمة</label>
-    <input type="text" id="subService" placeholder="مثال: ببجي موبايل / تيك توك" />
-  </div>
-  <div class="form-group">
-    <label>الباقة</label>
-    <input type="text" id="packageName" placeholder="مثال: 60 شدة / 1000 متابع" />
-  </div>
-  <div class="form-group">
-    <label>السعر</label>
-    <input type="number" id="price" placeholder="مثال: 50" />
-  </div>
-  <button onclick="addPackage()">إضافة / تعديل الباقة</button>  <table id="serviceTable">
-    <thead>
-      <tr>
-        <th>نوع الخدمة</th>
-        <th>الخدمة</th>
-        <th>الباقة</th>
-        <th>السعر</th>
-        <th>إجراءات</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script>
+  <div class="container">
+    <h1>إدارة أنواع الخدمات والباقات</h1><label>نوع الخدمة:</label>
+<input type="text" id="mainType" placeholder="مثال: ألعاب">
+
+<label>اسم الخدمة:</label>
+<input type="text" id="serviceName" placeholder="مثال: ببجي موبايل">
+
+<label>اسم الباقة:</label>
+<input type="text" id="packageName" placeholder="مثال: 60 شدة">
+
+<label>السعر بالجنيه:</label>
+<input type="number" id="price" placeholder="مثال: 50">
+
+<button onclick="addPackage()">إضافة / تعديل باقة</button>
+
+<div class="service-list" id="servicesContainer"></div>
+
+  </div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -59,52 +49,54 @@
     const db = firebase.database();
 
     function addPackage() {
-      const main = document.getElementById("mainService").value.trim();
-      const sub = document.getElementById("subService").value.trim();
+      const main = document.getElementById("mainType").value.trim();
+      const service = document.getElementById("serviceName").value.trim();
       const pack = document.getElementById("packageName").value.trim();
       const price = parseFloat(document.getElementById("price").value);
-      if (!main || !sub || !pack || isNaN(price)) return alert("يرجى تعبئة جميع الحقول بشكل صحيح");
 
-      db.ref(`prices/${main}/${sub}/${pack}`).set(price).then(() => {
-        alert("تمت الإضافة أو التعديل بنجاح");
-        loadServices();
+      if (!main || !service || !pack || isNaN(price)) {
+        alert("يرجى تعبئة جميع الحقول بشكل صحيح");
+        return;
+      }
+
+      db.ref(`prices/${main}/${service}/${pack}`).set(price).then(() => {
+        alert("تم حفظ الباقة بنجاح");
+        loadAll();
       });
     }
 
-    function deletePackage(main, sub, pack) {
-      if (!confirm("هل أنت متأكد من حذف هذه الباقة؟")) return;
-      db.ref(`prices/${main}/${sub}/${pack}`).remove().then(() => {
-        alert("تم الحذف بنجاح");
-        loadServices();
-      });
+    function deletePackage(main, service, pack) {
+      if (confirm("هل أنت متأكد من حذف هذه الباقة؟")) {
+        db.ref(`prices/${main}/${service}/${pack}`).remove().then(loadAll);
+      }
     }
 
-    function loadServices() {
-      const tbody = document.querySelector("#serviceTable tbody");
-      tbody.innerHTML = "";
-      db.ref("prices").once("value").then(snapshot => {
+    function loadAll() {
+      const container = document.getElementById("servicesContainer");
+      container.innerHTML = "<h2>جميع الباقات:</h2>";
+      db.ref("prices").once("value", snapshot => {
         const data = snapshot.val();
         if (!data) return;
-        for (const main in data) {
-          for (const sub in data[main]) {
-            for (const pack in data[main][sub]) {
-              const price = data[main][sub][pack];
-              const row = `<tr>
-                <td>${main}</td>
-                <td>${sub}</td>
-                <td>${pack}</td>
-                <td>${price}</td>
-                <td class="actions">
-                  <button onclick="deletePackage('${main}','${sub}','${pack}')">حذف</button>
-                </td>
-              </tr>`;
-              tbody.innerHTML += row;
+
+        for (let main in data) {
+          container.innerHTML += `<h3>📦 ${main}</h3>`;
+          for (let service in data[main]) {
+            container.innerHTML += `<div class='service-box'><strong>🔹 ${service}</strong>`;
+            for (let pack in data[main][service]) {
+              const price = data[main][service][pack];
+              container.innerHTML += `
+                <div>
+                  ${pack} - ${price} جنيه
+                  <button class='delete-btn' onclick="deletePackage('${main}', '${service}', '${pack}')">حذف</button>
+                </div>
+              `;
             }
+            container.innerHTML += `</div>`;
           }
         }
       });
     }
 
-    loadServices();
+    window.onload = loadAll;
   </script></body>
 </html>
