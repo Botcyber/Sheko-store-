@@ -170,6 +170,18 @@
     .removeBtn:hover {
       background: #c0392b;
     }
+    #deleteRoomBtn {
+      background:#e74c3c; 
+      color:white; 
+      border:none; 
+      padding:10px; 
+      border-radius:8px; 
+      width:100%; 
+      font-weight:bold; 
+      cursor:pointer; 
+      margin-top:15px; 
+      display:none;
+    }
     #closeSettings {
       background: #222;
       color: white;
@@ -203,6 +215,7 @@
   <div id="settingsPanel">
     <h3>إعدادات الغرفة</h3>
     <div id="membersList">جارٍ تحميل الأعضاء...</div>
+    <button id="deleteRoomBtn">حذف الغرفة</button>
     <button id="closeSettings">إغلاق</button>
   </div>
 
@@ -211,7 +224,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <script>
-    // تهيئة Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -229,15 +241,13 @@
     let roomId = null;
     let roomData = null;
 
-    // قراءة roomId من الرابط
     const urlParams = new URLSearchParams(window.location.search);
     roomId = urlParams.get("roomId");
     if (!roomId) {
       alert("لم يتم تحديد الغرفة.");
-      window.location.href = "all-chat-rooms.html"; // إعادة توجيه لصفحة الغرف
+      window.location.href = "all-chat-rooms.html";
     }
 
-    // عناصر الصفحة
     const roomTitleEl = document.getElementById("roomTitle");
     const messagesEl = document.getElementById("messages");
     const inputMessageEl = document.getElementById("inputMessage");
@@ -246,8 +256,8 @@
     const settingsPanel = document.getElementById("settingsPanel");
     const membersList = document.getElementById("membersList");
     const closeSettingsBtn = document.getElementById("closeSettings");
+    const deleteRoomBtn = document.getElementById("deleteRoomBtn");
 
-    // تسجيل الدخول والتحقق
     auth.onAuthStateChanged(user => {
       if (user) {
         currentUser = user;
@@ -257,7 +267,6 @@
       }
     });
 
-    // تحميل بيانات الغرفة
     function loadRoomData() {
       db.ref("chat_rooms/" + roomId).once("value").then(snapshot => {
         roomData = snapshot.val();
@@ -266,15 +275,14 @@
           window.location.href = "all-chat-rooms.html";
           return;
         }
-        // تحديث العنوان
+
         let titleHtml = roomData.name;
         if (roomData.adminUid === currentUser.uid) {
           titleHtml += ' <span class="admin-label">Admin</span>';
-          settingsBtn.style.display = "inline-block"; // إظهار زر الإعدادات فقط للمالك
+          settingsBtn.style.display = "inline-block";
         }
         roomTitleEl.innerHTML = titleHtml;
 
-        // تحقق إذا المستخدم عضو في الغرفة
         if (!roomData.users || !roomData.users[currentUser.uid]) {
           alert("أنت لست عضواً في هذه الغرفة.");
           window.location.href = "all-chat-rooms.html";
@@ -285,51 +293,54 @@
       });
     }
 
-    // الاستماع للرسائل وتحديث العرض
     function listenMessages() {
       db.ref("chat_rooms/" + roomId + "/messages").on("value", snapshot => {
         const messages = snapshot.val();
         messagesEl.innerHTML = "";
         if (!messages) return;
+        // جلب بيانات كل رسالة واظهارها
+        // هنا لنعرض بشكل متزامن كل رسالة مع بيانات المستخدم
+        const promises = [];
         for (const msgId in messages) {
-          const msg = messages[msgId];
-          displayMessage(msg);
+          promises.push(db.ref("users/" + messages[msgId].uid).once("value").then(userSnap => {
+            const userData = userSnap.val() || {};
+            return { msg: messages[msgId], user: userData };
+          }));
         }
-        // تمرير الاسكرول للأسفل تلقائياً
-        messagesEl.scrollTop = messagesEl.scrollHeight;
+        Promise.all(promises).then(results => {
+          results.forEach(({ msg, user }) => {
+            displayMessage(msg, user);
+          });
+          messagesEl.scrollTop = messagesEl.scrollHeight;
+        });
       });
     }
 
-    // عرض رسالة في الدردشة
-    function displayMessage(msg) {
+    function displayMessage(msg, user) {
       const div = document.createElement("div");
       div.classList.add("message");
 
-      const imgSrc = msg.photo || "default-profile.png"; // رابط الصورة الافتراضية لو لم توجد صورة
-      const username = msg.name || "مستخدم مجهول";
+      const imgSrc = user.profileimage || "default-profile.png";
+      let username = user.username || "مستخدم مجهول";
 
-      // إذا هو الأدمن اجعل اسمه مع الوسم
-      let nameHtml = username;
       if (roomData.adminUid === msg.uid) {
-        nameHtml += ' <span class="admin-label">Admin</span>';
+        username += ' <span class="admin-label">Admin</span>';
       }
 
       div.innerHTML = `
         <img src="${imgSrc}" alt="صورة المستخدم" />
-        <div class="username">${nameHtml}</div>
+        <div class="username">${username}</div>
         <div class="text">${escapeHtml(msg.text)}</div>
       `;
       messagesEl.appendChild(div);
     }
 
-    // تعقيم النص لمنع الـ HTML الضار
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.appendChild(document.createTextNode(text));
       return div.innerHTML;
     }
 
-    // إرسال رسالة جديدة
     sendBtn.addEventListener("click", sendMessage);
     inputMessageEl.addEventListener("keypress", e => {
       if (e.key === "Enter") sendMessage();
@@ -339,14 +350,11 @@
       const text = inputMessageEl.value.trim();
       if (!text) return;
 
-      // جلب بيانات المستخدم من قاعدة users لتحديث الصورة والاسم
       db.ref("users/" + currentUser.uid).once("value").then(snap => {
         const userInfo = snap.val() || {};
         const newMsgRef = db.ref("chat_rooms/" + roomId + "/messages").push();
         newMsgRef.set({
           uid: currentUser.uid,
-          name: userInfo.username || "مستخدم",
-          photo: userInfo.profileimage || "default-profile.png",
           text: text,
           timestamp: Date.now()
         });
@@ -354,50 +362,59 @@
       });
     }
 
-    // عرض لوحة الإعدادات عند الضغط على الزر
     settingsBtn.addEventListener("click", () => {
       settingsPanel.style.display = "block";
       loadMembers();
+
+      if (currentUser.uid === roomData.adminUid) {
+        deleteRoomBtn.style.display = "block";
+      } else {
+        deleteRoomBtn.style.display = "none";
+      }
     });
 
     closeSettingsBtn.addEventListener("click", () => {
       settingsPanel.style.display = "none";
     });
 
-    // تحميل الأعضاء وعرضهم مع إمكانية الإزالة للمالك فقط
     function loadMembers() {
       membersList.innerHTML = "جارٍ تحميل الأعضاء...";
-      db.ref("chat_rooms/" + roomId + "/users").once("value").then(snap => {
-        const users = snap.val();
-        if (!users) {
+      db.ref("chat_rooms/" + roomId + "/users").once("value").then(async snap => {
+        const usersInRoom = snap.val();
+        if (!usersInRoom) {
           membersList.innerHTML = "لا يوجد أعضاء.";
           return;
         }
         membersList.innerHTML = "";
-        for (const uid in users) {
-          const user = users[uid];
+
+        const userPromises = Object.keys(usersInRoom).map(uid => {
+          return db.ref("users/" + uid).once("value").then(userSnap => {
+            return { uid, data: userSnap.val() };
+          });
+        });
+
+        const usersData = await Promise.all(userPromises);
+
+        usersData.forEach(({ uid, data }) => {
           const div = document.createElement("div");
           div.classList.add("memberItem");
 
           div.innerHTML = `
             <div class="memberInfo">
-              <img src="${user.photo || "default-profile.png"}" alt="صورة العضو" />
-              <div class="memberName">${user.name || "مستخدم"}</div>
+              <img src="${data?.profileimage || "default-profile.png"}" alt="صورة العضو" />
+              <div class="memberName">${data?.username || "مستخدم"}</div>
               ${uid === roomData.adminUid ? '<span class="admin-label" style="margin-left:10px;">Admin</span>' : ''}
             </div>
-            ${ (currentUser.uid === roomData.adminUid && uid !== roomData.adminUid) ? `<button class="removeBtn" data-uid="${uid}">إزالة</button>` : ""}
+            ${(currentUser.uid === roomData.adminUid && uid !== roomData.adminUid) ? `<button class="removeBtn" data-uid="${uid}">إزالة</button>` : ""}
           `;
           membersList.appendChild(div);
-        }
+        });
 
-        // إضافة حدث إزالة عضو
         document.querySelectorAll(".removeBtn").forEach(btn => {
           btn.addEventListener("click", () => {
             const removeUid = btn.getAttribute("data-uid");
             if (confirm("هل أنت متأكد من إزالة هذا العضو من الغرفة؟")) {
               db.ref(`chat_rooms/${roomId}/users/${removeUid}`).remove().then(() => {
-                // إزالة جميع الرسائل الخاصة بالعضو إن أردت (اختياري)
-                // إعادة تحميل الأعضاء
                 loadMembers();
               });
             }
@@ -405,6 +422,19 @@
         });
       });
     }
+
+    deleteRoomBtn.addEventListener("click", () => {
+      if (confirm("هل أنت متأكد من حذف هذه الغرفة؟ سيتم حذف كل محتوياتها.")) {
+        db.ref("chat_rooms/" + roomId).remove()
+          .then(() => {
+            alert("تم حذف الغرفة بنجاح.");
+            window.location.href = "all-chat-rooms.html";
+          })
+          .catch(error => {
+            alert("حدث خطأ أثناء حذف الغرفة: " + error.message);
+          });
+      }
+    });
   </script>
 </body>
 </html>
