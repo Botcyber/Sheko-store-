@@ -1,5 +1,4 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
-<head>
+<!DOCTYPE html><html lang="ar" dir="rtl"><head>
   <meta charset="UTF-8" />
   <title>لوحة تحكم التذاكر - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -10,70 +9,65 @@
       background: linear-gradient(135deg, #fdfbfb, #ebedee);
       padding: 20px;
       color: #333;
-    }h2 {
-  text-align: center;
-  color: #00796b;
-  margin-bottom: 20px;
-}
-
-.ticket-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  margin: 15px auto;
-  padding: 15px;
-  max-width: 600px;
-  transition: 0.3s ease;
-  animation: fadeIn 0.6s ease-in;
-  direction: ltr;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.ticket-card:hover {
-  transform: translateY(-5px);
-}
-
-.uid, .email, .time {
-  font-size: 14px;
-  color: #555;
-}
-
-.message {
-  background: #f1f1f1;
-  border-radius: 8px;
-  padding: 10px;
-  margin-top: 10px;
-  white-space: pre-wrap;
-}
-
-.delete-btn {
-  background: #d32f2f;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  float: left;
-  margin-top: 10px;
-}
-
-.delete-btn:hover {
-  background: #b71c1c;
-}
-
+    }
+    h2 {
+      text-align: center;
+      color: #00796b;
+      margin-bottom: 20px;
+    }
+    .ticket-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      margin: 15px auto;
+      padding: 15px;
+      max-width: 600px;
+      transition: 0.3s ease;
+      animation: fadeIn 0.6s ease-in;
+      direction: ltr;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .ticket-card:hover {
+      transform: translateY(-5px);
+    }
+    .uid, .email, .time, .category {
+      font-size: 14px;
+      color: #555;
+    }
+    .message {
+      background: #f1f1f1;
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 10px;
+      white-space: pre-wrap;
+    }
+    .delete-btn {
+      background: #d32f2f;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      float: left;
+      margin-top: 10px;
+    }
+    .delete-btn:hover {
+      background: #b71c1c;
+    }
   </style>
 </head>
 <body>
-  <h2>📋 التذاكر المقترحة من المستخدمين</h2>  <div style="text-align:center; margin-bottom: 20px;">
+  <h2>📋 التذاكر المقترحة من المستخدمين</h2>
+  <div style="text-align:center; margin-bottom: 20px;">
     <input id="filterInput" type="text" placeholder="🔎 ابحث بـ UID أو البريد..." 
            style="padding: 10px; width: 60%; max-width: 400px; border-radius: 8px; border: 1px solid #ccc;">
     <button onclick="applyFilter()" style="margin-right: 10px; padding: 10px 20px; border-radius: 8px; border: none; background: #00796b; color: white;">فلترة</button>
     <button onclick="resetFilter()" style="padding: 10px 20px; border-radius: 8px; border: none; background: #9e9e9e; color: white;">إزالة الفلترة</button>
-  </div>  <div id="ticketsContainer">⏳ جاري التحميل...</div>  <script type="module">
+  </div>
+  <div id="ticketsContainer">⏳ جاري التحميل...</div>  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, get, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -127,6 +121,7 @@
         uid: userUid,
         email: email,
         message: item.message,
+        category: item.category || "غير محدد",
         time: item.time,
         ticketId: ticketId
       });
@@ -134,18 +129,37 @@
 
     function renderTickets(tickets) {
       container.innerHTML = "";
-      tickets.forEach(t => {
-        const div = document.createElement("div");
-        div.className = "ticket-card";
-        div.innerHTML = `
-          <div class="uid">🆔 UID: ${t.uid}</div>
-          <div class="email">📧 البريد الإلكتروني: ${t.email}</div>
-          <div class="time">⏱️ الوقت: ${new Date(t.time).toLocaleString("ar-EG")}</div>
-          <div class="message">💬 ${t.message}</div>
-          <button class="delete-btn" onclick="deleteTicket('${t.uid}', '${t.ticketId}')">🗑️ حذف</button>
-        `;
-        container.appendChild(div);
-      });
+
+      const errorTickets = tickets.filter(t => t.category === "خطأ");
+      const suggestionTickets = tickets.filter(t => t.category === "اقتراح");
+
+      if (errorTickets.length > 0) {
+        const errTitle = document.createElement("h3");
+        errTitle.textContent = "🚫 تذاكر الأخطاء";
+        container.appendChild(errTitle);
+        errorTickets.forEach(createTicketCard);
+      }
+
+      if (suggestionTickets.length > 0) {
+        const sugTitle = document.createElement("h3");
+        sugTitle.textContent = "💡 تذاكر المميزات المقترحة";
+        container.appendChild(sugTitle);
+        suggestionTickets.forEach(createTicketCard);
+      }
+    }
+
+    function createTicketCard(t) {
+      const div = document.createElement("div");
+      div.className = "ticket-card";
+      div.innerHTML = `
+        <div class="uid">🆔 UID: ${t.uid}</div>
+        <div class="email">📧 البريد الإلكتروني: ${t.email}</div>
+        <div class="category">📌 النوع: ${t.category}</div>
+        <div class="time">⏱️ الوقت: ${new Date(t.time).toLocaleString("ar-EG")}</div>
+        <div class="message">💬 ${t.message}</div>
+        <button class="delete-btn" onclick="deleteTicket('${t.uid}', '${t.ticketId}')">🗑️ حذف</button>
+      `;
+      container.appendChild(div);
     }
 
     window.deleteTicket = async (uid, ticketId) => {
