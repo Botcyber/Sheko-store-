@@ -340,6 +340,72 @@
       accountInput.placeholder = "أدخل رقم هاتفك";
       accountInput.type = "tel";
       accountInput.removeAttribute("pattern");
+<!-- أزل كود الأسعار الثابت -->
+<!-- استبدله بهذا داخل <script> بعد تعريف Firebase -->
+
+<script>
+  // ...
+
+  const mainService = document.getElementById("mainService");
+  const subService = document.getElementById("subService");
+  const packageEl = document.getElementById("package");
+  const accountInput = document.getElementById("accountInput");
+  const accountLabel = document.getElementById("accountLabel");
+  const balanceEl = document.getElementById("balance");
+  const notifBadge = document.getElementById("notifBadge");
+  const chatBadge = document.getElementById("chatBadge");
+
+  let prices = {};
+
+  // تحميل البيانات من قاعدة البيانات
+  db.ref("prices").once("value").then(snapshot => {
+    prices = snapshot.val() || {};
+    fillMainServices(); // ملء القائمة الأولى فقط
+  });
+
+  function fillMainServices() {
+    mainService.innerHTML = '<option value="">اختر نوع الخدمة</option>';
+    for (let type in prices) {
+      const opt = document.createElement("option");
+      opt.value = type;
+      opt.textContent = type;
+      mainService.appendChild(opt);
+    }
+  }
+
+  mainService.addEventListener("change", () => {
+    subService.innerHTML = "";
+    packageEl.innerHTML = "";
+
+    const selectedMain = prices[mainService.value];
+    if (!selectedMain) return;
+
+    for (let sub in selectedMain) {
+      const opt = document.createElement("option");
+      opt.value = sub;
+      opt.textContent = sub;
+      subService.appendChild(opt);
+    }
+
+    updatePackage();
+
+    if (mainService.value === "ألعاب") {
+      accountLabel.textContent = "ID فقط:";
+      accountInput.placeholder = "أدخل رقم الـ ID فقط";
+      accountInput.type = "tel";
+      accountInput.pattern = "\\d*";
+      accountInput.title = "يرجى إدخال أرقام فقط";
+    } else if (mainService.value === "سوشيال") {
+      accountLabel.textContent = "رابط الحساب [متابعين-بث] او رابط الفيديو:";
+      accountInput.placeholder = "أدخل الرابط";
+      accountInput.type = "text";
+      accountInput.removeAttribute("pattern");
+      accountInput.removeAttribute("title");
+    } else if (mainService.value === "الشحن الالكتروني") {
+      accountLabel.textContent = "رقم هاتفك:";
+      accountInput.placeholder = "أدخل رقم هاتفك";
+      accountInput.type = "tel";
+      accountInput.removeAttribute("pattern");
       accountInput.removeAttribute("title");
     } else {
       accountLabel.textContent = "رابط الحساب / رابط الفيديو / ID:";
@@ -347,22 +413,26 @@
       accountInput.type = "text";
       accountInput.removeAttribute("pattern");
       accountInput.removeAttribute("title");
-      }
+    }
   });
 
   subService.addEventListener("change", updatePackage);
 
   function updatePackage() {
     packageEl.innerHTML = "";
+
     const selected = prices[mainService.value]?.[subService.value];
     if (!selected) return;
+
     for (let pack in selected) {
-      let opt = document.createElement("option");
+      const opt = document.createElement("option");
       opt.value = pack;
-      opt.textContent = pack + " - السعر: " + selected[pack] + " جنيه";
+      opt.textContent = `${pack} - السعر: ${selected[pack]} جنيه`;
       packageEl.appendChild(opt);
     }
   }
+
+  // باقي الكود كما هو من قبل (الرصيد، إرسال الطلب، الإشعارات، الخ...
 
   // دالة لإظهار التنبيه المخصص
   function showCustomAlert(message, iconClass = "fa-info-circle", iconColor = "#007bff") {
