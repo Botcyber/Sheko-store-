@@ -28,32 +28,60 @@
     margin-bottom: 15px;
     color: #333;
   }
-  input, button {
+  input[type=text] {
     padding: 12px;
-    margin: 8px 0;
-    width: 100%;
     font-size: 16px;
-    box-sizing: border-box;
-    border-radius: 8px;
+    width: calc(100% - 130px);
+    border-radius: 8px 0 0 8px;
     border: 1px solid #ccc;
-    transition: border-color 0.3s;
+    border-left: none;
+    box-sizing: border-box;
   }
-  input:focus {
-    outline: none;
-    border-color: #0069d9;
+  .search-section {
+    display: flex;
+    margin-bottom: 20px;
   }
-  button {
-    cursor: pointer;
+  button, .copy-btn, .share-btn {
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 0 8px 8px 0;
+    border: 1px solid #0069d9;
     background-color: #0069d9;
     color: white;
-    border: none;
     font-weight: 600;
-    box-shadow: 0 4px 12px rgba(0,105,217,0.4);
+    cursor: pointer;
     transition: background-color 0.3s;
+    user-select: none;
   }
-  button:hover {
+  button:hover, .copy-btn:hover, .share-btn:hover {
     background-color: #004a99;
   }
+  /* زر نسخ ومشاركة منفصلين */
+  .id-buttons {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+  }
+  .copy-btn, .share-btn {
+    border-radius: 8px;
+    border: none;
+    width: 100px;
+    box-shadow: 0 4px 12px rgba(0,105,217,0.4);
+  }
+  #userIdSection {
+    background: #e3f2fd;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 0 8px #90caf9;
+    font-weight: bold;
+    font-size: 18px;
+    color: #0d47a1;
+    user-select: text;
+    display: none; /* سيتم إظهاره عند تحميل المستخدم */
+  }
+
+  /* بقية التنسيقات */
   .friend-card {
     display: flex;
     align-items: center;
@@ -95,34 +123,10 @@
     min-height: 80px;
     box-shadow: inset 0 0 5px #cde4ff;
   }
-  #userIdSection {
-    background: #e3f2fd;
-    padding: 15px;
-    border-radius: 10px;
+  #incomingRequests, #friendsList {
+    min-height: 80px;
     margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 0 8px #90caf9;
   }
-  #userIdSection span {
-    font-weight: bold;
-    font-size: 18px;
-    user-select: text;
-    color: #0d47a1;
-  }
-  #userIdSection button {
-    width: auto;
-    padding: 8px 15px;
-    margin-left: 10px;
-    background-color: #0288d1;
-    box-shadow: 0 2px 6px rgba(2,136,209,0.5);
-    transition: background-color 0.3s;
-  }
-  #userIdSection button:hover {
-    background-color: #01579b;
-  }
-
   /* أنيميشن دخول الصفحة */
   @keyframes fadeInUp {
     to {
@@ -137,19 +141,18 @@
   <h2>الأصدقاء وطلبات الصداقة</h2>
 
   <!-- قسم عرض ID المستخدم -->
-  <div id="userIdSection" style="display:none;">
-    <div>معرفك الخاص: <span id="currentUserId">جاري التحميل...</span></div>
-    <div>
-      <button onclick="copyUserId()">نسخ</button>
-      <button onclick="shareUserId()">مشاركة</button>
+  <div id="userIdSection">
+    معرفك الخاص: <span id="currentUserId">جاري التحميل...</span>
+    <div class="id-buttons">
+      <button class="copy-btn" id="copyUserIdBtn">نسخ</button>
+      <button class="share-btn" id="shareUserIdBtn">مشاركة</button>
     </div>
   </div>
 
   <!-- قسم البحث عن صديق وإرسال طلب صداقة -->
-  <div>
-    <label for="searchFriendId">أدخل ID الصديق:</label>
-    <input type="text" id="searchFriendId" placeholder="مثال: abc12345" />
-    <button onclick="searchFriend()">بحث</button>
+  <div class="search-section">
+    <input type="text" id="searchFriendId" placeholder="أدخل ID الصديق..." />
+    <button id="searchFriendBtn">بحث</button>
   </div>
 
   <div id="friendResult"></div>
@@ -190,12 +193,15 @@
   const friendsListDiv = document.getElementById("friendsList");
   const userIdSection = document.getElementById("userIdSection");
   const currentUserIdSpan = document.getElementById("currentUserId");
+  const copyBtn = document.getElementById("copyUserIdBtn");
+  const shareBtn = document.getElementById("shareUserIdBtn");
+  const searchBtn = document.getElementById("searchFriendBtn");
 
   // تحميل بيانات المستخدم وعرض الـ ID الخاص به
   onAuthStateChanged(auth, async user => {
     if (user) {
       currentUserUid = user.uid;
-      userIdSection.style.display = "flex";
+      userIdSection.style.display = "block";
       currentUserIdSpan.textContent = currentUserUid;
 
       loadIncomingRequests();
@@ -206,6 +212,29 @@
       userIdSection.style.display = "none";
     }
   });
+
+  // نسخ معرف المستخدم
+  copyBtn.onclick = () => {
+    navigator.clipboard.writeText(currentUserUid)
+      .then(() => alert("تم نسخ المعرف!"))
+      .catch(() => alert("فشل نسخ المعرف."));
+  };
+
+  // مشاركة معرف المستخدم
+  shareBtn.onclick = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: 'معرفي في Sheko Store',
+        text: `هذا هو المعرف الخاص بي: ${currentUserUid}`,
+      }).catch(() => alert("فشل في المشاركة"));
+    } else {
+      alert("المشاركة غير مدعومة على جهازك. يمكنك نسخ المعرف يدوياً.");
+    }
+  };
+
+  searchBtn.onclick = () => {
+    searchFriend();
+  };
 
   async function loadIncomingRequests() {
     incomingRequestsDiv.innerHTML = "جاري تحميل طلبات الصداقة...";
@@ -389,25 +418,6 @@
 
   function startChat(friendUid) {
     window.location.href = `chat.html?friendUid=${friendUid}`;
-  }
-
-  // نسخ معرف المستخدم
-  function copyUserId() {
-    navigator.clipboard.writeText(currentUserUid)
-      .then(() => alert("تم نسخ المعرف!"))
-      .catch(() => alert("فشل نسخ المعرف."));
-  }
-
-  // مشاركة معرف المستخدم
-  function shareUserId() {
-    if (navigator.share) {
-      navigator.share({
-        title: 'معرفي في Sheko Store',
-        text: `هذا هو المعرف الخاص بي: ${currentUserUid}`,
-      }).catch(() => alert("فشل في المشاركة"));
-    } else {
-      alert("المشاركة غير مدعومة على جهازك. يمكنك نسخ المعرف يدوياً.");
-    }
   }
 </script>
 </body>
