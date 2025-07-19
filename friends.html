@@ -247,11 +247,16 @@
       }
     });
 
-    // البحث عن مستخدم
+    // البحث عن مستخدم مع منع البحث عن نفسه
     window.searchUser = async () => {
       const uid = document.getElementById("searchInput").value.trim();
       const resultDiv = document.getElementById("searchResult");
       if (!uid) return;
+
+      if (uid === myUid) {
+        resultDiv.innerHTML = "<p>⚠️ لا يمكنك البحث عن نفسك.</p>";
+        return;
+      }
 
       const snapshot = await get(ref(db, "users/" + uid));
       if (snapshot.exists()) {
@@ -277,12 +282,29 @@
       }
     };
 
-    // إرسال طلب صداقة
+    // إرسال طلب صداقة مع التأكد من أن الصديق ليس موجودًا أصلاً في قائمة الأصدقاء
     window.sendFriendRequest = async (toUid) => {
-      if (!myUid || !toUid || myUid === toUid) return alert("⚠️ لا يمكنك إرسال طلب صداقة لنفسك");
-      // نتحقق إذا لم يتم إرسال طلب مسبقاً
+      if (!myUid || !toUid) return;
+
+      if (myUid === toUid) {
+        alert("⚠️ لا يمكنك إرسال طلب صداقة لنفسك");
+        return;
+      }
+
+      // تحقق إذا المستخدم موجود أصلاً في قائمة أصدقائك
+      const friendSnap = await get(ref(db, `friends/${myUid}/${toUid}`));
+      if (friendSnap.exists()) {
+        alert("⚠️ المستخدم موجود لديك في قائمة الأصدقاء بالفعل");
+        return;
+      }
+
+      // تحقق إذا لم يتم إرسال طلب مسبقاً
       const reqSnap = await get(ref(db, `friendRequests/${toUid}/${myUid}`));
-      if (reqSnap.exists()) return alert("⚠️ لقد أرسلت طلب صداقة مسبقاً");
+      if (reqSnap.exists()) {
+        alert("⚠️ لقد أرسلت طلب صداقة مسبقاً");
+        return;
+      }
+
       await set(ref(db, `friendRequests/${toUid}/${myUid}`), true);
       alert("✅ تم إرسال طلب الصداقة");
     };
@@ -435,16 +457,14 @@
           }
           msgDiv.textContent = msg.text;
           messagesDiv.appendChild(msgDiv);
+          messagesDiv.scrollTop = messagesDiv.scrollHeight; // نزّل تلقائياً لآخر رسالة
         });
-
-        // تمرير الأسفل تلقائياً
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
       });
     }
 
-    // توليد معرف دردشة موحد بين مستخدمين
+    // توليد معرّف دردشة مشترك بين مستخدمين (ترتيب أبجدي للـUIDs)
     function generateChatId(uid1, uid2) {
-      return [uid1, uid2].sort().join("_");
+      return uid1 < uid2 ? uid1 + "_" + uid2 : uid2 + "_" + uid1;
     }
 
     // إرسال رسالة في الدردشة
@@ -452,35 +472,39 @@
       const input = document.getElementById("chatInput");
       const text = input.value.trim();
       if (!text || !currentChatUid) return;
+
       const chatId = generateChatId(myUid, currentChatUid);
       const messagesRef = ref(db, `chats/${chatId}/messages`);
       const newMsgRef = push(messagesRef);
       await set(newMsgRef, {
         sender: myUid,
-        text,
+        text: text,
         timestamp: Date.now()
       });
       input.value = "";
     };
 
+    // نسخ UID الخاص بي
     window.copyMyUID = () => {
       navigator.clipboard.writeText(myUid)
         .then(() => alert("📋 تم نسخ UID!"))
         .catch(() => alert("❌ فشل النسخ"));
     };
 
+    // مشاركة UID الخاص بي
     window.shareMyUID = () => {
       const data = {
         title: "هذا هو UID الخاص بي",
         text: "ضيفني على Sheko Store! هذا هو UID الخاص بي:",
-      url: myUid
+        url: myUid
+      };
+      if (navigator.share) {
+        navigator.share(data).catch(() => alert("❌ فشل المشاركة"));
+      } else {
+        alert("جهازك لا يدعم المشاركة");
+      }
     };
-    if (navigator.share) {
-      navigator.share(data).catch(() => alert("❌ فشل المشاركة"));
-    } else {
-      alert("جهازك لا يدعم المشاركة");
-    }
-  };
+
   </script>
 </body>
 </html>
