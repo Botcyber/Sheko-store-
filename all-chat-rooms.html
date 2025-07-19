@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <title>كل غرف الدردشة - Sheko Store</title>
@@ -8,272 +7,180 @@
   <style>
     body { font-family: 'Cairo', sans-serif; background: #f1f1f1; margin: 0; padding: 20px; }
     h1 { text-align: center; }
-    #createRoomBtn {
-      position: fixed; top: 20px; left: 20px;
-      font-size: 30px; cursor: pointer; background: #222; color: #fff;
-      width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center;
+    #createRoomBtn, #myRoomsBtn {
+      position: fixed;
+      top: 20px;
+      font-size: 30px;
+      cursor: pointer;
+      background: #222;
+      color: #fff;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       box-shadow: 0 0 10px #000;
       z-index: 1000;
     }
-    #createRoomModal {
-      display: none;
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5);
-      justify-content: center; align-items: center;
-      z-index: 1100;
-    }
-    #createRoomModal .modal-content {
-      background: white; padding: 20px; border-radius: 10px; width: 320px; position: relative;
-    }
-    #createRoomModal input, #createRoomModal select {
-      width: 100%; margin: 10px 0; padding: 8px; border-radius: 5px; border: 1px solid #ccc;
-    }
-    #createRoomModal button {
-      background: #222; color: white; padding: 10px; width: 100%; border: none; border-radius: 5px; font-weight: bold;
-      cursor: pointer;
-    }
-    #createRoomModal button:hover { background: #ffb700; color: #222; }
-    #createRoomModal .close-btn {
-      position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 20px;
-    }
-    .room {
-      background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1); cursor: pointer; display: flex; align-items: center;
-    }
-    .room img {
-      width: 50px; height: 50px; border-radius: 8px; margin-left: 10px;
-      object-fit: cover;
-    }
-    .room-info {
-      flex-grow: 1;
-    }
-    .room-name {
-      font-weight: bold; font-size: 18px;
-    }
-    .room-meta {
-      font-size: 14px; color: #555;
-    }
-    .invited-label {
-      background: orange; color: white; font-size: 12px; padding: 2px 5px; border-radius: 5px;
-      margin-right: 10px;
-    }
+    #createRoomBtn { left: 20px; }
+    #myRoomsBtn { right: 20px; }#createRoomModal, #myRoomsModal {
+  display: none;
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  justify-content: center; align-items: center;
+  z-index: 1100;
+}
+.modal-content {
+  background: white; padding: 20px; border-radius: 10px; width: 320px; position: relative;
+}
+.modal-content input, .modal-content select {
+  width: 100%; margin: 10px 0; padding: 8px; border-radius: 5px; border: 1px solid #ccc;
+}
+.modal-content button {
+  background: #222; color: white; padding: 10px; width: 100%; border: none; border-radius: 5px; font-weight: bold;
+  cursor: pointer;
+}
+.modal-content button:hover { background: #ffb700; color: #222; }
+.close-btn {
+  position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 20px;
+}
+.room {
+  background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1); cursor: pointer; display: flex; align-items: center;
+}
+.room img {
+  width: 50px; height: 50px; border-radius: 8px; margin-left: 10px;
+  object-fit: cover;
+}
+.room-info { flex-grow: 1; }
+.room-name { font-weight: bold; font-size: 18px; }
+.room-meta { font-size: 14px; color: #555; }
+.invited-label {
+  background: orange; color: white; font-size: 12px; padding: 2px 5px; border-radius: 5px;
+  margin-right: 10px;
+}
+#searchMyRooms {
+  padding: 8px;
+  width: 100%;
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
+  border-radius: 6px;
+}
+
   </style>
 </head>
 <body>
   <h1>كل غرف الدردشة</h1>
-
   <div id="createRoomBtn" title="إنشاء غرفة جديدة"><i class="fa fa-plus"></i></div>
-
-  <div id="createRoomModal">
+  <div id="myRoomsBtn" title="غرفي"><i class="fa fa-door-open"></i></div>  <!-- Modal إنشاء الغرفة -->  <div id="createRoomModal">
     <div class="modal-content">
       <div class="close-btn" id="closeCreateModal">&times;</div>
       <h3>إنشاء غرفة جديدة مقابل 50 جنيه</h3>
       <input type="text" id="roomName" placeholder="اسم الغرفة" />
       <select id="language">
-        <option value="" disabled selected>اختر اللغة</option>
-        <option value="عربية">عربية</option>
-        <option value="إنجليزية">إنجليزية</option>
-        <option value="فرنسية">فرنسية</option>
-        <option value="أخرى">أخرى</option>
+        <option disabled selected>اختر اللغة</option>
+        <option>العربية</option>
+        <option>الإنجليزية</option>
+        <option>الفرنسية</option>
+        <option>الإسبانية</option>
+        <option>التركية</option>
+        <option>الصينية</option>
+        <option>أخرى</option>
       </select>
       <select id="country">
-        <option value="" disabled selected>اختر شعار الدولة</option>
+        <option disabled selected>اختر شعار الدولة</option>
         <option value="🇪🇬">🇪🇬 مصر</option>
         <option value="🇸🇦">🇸🇦 السعودية</option>
         <option value="🇦🇪">🇦🇪 الإمارات</option>
         <option value="🇰🇼">🇰🇼 الكويت</option>
         <option value="🇱🇧">🇱🇧 لبنان</option>
         <option value="🇯🇴">🇯🇴 الأردن</option>
+        <option value="🇲🇦">🇲🇦 المغرب</option>
+        <option value="🇶🇦">🇶🇦 قطر</option>
+        <option value="🇺🇸">🇺🇸 أمريكا</option>
       </select>
       <input type="file" id="roomImage" accept="image/*" />
       <button id="createRoomConfirmBtn">إنشاء الغرفة</button>
     </div>
-  </div>
-
-  <div id="roomsContainer"></div>
-
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-      authDomain: "sheko-store.firebaseapp.com",
-      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-      projectId: "sheko-store",
-      storageBucket: "sheko-store.appspot.com",
-      messagingSenderId: "113892775847",
-      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-    };
+  </div>  <!-- Modal غرفي -->  <div id="myRoomsModal">
+    <div class="modal-content">
+      <div class="close-btn" id="closeMyRooms">&times;</div>
+      <h3>غرفي</h3>
+      <input type="text" id="searchMyRooms" placeholder="ابحث عن غرفتك...">
+      <div id="myRoomsList"></div>
+    </div>
+  </div>  <div id="roomsContainer"></div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>  <script>
+    const firebaseConfig = { /* ... */ };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
-
-    let currentUser;
+    const storage = firebase.storage();
 
     const createRoomBtn = document.getElementById("createRoomBtn");
     const createRoomModal = document.getElementById("createRoomModal");
     const closeCreateModal = document.getElementById("closeCreateModal");
     const createRoomConfirmBtn = document.getElementById("createRoomConfirmBtn");
-
+    const myRoomsBtn = document.getElementById("myRoomsBtn");
+    const myRoomsModal = document.getElementById("myRoomsModal");
+    const closeMyRooms = document.getElementById("closeMyRooms");
+    const searchMyRooms = document.getElementById("searchMyRooms");
+    const myRoomsList = document.getElementById("myRoomsList");
     const roomsContainer = document.getElementById("roomsContainer");
 
+    let currentUser;
+
     auth.onAuthStateChanged(user => {
-      if (!user) {
-        window.location.href = "login.html";
-        return;
-      }
+      if (!user) return location.href = "login.html";
       currentUser = user;
       loadRooms();
     });
 
-    // عرض الغرف - الغرف التي أنشأها المستخدم أو التي يدعى إليها
     function loadRooms() {
-      db.ref("chat_rooms").on("value", snapshot => {
-        const allRooms = snapshot.val() || {};
+      db.ref("chat_rooms").on("value", snap => {
+        const data = snap.val() || {};
         roomsContainer.innerHTML = "";
+        myRoomsList.innerHTML = "";
 
-        for (const roomId in allRooms) {
-          const room = allRooms[roomId];
+        for (const id in data) {
+          const room = data[id];
           const isOwner = room.adminUid === currentUser.uid;
-          const users = room.users || {};
-          const userCount = Object.keys(users).length;
-
-          // هل المستخدم عضو او مدعو في الغرفة؟
-          const isMember = users.hasOwnProperty(currentUser.uid);
+          const isMember = room.users && room.users[currentUser.uid];
           const isInvited = room.invitations && room.invitations[currentUser.uid];
 
-          // فقط عرض الغرف التي ينتمي لها المستخدم أو يدعى لها
-          if (isMember || isOwner || isInvited) {
-            let imgSrc = room.approvedImage || "default-room.png";
-
-            // انشاء عنصر الغرفة
+          if (isOwner || isMember || isInvited) {
             const roomDiv = document.createElement("div");
             roomDiv.className = "room";
-
-            roomDiv.innerHTML = `
-              <img src="${imgSrc}" alt="صورة الغرفة" />
-              <div class="room-info">
-                <div class="room-name">${room.name} ${room.flag || ""}</div>
-                <div class="room-meta">اللغة: ${room.language || "غير محددة"} - الأعضاء: ${userCount}</div>
-              </div>
-              ${isInvited ? '<div class="invited-label">تم دعوتك</div>' : ''}
-            `;
-
-            roomDiv.addEventListener("click", () => {
-              // لا يسمح بالدخول إلا لو كان عضو أو مالك
-              if (isMember || isOwner) {
-                window.location.href = `Private-chat-room.html?roomId=${roomId}`;
-              } else if (isInvited) {
-                alert("يرجى انتظار موافقة الأدمن على دعوتك.");
-              } else {
-                alert("لا يمكنك الدخول إلى هذه الغرفة.");
-              }
-            });
-
-            roomsContainer.appendChild(roomDiv);
+            roomDiv.innerHTML = `<img src="${room.approvedImage || 'default-room.png'}"><div class="room-info"><div class="room-name">${room.name} ${room.flag || ''}</div><div class="room-meta">${room.language}</div></div>`;
+            roomDiv.onclick = () => location.href = `Private-chat-room.html?roomId=${id}`;
+            myRoomsList.appendChild(roomDiv.cloneNode(true));
           }
+
+          // عرض كل الغرف
+          const roomDiv2 = document.createElement("div");
+          roomDiv2.className = "room";
+          roomDiv2.innerHTML = `<img src="${room.approvedImage || 'default-room.png'}"><div class="room-info"><div class="room-name">${room.name} ${room.flag || ''}</div><div class="room-meta">${room.language}</div></div>`;
+          roomDiv2.onclick = () => (room.users && room.users[currentUser.uid]) ? location.href = `Private-chat-room.html?roomId=${id}` : alert("لا يمكنك الدخول بدون دعوة وموافقة.");
+          roomsContainer.appendChild(roomDiv2);
         }
       });
     }
 
-    createRoomBtn.onclick = () => {
-      createRoomModal.style.display = "flex";
-    };
-    closeCreateModal.onclick = () => {
-      createRoomModal.style.display = "none";
-    };
+    createRoomBtn.onclick = () => createRoomModal.style.display = "flex";
+    closeCreateModal.onclick = () => createRoomModal.style.display = "none";
+    myRoomsBtn.onclick = () => myRoomsModal.style.display = "flex";
+    closeMyRooms.onclick = () => myRoomsModal.style.display = "none";
     window.onclick = e => {
-      if (e.target === createRoomModal) {
-        createRoomModal.style.display = "none";
-      }
+      if (e.target === createRoomModal) createRoomModal.style.display = "none";
+      if (e.target === myRoomsModal) myRoomsModal.style.display = "none";
     };
 
-    // تحميل صورة ورفعها على Firebase Storage (تحويلها إلى نص الرابط)
-    function uploadImage(file) {
-      return new Promise((resolve, reject) => {
-        if (!file) resolve("");
-        else {
-          // إعداد Firebase Storage
-          const storage = firebase.storage();
-          const storageRef = storage.ref();
-          const imageRef = storageRef.child('room_images/' + Date.now() + '_' + file.name);
-
-          const uploadTask = imageRef.put(file);
-          uploadTask.on('state_changed', 
-            snapshot => {},
-            error => reject(error),
-            () => {
-              uploadTask.snapshot.ref.getDownloadURL().then(url => resolve(url));
-            }
-          );
-        }
+    searchMyRooms.oninput = () => {
+      const keyword = searchMyRooms.value.toLowerCase();
+      [...myRoomsList.children].forEach(div => {
+        const text = div.innerText.toLowerCase();
+        div.style.display = text.includes(keyword) ? "flex" : "none";
       });
-    }
-
-    createRoomConfirmBtn.onclick = async () => {
-      const name = document.getElementById("roomName").value.trim();
-      const language = document.getElementById("language").value;
-      const flag = document.getElementById("country").value;
-      const fileInput = document.getElementById("roomImage");
-      const file = fileInput.files[0];
-
-      if (!name || !language || !flag) {
-        alert("يرجى ملء جميع الحقول المطلوبة.");
-        return;
-      }
-
-      // تحقق الرصيد
-      const balanceSnap = await db.ref(`users/${currentUser.uid}/balance`).once("value");
-      let balance = balanceSnap.val() || 0;
-      if (balance < 50) {
-        alert("رصيدك غير كاف لإنشاء غرفة جديدة.");
-        return;
-      }
-
-      // خصم الرصيد
-      await db.ref(`users/${currentUser.uid}/balance`).set(balance - 50);
-
-      // رفع الصورة إن وجدت
-      let imgUrl = "";
-      if (file) {
-        // نحتاج تضمين firebase-storage sdk في الصفحة
-        // لكن حالياً نستخدم رابط نصي مؤقت
-        imgUrl = URL.createObjectURL(file);
-        // لاحقاً يمكن استبداله برفع للصورة في Firebase Storage
-      }
-
-      // إنشاء الغرفة في قاعدة البيانات مع حالة انتظار موافقة الصورة
-      const newRoomRef = db.ref("chat_rooms").push();
-      await newRoomRef.set({
-        name: name,
-        language: language,
-        flag: flag,
-        adminUid: currentUser.uid,
-        requestedImage: imgUrl,
-        approvedImage: "", // لن تظهر إلا بعد موافقة الأدمن
-        users: {
-          [currentUser.uid]: { name: "أنت", photo: "" }
-        },
-        invitations: {}
-      });
-
-      alert("تم إنشاء الغرفة بنجاح! جاري انتظار موافقة الأدمن على الصورة إن وجدت.");
-
-      // اغلاق النافذة
-      createRoomModal.style.display = "none";
-      // إعادة تحميل الغرف
-      loadRooms();
-
-      // تنظيف الحقول
-      document.getElementById("roomName").value = "";
-      document.getElementById("language").value = "";
-      document.getElementById("country").value = "";
-      fileInput.value = "";
     };
-  </script>
-
-  <!-- لم تضمن firebase-storage, يجب تضمينها في المستقبل لرفع الصور الحقيقية -->
-</body>
+  </script></body>
 </html>
