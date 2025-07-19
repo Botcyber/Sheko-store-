@@ -1,37 +1,217 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>غرفتي الخاصة - Sheko Store</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <title>غرفة دردشة خاصة</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
-    body { font-family: 'Cairo', sans-serif; background: #f1f1f1; margin: 0; }
-    .top-bar { background: #222; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
-    .chat-box { max-width: 800px; margin: 20px auto; background: white; padding: 15px; border-radius: 10px; height: 70vh; overflow-y: auto; }
-    .message { padding: 10px; margin: 10px 0; border-radius: 10px; max-width: 60%; position: relative; }
-    .message.self { background: #dcf8c6; margin-left: auto; }
-    .message.other { background: #eee; margin-right: auto; }
-    .message .username { font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; }
-    .message .admin-label { background: gold; color: #222; padding: 2px 6px; border-radius: 5px; margin-right: 5px; font-size: 12px; animation: glow 1.5s infinite ease-in-out; }
-    .message img.profile { width: 30px; height: 30px; border-radius: 50%; margin-left: 8px; }
-    @keyframes glow {
-      0%, 100% { box-shadow: 0 0 5px gold; }
-      50% { box-shadow: 0 0 15px gold; }
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f1f1f1;
+      margin: 0; padding: 20px;
+      display: flex; flex-direction: column; height: 100vh;
     }
-    .input-area { display: flex; padding: 10px; background: #fff; position: fixed; bottom: 0; width: 100%; max-width: 800px; margin: auto; left: 50%; transform: translateX(-50%); box-shadow: 0 -2px 5px rgba(0,0,0,0.1); }
-    .input-area input { flex: 1; padding: 10px; border-radius: 20px; border: 1px solid #ccc; margin-left: 10px; }
-    .input-area button { background: #222; color: white; border: none; border-radius: 20px; padding: 10px 20px; cursor: pointer; }
-    .settings-btn { color: white; font-size: 20px; cursor: pointer; }
+    header {
+      background: #222;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: bold;
+      position: relative;
+    }
+    .admin-label {
+      background: #ffb700;
+      color: #222;
+      font-weight: bold;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-left: 10px;
+      box-shadow: 0 0 8px #ffb700;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    #messages {
+      flex: 1;
+      background: white;
+      border-radius: 10px;
+      padding: 15px;
+      overflow-y: auto;
+      margin: 15px 0;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .message {
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .message img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .message .username {
+      font-weight: bold;
+      min-width: 100px;
+    }
+    .message .text {
+      background: #eee;
+      padding: 10px 15px;
+      border-radius: 15px;
+      max-width: 70%;
+      word-break: break-word;
+    }
+    #inputArea {
+      display: flex;
+      gap: 10px;
+    }
+    #inputMessage {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 20px;
+      border: 1px solid #ccc;
+      outline: none;
+    }
+    #sendBtn {
+      background: #222;
+      border: none;
+      color: white;
+      padding: 10px 18px;
+      font-weight: bold;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    #sendBtn:hover {
+      background: #ffb700;
+      color: #222;
+    }
+    #settingsBtn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: #ffb700;
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 30px;
+      text-align: center;
+      color: #222;
+      box-shadow: 0 0 8px #ffb700;
+    }
+    #settingsPanel {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      display: none;
+      width: 300px;
+      max-height: 80vh;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+    #settingsPanel h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    #membersList {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .memberItem {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding: 6px 8px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: #f9f9f9;
+    }
+    .memberItem img {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 10px;
+    }
+    .memberInfo {
+      display: flex;
+      align-items: center;
+      flex: 1;
+    }
+    .memberName {
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .removeBtn {
+      background: #e74c3c;
+      border: none;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background 0.3s;
+    }
+    .removeBtn:hover {
+      background: #c0392b;
+    }
+    #closeSettings {
+      background: #222;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+      width: 100%;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    #closeSettings:hover {
+      background: #ffb700;
+      color: #222;
+    }
   </style>
 </head>
 <body>
-  <div class="top-bar">
-    <div>غرفتي الخاصة</div>
-    <div class="settings-btn" onclick="openSettings()"><i class="fa fa-cog"></i></div>
-  </div>  <div class="chat-box" id="chatBox"></div>  <div class="input-area">
-    <input type="text" id="msgInput" placeholder="اكتب رسالتك هنا...">
-    <button onclick="sendMessage()">إرسال</button>
-  </div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>  <script>
+  <header>
+    <span id="roomTitle">جارٍ التحميل...</span>
+    <button id="settingsBtn" title="إعدادات الغرفة" style="display:none;"><i class="fa fa-cog"></i></button>
+  </header>
+  <div id="messages"></div>
+  <div id="inputArea">
+    <input type="text" id="inputMessage" placeholder="اكتب رسالتك هنا..." autocomplete="off" />
+    <button id="sendBtn"><i class="fa fa-paper-plane"></i> إرسال</button>
+  </div>
+
+  <!-- لوحة الإعدادات -->
+  <div id="settingsPanel">
+    <h3>إعدادات الغرفة</h3>
+    <div id="membersList">جارٍ تحميل الأعضاء...</div>
+    <button id="closeSettings">إغلاق</button>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <script>
+    // تهيئة Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -42,80 +222,189 @@
       appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
     firebase.initializeApp(firebaseConfig);
+
     const db = firebase.database();
     const auth = firebase.auth();
+    let currentUser = null;
+    let roomId = null;
+    let roomData = null;
 
-    let currentUser;
-    let currentRoomId;
+    // قراءة roomId من الرابط
+    const urlParams = new URLSearchParams(window.location.search);
+    roomId = urlParams.get("roomId");
+    if (!roomId) {
+      alert("لم يتم تحديد الغرفة.");
+      window.location.href = "all-chat-rooms.html"; // إعادة توجيه لصفحة الغرف
+    }
 
+    // عناصر الصفحة
+    const roomTitleEl = document.getElementById("roomTitle");
+    const messagesEl = document.getElementById("messages");
+    const inputMessageEl = document.getElementById("inputMessage");
+    const sendBtn = document.getElementById("sendBtn");
+    const settingsBtn = document.getElementById("settingsBtn");
+    const settingsPanel = document.getElementById("settingsPanel");
+    const membersList = document.getElementById("membersList");
+    const closeSettingsBtn = document.getElementById("closeSettings");
+
+    // تسجيل الدخول والتحقق
     auth.onAuthStateChanged(user => {
       if (user) {
         currentUser = user;
-        loadRoom();
+        loadRoomData();
       } else {
         window.location.href = "login.html";
       }
     });
 
-    function loadRoom() {
-      db.ref("chat_rooms").orderByChild("adminUid").equalTo(currentUser.uid).once("value", snap => {
-        const data = snap.val();
-        if (!data) return alert("لم تنشئ غرفة بعد.");
-        currentRoomId = Object.keys(data)[0];
+    // تحميل بيانات الغرفة
+    function loadRoomData() {
+      db.ref("chat_rooms/" + roomId).once("value").then(snapshot => {
+        roomData = snapshot.val();
+        if (!roomData) {
+          alert("هذه الغرفة غير موجودة.");
+          window.location.href = "all-chat-rooms.html";
+          return;
+        }
+        // تحديث العنوان
+        let titleHtml = roomData.name;
+        if (roomData.adminUid === currentUser.uid) {
+          titleHtml += ' <span class="admin-label">Admin</span>';
+          settingsBtn.style.display = "inline-block"; // إظهار زر الإعدادات فقط للمالك
+        }
+        roomTitleEl.innerHTML = titleHtml;
+
+        // تحقق إذا المستخدم عضو في الغرفة
+        if (!roomData.users || !roomData.users[currentUser.uid]) {
+          alert("أنت لست عضواً في هذه الغرفة.");
+          window.location.href = "all-chat-rooms.html";
+          return;
+        }
+
         listenMessages();
       });
     }
 
+    // الاستماع للرسائل وتحديث العرض
     function listenMessages() {
-      db.ref("chat_rooms/" + currentRoomId + "/messages").on("value", snap => {
-        const chatBox = document.getElementById("chatBox");
-        chatBox.innerHTML = "";
-        const msgs = snap.val();
-        for (let key in msgs) {
-          const msg = msgs[key];
-          const isSelf = msg.uid === currentUser.uid;
-          const msgDiv = document.createElement("div");
-          msgDiv.className = "message " + (isSelf ? "self" : "other");
-
-          const userTag = document.createElement("div");
-          userTag.className = "username";
-          if (msg.uid === msg.adminUid) {
-            userTag.innerHTML = `<span class='admin-label'>admin</span>`;
-          }
-          userTag.innerHTML += `<img src='${msg.photo}' class='profile'> ${msg.username}`;
-          msgDiv.appendChild(userTag);
-
-          const text = document.createElement("div");
-          text.textContent = msg.text;
-          msgDiv.appendChild(text);
-
-          chatBox.appendChild(msgDiv);
+      db.ref("chat_rooms/" + roomId + "/messages").on("value", snapshot => {
+        const messages = snapshot.val();
+        messagesEl.innerHTML = "";
+        if (!messages) return;
+        for (const msgId in messages) {
+          const msg = messages[msgId];
+          displayMessage(msg);
         }
-        chatBox.scrollTop = chatBox.scrollHeight;
+        // تمرير الاسكرول للأسفل تلقائياً
+        messagesEl.scrollTop = messagesEl.scrollHeight;
       });
     }
+
+    // عرض رسالة في الدردشة
+    function displayMessage(msg) {
+      const div = document.createElement("div");
+      div.classList.add("message");
+
+      const imgSrc = msg.photo || "default-profile.png"; // رابط الصورة الافتراضية لو لم توجد صورة
+      const username = msg.name || "مستخدم مجهول";
+
+      // إذا هو الأدمن اجعل اسمه مع الوسم
+      let nameHtml = username;
+      if (roomData.adminUid === msg.uid) {
+        nameHtml += ' <span class="admin-label">Admin</span>';
+      }
+
+      div.innerHTML = `
+        <img src="${imgSrc}" alt="صورة المستخدم" />
+        <div class="username">${nameHtml}</div>
+        <div class="text">${escapeHtml(msg.text)}</div>
+      `;
+      messagesEl.appendChild(div);
+    }
+
+    // تعقيم النص لمنع الـ HTML الضار
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.appendChild(document.createTextNode(text));
+      return div.innerHTML;
+    }
+
+    // إرسال رسالة جديدة
+    sendBtn.addEventListener("click", sendMessage);
+    inputMessageEl.addEventListener("keypress", e => {
+      if (e.key === "Enter") sendMessage();
+    });
 
     function sendMessage() {
-      const msgInput = document.getElementById("msgInput");
-      const text = msgInput.value.trim();
+      const text = inputMessageEl.value.trim();
       if (!text) return;
-      msgInput.value = "";
 
+      // جلب بيانات المستخدم من قاعدة users لتحديث الصورة والاسم
       db.ref("users/" + currentUser.uid).once("value").then(snap => {
-        const userData = snap.val();
-        const msg = {
+        const userInfo = snap.val() || {};
+        const newMsgRef = db.ref("chat_rooms/" + roomId + "/messages").push();
+        newMsgRef.set({
           uid: currentUser.uid,
-          text,
-          username: userData.username || "مستخدم",
-          photo: userData.profileimage || "",
-          adminUid: currentUser.uid
-        };
-        db.ref("chat_rooms/" + currentRoomId + "/messages").push(msg);
+          name: userInfo.username || "مستخدم",
+          photo: userInfo.profileimage || "default-profile.png",
+          text: text,
+          timestamp: Date.now()
+        });
+        inputMessageEl.value = "";
       });
     }
 
-    function openSettings() {
-      window.location.href = "room-settings.html?roomId=" + currentRoomId;
+    // عرض لوحة الإعدادات عند الضغط على الزر
+    settingsBtn.addEventListener("click", () => {
+      settingsPanel.style.display = "block";
+      loadMembers();
+    });
+
+    closeSettingsBtn.addEventListener("click", () => {
+      settingsPanel.style.display = "none";
+    });
+
+    // تحميل الأعضاء وعرضهم مع إمكانية الإزالة للمالك فقط
+    function loadMembers() {
+      membersList.innerHTML = "جارٍ تحميل الأعضاء...";
+      db.ref("chat_rooms/" + roomId + "/users").once("value").then(snap => {
+        const users = snap.val();
+        if (!users) {
+          membersList.innerHTML = "لا يوجد أعضاء.";
+          return;
+        }
+        membersList.innerHTML = "";
+        for (const uid in users) {
+          const user = users[uid];
+          const div = document.createElement("div");
+          div.classList.add("memberItem");
+
+          div.innerHTML = `
+            <div class="memberInfo">
+              <img src="${user.photo || "default-profile.png"}" alt="صورة العضو" />
+              <div class="memberName">${user.name || "مستخدم"}</div>
+              ${uid === roomData.adminUid ? '<span class="admin-label" style="margin-left:10px;">Admin</span>' : ''}
+            </div>
+            ${ (currentUser.uid === roomData.adminUid && uid !== roomData.adminUid) ? `<button class="removeBtn" data-uid="${uid}">إزالة</button>` : ""}
+          `;
+          membersList.appendChild(div);
+        }
+
+        // إضافة حدث إزالة عضو
+        document.querySelectorAll(".removeBtn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const removeUid = btn.getAttribute("data-uid");
+            if (confirm("هل أنت متأكد من إزالة هذا العضو من الغرفة؟")) {
+              db.ref(`chat_rooms/${roomId}/users/${removeUid}`).remove().then(() => {
+                // إزالة جميع الرسائل الخاصة بالعضو إن أردت (اختياري)
+                // إعادة تحميل الأعضاء
+                loadMembers();
+              });
+            }
+          });
+        });
+      });
     }
-  </script></body>
+  </script>
+</body>
 </html>
