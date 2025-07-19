@@ -1,0 +1,110 @@
+<!DOCTYPE html><html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>إدارة الخدمات والباقات</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: 'Cairo', sans-serif; background: #121212; color: #fff; padding: 20px; }
+    h1 { text-align: center; color: #ffb700; margin-bottom: 30px; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 5px; font-size: 16px; }
+    input, select { width: 100%; padding: 8px; font-size: 16px; border-radius: 5px; border: none; }
+    button { padding: 10px 20px; font-size: 16px; background-color: #ffb700; color: #222; border: none; border-radius: 5px; cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; margin-top: 30px; }
+    th, td { border: 1px solid #444; padding: 10px; text-align: center; }
+    th { background-color: #333; }
+    .actions button { margin: 0 5px; }
+  </style>
+</head>
+<body>
+  <h1>إدارة الخدمات والباقات</h1>
+  <div class="form-group">
+    <label>نوع الخدمة</label>
+    <input type="text" id="mainService" placeholder="مثال: ألعاب / سوشيال / شحن الكتروني" />
+  </div>
+  <div class="form-group">
+    <label>الخدمة</label>
+    <input type="text" id="subService" placeholder="مثال: ببجي موبايل / تيك توك" />
+  </div>
+  <div class="form-group">
+    <label>الباقة</label>
+    <input type="text" id="packageName" placeholder="مثال: 60 شدة / 1000 متابع" />
+  </div>
+  <div class="form-group">
+    <label>السعر</label>
+    <input type="number" id="price" placeholder="مثال: 50" />
+  </div>
+  <button onclick="addPackage()">إضافة / تعديل الباقة</button>  <table id="serviceTable">
+    <thead>
+      <tr>
+        <th>نوع الخدمة</th>
+        <th>الخدمة</th>
+        <th>الباقة</th>
+        <th>السعر</th>
+        <th>إجراءات</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function addPackage() {
+      const main = document.getElementById("mainService").value.trim();
+      const sub = document.getElementById("subService").value.trim();
+      const pack = document.getElementById("packageName").value.trim();
+      const price = parseFloat(document.getElementById("price").value);
+      if (!main || !sub || !pack || isNaN(price)) return alert("يرجى تعبئة جميع الحقول بشكل صحيح");
+
+      db.ref(`prices/${main}/${sub}/${pack}`).set(price).then(() => {
+        alert("تمت الإضافة أو التعديل بنجاح");
+        loadServices();
+      });
+    }
+
+    function deletePackage(main, sub, pack) {
+      if (!confirm("هل أنت متأكد من حذف هذه الباقة؟")) return;
+      db.ref(`prices/${main}/${sub}/${pack}`).remove().then(() => {
+        alert("تم الحذف بنجاح");
+        loadServices();
+      });
+    }
+
+    function loadServices() {
+      const tbody = document.querySelector("#serviceTable tbody");
+      tbody.innerHTML = "";
+      db.ref("prices").once("value").then(snapshot => {
+        const data = snapshot.val();
+        if (!data) return;
+        for (const main in data) {
+          for (const sub in data[main]) {
+            for (const pack in data[main][sub]) {
+              const price = data[main][sub][pack];
+              const row = `<tr>
+                <td>${main}</td>
+                <td>${sub}</td>
+                <td>${pack}</td>
+                <td>${price}</td>
+                <td class="actions">
+                  <button onclick="deletePackage('${main}','${sub}','${pack}')">حذف</button>
+                </td>
+              </tr>`;
+              tbody.innerHTML += row;
+            }
+          }
+        }
+      });
+    }
+
+    loadServices();
+  </script></body>
+</html>
