@@ -1,0 +1,218 @@
+<!DOCTYPE html><html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>الأصدقاء - Sheko Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f0f0f0;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 { text-align: center; margin-bottom: 20px; }
+    .section { margin-bottom: 30px; }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    .friend-card {
+      background: #f9f9f9;
+      padding: 10px;
+      border-radius: 8px;
+      margin: 10px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .friend-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .friend-info img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+    .btn-small {
+      font-size: 12px;
+      margin-left: 5px;
+      padding: 5px 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>قائمة الأصدقاء</h2><div class="section" id="userIdSection">
+  <button onclick="copyUserId()">📋 عرض الـ ID الخاص بك</button>
+  <p id="myId" style="word-break: break-all; text-align: center;"></p>
+</div>
+
+<div class="section">
+  <input type="text" id="friendIdInput" placeholder="اكتب ID المستخدم لإضافته">
+  <button onclick="searchUserById()">🔍 بحث عن مستخدم</button>
+  <div id="searchedUser"></div>
+</div>
+
+<div class="section" id="friendRequests">
+  <h3>طلبات الصداقة</h3>
+  <div id="requestsList"></div>
+</div>
+
+<div class="section" id="friendsList">
+  <h3>الأصدقاء</h3>
+  <div id="friends"></div>
+</div>
+
+  </div>  <!-- Firebase CDN -->  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getDatabase, ref, get, set, onValue, update, push, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getDatabase(app);
+
+    let currentUser;
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        document.getElementById("myId").textContent = user.uid;
+        loadFriendRequests();
+        loadFriends();
+      }
+    });
+
+    window.copyUserId = () => {
+      navigator.clipboard.writeText(currentUser.uid).then(() => {
+        alert("✅ تم نسخ ID الخاص بك");
+      });
+    };
+
+    window.searchUserById = async () => {
+      const id = document.getElementById("friendIdInput").value.trim();
+      const resultDiv = document.getElementById("searchedUser");
+      if (!id || id === currentUser.uid) return alert("❗ أدخل ID صالح");
+      const snapshot = await get(ref(db, `users/${id}`));
+      if (!snapshot.exists()) return resultDiv.innerHTML = "<p>❌ لم يتم العثور على المستخدم</p>";
+
+      const data = snapshot.val();
+      resultDiv.innerHTML = `
+        <div class="friend-card">
+          <div class="friend-info">
+            <img src="${data.photoURL || 'https://i.imgur.com/6VBx3io.png'}" alt="user">
+            <div>
+              <strong>${data.username || 'مستخدم'}</strong><br>
+              <small>${id}</small>
+            </div>
+          </div>
+          <div>
+            <button class="btn-small" onclick="sendRequest('${id}')">إضافة</button>
+          </div>
+        </div>
+      `;
+    };
+
+    window.sendRequest = async (toId) => {
+      await set(ref(db, `friendRequests/${toId}/${currentUser.uid}`), true);
+      alert("✅ تم إرسال الطلب");
+    };
+
+    function loadFriendRequests() {
+      onValue(ref(db, `friendRequests/${currentUser.uid}`), (snapshot) => {
+        const container = document.getElementById("requestsList");
+        container.innerHTML = "";
+        snapshot.forEach(async (child) => {
+          const senderId = child.key;
+          const userSnap = await get(ref(db, `users/${senderId}`));
+          const userData = userSnap.val();
+          const el = document.createElement("div");
+          el.className = "friend-card";
+          el.innerHTML = `
+            <div class="friend-info">
+              <img src="${userData.photoURL || 'https://i.imgur.com/6VBx3io.png'}" alt="user">
+              <div><strong>${userData.username}</strong><br><small>${senderId}</small></div>
+            </div>
+            <div>
+              <button class="btn-small" onclick="acceptRequest('${senderId}')">قبول</button>
+              <button class="btn-small" onclick="rejectRequest('${senderId}')">رفض</button>
+            </div>
+          `;
+          container.appendChild(el);
+        });
+      });
+    }
+
+    window.acceptRequest = async (senderId) => {
+      await set(ref(db, `friends/${currentUser.uid}/${senderId}`), true);
+      await set(ref(db, `friends/${senderId}/${currentUser.uid}`), true);
+      await remove(ref(db, `friendRequests/${currentUser.uid}/${senderId}`));
+    };
+
+    window.rejectRequest = async (senderId) => {
+      await remove(ref(db, `friendRequests/${currentUser.uid}/${senderId}`));
+    };
+
+    function loadFriends() {
+      onValue(ref(db, `friends/${auth.currentUser.uid}`), async (snapshot) => {
+        const container = document.getElementById("friends");
+        container.innerHTML = "";
+        for (const friendId in snapshot.val() || {}) {
+          const snap = await get(ref(db, `users/${friendId}`));
+          const data = snap.val();
+          const el = document.createElement("div");
+          el.className = "friend-card";
+          el.innerHTML = `
+            <div class="friend-info">
+              <img src="${data.photoURL || 'https://i.imgur.com/6VBx3io.png'}" alt="user">
+              <div>
+                <strong>${data.username || 'مستخدم'}</strong><br>
+                <small>${friendId}</small>
+              </div>
+            </div>
+            <div>
+              <button class="btn-small" onclick="chat('${friendId}')">💬 دردشة</button>
+              <button class="btn-small" onclick="block('${friendId}')">🚫 حظر</button>
+            </div>
+          `;
+          container.appendChild(el);
+        }
+      });
+    }
+
+    window.chat = (id) => {
+      alert("فتح دردشة مع: " + id);
+      // يمكنك ربطها بصفحة دردشة حقيقية لاحقًا
+    };
+
+    window.block = async (id) => {
+      await remove(ref(db, `friends/${auth.currentUser.uid}/${id}`));
+      await remove(ref(db, `friends/${id}/${auth.currentUser.uid}`));
+      alert("🚫 تم الحظر");
+    };
+  </script></body>
+</html>
