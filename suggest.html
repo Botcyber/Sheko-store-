@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>اقتراحات وتصحيح أخطاء</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: linear-gradient(135deg, #e0f7fa, #f9fbe7);
+      padding: 20px;
+      text-align: center;
+      animation: fadeIn 1s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(20px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+
+    h2 {
+      color: #00796b;
+      margin-bottom: 10px;
+    }
+
+    textarea {
+      width: 80%;
+      height: 150px;
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      padding: 10px 25px;
+      border: none;
+      border-radius: 8px;
+      background: #00796b;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #004d40;
+    }
+
+    #successMessage {
+      color: green;
+      margin-top: 15px;
+      font-weight: bold;
+      display: none;
+    }
+
+    #popup {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    #popupContent {
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      width: 80%;
+      max-width: 400px;
+      text-align: center;
+      animation: scaleIn 0.5s ease;
+    }
+
+    @keyframes scaleIn {
+      from {transform: scale(0.8); opacity: 0;}
+      to {transform: scale(1); opacity: 1;}
+    }
+  </style>
+</head>
+<body>
+  <div id="popup">
+    <div id="popupContent">
+      <h3>📢 تنبيه مهم</h3>
+      <p>هذه الصفحة مخصصة لإرسال الأخطاء التي تواجهك في الموقع أو اقتراح مميزات جديدة.</p>
+      <p>⚠️ ليست للدردشة أو الشكاوى.</p>
+      <button onclick="closePopup()">حسناً</button>
+    </div>
+  </div>
+
+  <h2>📨 إرسال تذكرة اقتراح / خطأ</h2>
+  <textarea id="suggestionInput" placeholder="اكتب اقتراحك أو الخطأ الذي واجهته..."></textarea><br>
+  <button onclick="submitSuggestion()">إرسال التذكرة</button>
+  <p id="successMessage">✅ تم إرسال التذكرة بنجاح! شكراً لك 💡</p>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
+
+    let myUid = null;
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        myUid = user.uid;
+      } else {
+        alert("يرجى تسجيل الدخول أولاً.");
+      }
+    });
+
+    window.submitSuggestion = async () => {
+      const input = document.getElementById("suggestionInput");
+      const message = input.value.trim();
+      const successMsg = document.getElementById("successMessage");
+
+      if (!message || !myUid) return alert("⚠️ الرجاء كتابة الرسالة.");
+
+      const newRef = push(ref(db, "suggestions/" + myUid));
+      await set(newRef, {
+        message: message,
+        time: new Date().toISOString()
+      });
+
+      input.value = "";
+      successMsg.style.display = "block";
+
+      setTimeout(() => {
+        successMsg.style.display = "none";
+      }, 4000);
+    };
+
+    window.closePopup = () => {
+      document.getElementById("popup").style.display = "none";
+    };
+  </script>
+</body>
+</html>
