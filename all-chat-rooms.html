@@ -8,127 +8,101 @@
     body { font-family: 'Cairo', sans-serif; background: #f1f1f1; margin: 0; padding: 20px; }
     h1 { text-align: center; }
     #createRoomBtn, #myRoomsBtn {
-      position: fixed;
-      top: 20px;
-      font-size: 30px;
-      cursor: pointer;
-      background: #222;
-      color: #fff;
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      position: fixed; top: 20px;
+      font-size: 30px; cursor: pointer; background: #222; color: #fff;
+      width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center;
       box-shadow: 0 0 10px #000;
       z-index: 1000;
     }
     #createRoomBtn { left: 20px; }
-    #myRoomsBtn { right: 20px; }#createRoomModal, #myRoomsModal {
-  display: none;
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.5);
-  justify-content: center; align-items: center;
-  z-index: 1100;
-}
-.modal-content {
-  background: white; padding: 20px; border-radius: 10px; width: 320px; position: relative;
-}
-.modal-content input, .modal-content select {
-  width: 100%; margin: 10px 0; padding: 8px; border-radius: 5px; border: 1px solid #ccc;
-}
-.modal-content button {
-  background: #222; color: white; padding: 10px; width: 100%; border: none; border-radius: 5px; font-weight: bold;
-  cursor: pointer;
-}
-.modal-content button:hover { background: #ffb700; color: #222; }
-.close-btn {
-  position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 20px;
-}
-.room {
-  background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px;
-  box-shadow: 0 0 5px rgba(0,0,0,0.1); cursor: pointer; display: flex; align-items: center;
-}
-.room img {
-  width: 50px; height: 50px; border-radius: 8px; margin-left: 10px;
-  object-fit: cover;
-}
-.room-info { flex-grow: 1; }
-.room-name { font-weight: bold; font-size: 18px; }
-.room-meta { font-size: 14px; color: #555; }
-.invited-label {
-  background: orange; color: white; font-size: 12px; padding: 2px 5px; border-radius: 5px;
-  margin-right: 10px;
-}
-#searchMyRooms {
-  padding: 8px;
-  width: 100%;
-  border: 1px solid #ccc;
-  margin-bottom: 10px;
-  border-radius: 6px;
-}
-
+    #myRoomsBtn { right: 20px; }
+    .modal {
+      display: none;
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      justify-content: center; align-items: center;
+      z-index: 1100;
+    }
+    .modal .modal-content {
+      background: white; padding: 20px; border-radius: 10px; width: 320px; position: relative;
+    }
+    .modal input, .modal select {
+      width: 100%; margin: 10px 0; padding: 8px; border-radius: 5px; border: 1px solid #ccc;
+    }
+    .modal button {
+      background: #222; color: white; padding: 10px; width: 100%; border: none; border-radius: 5px; font-weight: bold;
+      cursor: pointer;
+    }
+    .modal button:hover { background: #ffb700; color: #222; }
+    .modal .close-btn {
+      position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 20px;
+    }
+    .room {
+      background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1); cursor: pointer; display: flex; align-items: center;
+    }
+    .room img {
+      width: 50px; height: 50px; border-radius: 8px; margin-left: 10px;
+      object-fit: cover;
+    }
+    .room-info { flex-grow: 1; }
+    .room-name { font-weight: bold; font-size: 18px; }
+    .room-meta { font-size: 14px; color: #555; }
+    .invited-label {
+      background: orange; color: white; font-size: 12px; padding: 2px 5px; border-radius: 5px;
+      margin-right: 10px;
+    }
+    #searchInput { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #ccc; }
   </style>
 </head>
 <body>
-  <h1>كل غرف الدردشة</h1>
-  <div id="createRoomBtn" title="إنشاء غرفة جديدة"><i class="fa fa-plus"></i></div>
-  <div id="myRoomsBtn" title="غرفي"><i class="fa fa-door-open"></i></div>  <!-- Modal إنشاء الغرفة -->  <div id="createRoomModal">
+  <h1>كل غرف الدردشة</h1>  <div id="createRoomBtn" title="إنشاء غرفة جديدة"><i class="fa fa-plus"></i></div>
+  <div id="myRoomsBtn" title="غرفي"><i class="fa fa-user"></i></div>  <!-- نافذة إنشاء غرفة -->  <div id="createRoomModal" class="modal">
     <div class="modal-content">
-      <div class="close-btn" id="closeCreateModal">&times;</div>
+      <div class="close-btn" onclick="createRoomModal.style.display='none'">&times;</div>
       <h3>إنشاء غرفة جديدة مقابل 50 جنيه</h3>
       <input type="text" id="roomName" placeholder="اسم الغرفة" />
       <select id="language">
-        <option disabled selected>اختر اللغة</option>
-        <option>العربية</option>
-        <option>الإنجليزية</option>
-        <option>الفرنسية</option>
-        <option>الإسبانية</option>
-        <option>التركية</option>
-        <option>الصينية</option>
-        <option>أخرى</option>
+        <option value="" disabled selected>اختر اللغة</option>
+        <option>عربية</option><option>إنجليزية</option><option>فرنسية</option><option>إسبانية</option><option>تركية</option><option>ألمانية</option><option>أخرى</option>
       </select>
       <select id="country">
-        <option disabled selected>اختر شعار الدولة</option>
+        <option value="" disabled selected>اختر شعار الدولة</option>
         <option value="🇪🇬">🇪🇬 مصر</option>
         <option value="🇸🇦">🇸🇦 السعودية</option>
         <option value="🇦🇪">🇦🇪 الإمارات</option>
-        <option value="🇰🇼">🇰🇼 الكويت</option>
+        <option value="🇩🇿">🇩🇿 الجزائر</option>
+        <option value="🇲🇦">🇲🇦 المغرب</option>
         <option value="🇱🇧">🇱🇧 لبنان</option>
         <option value="🇯🇴">🇯🇴 الأردن</option>
-        <option value="🇲🇦">🇲🇦 المغرب</option>
-        <option value="🇶🇦">🇶🇦 قطر</option>
-        <option value="🇺🇸">🇺🇸 أمريكا</option>
       </select>
       <input type="file" id="roomImage" accept="image/*" />
       <button id="createRoomConfirmBtn">إنشاء الغرفة</button>
     </div>
-  </div>  <!-- Modal غرفي -->  <div id="myRoomsModal">
+  </div>  <!-- نافذة غرفي -->  <div id="myRoomsModal" class="modal">
     <div class="modal-content">
-      <div class="close-btn" id="closeMyRooms">&times;</div>
+      <div class="close-btn" onclick="myRoomsModal.style.display='none'">&times;</div>
       <h3>غرفي</h3>
-      <input type="text" id="searchMyRooms" placeholder="ابحث عن غرفتك...">
+      <input type="text" id="searchMyRooms" placeholder="ابحث عن غرفة..." />
       <div id="myRoomsList"></div>
     </div>
-  </div>  <div id="roomsContainer"></div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>  <script>
-    const firebaseConfig = { /* ... */ };
+  </div>  <div id="roomsContainer"></div>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const auth = firebase.auth();
-    const storage = firebase.storage();
-
-    const createRoomBtn = document.getElementById("createRoomBtn");
-    const createRoomModal = document.getElementById("createRoomModal");
-    const closeCreateModal = document.getElementById("closeCreateModal");
-    const createRoomConfirmBtn = document.getElementById("createRoomConfirmBtn");
-    const myRoomsBtn = document.getElementById("myRoomsBtn");
-    const myRoomsModal = document.getElementById("myRoomsModal");
-    const closeMyRooms = document.getElementById("closeMyRooms");
-    const searchMyRooms = document.getElementById("searchMyRooms");
-    const myRoomsList = document.getElementById("myRoomsList");
-    const roomsContainer = document.getElementById("roomsContainer");
 
     let currentUser;
+    const createRoomModal = document.getElementById("createRoomModal");
+    const myRoomsModal = document.getElementById("myRoomsModal");
 
     auth.onAuthStateChanged(user => {
       if (!user) return location.href = "login.html";
@@ -136,51 +110,67 @@
       loadRooms();
     });
 
+    document.getElementById("createRoomBtn").onclick = () => createRoomModal.style.display = "flex";
+    document.getElementById("myRoomsBtn").onclick = () => {
+      myRoomsModal.style.display = "flex";
+      loadMyRooms();
+    };
+
+    document.getElementById("createRoomConfirmBtn").onclick = async () => {
+      const name = document.getElementById("roomName").value.trim();
+      const language = document.getElementById("language").value;
+      const flag = document.getElementById("country").value;
+      const file = document.getElementById("roomImage").files[0];
+      if (!name || !language || !flag) return alert("يرجى تعبئة كل الحقول.");
+      const balSnap = await db.ref("users/" + currentUser.uid + "/balance").once("value");
+      const balance = balSnap.val() || 0;
+      if (balance < 50) return alert("رصيدك لا يكفي.");
+      await db.ref("users/" + currentUser.uid + "/balance").set(balance - 50);
+      const imgUrl = file ? URL.createObjectURL(file) : "";
+      const roomRef = db.ref("chat_rooms").push();
+      await roomRef.set({ name, language, flag, adminUid: currentUser.uid, requestedImage: imgUrl, approvedImage: "", users: { [currentUser.uid]: { name: "أنت" } } });
+      alert("تم إنشاء الغرفة.");
+      createRoomModal.style.display = "none";
+    };
+
     function loadRooms() {
       db.ref("chat_rooms").on("value", snap => {
-        const data = snap.val() || {};
-        roomsContainer.innerHTML = "";
-        myRoomsList.innerHTML = "";
-
-        for (const id in data) {
-          const room = data[id];
-          const isOwner = room.adminUid === currentUser.uid;
-          const isMember = room.users && room.users[currentUser.uid];
-          const isInvited = room.invitations && room.invitations[currentUser.uid];
-
-          if (isOwner || isMember || isInvited) {
-            const roomDiv = document.createElement("div");
-            roomDiv.className = "room";
-            roomDiv.innerHTML = `<img src="${room.approvedImage || 'default-room.png'}"><div class="room-info"><div class="room-name">${room.name} ${room.flag || ''}</div><div class="room-meta">${room.language}</div></div>`;
-            roomDiv.onclick = () => location.href = `Private-chat-room.html?roomId=${id}`;
-            myRoomsList.appendChild(roomDiv.cloneNode(true));
-          }
-
-          // عرض كل الغرف
-          const roomDiv2 = document.createElement("div");
-          roomDiv2.className = "room";
-          roomDiv2.innerHTML = `<img src="${room.approvedImage || 'default-room.png'}"><div class="room-info"><div class="room-name">${room.name} ${room.flag || ''}</div><div class="room-meta">${room.language}</div></div>`;
-          roomDiv2.onclick = () => (room.users && room.users[currentUser.uid]) ? location.href = `Private-chat-room.html?roomId=${id}` : alert("لا يمكنك الدخول بدون دعوة وموافقة.");
-          roomsContainer.appendChild(roomDiv2);
+        const rooms = snap.val() || {};
+        const container = document.getElementById("roomsContainer");
+        container.innerHTML = "";
+        for (const id in rooms) {
+          const r = rooms[id];
+          const isMember = r.users && r.users[currentUser.uid];
+          const div = document.createElement("div");
+          div.className = "room";
+          div.innerHTML = `<img src="${r.approvedImage || 'default-room.png'}"><div class='room-info'><div class='room-name'>${r.name} ${r.flag || ''}</div><div class='room-meta'>اللغة: ${r.language || 'غير محددة'} - الأعضاء: ${r.users ? Object.keys(r.users).length : 0}</div></div>`;
+          if (isMember) div.onclick = () => location.href = `Private-chat-room.html?roomId=${id}`;
+          container.appendChild(div);
         }
       });
     }
 
-    createRoomBtn.onclick = () => createRoomModal.style.display = "flex";
-    closeCreateModal.onclick = () => createRoomModal.style.display = "none";
-    myRoomsBtn.onclick = () => myRoomsModal.style.display = "flex";
-    closeMyRooms.onclick = () => myRoomsModal.style.display = "none";
-    window.onclick = e => {
-      if (e.target === createRoomModal) createRoomModal.style.display = "none";
-      if (e.target === myRoomsModal) myRoomsModal.style.display = "none";
-    };
-
-    searchMyRooms.oninput = () => {
-      const keyword = searchMyRooms.value.toLowerCase();
-      [...myRoomsList.children].forEach(div => {
-        const text = div.innerText.toLowerCase();
-        div.style.display = text.includes(keyword) ? "flex" : "none";
+    function loadMyRooms() {
+      db.ref("chat_rooms").once("value").then(snap => {
+        const rooms = snap.val() || {};
+        const myList = document.getElementById("myRoomsList");
+        const searchInput = document.getElementById("searchMyRooms");
+        myList.innerHTML = "";
+        for (const id in rooms) {
+          const r = rooms[id];
+          if (r.users && r.users[currentUser.uid]) {
+            const btn = document.createElement("div");
+            btn.style.cssText = "padding:10px; margin:5px 0; border:1px solid #ccc; border-radius:6px; cursor:pointer";
+            btn.textContent = r.name + ' ' + (r.flag || '');
+            btn.onclick = () => location.href = `Private-chat-room.html?roomId=${id}`;
+            myList.appendChild(btn);
+          }
+        }
+        searchInput.oninput = () => {
+          const val = searchInput.value.toLowerCase();
+          [...myList.children].forEach(d => d.style.display = d.textContent.toLowerCase().includes(val) ? "block" : "none");
+        };
       });
-    };
+    }
   </script></body>
 </html>
