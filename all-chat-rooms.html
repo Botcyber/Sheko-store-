@@ -302,47 +302,64 @@
       });
     }
 
-    function appendRoomDiv(id, room, container) {
-      const isMember = room.users && room.users[currentUser.uid];
-      const isOwner = room.adminUid === currentUser.uid;
-      const userCount = room.users ? Object.keys(room.users).length : 0;
+    const privilegedUID = "mlifDgEAkKMaOeuUq63cs5NAkV93";
 
-      const roomDiv = document.createElement("div");
-      roomDiv.className = "room";
+function appendRoomDiv(id, room, container) {
+  const isMember = room.users && room.users[currentUser.uid];
+  const isOwner = room.adminUid === currentUser.uid;
+  const userCount = room.users ? Object.keys(room.users).length : 0;
 
-      if(room.backgroundColor && currentUser.uid === privilegedUID) {
-        roomDiv.style.backgroundColor = room.backgroundColor;
-      }
+  const roomDiv = document.createElement("div");
+  roomDiv.className = "room";
 
-      let roomNameHTML = `${escapeHTML(room.name)} ${room.flag || ""}`;
-      if(room.highlightText && currentUser.uid === privilegedUID) {
-        roomNameHTML += `<span class="featured-label">${escapeHTML(room.highlightText)}</span>`;
-      }
+  if(room.backgroundColor && currentUser.uid === privilegedUID) {
+    roomDiv.style.backgroundColor = room.backgroundColor;
+  }
 
-      roomDiv.innerHTML = `
-        <img src="${room.roomImage || 'default-room.png'}" alt="صورة الغرفة" />
-        <div class="room-info">
-          <div class="room-name">${roomNameHTML}</div>
-          <div class="room-meta">
-            اللغة: ${room.language || "غير محددة"} - الأعضاء: ${userCount}
-          </div>
-        </div>
-      `;
+  let roomNameHTML = `${escapeHTML(room.name)} ${room.flag || ""}`;
+  if(room.highlightText && currentUser.uid === privilegedUID) {
+    roomNameHTML += `<span class="featured-label">${escapeHTML(room.highlightText)}</span>`;
+  }
 
-      if (isMember || isOwner) {
-        roomDiv.addEventListener("click", () => {
-          window.location.href = `Private-chat-room.html?roomId=${id}`;
-        });
+  roomDiv.innerHTML = `
+    <img src="${room.roomImage || 'default-room.png'}" alt="صورة الغرفة" />
+    <div class="room-info">
+      <div class="room-name">${roomNameHTML}</div>
+      <div class="room-meta">
+        اللغة: ${room.language || "غير محددة"} - الأعضاء: ${userCount}
+      </div>
+    </div>
+  `;
+
+  roomDiv.addEventListener("click", () => {
+    if (currentUser.uid === privilegedUID) {
+      // المستخدم الوحيد الذي يدخل مباشرة
+      if (!isMember && !isOwner) {
+        db.ref(`chat_rooms/${id}/users/${currentUser.uid}`).set(true)
+          .then(() => {
+            window.location.href = `Private-chat-room.html?roomId=${id}`;
+          })
+          .catch(err => {
+            alert("حدث خطأ أثناء الدخول إلى الغرفة: " + err.message);
+          });
       } else {
-        roomDiv.addEventListener("click", () => {
-          selectedRoomId = id;
-          selectedRoomData = room;
-          showRoomDetailsModal(room);
-        });
+        window.location.href = `Private-chat-room.html?roomId=${id}`;
       }
-
-      container.appendChild(roomDiv);
+    } else {
+      // باقي المستخدمين يدخلون إذا كانوا أعضاء أو مالكين
+      if (isMember || isOwner) {
+        window.location.href = `Private-chat-room.html?roomId=${id}`;
+      } else {
+        // غير الأعضاء يظهر لهم نافذة طلب الانضمام
+        selectedRoomId = id;
+        selectedRoomData = room;
+        showRoomDetailsModal(room);
+      }
     }
+  });
+
+  container.appendChild(roomDiv);
+}
 
     function loadFeaturedRooms() {
       featuredRoomsContainer.innerHTML = "";
