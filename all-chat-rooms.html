@@ -507,55 +507,76 @@
     }
 
     createRoomConfirmBtn.onclick = () => {
-      const name = roomNameInput.value.trim();
-      const language = languageInput.value;
-      const countryFlag = countryInput.value;
-      const file = roomFileInput.files[0];
+  createRoomConfirmBtn.disabled = true; // يمنع الضغط مرتين
 
-      if(!name) { alert("يرجى إدخال اسم الغرفة"); return; }
-      if(!language) { alert("يرجى اختيار اللغة"); return; }
-      if(!countryFlag) { alert("يرجى اختيار شعار الدولة"); return; }
-      if(!file) { alert("يرجى رفع صورة الغرفة"); return; }
+  const name = roomNameInput.value.trim();
+  const language = languageInput.value;
+  const countryFlag = countryInput.value;
+  const file = roomFileInput.files[0];
 
-      // تحويل الصورة إلى Base64 بدون استخدام Storage
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const base64Img = e.target.result;
+  if (!name || !language || !countryFlag) {
+    alert("يرجى ملء جميع الحقول.");
+    createRoomConfirmBtn.disabled = false;
+    return;
+  }
 
-        // إنشاء كائن الغرفة الجديد
-        const newRoomRef = db.ref("chat_rooms").push();
-        const newRoomData = {
-          name: name,
-          language: language,
-          flag: countryFlag,
-          adminUid: currentUser.uid,
-          roomImage: base64Img,
-          featured: false,
-          highlightText: "",
-          backgroundColor: "",
-          createdAt: Date.now(),
-          users: {
-            [currentUser.uid]: true
-          }
-        };
+  // منع الإيموجي ✅
+  if(currentUser.uid !== privilegedUID && name.includes("✅")) {
+    alert("لا يمكنك استخدام هذا الإيموجي.");
+    createRoomConfirmBtn.disabled = false;
+    return;
+  }
 
-        // إضافة الغرفة للقاعدة
-        newRoomRef.set(newRoomData).then(() => {
-          alert("تم إنشاء الغرفة بنجاح!");
-          createRoomModal.style.display = "none";
-          // إعادة تهيئة النموذج
-          roomNameInput.value = "";
-          languageInput.value = "";
-          countryInput.value = "";
-          roomFileInput.value = "";
-          loadRooms();
-        }).catch(err => {
-          alert("حدث خطأ أثناء إنشاء الغرفة.");
-          console.error(err);
-        });
+  // تحقق من الاسم موجود مسبقًا
+  db.ref("chat_rooms").once("value").then(snapshot => {
+    const allRooms = snapshot.val() || {};
+    for (const id in allRooms) {
+      if (allRooms[id].name?.toLowerCase() === name.toLowerCase()) {
+        alert("هذا الاسم مستخدم بالفعل، يرجى اختيار اسم آخر.");
+        createRoomConfirmBtn.disabled = false;
+        return;
+      }
+    }
+
+    // متابعة إنشاء الغرفة بعد التأكد من عدم تكرار الاسم
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const base64Img = e.target.result;
+
+      const newRoomRef = db.ref("chat_rooms").push();
+      const newRoomData = {
+        name: name,
+        language: language,
+        flag: countryFlag,
+        adminUid: currentUser.uid,
+        roomImage: base64Img,
+        featured: false,
+        highlightText: "",
+        backgroundColor: "",
+        createdAt: Date.now(),
+        users: {
+          [currentUser.uid]: true
+        }
       };
-      reader.readAsDataURL(file);
+
+      newRoomRef.set(newRoomData).then(() => {
+        alert("تم إنشاء الغرفة بنجاح!");
+        createRoomModal.style.display = "none";
+        roomNameInput.value = "";
+        languageInput.value = "";
+        countryInput.value = "";
+        roomFileInput.value = "";
+        loadRooms();
+        createRoomConfirmBtn.disabled = false; // إرجاع الزر للعمل
+      }).catch(err => {
+        alert("حدث خطأ أثناء إنشاء الغرفة.");
+        console.error(err);
+        createRoomConfirmBtn.disabled = false;
+      });
     };
+    reader.readAsDataURL(file);
+  });
+};
 
     // منع استخدام إيموجي ✅ إلا للمستخدم المميز
     document.body.addEventListener('keydown', function(e){
