@@ -514,65 +514,71 @@
 
     // تأكيد إنشاء الغرفة
     createRoomConfirmBtn.onclick = async () => {
-      const name = roomNameInput.value.trim();
-      const language = languageInput.value;
-      const flag = countryInput.value;
-      const file = roomFileInput.files[0];
+  const name = roomNameInput.value.trim();
+  const language = languageInput.value;
+  const flag = countryInput.value;
+  const file = roomFileInput.files[0];
 
-      if (!name || !language || !flag) {
-        alert("يرجى ملء جميع الحقول المطلوبة.");
-        return;
-      }
+  // منع استخدام الإيموجي ✅ لغير المستخدم المصرح له
+  if (name.includes("✅") && currentUser.uid !== "mlifDgEAkKMaOeuUq63cs5NAkV93") {
+    alert("لا يمكنك استخدام هذا الإيموجي ✅ في اسم الغرفة.");
+    return;
+  }
 
-      // تحقق رصيد المستخدم
-      const balanceSnap = await db.ref(`users/${currentUser.uid}/balance`).once("value");
-      let balance = balanceSnap.val() || 0;
-      if (balance < 50) {
-        alert("رصيدك غير كاف لإنشاء غرفة جديدة.");
-        return;
-      }
+  if (!name || !language || !flag) {
+    alert("يرجى ملء جميع الحقول المطلوبة.");
+    return;
+  }
 
-      // خصم الرصيد
-      await db.ref(`users/${currentUser.uid}/balance`).set(balance - 50);
+  // تحقق رصيد المستخدم
+  const balanceSnap = await db.ref(`users/${currentUser.uid}/balance`).once("value");
+  let balance = balanceSnap.val() || 0;
+  if (balance < 50) {
+    alert("رصيدك غير كاف لإنشاء غرفة جديدة.");
+    return;
+  }
 
-      let imageUrl = "default-room.png"; // افتراضي
-      if (file) {
-        try {
-          imageUrl = await convertFileToBase64(file);
-        } catch {
-          alert("حدث خطأ أثناء تحويل الصورة.");
-          return;
-        }
-      }
+  // خصم الرصيد
+  await db.ref(`users/${currentUser.uid}/balance`).set(balance - 50);
 
-      // إنشاء الغرفة مع createdAt
-      const newRoomRef = db.ref("chat_rooms").push();
-      await newRoomRef.set({
-        name: name,
-        language: language,
-        flag: flag,
-        adminUid: currentUser.uid,
-        roomImage: imageUrl,
-        createdAt: Date.now(),
-        users: {
-          [currentUser.uid]: true
-        },
-        invitations: {}
-      });
+  let imageUrl = "default-room.png"; // افتراضي
+  if (file) {
+    try {
+      imageUrl = await convertFileToBase64(file);
+    } catch {
+      alert("حدث خطأ أثناء تحويل الصورة.");
+      return;
+    }
+  }
 
-      alert("تم إنشاء الغرفة بنجاح!");
+  // إنشاء الغرفة مع createdAt
+  const newRoomRef = db.ref("chat_rooms").push();
+  await newRoomRef.set({
+    name: name,
+    language: language,
+    flag: flag,
+    adminUid: currentUser.uid,
+    roomImage: imageUrl,
+    createdAt: Date.now(),
+    users: {
+      [currentUser.uid]: true
+    },
+    invitations: {}
+  });
 
-      createRoomModal.style.display = "none";
+  alert("تم إنشاء الغرفة بنجاح!");
 
-      // تنظيف الحقول
-      roomNameInput.value = "";
-      languageInput.value = "";
-      countryInput.value = "";
-      roomFileInput.value = "";
+  createRoomModal.style.display = "none";
 
-      // إعادة تحميل الغرف
-      loadRooms();
-    };
+  // تنظيف الحقول
+  roomNameInput.value = "";
+  languageInput.value = "";
+  countryInput.value = "";
+  roomFileInput.value = "";
+
+  // إعادة تحميل الغرف
+  loadRooms();
+};
 
   </script>
 </body>
