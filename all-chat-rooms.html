@@ -101,6 +101,13 @@
     }
     #createRoomModal button:hover { background: #ffb700; color: #222; }
 
+    #userBalanceDisplay {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+      text-align: center;
+    }
+
     /* شريط الغرف المميزة */
     #featuredRoomsSection {
       margin-bottom: 20px;
@@ -185,6 +192,9 @@
     <div class="modal-content">
       <div class="close-btn" id="closeCreateRoom">&times;</div>
       <h3>إنشاء غرفة جديدة مقابل 50 جنيه</h3>
+
+      <div id="userBalanceDisplay">جارٍ تحميل رصيدك...</div>
+
       <input type="text" id="roomNameInput" placeholder="اسم الغرفة" />
       <select id="languageInput">
         <option value="" disabled selected>اختر اللغة</option>
@@ -214,7 +224,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
   <script>
-    // إعداد Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -232,6 +241,8 @@
     let roomsData = {};
     let selectedRoomId = null;
     let selectedRoomData = null;
+
+    const privilegedUID = "mlifDgEAkKMaOeuUq63cs5NAkV93";
 
     // عناصر DOM
     const myRoomsBtn = document.getElementById("myRoomsBtn");
@@ -256,10 +267,8 @@
     const roomsContainer = document.getElementById("roomsContainer");
     const featuredRoomsSection = document.getElementById("featuredRoomsSection");
     const featuredRoomsContainer = document.getElementById("featuredRoomsContainer");
+    const userBalanceDisplay = document.getElementById("userBalanceDisplay");
 
-    const privilegedUID = "mlifDgEAkKMaOeuUq63cs5NAkV93";
-
-    // مراقبة تسجيل الدخول
     auth.onAuthStateChanged(user => {
       if (!user) {
         window.location.href = "login.html";
@@ -280,14 +289,10 @@
     function renderRooms() {
       roomsContainer.innerHTML = "";
 
-      // ترتيب: غرف مميزة أولا حسب ترتيبها
       let featuredRoomsIds = [];
       for(const id in roomsData) {
         if(roomsData[id].featured) featuredRoomsIds.push(id);
       }
-
-      // عرض غرف مميزة في الشريط العلوي
-      // (سيتم عرض غير المميزة هنا فقط)
 
       for (const id in roomsData) {
         if (featuredRoomsIds.includes(id)) continue;
@@ -404,7 +409,6 @@
           window.location.href = `Private-chat-room.html?roomId=${selectedRoomId}`;
         };
       } else {
-        // التحقق من وجود طلب انضمام مسبق
         db.ref(`chat_rooms/${selectedRoomId}/invitations/${currentUser.uid}`).once("value").then(snapshot => {
           if (snapshot.exists()) {
             joinRoomBtn.textContent = "تم إرسال الطلب";
@@ -425,17 +429,11 @@
       }
 
       roomDetailsModal.style.display = "flex";
-    
     }
 
     // إخفاء النوافذ
     closeMyRooms.onclick = () => { myRoomsModal.style.display = "none"; };
-    closeRoomDetails.onclick = () => {
-      roomDetailsModal.style.display = "none";
-      // إزالة عناصر الإدارة حتى لا تتكرر
-      const c = document.getElementById("colorPickerContainer");
-      if(c) c.remove();
-    };
+    closeRoomDetails.onclick = () => { roomDetailsModal.style.display = "none"; };
     closeCreateRoom.onclick = () => { createRoomModal.style.display = "none"; };
 
     myRoomsBtn.onclick = () => {
@@ -444,123 +442,134 @@
     };
 
     createRoomBtn.onclick = () => {
-      createRoomModal.style.display = "flex";
+      loadUserBalance().then(() => {
+        createRoomModal.style.display = "flex";
+      });
     };
 
-    function loadMyRooms() {
+    async function loadMyRooms() {
       myRoomsList.innerHTML = "جارٍ التحميل...";
-      db.ref("chat_rooms").once("value").then(snapshot => {
-        const allRooms = snapshot.val() || {};
-        myRoomsList.innerHTML = "";
-        let count = 0;
-        for(const id in allRooms) {
-          if(allRooms[id].adminUid === currentUser.uid) {
-            count++;
-            const div = document.createElement("div");
-            div.className = "roomItem";
-            div.textContent = allRooms[id].name;
-            div.onclick = () => {
-              window.location.href = `Private-chat-room.html?roomId=${id}`;
-            };
-            myRoomsList.appendChild(div);
-          }
-        }
-        if(count === 0) myRoomsList.innerHTML = "ليس لديك غرف حالياً.";
-      });
-    }
+      const snapshot = await db.ref("chat_rooms").orderByChild(`users/${currentUser.uid}`).equalTo(true).once("value");
+      const rooms = snapshot.val() || {};
+      myRoomsList.innerHTML = "";
 
-    createRoomConfirmBtn.onclick = () => {
-  createRoomConfirmBtn.disabled = true; // يمنع الضغط مرتين
-
-  const name = roomNameInput.value.trim();
-  const language = languageInput.value;
-  const countryFlag = countryInput.value;
-  const file = roomFileInput.files[0];
-
-  if (!name || !language || !countryFlag) {
-    alert("يرجى ملء جميع الحقول.");
-    createRoomConfirmBtn.disabled = false;
-    return;
-  }
-
-  // منع الإيموجي ✅
-  if(currentUser.uid !== privilegedUID && name.includes("✅")) {
-    alert("لا يمكنك استخدام هذا الإيموجي.");
-    createRoomConfirmBtn.disabled = false;
-    return;
-  }
-
-// التحقق من الرصيد أولاً
-db.ref("users/" + currentUser.uid + "/balance").once("value").then(balanceSnap => {
-  const currentBalance = balanceSnap.val() || 0;
-
-  if (currentBalance < 50) {
-    alert("رصيدك غير كافٍ لإنشاء غرفة (مطلوب 50 جنيه).");
-    createRoomConfirmBtn.disabled = false;
-    return;
-  }
-
-  // تحقق من الاسم موجود مسبقًا
-  db.ref("chat_rooms").once("value").then(snapshot => {
-    const allRooms = snapshot.val() || {};
-    for (const id in allRooms) {
-      if (allRooms[id].name?.toLowerCase() === name.toLowerCase()) {
-        alert("هذا الاسم مستخدم بالفعل، يرجى اختيار اسم آخر.");
-        createRoomConfirmBtn.disabled = false;
+      if(Object.keys(rooms).length === 0) {
+        myRoomsList.innerHTML = "<p>ليس لديك غرف حالياً.</p>";
         return;
+      }
+
+      for(const id in rooms) {
+        const room = rooms[id];
+        const div = document.createElement("div");
+        div.className = "roomItem";
+
+        div.innerHTML = `
+          <img src="${room.roomImage || 'default-room.png'}" alt="صورة الغرفة" />
+          <div class="room-info">
+            <div class="room-name">${escapeHTML(room.name)} ${room.flag || ""}</div>
+            <div class="room-meta">اللغة: ${room.language || "غير محددة"}</div>
+          </div>
+        `;
+
+        div.onclick = () => {
+          window.location.href = `Private-chat-room.html?roomId=${id}`;
+        };
+
+        myRoomsList.appendChild(div);
       }
     }
 
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const base64Img = e.target.result;
+    // دالة لجلب رصيد المستخدم من قاعدة البيانات وعرضه
+    async function loadUserBalance() {
+      userBalanceDisplay.textContent = "جارٍ تحميل رصيدك...";
+      try {
+        const snapshot = await db.ref(`users/${currentUser.uid}/balance`).once("value");
+        const balance = snapshot.val() || 0;
+        userBalanceDisplay.textContent = `رصيدك الحالي: ${balance} جنيه`;
+        return balance;
+      } catch (e) {
+        userBalanceDisplay.textContent = "حدث خطأ في تحميل الرصيد.";
+        return 0;
+      }
+    }
 
+    // إنشاء غرفة مع خصم 50 جنيه
+    createRoomConfirmBtn.onclick = async () => {
+      const roomName = roomNameInput.value.trim();
+      const language = languageInput.value;
+      const countryFlag = countryInput.value;
+      const file = roomFileInput.files[0];
+
+      if (!roomName || !language || !countryFlag || !file) {
+        alert("يرجى تعبئة كل الحقول واختيار صورة.");
+        return;
+      }
+
+      // تأكد من الرصيد
+      let balance = await loadUserBalance();
+      if (balance < 50) {
+        alert("رصيدك غير كافٍ لإنشاء غرفة (50 جنيه).");
+        return;
+      }
+
+      // تحويل الصورة إلى Base64
+      const base64Image = await readFileAsBase64(file);
+
+      // إنشاء بيانات الغرفة
       const newRoomRef = db.ref("chat_rooms").push();
-      const newRoomData = {
-        name: name,
+      const roomId = newRoomRef.key;
+      const createdAt = Date.now();
+
+      const roomData = {
+        name: roomName,
         language: language,
         flag: countryFlag,
+        roomImage: base64Image,
         adminUid: currentUser.uid,
-        roomImage: base64Img,
-        featured: false,
-        highlightText: "",
-        backgroundColor: "",
-        createdAt: Date.now(),
+        createdAt: createdAt,
         users: {
           [currentUser.uid]: true
         }
       };
 
-      newRoomRef.set(newRoomData).then(() => {
-        // خصم 50 من الرصيد
-        db.ref("users/" + currentUser.uid + "/balance").set(currentBalance - 50);
+      // حفظ الغرفة في قاعدة البيانات
+      await newRoomRef.set(roomData);
 
-        alert("تم إنشاء الغرفة وتم خصم 50 جنيه من رصيدك!");
-        createRoomModal.style.display = "none";
-        roomNameInput.value = "";
-        languageInput.value = "";
-        countryInput.value = "";
-        roomFileInput.value = "";
-        loadRooms();
-        createRoomConfirmBtn.disabled = false;
-      }).catch(err => {
-        alert("حدث خطأ أثناء إنشاء الغرفة.");
-        console.error(err);
-        createRoomConfirmBtn.disabled = false;
-      });
+      // خصم 50 جنيه من الرصيد
+      const newBalance = balance - 50;
+      await db.ref(`users/${currentUser.uid}/balance`).set(newBalance);
+
+      alert("تم إنشاء الغرفة بنجاح وتم خصم 50 جنيه من رصيدك.");
+
+      // إغلاق النافذة وإعادة تحميل الغرف
+      createRoomModal.style.display = "none";
+      roomNameInput.value = "";
+      languageInput.value = "";
+      countryInput.value = "";
+      roomFileInput.value = "";
+
+      userBalanceDisplay.textContent = `رصيدك الحالي: ${newBalance} جنيه`;
+
+      loadRooms();
+      loadMyRooms();
     };
-    reader.readAsDataURL(file);
-  });
-});
 
-    // منع استخدام إيموجي ✅ إلا للمستخدم المميز
-    document.body.addEventListener('keydown', function(e){
-      if(e.key === '✅' && currentUser && currentUser.uid !== privilegedUID) {
-        e.preventDefault();
-        alert("لا يمكنك استخدام هذا الإيموجي.");
-      }
-    });
+    // دالة لتحويل الملف إلى Base64
+    function readFileAsBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(file);
+      });
+    }
 
+    // إخفاء النوافذ عند الضغط خارج المحتوى
+    window.onclick = function(event) {
+      if(event.target === myRoomsModal) myRoomsModal.style.display = "none";
+      if(event.target === roomDetailsModal) roomDetailsModal.style.display = "none";
+      if(event.target === createRoomModal) createRoomModal.style.display = "none";
+    };
   </script>
 </body>
 </html>
