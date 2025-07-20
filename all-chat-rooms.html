@@ -261,7 +261,7 @@
 
     auth.onAuthStateChanged(user => {
       if (!user) {
-        window.location.href = "login.html";
+        window.location.href = "index.html";
         return;
       }
       currentUser = user;
@@ -302,22 +302,22 @@
       });
     }
 
-    const privilegedUID = "mlifDgEAkKMaOeuUq63cs5NAkV93";
-
-function appendRoomDiv(id, room, container) {
+    function appendRoomDiv(id, room, container) {
+  const privilegedUID = "mlifDgEAkKMaOeuUq63cs5NAkV93";
   const isMember = room.users && room.users[currentUser.uid];
   const isOwner = room.adminUid === currentUser.uid;
+  const isPrivilegedUser = currentUser.uid === privilegedUID;
   const userCount = room.users ? Object.keys(room.users).length : 0;
 
   const roomDiv = document.createElement("div");
   roomDiv.className = "room";
 
-  if(room.backgroundColor && currentUser.uid === privilegedUID) {
+  if(room.backgroundColor && isPrivilegedUser) {
     roomDiv.style.backgroundColor = room.backgroundColor;
   }
 
   let roomNameHTML = `${escapeHTML(room.name)} ${room.flag || ""}`;
-  if(room.highlightText && currentUser.uid === privilegedUID) {
+  if(room.highlightText && isPrivilegedUser) {
     roomNameHTML += `<span class="featured-label">${escapeHTML(room.highlightText)}</span>`;
   }
 
@@ -331,30 +331,25 @@ function appendRoomDiv(id, room, container) {
     </div>
   `;
 
+  roomDiv.style.cursor = "pointer";
+
   roomDiv.addEventListener("click", () => {
-    if (currentUser.uid === privilegedUID) {
-      // المستخدم الوحيد الذي يدخل مباشرة
+    if (isPrivilegedUser) {
+      // الدخول المباشر أو الإضافة مباشرة بدون طلب
       if (!isMember && !isOwner) {
         db.ref(`chat_rooms/${id}/users/${currentUser.uid}`).set(true)
           .then(() => {
             window.location.href = `Private-chat-room.html?roomId=${id}`;
           })
-          .catch(err => {
-            alert("حدث خطأ أثناء الدخول إلى الغرفة: " + err.message);
-          });
+          .catch(err => alert("حدث خطأ أثناء الدخول إلى الغرفة: " + err.message));
       } else {
         window.location.href = `Private-chat-room.html?roomId=${id}`;
       }
     } else {
-      // باقي المستخدمين يدخلون إذا كانوا أعضاء أو مالكين
-      if (isMember || isOwner) {
-        window.location.href = `Private-chat-room.html?roomId=${id}`;
-      } else {
-        // غير الأعضاء يظهر لهم نافذة طلب الانضمام
-        selectedRoomId = id;
-        selectedRoomData = room;
-        showRoomDetailsModal(room);
-      }
+      // باقي المستخدمين: عرض تفاصيل الغرفة لطلب الانضمام
+      selectedRoomId = id;
+      selectedRoomData = room;
+      showRoomDetailsModal(room);
     }
   });
 
