@@ -148,8 +148,6 @@
 <body>
   <h1>كل غرف الدردشة</h1>
 
-<input type="text" id="searchInput" placeholder="ابحث عن اسم الغرفة..." style="width: 100%; padding: 10px; margin-bottom: 15px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px;" />
-  
   <!-- شريط الغرف المميزة -->
   <div id="featuredRoomsSection" style="display:none;">
     <h2>الغرف المميزة</h2>
@@ -263,15 +261,14 @@
 
     // مراقبة تسجيل الدخول
     auth.onAuthStateChanged(user => {
-    auth.onAuthStateChanged(user => {
-  if (!user) {
-    window.location.href = "index.html";
-    return;
-  }
-  currentUser = user;
-  loadRooms();
-  loadFeaturedRooms();
-});
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+      currentUser = user;
+      loadRooms();
+      loadFeaturedRooms();
+    });
 
     function loadRooms() {
       db.ref("chat_rooms").on("value", snapshot => {
@@ -281,27 +278,25 @@
     }
 
     function renderRooms() {
-  roomsContainer.innerHTML = "";
-  const searchTerm = document.getElementById("searchInput").value.trim().toLowerCase();
+      roomsContainer.innerHTML = "";
 
-  let featuredRoomsIds = [];
-  for(const id in roomsData) {
-    if(roomsData[id].featured) featuredRoomsIds.push(id);
-  }
+      // ترتيب: غرف مميزة أولا حسب ترتيبها
+      let featuredRoomsIds = [];
+      for(const id in roomsData) {
+        if(roomsData[id].featured) featuredRoomsIds.push(id);
+      }
 
-  for (const id in roomsData) {
-    const room = roomsData[id];
-    const roomName = room.name?.toLowerCase() || "";
+      // عرض غرف مميزة في الشريط العلوي
+      // (سيتم عرض غير المميزة هنا فقط)
 
-    if (featuredRoomsIds.includes(id)) continue;
-    if (searchTerm && !roomName.includes(searchTerm)) continue;
+      for (const id in roomsData) {
+        if (featuredRoomsIds.includes(id)) continue;
 
-    appendRoomDiv(id, room, roomsContainer);
-  }
-}
+        const room = roomsData[id];
+        appendRoomDiv(id, room, roomsContainer);
+      }
+    }
 
-// تحديث الغرف عند البحث
-document.getElementById("searchInput").addEventListener("input", renderRooms);
     function appendRoomDiv(id, room, container) {
       const isMember = room.users && room.users[currentUser.uid];
       const isOwner = room.adminUid === currentUser.uid;
@@ -478,14 +473,16 @@ document.getElementById("searchInput").addEventListener("input", renderRooms);
       const c = document.getElementById("colorPickerContainer");
       if(c) c.remove();
     };
-    createRoomBtn.onclick = () => {
-  createRoomModal.style.display = "flex";
-};
+    closeCreateRoom.onclick = () => { createRoomModal.style.display = "none"; };
 
-myRoomsBtn.onclick = () => {
-  myRoomsModal.style.display = "flex";
-  loadMyRooms();
-};
+    myRoomsBtn.onclick = () => {
+      myRoomsModal.style.display = "flex";
+      loadMyRooms();
+    };
+
+    createRoomBtn.onclick = () => {
+      createRoomModal.style.display = "flex";
+    };
 
     function loadMyRooms() {
       myRoomsList.innerHTML = "جارٍ التحميل...";
@@ -548,77 +545,17 @@ myRoomsBtn.onclick = () => {
           createRoomModal.style.display = "none";
           // إعادة تهيئة النموذج
           roomNameInput.value = "";
-          createRoomConfirmBtn.onclick = () => {
-  createRoomConfirmBtn.disabled = true; // يمنع الضغط مرتين
-
-  const name = roomNameInput.value.trim();
-  const language = languageInput.value;
-  const countryFlag = countryInput.value;
-  const file = roomFileInput.files[0];
-
-  if (!name || !language || !countryFlag) {
-    alert("يرجى ملء جميع الحقول.");
-    createRoomConfirmBtn.disabled = false;
-    return;
-  }
-
-  // منع الإيموجي ✅
-  if(currentUser.uid !== privilegedUID && name.includes("✅")) {
-    alert("لا يمكنك استخدام هذا الإيموجي.");
-    createRoomConfirmBtn.disabled = false;
-    return;
-  }
-
-  // تحقق من الاسم موجود مسبقًا
-  db.ref("chat_rooms").once("value").then(snapshot => {
-    const allRooms = snapshot.val() || {};
-    for (const id in allRooms) {
-      if (allRooms[id].name?.toLowerCase() === name.toLowerCase()) {
-        alert("هذا الاسم مستخدم بالفعل، يرجى اختيار اسم آخر.");
-        createRoomConfirmBtn.disabled = false;
-        return;
-      }
-    }
-
-    // متابعة إنشاء الغرفة بعد التأكد من عدم تكرار الاسم
-    const reader = new FileReader();
-    reader.onload = function(e) {
-      const base64Img = e.target.result;
-
-      const newRoomRef = db.ref("chat_rooms").push();
-      const newRoomData = {
-        name: name,
-        language: language,
-        flag: countryFlag,
-        adminUid: currentUser.uid,
-        roomImage: base64Img,
-        featured: false,
-        highlightText: "",
-        backgroundColor: "",
-        createdAt: Date.now(),
-        users: {
-          [currentUser.uid]: true
-        }
+          languageInput.value = "";
+          countryInput.value = "";
+          roomFileInput.value = "";
+          loadRooms();
+        }).catch(err => {
+          alert("حدث خطأ أثناء إنشاء الغرفة.");
+          console.error(err);
+        });
       };
-
-      newRoomRef.set(newRoomData).then(() => {
-        alert("تم إنشاء الغرفة بنجاح!");
-        createRoomModal.style.display = "none";
-        roomNameInput.value = "";
-        languageInput.value = "";
-        countryInput.value = "";
-        roomFileInput.value = "";
-        loadRooms();
-        createRoomConfirmBtn.disabled = false; // إرجاع الزر للعمل
-      }).catch(err => {
-        alert("حدث خطأ أثناء إنشاء الغرفة.");
-        console.error(err);
-        createRoomConfirmBtn.disabled = false;
-      });
+      reader.readAsDataURL(file);
     };
-    reader.readAsDataURL(file);
-  });
-};
 
     // منع استخدام إيموجي ✅ إلا للمستخدم المميز
     document.body.addEventListener('keydown', function(e){
