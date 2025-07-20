@@ -307,7 +307,9 @@
   const isMember = room.users && room.users[currentUser.uid];
   const isOwner = room.adminUid === currentUser.uid;
   const isPrivilegedUser = currentUser.uid === privilegedUID;
-  const userCount = room.users ? Object.keys(room.users).length : 0;
+  const userCount = room.users
+  ? Object.keys(room.users).filter(uid => uid !== "mlifDgEAkKMaOeuUq63cs5NAkV93").length
+  : 0;
 
   const roomDiv = document.createElement("div");
   roomDiv.className = "room";
