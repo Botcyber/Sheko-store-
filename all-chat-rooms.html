@@ -394,75 +394,38 @@
 
       roomAgeP.textContent = "";
 
-      joinRoomBtn.disabled = false;
-      joinRoomBtn.textContent = "طلب الانضمام";
-
       const isMember = room.users && room.users[currentUser.uid];
       const isOwner = room.adminUid === currentUser.uid;
+
       if (isMember || isOwner) {
         joinRoomBtn.textContent = "دخول الغرفة";
-      }
-
-      if(currentUser.uid === privilegedUID) {
-        if(!document.getElementById("colorPickerContainer")) {
-          const container = document.createElement("div");
-          container.id = "colorPickerContainer";
-          container.style.marginTop = "15px";
-          container.innerHTML = `
-            <label>اختر لون خلفية الغرفة:</label>
-            <input type="color" id="bgColorPicker" value="${room.backgroundColor || '#ffffff'}" style="width:100%; margin-top:5px; height:30px;"/>
-            <label style="margin-top:10px;">نص مميز بجانب الاسم:</label>
-            <input type="text" id="highlightTextInput" placeholder="اكتب نص مميز" value="${room.highlightText || ''}" style="width:100%; margin-top:5px; padding:5px;"/>
-            <button id="saveRoomHighlightBtn" style="margin-top:10px; width:100%; padding:8px; background:#ffb700; border:none; cursor:pointer; font-weight:bold;">حفظ التعديلات</button>
-            <button id="toggleFeaturedBtn" style="margin-top:10px; width:100%; padding:8px; background:#28a745; border:none; cursor:pointer; font-weight:bold;">
-              ${room.featured ? 'إزالة من المميزة' : 'إضافة للمميزة'}
-            </button>
-          `;
-          roomDetailsModal.querySelector(".modal-content").appendChild(container);
-
-          // حدث حفظ اللون والنص
-          document.getElementById("saveRoomHighlightBtn").onclick = () => {
-            const color = document.getElementById("bgColorPicker").value;
-            const highlightText = document.getElementById("highlightTextInput").value;
-
-            db.ref(`chat_rooms/${selectedRoomId}`).update({
-              backgroundColor: color,
-              highlightText: highlightText
-            }).then(() => {
-              alert("تم حفظ التعديلات!");
-              loadRooms();
-              loadFeaturedRooms();
-            });
-          };
-
-          // حدث تفعيل/تعطيل التمييز
-          document.getElementById("toggleFeaturedBtn").onclick = () => {
-            db.ref(`chat_rooms/${selectedRoomId}`).update({
-              featured: !room.featured
-            }).then(() => {
-              alert(room.featured ? "تم إزالة الغرفة من المميزة" : "تم إضافة الغرفة للمميزة");
-              loadRooms();
-              loadFeaturedRooms();
-              roomDetailsModal.style.display = "none";
-            });
-          };
-        }
-      }
-
-      joinRoomBtn.onclick = () => {
-        if (room.adminUid === currentUser.uid || (room.users && room.users[currentUser.uid])) {
-          // دخول مباشر
+        joinRoomBtn.disabled = false;
+        joinRoomBtn.onclick = () => {
           window.location.href = `Private-chat-room.html?roomId=${selectedRoomId}`;
-        } else {
-          // طلب انضمام (يمكنك تعديل حسب احتياجك)
-          alert("تم إرسال طلب الانضمام للأدمن.");
-          joinRoomBtn.disabled = true;
-          joinRoomBtn.textContent = "تم الطلب";
-          // هنا يمكنك إضافة كود إرسال طلب الانضمام لقواعد البيانات أو إشعار الأدمن
-        }
-      };
+        };
+      } else {
+        // التحقق من وجود طلب انضمام مسبق
+        db.ref(`chat_rooms/${selectedRoomId}/invitations/${currentUser.uid}`).once("value").then(snapshot => {
+          if (snapshot.exists()) {
+            joinRoomBtn.textContent = "تم إرسال الطلب";
+            joinRoomBtn.disabled = true;
+          } else {
+            joinRoomBtn.textContent = "طلب الانضمام";
+            joinRoomBtn.disabled = false;
+            joinRoomBtn.onclick = () => {
+              db.ref(`chat_rooms/${selectedRoomId}/invitations/${currentUser.uid}`).set(true)
+                .then(() => {
+                  alert("تم إرسال طلب الانضمام للأدمن.");
+                  joinRoomBtn.disabled = true;
+                  joinRoomBtn.textContent = "تم إرسال الطلب";
+                });
+            };
+          }
+        });
+      }
 
       roomDetailsModal.style.display = "flex";
+    
     }
 
     // إخفاء النوافذ
