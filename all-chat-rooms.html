@@ -452,7 +452,7 @@
       joinRoomBtn.onclick = () => {
         if (room.adminUid === currentUser.uid || (room.users && room.users[currentUser.uid])) {
           // دخول مباشر
-          window.location.href = `chat-rooms.html?roomId=${selectedRoomId}`;
+          window.location.href = `Private-chat-room.html?roomId=${selectedRoomId}`;
         } else {
           // طلب انضمام (يمكنك تعديل حسب احتياجك)
           alert("تم إرسال طلب الانضمام للأدمن.");
