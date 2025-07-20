@@ -490,7 +490,7 @@
     return;
   }
 
-  // تحقق من الاسم موجود مسبقًا
+// التحقق من الرصيد أولاً
 db.ref("users/" + currentUser.uid + "/balance").once("value").then(balanceSnap => {
   const currentBalance = balanceSnap.val() || 0;
 
@@ -500,7 +500,7 @@ db.ref("users/" + currentUser.uid + "/balance").once("value").then(balanceSnap =
     return;
   }
 
-  // تابع التحقق من تكرار الاسم
+  // تحقق من الاسم موجود مسبقًا
   db.ref("chat_rooms").once("value").then(snapshot => {
     const allRooms = snapshot.val() || {};
     for (const id in allRooms) {
@@ -511,7 +511,6 @@ db.ref("users/" + currentUser.uid + "/balance").once("value").then(balanceSnap =
       }
     }
 
-    // تابع إنشاء الغرفة بعد التأكد
     const reader = new FileReader();
     reader.onload = function(e) {
       const base64Img = e.target.result;
@@ -533,7 +532,7 @@ db.ref("users/" + currentUser.uid + "/balance").once("value").then(balanceSnap =
       };
 
       newRoomRef.set(newRoomData).then(() => {
-        // خصم 50 جنيه من الرصيد
+        // خصم 50 من الرصيد
         db.ref("users/" + currentUser.uid + "/balance").set(currentBalance - 50);
 
         alert("تم إنشاء الغرفة وتم خصم 50 جنيه من رصيدك!");
@@ -552,7 +551,6 @@ db.ref("users/" + currentUser.uid + "/balance").once("value").then(balanceSnap =
     };
     reader.readAsDataURL(file);
   });
-
 });
 
     // منع استخدام إيموجي ✅ إلا للمستخدم المميز
