@@ -198,11 +198,43 @@
       background: #ffb700;
       color: #222;
     }
+    /* زر طلبات الانضمام */
+    #joinRequestsBtn {
+      display: none;
+      position: absolute;
+      left: 60px;
+      top: 15px;
+      background: #ffb700;
+      border:none;
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 8px #ffb700;
+      color: #222;
+    }
+    /* نافذة طلبات الانضمام */
+    #joinRequestsPanel {
+      display: none;
+      position: fixed;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      width: 350px;
+      max-height: 400px;
+      overflow-y: auto;
+      z-index: 1001;
+    }
   </style>
 </head>
 <body>
   <header>
     <span id="roomTitle">جارٍ التحميل...</span>
+    <button id="joinRequestsBtn" title="طلبات الانضمام">طلبات (0)</button>
     <button id="settingsBtn" title="إعدادات الغرفة" style="display:none;"><i class="fa fa-cog"></i></button>
   </header>
   <div id="messages"></div>
@@ -217,6 +249,13 @@
     <div id="membersList">جارٍ تحميل الأعضاء...</div>
     <button id="deleteRoomBtn">حذف الغرفة</button>
     <button id="closeSettings">إغلاق</button>
+  </div>
+
+  <!-- نافذة طلبات الانضمام -->
+  <div id="joinRequestsPanel">
+    <h3>طلبات الانضمام</h3>
+    <div id="joinRequestsList">جارٍ تحميل الطلبات...</div>
+    <button id="closeJoinRequests" style="margin-top:15px; width: 100%; padding: 8px; background: #222; color: white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">إغلاق</button>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -258,6 +297,12 @@
     const closeSettingsBtn = document.getElementById("closeSettings");
     const deleteRoomBtn = document.getElementById("deleteRoomBtn");
 
+    // إضافة عناصر طلبات الانضمام
+    const joinRequestsBtn = document.getElementById("joinRequestsBtn");
+    const joinRequestsPanel = document.getElementById("joinRequestsPanel");
+    const joinRequestsList = document.getElementById("joinRequestsList");
+    const closeJoinRequests = document.getElementById("closeJoinRequests");
+
     auth.onAuthStateChanged(user => {
       if (user) {
         currentUser = user;
@@ -290,6 +335,9 @@
         }
 
         listenMessages();
+
+        // تفعيل عرض زر طلبات الانضمام وتحديثه
+        updateJoinRequestsUI();
       });
     }
 
@@ -298,8 +346,6 @@
         const messages = snapshot.val();
         messagesEl.innerHTML = "";
         if (!messages) return;
-        // جلب بيانات كل رسالة واظهارها
-        // هنا لنعرض بشكل متزامن كل رسالة مع بيانات المستخدم
         const promises = [];
         for (const msgId in messages) {
           promises.push(db.ref("users/" + messages[msgId].uid).once("value").then(userSnap => {
@@ -320,7 +366,7 @@
       const div = document.createElement("div");
       div.classList.add("message");
 
-      const imgSrc = user.profileImage || "default-profile.png";
+      const imgSrc = user.profileimage || "default-profile.png";
       let username = user.username || "مستخدم مجهول";
 
       if (roomData.adminUid === msg.uid) {
@@ -434,6 +480,94 @@
             alert("حدث خطأ أثناء حذف الغرفة: " + error.message);
           });
       }
+    });
+
+    // --- إضافة وظائف زر طلبات الانضمام ---
+
+    function updateJoinRequestsUI() {
+      if (!currentUser || !roomData) return;
+
+      if (currentUser.uid === roomData.adminUid) {
+        joinRequestsBtn.style.display = "inline-block";
+
+        db.ref(`chat_rooms/${roomId}/invitations`).on("value", snapshot => {
+          const invitations = snapshot.val() || {};
+          const uids = Object.keys(invitations);
+          joinRequestsBtn.textContent = `طلبات (${uids.length})`;
+
+          if (uids.length === 0) {
+            joinRequestsList.innerHTML = "<p>لا توجد طلبات حالياً.</p>";
+            return;
+          }
+
+          const promises = uids.map(uid => {
+            return db.ref(`users/${uid}`).once("value").then(userSnap => {
+              const userData = userSnap.val() || {};
+              return { uid, username: userData.username || "مستخدم", profileImage: userData.profileimage || "default-profile.png" };
+            });
+          });
+
+          Promise.all(promises).then(users => {
+            joinRequestsList.innerHTML = "";
+            users.forEach(user => {
+              const div = document.createElement("div");
+              div.style.display = "flex";
+              div.style.alignItems = "center";
+              div.style.justifyContent = "space-between
+                div.style.marginBottom = "10px";
+              div.style.padding = "6px 8px";
+              div.style.border = "1px solid #ddd";
+              div.style.borderRadius = "6px";
+              div.style.background = "#f9f9f9";
+
+              div.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <img src="${user.profileImage}" alt="صورة المستخدم" style="width:35px; height:35px; border-radius:50%; object-fit:cover;" />
+                  <span style="font-weight:bold;">${user.username}</span>
+                </div>
+                <div>
+                  <button style="margin-left:5px; background:#28a745; color:white; border:none; padding:5px 8px; border-radius:6px; cursor:pointer;">قبول</button>
+                  <button style="background:#dc3545; color:white; border:none; padding:5px 8px; border-radius:6px; cursor:pointer;">رفض</button>
+                </div>
+              `;
+
+              const acceptBtn = div.querySelector("button:nth-child(1)");
+              const rejectBtn = div.querySelector("button:nth-child(2)");
+
+              acceptBtn.addEventListener("click", () => {
+                // إضافة المستخدم لغرفة users
+                db.ref(`chat_rooms/${roomId}/users/${user.uid}`).set(true)
+                  .then(() => {
+                    // إزالة الطلب من invitations
+                    db.ref(`chat_rooms/${roomId}/invitations/${user.uid}`).remove();
+                  });
+              });
+
+              rejectBtn.addEventListener("click", () => {
+                // فقط إزالة الطلب من invitations
+                db.ref(`chat_rooms/${roomId}/invitations/${user.uid}`).remove();
+              });
+
+              joinRequestsList.appendChild(div);
+            });
+          });
+        });
+      } else {
+        joinRequestsBtn.style.display = "none";
+        joinRequestsPanel.style.display = "none";
+      }
+    }
+
+    joinRequestsBtn.addEventListener("click", () => {
+      if (joinRequestsPanel.style.display === "block") {
+        joinRequestsPanel.style.display = "none";
+      } else {
+        joinRequestsPanel.style.display = "block";
+      }
+    });
+
+    closeJoinRequests.addEventListener("click", () => {
+      joinRequestsPanel.style.display = "none";
     });
   </script>
 </body>
