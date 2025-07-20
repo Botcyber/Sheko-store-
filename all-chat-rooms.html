@@ -6,8 +6,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
-    body { font-family: 'Cairo', sans-serif; background: #f1f1f1; margin: 0; padding: 20px; }
-    h1 { text-align: center; margin-bottom: 50px; }
+    @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #f1f1f1;
+      margin: 0;
+      padding: 20px;
+      /* حركة خفيفة على الخلفية */
+      background: linear-gradient(135deg, #f1f1f1 25%, #e2e2e2 75%);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+    }
+    @keyframes gradientBG {
+      0% {background-position:0% 50%;}
+      50% {background-position:100% 50%;}
+      100% {background-position:0% 50%;}
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 50px;
+      color: #222;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
     #floatingBtns {
       position: fixed;
       bottom: 20px;
@@ -26,12 +48,15 @@
       font-size: 16px;
       cursor: pointer;
       box-shadow: 0 0 10px rgba(0,0,0,0.3);
-      transition: background 0.3s;
+      transition: background 0.3s, transform 0.3s;
       width: 140px;
+      user-select: none;
     }
     .floating-btn:hover {
       background: #ffb700;
       color: #000;
+      transform: scale(1.05);
+      box-shadow: 0 0 15px #ffb700;
     }
     #myRoomsModal, #roomDetailsModal, #createRoomModal {
       display: none;
@@ -39,60 +64,169 @@
       background: rgba(0,0,0,0.5);
       justify-content: center; align-items: center;
       z-index: 1200;
+      animation: fadeIn 0.3s ease forwards;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
     }
     .modal-content {
-      background: white; padding: 20px; border-radius: 10px; width: 320px; position: relative;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 320px;
+      position: relative;
       max-height: 90vh;
       overflow-y: auto;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      animation: slideUp 0.3s ease forwards;
+    }
+    @keyframes slideUp {
+      from {transform: translateY(30px); opacity: 0;}
+      to {transform: translateY(0); opacity: 1;}
     }
     .close-btn {
-      position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 22px; font-weight: bold;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      cursor: pointer;
+      font-size: 22px;
+      font-weight: bold;
+      color: #888;
+      transition: color 0.3s;
+      user-select: none;
     }
-    #myRoomsList .roomItem, #roomsContainer .room {
-      background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1); cursor: pointer; display: flex; align-items: center;
-      transition: background 0.2s;
+    .close-btn:hover {
+      color: #ffb700;
     }
-    #myRoomsList .roomItem:hover, #roomsContainer .room:hover {
+
+    /* تصغير وتنسيق غرفي في نافذة "غرفي" */
+    #myRoomsList .roomItem {
+      background: white;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 12px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      transition: background 0.3s, transform 0.3s;
+      user-select: none;
+    }
+    #myRoomsList .roomItem:hover {
       background: #ffeab3;
+      transform: translateX(5px);
     }
-    .room img {
-      width: 50px; height: 50px; border-radius: 8px; margin-left: 10px;
+    #myRoomsList .roomItem img {
+      width: 40px;
+      height: 40px;
+      border-radius: 6px;
       object-fit: cover;
       border: 1.5px solid #ddd;
+      flex-shrink: 0;
+    }
+
+    /* تصغير الغرف في الشاشة الرئيسية */
+    #roomsContainer .room {
+      background: white;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 15px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      font-size: 15px;
+      transition: background 0.3s, transform 0.3s;
+      user-select: none;
+    }
+    #roomsContainer .room:hover {
+      background: #ffeab3;
+      transform: scale(1.03);
+      box-shadow: 0 0 15px #ffb700;
+    }
+    #roomsContainer .room img {
+      width: 45px;
+      height: 45px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1.5px solid #ddd;
+      flex-shrink: 0;
     }
     .room-info {
       flex-grow: 1;
     }
     .room-name {
-      font-weight: bold; font-size: 18px;
+      font-weight: bold;
+      font-size: 17px;
+      color: #222;
     }
     .room-meta {
-      font-size: 14px; color: #555;
+      font-size: 13px;
+      color: #555;
       margin-top: 4px;
     }
     #joinRoomBtn {
-      background: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer;
-      margin-top: 15px; width: 100%;
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 15px;
+      width: 100%;
       font-weight: bold;
-      transition: background 0.3s;
+      transition: background 0.3s, transform 0.3s;
+      user-select: none;
+    }
+    #joinRoomBtn:hover:not(:disabled) {
+      background: #218838;
+      transform: scale(1.05);
     }
     #joinRoomBtn:disabled {
-      background: gray; cursor: not-allowed;
+      background: gray;
+      cursor: not-allowed;
+      transform: none;
     }
+
     /* نموذج إنشاء غرفة */
-    #createRoomModal input, #createRoomModal select {
-      width: 100%; margin: 10px 0; padding: 8px; border-radius: 5px; border: 1px solid #ccc;
+    #createRoomModal input,
+    #createRoomModal select {
+      width: 100%;
+      margin: 10px 0;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
       box-sizing: border-box;
       font-size: 15px;
+      transition: border-color 0.3s;
+    }
+    #createRoomModal input:focus,
+    #createRoomModal select:focus {
+      border-color: #ffb700;
+      outline: none;
     }
     #createRoomModal button {
-      background: #222; color: white; padding: 10px; width: 100%; border: none; border-radius: 5px; font-weight: bold;
+      background: #222;
+      color: white;
+      padding: 10px;
+      width: 100%;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
       cursor: pointer;
-      transition: background 0.3s;
+      transition: background 0.3s, transform 0.3s;
       font-size: 16px;
+      user-select: none;
     }
-    #createRoomModal button:hover { background: #ffb700; color: #222; }
+    #createRoomModal button:hover {
+      background: #ffb700;
+      color: #222;
+      transform: scale(1.05);
+    }
   </style>
 </head>
 <body>
@@ -119,7 +253,7 @@
       <h3 id="detailRoomName"></h3>
       <img id="detailRoomImage" src="" alt="صورة الغرفة" style="width:100%; border-radius:10px; margin: 10px 0;" />
       <p>الأدمن: <span id="detailAdminName"></span></p>
-      <p id="roomAge"></p>
+      <!-- تم حذف عرض عمر الغرفة حسب طلبك -->
       <button id="joinRoomBtn">طلب الانضمام</button>
     </div>
   </div>
@@ -191,7 +325,6 @@
     const detailRoomImage = document.getElementById("detailRoomImage");
     const detailAdminName = document.getElementById("detailAdminName");
     const joinRoomBtn = document.getElementById("joinRoomBtn");
-    const roomAgeP = document.getElementById("roomAge");
 
     const createRoomModal = document.getElementById("createRoomModal");
     const closeCreateRoom = document.getElementById("closeCreateRoom");
@@ -260,61 +393,6 @@
       }
     }
 
-    // دالة حساب عمر الغرفة (بالأيام/الشهور/السنين)
-    function getRoomAge(createdAt) {
-      if (!createdAt) return "غير معروف";
-      const now = Date.now();
-      const diffMs = now - createdAt;
-      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-      if (diffDays < 1) return "أقل من يوم";
-      if (diffDays < 30) return diffDays + (diffDays === 1 ? " يوم" : " أيام");
-
-      const diffMonths = Math.floor(diffDays / 30);
-      if (diffMonths < 12) return diffMonths + (diffMonths === 1 ? " شهر" : " أشهر");
-
-      const diffYears = Math.floor(diffMonths / 12);
-      return diffYears + (diffYears === 1 ? " سنة" : " سنوات");
-    }
-
-    // دالة تحديد لون بادج العمر حسب المدة
-    function getRoomAgeBadge(createdAt) {
-      if (!createdAt) return null;
-      const now = Date.now();
-      const diffMs = now - createdAt;
-      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      const diffMonths = Math.floor(diffDays / 30);
-      const diffYears = Math.floor(diffMonths / 12);
-
-      let badge = document.createElement("div");
-      badge.style.marginTop = "15px";
-      badge.style.padding = "8px";
-      badge.style.textAlign = "center";
-      badge.style.borderRadius = "6px";
-      badge.style.color = "#fff";
-      badge.style.fontWeight = "bold";
-      badge.style.userSelect = "none";
-
-      if (diffDays < 30) {
-        badge.textContent = "جديدة";
-        badge.style.backgroundColor = "#6c757d"; // رمادي
-      } else if (diffMonths < 12) {
-        badge.textContent = "برونزية";
-        badge.style.background = "linear-gradient(45deg, #cd7f32, #b87333)"; // برونزي متوهج
-      } else if (diffYears < 2) {
-        badge.textContent = "فضية";
-        badge.style.background = "linear-gradient(45deg, #c0c0c0, #a9a9a9)"; // فضي
-      } else if (diffYears < 5) {
-        badge.textContent = "ذهبية";
-        badge.style.background = "linear-gradient(45deg, #ffd700, #e6c200)"; // ذهبي
-      } else {
-        badge.textContent = "أسطورية";
-        badge.style.background = "linear-gradient(45deg, #8a2be2, #6a0dad)"; // بنفسجي ملكي
-      }
-
-      return badge;
-    }
-
     // عرض نافذة تفاصيل الغرفة مع بياناتها
     function showRoomDetailsModal(room) {
       detailRoomName.textContent = room.name || "بدون اسم";
@@ -329,26 +407,20 @@
         });
       }
 
-      // عرض عمر الغرفة
-      roomAgeP.textContent = "عمر الغرفة: " + getRoomAge(room.createdAt);
-
-      // إضافة بادج العمر الملون داخل النافذة
-      let oldBadge = document.getElementById("roomAgeBadge");
-      if (oldBadge) oldBadge.remove();
-      let badge = getRoomAgeBadge(room.createdAt);
-      if (badge) {
-        badge.id = "roomAgeBadge";
-        roomAgeP.parentNode.appendChild(badge);
-      }
-
+      // تعطيل زر الانضمام بشكل افتراضي
       joinRoomBtn.disabled = false;
       joinRoomBtn.textContent = "طلب الانضمام";
 
-      // إذا المستخدم عضو أو مالك يمكنه دخول الغرفة مباشرة
       const isMember = room.users && room.users[currentUser.uid];
       const isOwner = room.adminUid === currentUser.uid;
       if (isMember || isOwner) {
         joinRoomBtn.textContent = "دخول الغرفة";
+      }
+
+      // تحقق إذا كان طلب الانضمام موجوداً (قيد المراجعة) لإلغاء إرسال الطلب مجدداً
+      if (room.invitations && room.invitations[currentUser.uid]) {
+        joinRoomBtn.disabled = true;
+        joinRoomBtn.textContent = "طلبك قيد المراجعة";
       }
 
       roomDetailsModal.style.display = "flex";
@@ -363,6 +435,12 @@
       if (isMember || isOwner) {
         // دخول مباشر
         window.location.href = `Private-chat-room.html?roomId=${selectedRoomId}`;
+        return;
+      }
+
+      // إذا طلب الانضمام قيد المراجعة لا نرسل طلب جديد
+      if (selectedRoomData.invitations && selectedRoomData.invitations[currentUser.uid]) {
+        alert("طلبك قيد المراجعة بالفعل. يرجى الانتظار.");
         return;
       }
 
@@ -387,7 +465,7 @@
       loadMyRooms();
     };
 
-    // تحميل غرف المستخدم فقط
+    // تحميل غرف المستخدم فقط مع تصغير حجم العرض وترتيبها
     function loadMyRooms() {
       myRoomsList.innerHTML = "";
       const userRooms = Object.entries(roomsData).filter(([id, room]) => {
