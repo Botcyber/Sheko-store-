@@ -491,6 +491,16 @@
   }
 
   // تحقق من الاسم موجود مسبقًا
+db.ref("users/" + currentUser.uid + "/balance").once("value").then(balanceSnap => {
+  const currentBalance = balanceSnap.val() || 0;
+
+  if (currentBalance < 50) {
+    alert("رصيدك غير كافٍ لإنشاء غرفة (مطلوب 50 جنيه).");
+    createRoomConfirmBtn.disabled = false;
+    return;
+  }
+
+  // تابع التحقق من تكرار الاسم
   db.ref("chat_rooms").once("value").then(snapshot => {
     const allRooms = snapshot.val() || {};
     for (const id in allRooms) {
@@ -501,7 +511,7 @@
       }
     }
 
-    // متابعة إنشاء الغرفة بعد التأكد من عدم تكرار الاسم
+    // تابع إنشاء الغرفة بعد التأكد
     const reader = new FileReader();
     reader.onload = function(e) {
       const base64Img = e.target.result;
@@ -523,14 +533,17 @@
       };
 
       newRoomRef.set(newRoomData).then(() => {
-        alert("تم إنشاء الغرفة بنجاح!");
+        // خصم 50 جنيه من الرصيد
+        db.ref("users/" + currentUser.uid + "/balance").set(currentBalance - 50);
+
+        alert("تم إنشاء الغرفة وتم خصم 50 جنيه من رصيدك!");
         createRoomModal.style.display = "none";
         roomNameInput.value = "";
         languageInput.value = "";
         countryInput.value = "";
         roomFileInput.value = "";
         loadRooms();
-        createRoomConfirmBtn.disabled = false; // إرجاع الزر للعمل
+        createRoomConfirmBtn.disabled = false;
       }).catch(err => {
         alert("حدث خطأ أثناء إنشاء الغرفة.");
         console.error(err);
@@ -539,7 +552,8 @@
     };
     reader.readAsDataURL(file);
   });
-};
+
+});
 
     // منع استخدام إيموجي ✅ إلا للمستخدم المميز
     document.body.addEventListener('keydown', function(e){
