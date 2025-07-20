@@ -7,17 +7,42 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <style>
     body { font-family: 'Cairo', sans-serif; background: #f1f1f1; margin: 0; padding: 20px; }
-    h1 { text-align: center; }
-    #myRoomsBtn, #createRoomBtn {
-      position: fixed; top: 20px; right: 20px;
-      background: #222; color: #fff;
-      border: none; padding: 10px 15px;
-      border-radius: 8px; cursor: pointer;
-      z-index: 1100;
-      margin-left: 10px;
+    h1 {
+      text-align: center;
+      background: linear-gradient(90deg, #ffb700, #ff6f00);
+      color: white;
+      padding: 15px 0;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ffb700;
     }
     #createRoomBtn {
-      right: 140px;
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      font-size: 28px;
+      cursor: pointer;
+      background: #222;
+      color: #fff;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 0 10px #000;
+      z-index: 1000;
+    }
+    #myRoomsBtn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #222;
+      color: #fff;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 1100;
     }
     #myRoomsModal, #roomDetailsModal, #createRoomModal {
       display: none;
@@ -28,7 +53,6 @@
     }
     .modal-content {
       background: white; padding: 20px; border-radius: 10px; width: 320px; position: relative;
-      max-height: 80vh; overflow-y: auto;
     }
     .close-btn {
       position: absolute; top: 10px; right: 10px; cursor: pointer; font-size: 20px;
@@ -57,49 +81,23 @@
     #joinRoomBtn:disabled {
       background: gray; cursor: not-allowed;
     }
-    /* غرفة داخل نافذة غرفي */
-    .roomItem img {
-      width: 50px; height: 50px;
-      border-radius: 8px;
-      margin-left: 10px;
-      object-fit: cover;
+    /* تصميم نافذة إنشاء غرفة */
+    #createRoomModal input, #createRoomModal select {
+      width: 100%; margin: 10px 0; padding: 8px; border-radius: 5px; border: 1px solid #ccc;
     }
-    /* عداد الأيام داخل نافذة تفاصيل الغرفة */
-    #roomAgeBadge {
+    #createRoomModal button {
+      background: #222; color: white; padding: 10px; width: 100%; border: none; border-radius: 5px; font-weight: bold;
+      cursor: pointer;
       margin-top: 10px;
-      font-weight: bold;
-      padding: 6px 10px;
-      border-radius: 12px;
-      text-align: center;
-      color: white;
-      user-select: none;
     }
-    /* الألوان حسب المستوى */
-    .bronze {
-      background: linear-gradient(45deg, #b87333, #cd7f32);
-      box-shadow: 0 0 10px #cd7f32;
-    }
-    .silver {
-      background: linear-gradient(45deg, #c0c0c0, #d6d6d6);
-      box-shadow: 0 0 10px #d6d6d6;
-      color: #222;
-    }
-    .gold {
-      background: linear-gradient(45deg, #ffd700, #ffec00);
-      box-shadow: 0 0 12px #ffec00;
-      color: #222;
-    }
-    .legendary {
-      background: linear-gradient(45deg, #6a0dad, #9b30ff);
-      box-shadow: 0 0 15px #9b30ff;
-    }
+    #createRoomModal button:hover { background: #ffb700; color: #222; }
   </style>
 </head>
 <body>
   <h1>كل غرف الدردشة</h1>
 
-  <button id="myRoomsBtn" title="غرفي">غرفي</button>
-  <button id="createRoomBtn" title="إنشاء غرفة جديدة"><i class="fa fa-plus"></i> إنشاء غرفة</button>
+  <div id="createRoomBtn" title="إنشاء غرفة جديدة"><i class="fa fa-plus"></i></div>
+  <button id="myRoomsBtn">غرفي</button>
 
   <!-- نافذة غرفي -->
   <div id="myRoomsModal" class="modal">
@@ -117,8 +115,9 @@
       <h3 id="detailRoomName"></h3>
       <img id="detailRoomImage" src="" alt="صورة الغرفة" style="width:100%; border-radius:10px; margin: 10px 0;" />
       <p>الأدمن: <span id="detailAdminName"></span></p>
-      <p>عدد الأعضاء: <span id="detailMembersCount"></span></p>
-      <div id="roomAgeBadge"></div>
+      <p id="detailCreatedAt"></p>
+      <p id="detailMembersCount"></p>
+      <div id="detailAgeBadge" style="font-weight:bold; padding: 5px 10px; border-radius: 8px; text-align:center; margin-top:10px;"></div>
       <button id="joinRoomBtn">طلب الانضمام</button>
     </div>
   </div>
@@ -175,10 +174,7 @@
     let selectedRoomId = null;
     let selectedRoomData = null;
 
-    // عناصر DOM
     const myRoomsBtn = document.getElementById("myRoomsBtn");
-    const createRoomBtn = document.getElementById("createRoomBtn");
-
     const myRoomsModal = document.getElementById("myRoomsModal");
     const closeMyRooms = document.getElementById("closeMyRooms");
     const myRoomsList = document.getElementById("myRoomsList");
@@ -188,21 +184,18 @@
     const detailRoomName = document.getElementById("detailRoomName");
     const detailRoomImage = document.getElementById("detailRoomImage");
     const detailAdminName = document.getElementById("detailAdminName");
+    const detailCreatedAt = document.getElementById("detailCreatedAt");
     const detailMembersCount = document.getElementById("detailMembersCount");
-    const roomAgeBadge = document.getElementById("roomAgeBadge");
+    const detailAgeBadge = document.getElementById("detailAgeBadge");
     const joinRoomBtn = document.getElementById("joinRoomBtn");
 
+    const createRoomBtn = document.getElementById("createRoomBtn");
     const createRoomModal = document.getElementById("createRoomModal");
     const closeCreateModal = document.getElementById("closeCreateModal");
     const createRoomConfirmBtn = document.getElementById("createRoomConfirmBtn");
-    const roomNameInput = document.getElementById("roomName");
-    const languageSelect = document.getElementById("language");
-    const countrySelect = document.getElementById("country");
-    const roomImageInput = document.getElementById("roomImage");
 
     const roomsContainer = document.getElementById("roomsContainer");
 
-    // تحقق دخول المستخدم وتحميل البيانات
     auth.onAuthStateChanged(user => {
       if (!user) {
         window.location.href = "login.html";
@@ -212,7 +205,6 @@
       loadRooms();
     });
 
-    // تحميل كل الغرف من قاعدة البيانات
     function loadRooms() {
       db.ref("chat_rooms").on("value", snapshot => {
         roomsData = snapshot.val() || {};
@@ -220,7 +212,6 @@
       });
     }
 
-    // عرض الغرف في الصفحة الرئيسية
     function renderRooms() {
       roomsContainer.innerHTML = "";
       for (const id in roomsData) {
@@ -229,13 +220,16 @@
         const isOwner = room.adminUid === currentUser.uid;
         const userCount = room.users ? Object.keys(room.users).length : 0;
 
+        const createdAt = room.createdAt || 0;
+        const ageText = getAgeText(createdAt);
+        
         const roomDiv = document.createElement("div");
         roomDiv.className = "room";
         roomDiv.innerHTML = `
           <img src="${room.roomImage || 'default-room.png'}" alt="صورة الغرفة" />
           <div class="room-info">
             <div class="room-name">${room.name} ${room.flag || ""}</div>
-            <div class="room-meta">اللغة: ${room.language || "غير محددة"} - الأعضاء: ${userCount}</div>
+            <div class="room-meta">اللغة: ${room.language || "غير محددة"} - الأعضاء: ${userCount} - منذ: ${ageText}</div>
           </div>
         `;
 
@@ -255,17 +249,116 @@
       }
     }
 
-    // إظهار نافذة غرفي مع غرف المستخدم
+    // تاريخ الإنشاء مع عرض بوادر مستمرة من برونزي إلى أسطوري
+    function getAgeText(createdAt) {
+      if (!createdAt) return "غير معروف";
+      const now = Date.now();
+      const diffMs = now - createdAt;
+      const diffDays = Math.floor(diffMs / (1000*60*60*24));
+
+      if (diffDays < 1) return "اليوم";
+      if (diffDays < 30) return diffDays + (diffDays === 1 ? " يوم" : " أيام");
+      const diffMonths = Math.floor(diffDays / 30);
+      if (diffMonths < 12) return diffMonths + (diffMonths === 1 ? " شهر" : " أشهر");
+      const diffYears = Math.floor(diffMonths / 12);
+      return diffYears + (diffYears === 1 ? " سنة" : " سنوات");
+    }
+
+    // ألوان الدرجة حسب العمر
+    function getAgeBadgeColor(createdAt) {
+      if (!createdAt) return "#aaa";
+      const now = Date.now();
+      const diffMs = now - createdAt;
+      const diffDays = Math.floor(diffMs / (1000*60*60*24));
+      const diffMonths = Math.floor(diffDays / 30);
+      const diffYears = Math.floor(diffMonths / 12);
+
+      if (diffYears >= 2) return "#6a0dad"; // أسطوري - بنفسجي غامق
+      if (diffYears === 1) return "#ff8c00"; // برونزي متوهج - برتقالي غامق
+      if (diffMonths >= 6) return "#cd7f32"; // برونزي عادي
+      return "#d4af37"; // برونزي فاتح
+    }
+
+    function showRoomDetailsModal(room) {
+      detailRoomName.textContent = room.name || "";
+      detailRoomImage.src = room.roomImage || "default-room.png";
+      detailAdminName.textContent = ""; // سنجلب اسم الأدمن من الـ users
+      detailCreatedAt.textContent = "تاريخ الإنشاء: " + getAgeText(room.createdAt);
+      detailMembersCount.textContent = "عدد الأعضاء: " + (room.users ? Object.keys(room.users).length : 0);
+
+      // لون الشارة حسب العمر
+      detailAgeBadge.textContent = "";
+      detailAgeBadge.style.backgroundColor = "transparent";
+
+      // عرض شارة العمر حسب الشروط
+      const now = Date.now();
+      const diffMs = now - (room.createdAt || now);
+      const diffDays = Math.floor(diffMs / (1000*60*60*24));
+      const diffMonths = Math.floor(diffDays / 30);
+      const diffYears = Math.floor(diffMonths / 12);
+
+      if (diffYears >= 2) {
+        detailAgeBadge.textContent = "أسطوري";
+        detailAgeBadge.style.backgroundColor = "#6a0dad";
+        detailAgeBadge.style.color = "white";
+        detailAgeBadge.style.boxShadow = "0 0 10px #6a0dad";
+      } else if (diffYears === 1) {
+        detailAgeBadge.textContent = "برونزي متوهج";
+        detailAgeBadge.style.backgroundColor = "#ff8c00";
+        detailAgeBadge.style.color = "white";
+        detailAgeBadge.style.boxShadow = "0 0 10px #ff8c00";
+      } else if (diffMonths >= 6) {
+        detailAgeBadge.textContent = "برونزي عادي";
+        detailAgeBadge.style.backgroundColor = "#cd7f32";
+        detailAgeBadge.style.color = "white";
+      } else if (diffMonths > 0) {
+        detailAgeBadge.textContent = "برونزي فاتح";
+        detailAgeBadge.style.backgroundColor = "#d4af37";
+        detailAgeBadge.style.color = "black";
+      }
+
+      // جلب اسم الأدمن من قاعدة بيانات المستخدمين
+      db.ref(`users/${room.adminUid}`).once("value").then(snapshot => {
+        const adminData = snapshot.val();
+        detailAdminName.textContent = adminData ? (adminData.name || adminData.email || "غير معروف") : "غير معروف";
+      });
+
+      joinRoomBtn.disabled = false;
+      joinRoomBtn.textContent = "طلب الانضمام";
+
+      joinRoomBtn.onclick = () => {
+        // هنا ترسل طلب الانضمام (مثلاً تضيفه في invitations)
+        if (!room.invitations) room.invitations = {};
+        room.invitations[currentUser.uid] = true;
+        db.ref(`chat_rooms/${selectedRoomId}/invitations`).set(room.invitations)
+          .then(() => {
+            alert("تم إرسال طلب الانضمام. يرجى انتظار موافقة الأدمن.");
+            roomDetailsModal.style.display = "none";
+          })
+          .catch(() => alert("حدث خطأ أثناء إرسال الطلب."));
+      };
+
+      roomDetailsModal.style.display = "flex";
+    }
+
     myRoomsBtn.onclick = () => {
       myRoomsModal.style.display = "flex";
       loadMyRooms();
     };
-
     closeMyRooms.onclick = () => {
       myRoomsModal.style.display = "none";
     };
+    closeRoomDetails.onclick = () => {
+      roomDetailsModal.style.display = "none";
+    };
 
-    // تحميل وعرض غرف المستخدم فقط في نافذة غرفي
+    createRoomBtn.onclick = () => {
+      createRoomModal.style.display = "flex";
+    };
+    closeCreateModal.onclick = () => {
+      createRoomModal.style.display = "none";
+    };
+
     function loadMyRooms() {
       myRoomsList.innerHTML = "";
       const userRooms = Object.entries(roomsData).filter(([id, room]) => {
@@ -278,177 +371,80 @@
       }
 
       userRooms.forEach(([id, room]) => {
-        const userCount = room.users ? Object.keys(room.users).length : 0;
-
-        const roomItem = document.createElement("div");
-        roomItem.className = "roomItem";
-        roomItem.innerHTML = `
-          <img src="${room.roomImage || 'default-room.png'}" alt="صورة الغرفة" />
-          <div class="room-info">
+        const roomDiv = document.createElement("div");
+        roomDiv.className = "roomItem";
+        roomDiv.innerHTML = `
+          <img src="${room.roomImage || 'default-room.png'}" alt="صورة الغرفة" style="width:40px; height:40px; border-radius:6px; margin-left:10px; object-fit:cover;" />
+          <div class="room-info" style="flex-grow:1;">
             <div class="room-name">${room.name} ${room.flag || ""}</div>
-            <div class="room-meta">اللغة: ${room.language || "غير محددة"} - الأعضاء: ${userCount}</div>
+            <div class="room-meta">اللغة: ${room.language || "غير محددة"}</div>
           </div>
         `;
-        roomItem.addEventListener("click", () => {
+        roomDiv.addEventListener("click", () => {
           window.location.href = `Private-chat-room.html?roomId=${id}`;
         });
-
-        myRoomsList.appendChild(roomItem);
+        myRoomsList.appendChild(roomDiv);
       });
     }
 
-    // إظهار تفاصيل الغرفة (للغرف التي ليس المستخدم عضوًا بها)
-    closeRoomDetails.onclick = () => {
-      roomDetailsModal.style.display = "none";
-    };
-
-    function showRoomDetailsModal(room) {
-      detailRoomName.textContent = room.name;
-      detailRoomImage.src = room.roomImage || 'default-room.png';
-      detailAdminName.textContent = room.adminName || "غير معروف";
-      detailMembersCount.textContent = room.users ? Object.keys(room.users).length : 0;
-
-      // حساب عمر الغرفة وعرض العدّاد الملون
-      if (room.createdAt) {
-        const age = calculateRoomAge(room.createdAt);
-        roomAgeBadge.textContent = age.text;
-        roomAgeBadge.className = "";
-        roomAgeBadge.classList.add(age.className);
-      } else {
-        roomAgeBadge.textContent = "";
-        roomAgeBadge.className = "";
-      }
-
-      // ضبط زر الانضمام
-      joinRoomBtn.disabled = false;
-      joinRoomBtn.textContent = "طلب الانضمام";
-      joinRoomBtn.onclick = () => {
-        requestJoinRoom(selectedRoomId);
-      };
-
-      roomDetailsModal.style.display = "flex";
-    }
-
-    // حساب عمر الغرفة وعرض النتيجة مع تصنيف اللون
-    function calculateRoomAge(createdAtTimestamp) {
-      const createdDate = new Date(createdAtTimestamp);
-      const now = new Date();
-      const diffMs = now - createdDate;
-      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      const diffMonths = Math.floor(diffDays / 30);
-      const diffYears = Math.floor(diffDays / 365);
-
-      if (diffYears >= 2) {
-        return { text: `${diffYears} سنة (أسطوري)`, className: "legendary" };
-      } else if (diffYears >= 1) {
-        return { text: `${diffYears} سنة (ذهبي)`, className: "gold" };
-      } else if (diffMonths >= 6) {
-        return { text: `${diffMonths} شهر (فضي)`, className: "silver" };
-      } else if (diffMonths >= 1) {
-        return { text: `${diffMonths} شهر (برونزي)`, className: "bronze" };
-      } else if (diffDays >= 1) {
-        return { text: `${diffDays} يوم`, className: "bronze" };
-      } else {
-        return { text: "اليوم", className: "bronze" };
-      }
-    }
-
-    // دالة طلب الانضمام للغرفة (يمكنك تعديلها لتخزين طلب أو إرسال إشعار)
-    function requestJoinRoom(roomId) {
-      joinRoomBtn.disabled = true;
-      joinRoomBtn.textContent = "جارٍ إرسال الطلب...";
-
-      // هنا يمكنك تخزين الطلب في قاعدة البيانات أو إرسال إشعار
-      const requestsRef = db.ref(`chat_rooms/${roomId}/joinRequests`);
-      requestsRef.child(currentUser.uid).set({
-        userId: currentUser.uid,
-        userName: currentUser.displayName || currentUser.email,
-        timestamp: Date.now()
-      }).then(() => {
-        joinRoomBtn.textContent = "تم إرسال الطلب";
-      }).catch(() => {
-        joinRoomBtn.textContent = "فشل إرسال الطلب";
-        joinRoomBtn.disabled = false;
+    // تحويل ملف الصورة إلى Base64 نصي
+    function getBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
       });
     }
 
-    // فتح وغلق نافذة إنشاء الغرفة
-    createRoomBtn.onclick = () => {
-      createRoomModal.style.display = "flex";
-      clearCreateRoomForm();
-    };
-    closeCreateModal.onclick = () => {
-      createRoomModal.style.display = "none";
-    };
-
-    // مسح بيانات النموذج
-    function clearCreateRoomForm() {
-      roomNameInput.value = "";
-      languageSelect.value = "";
-      countrySelect.value = "";
-      roomImageInput.value = "";
-    }
-
-    // إنشاء غرفة جديدة
-    createRoomConfirmBtn.onclick = () => {
-      const name = roomNameInput.value.trim();
-      const language = languageSelect.value;
-      const flag = countrySelect.value;
-      const file = roomImageInput.files[0];
+    createRoomConfirmBtn.onclick = async () => {
+      const name = document.getElementById("roomName").value.trim();
+      const language = document.getElementById("language").value;
+      const flag = document.getElementById("country").value;
+      const imageFile = document.getElementById("roomImage").files[0];
 
       if (!name || !language || !flag) {
-        alert("يرجى تعبئة جميع الحقول المطلوبة");
+        alert("يرجى ملء جميع الحقول المطلوبة");
         return;
       }
 
       createRoomConfirmBtn.disabled = true;
       createRoomConfirmBtn.textContent = "جارٍ الإنشاء...";
 
-      // قراءة الصورة كـ Base64 وتحويلها إلى رابط (رابط بيانات)
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          const imageDataUrl = e.target.result;
-          saveRoom(name, language, flag, imageDataUrl);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        // بدون صورة، استخدم صورة افتراضية
-        saveRoom(name, language, flag, "default-room.png");
+      try {
+        let roomImageBase64 = "";
+        if (imageFile) {
+          roomImageBase64 = await getBase64(imageFile);
+        }
+
+        const newRoomRef = db.ref("chat_rooms").push();
+        await newRoomRef.set({
+          name: name,
+          language: language,
+          flag: flag,
+          adminUid: currentUser.uid,
+          users: {
+            [currentUser.uid]: true
+          },
+          roomImage: roomImageBase64 || "",
+          createdAt: Date.now()
+        });
+
+        alert("تم إنشاء الغرفة بنجاح");
+        createRoomModal.style.display = "none";
+        // إعادة تعيين الحقول
+        document.getElementById("roomName").value = "";
+        document.getElementById("language").value = "";
+        document.getElementById("country").value = "";
+        document.getElementById("roomImage").value = "";
+      } catch (error) {
+        alert("حدث خطأ أثناء إنشاء الغرفة");
+        console.error(error);
+      } finally {
+        createRoomConfirmBtn.disabled = false;
+        createRoomConfirmBtn.textContent = "إنشاء الغرفة";
       }
     };
-
-    // حفظ الغرفة في قاعدة البيانات
-    function saveRoom(name, language, flag, imageUrl) {
-      const newRoomRef = db.ref("chat_rooms").push();
-      const createdAt = Date.now();
-
-      const roomData = {
-        name,
-        language,
-        flag,
-        roomImage: imageUrl,
-        adminUid: currentUser.uid,
-        adminName: currentUser.displayName || currentUser.email,
-        createdAt,
-        users: { [currentUser.uid]: true } // منشئ الغرفة عضو تلقائياً
-      };
-
-      newRoomRef.set(roomData)
-        .then(() => {
-          alert("تم إنشاء الغرفة بنجاح!");
-          createRoomModal.style.display = "none";
-          createRoomConfirmBtn.disabled = false;
-          createRoomConfirmBtn.textContent = "إنشاء الغرفة";
-          clearCreateRoomForm();
-        })
-        .catch(err => {
-          alert("حدث خطأ أثناء إنشاء الغرفة. حاول مرة أخرى.");
-          createRoomConfirmBtn.disabled = false;
-          createRoomConfirmBtn.textContent = "إنشاء الغرفة";
-          console.error(err);
-        });
-    }
   </script>
 </body>
 </html>
