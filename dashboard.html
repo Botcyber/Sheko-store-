@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <title>لوحة التحكم - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
   <style>
     body { font-family: 'Cairo', sans-serif; margin: 0; background: #f1f1f1; }
     .top-bar { display: flex; justify-content: space-between; align-items: center; background: #222; padding: 10px 20px; color: white; flex-wrap: wrap; }
     .nav-icons { display: flex; gap: 25px; flex-direction: column; }
-    .nav-icons a { color: white; text-decoration: none; display: flex; flex-direction: row; align-items: center; font-size: 14px; position: relative; transition: color 0.3s ease; gap: 8px; }
-    .nav-icons a i { font-size: 20px; margin: 0; }
+    .nav-icons a { color: white; text-decoration: none; display: flex; align-items: center; font-size: 14px; gap: 8px; position: relative; }
+    .nav-icons a i { font-size: 20px; }
     .nav-icons a:hover { color: #ffb700; }
     #notifBadge, #chatBadge {
       position: absolute;
@@ -24,22 +24,16 @@
       padding: 2px 6px;
       display: none;
       transform: translate(-50%, 50%);
-      user-select: none;
-      pointer-events: none;
     }
     .user-area { display: flex; align-items: center; gap: 15px; font-size: 15px; }
     #balance { font-weight: bold; }
-    button { background: #444; border: none; color: white; padding: 8px 15px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: bold; transition: background 0.3s ease; font-size: 14px; }
+    button { background: #444; border: none; color: white; padding: 10px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 14px; transition: background 0.3s ease; }
     button i { font-size: 16px; }
     button:hover { background: #ffb700; color: #222; }
-    .dashboard { max-width: 800px; margin: auto; padding: 20px; background: white; border-radius: 12px; margin-top: 30px; position: relative; }
-    label, select, input { display: block; width: 100%; margin: 10px 0; padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
-    button.order-btn { background: #222; color: white; padding: 10px; border: none; border-radius: 5px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: bold; }
-    button.order-btn:hover { background: #444; }
-    .note { font-size: 14px; color: #666; text-align: center; margin-top: 20px; }
+    .dashboard { max-width: 800px; margin: auto; padding: 20px; background: white; border-radius: 12px; margin-top: 30px; }
     .footer-contact { max-width: 800px; margin: 30px auto 20px; text-align: center; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+    .note { font-size: 14px; color: #666; text-align: center; margin-top: 20px; }
 
-    /* زر اسألني (ذكاء صناعي) */
     #askMeBtn {
       position: fixed;
       left: 20px;
@@ -68,508 +62,172 @@
       100% { transform: translateY(0); }
     }
 
-#whatsappBtn {
-  position: fixed;
-  left: 20px;
-  bottom: 90px; /* فوق زر البوت */
-  background-color: #25d366; /* أخضر واتساب */
-  color: white;
-  font-size: 22px;
-  padding: 12px 14px;
-  border-radius: 50%;
-  box-shadow: 0 0 15px rgba(0,0,0,0.2);
-  animation: floatUpDown 2s infinite ease-in-out;
-  z-index: 9999;
-  transition: transform 0.2s ease;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#whatsappBtn:hover {
-  transform: scale(1.1);
-  background-color: #1ebea5;
-}
-
-#whatsappBtn i {
-  font-size: 20px; /* يمكن زيادة حجم الأيقونة قليلاً لتناسب حجم الزر */
-  margin: 0;
+    #whatsappBtn {
+      position: fixed;
+      left: 20px;
+      bottom: 90px;
+      background-color: #25d366;
+      color: white;
+      font-size: 22px;
+      padding: 12px 14px;
+      border-radius: 50%;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      animation: floatUpDown 2s infinite ease-in-out;
+      z-index: 9999;
+      transition: transform 0.2s ease;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #whatsappBtn:hover {
+      transform: scale(1.1);
+      background-color: #1ebea5;
     }
   </style>
 </head>
 <body>
+
   <div class="top-bar">
     <nav class="nav-icons">
       <a href="account.html"><i class="fa fa-user"></i><span>حسابك</span></a>
       <a href="orders.html"><i class="fa fa-box"></i><span>طلباتك</span></a>
       <a href="add-money.html"><i class="fa fa-wallet"></i><span>إضافة أموال</span></a>
       <a href="reviews_complaints.html"><i class="fa fa-comments"></i><span>التقييمات</span></a>
-      <a href="notifications.html" style="position: relative;">
-        <i class="fa fa-bell"></i><span>الإشعارات</span><span id="notifBadge">0</span>
-      </a>
+      <a href="notifications.html" style="position: relative;"><i class="fa fa-bell"></i><span>الإشعارات</span><span id="notifBadge">0</span></a>
       <a href="ranking.html"><i class="fa fa-crown"></i><span>التصنيف</span></a>
-      <a href="#" style="pointer-events: none; opacity: 0.6;">
-        <i class="fa fa-lock"></i><span>الفعاليات</span>
-      </a>
-      <a href="support_chat.html"><i class="fa fa-headset"></i><span>فريق الدعم والشكاوى</span></a>
-      <a href="#" style="pointer-events: none; opacity: 0.6;">
-        <i class="fa fa-lock"></i><span>عجلة الحظ</span>
-      </a>
-      <a href="suggest.html">
-  <i class="fa fa-ticket-alt"></i>
-  <span>اقتراح أو خطأ</span>
-      </a>
-      <a href="chat.html" id="chatLink" style="position: relative;">
-        <i class="fa fa-comments"></i><span>الدردشة</span><span id="chatBadge">0</span>
-      </a>
-      <!-- زر الأخبار -->
-      <a href="news.html" style="display: flex; align-items: center; gap: 5px; color: white; text-decoration: none;">
-        <i class="fa fa-newspaper"></i>
-        <span>الأخبار</span>
-      </a>
+      <a href="#" style="pointer-events: none; opacity: 0.6;"><i class="fa fa-lock"></i><span>الفعاليات</span></a>
+      <a href="support_chat.html"><i class="fa fa-headset"></i><span>الدعم والشكاوى</span></a>
+      <a href="#" style="pointer-events: none; opacity: 0.6;"><i class="fa fa-lock"></i><span>عجلة الحظ</span></a>
+      <a href="suggest.html"><i class="fa fa-ticket-alt"></i><span>اقتراح أو خطأ</span></a>
+      <a href="chat.html" id="chatLink" style="position: relative;"><i class="fa fa-comments"></i><span>الدردشة</span><span id="chatBadge">0</span></a>
+      <a href="news.html"><i class="fa fa-newspaper"></i><span>الأخبار</span></a>
     </nav>
     <div class="user-area">
       <span id="balance">رصيدك: ...</span>
       <button onclick="logout()"><i class="fa fa-sign-out-alt"></i> خروج</button>
     </div>
   </div>
+
   <div class="dashboard">
-    <h2>إرسال طلب</h2>
-    <label for="mainService">نوع الخدمة:</label>
-    <select id="mainService">
-      <option value="">اختر نوع الخدمة</option>
-      <option value="ألعاب">شحن ألعاب</option>
-      <option value="سوشيال">مواقع التواصل</option>
-      <option value="الشحن الالكتروني">الشحن الالكتروني</option>
-    </select>
-    <label for="subService">الخدمة:</label>
-    <select id="subService"></select>
-    <label for="package">الباقة:</label>
-    <select id="package"></select>
-    <label for="accountInput" id="accountLabel"> رابط الحساب - رابط الفيديو - رقم الهاتف - الايدي </label>
-    <input type="text" id="accountInput" />
-    <button class="order-btn" onclick="submitOrder()">إرسال الطلب</button>
-    <p class="note">إذا واجهت أي مشكلة كلم فريق الدعم</p>
+    <h2 style="text-align: center;">لوحة التحكم</h2>
+    <button class="order-btn" onclick="location.href='send_message.html'"><i class="fa fa-paper-plane"></i> إرسال رسائل للأصدقاء</button>
+    <button class="order-btn" onclick="location.href='chat_rooms.html'"><i class="fa fa-comments"></i> غرف دردشة</button>
+    <button class="order-btn" onclick="location.href='pending_orders.html'"><i class="fa fa-hourglass-half"></i> الطلبات المعلقة</button>
+    <button class="order-btn" onclick="location.href='my_profile.html'"><i class="fa fa-user-circle"></i> ملفي الشخصي</button>
+    <button class="order-btn" onclick="location.href='vip_badges.html'"><i class="fa fa-star"></i> شارات VIP</button>
+    <button class="order-btn" onclick="location.href='achievements.html'"><i class="fa fa-trophy"></i> الإنجازات</button>
+    <button class="order-btn" onclick="location.href='support_chat.html'"><i class="fa fa-headset"></i> الدعم الفني</button>
+    <p class="note">اختر ما تريد من القائمة أعلاه</p>
   </div>
+
   <div class="footer-contact">
-    <button class="btn-share" onclick="shareSite()">مشاركة الموقع مع أصدقائك</button>
-    <button class="btn-copy" onclick="copyLink()">نسخ رابط الموقع</button>
-  </div>
-  <!-- تنبيه مخصص -->
-  <div id="customAlert" style="
-    display:none;
-    position: fixed;
-    top: 30%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 0 15px rgba(0,0,0,0,0.4);
-    padding: 20px 30px;
-    max-width: 320px;
-    text-align: center;
-    font-weight: bold;
-    font-size: 17px;
-    z-index: 9999;
-    color: #222;
-  ">
-    <i id="alertIcon" class="fa fa-info-circle" style="color: #007bff; font-size: 28px; margin-bottom: 10px;"></i>
-    <div id="alertText" style="margin-bottom: 15px;"></div>
-    <button onclick="hideCustomAlert()" style="
-      background: #ffb700;
-      border: none;
-      padding: 8px 20px;
-      font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 15px;
-      color: #222;
-    ">حسناً</button>
+    <button onclick="shareSite()">مشاركة الموقع</button>
+    <button onclick="copyLink()">نسخ رابط الموقع</button>
   </div>
 
   <!-- زر اسألني -->
   <button id="askMeBtn" title="اسألني؟"><i class="fa fa-robot"></i></button>
-  <!-- زر واتساب دائري -->
-<a id="whatsappBtn" title="انضم لجروب واتساب" href="https://chat.whatsapp.com/EpJHhfUBTro8TZKx901A9S?mode=r_t" target="_blank">
-  <i class="fab fa-whatsapp"></i>
-</a>
-  
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-<script>
-  // تهيئة Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-    authDomain: "sheko-store.firebaseapp.com",
-    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-    projectId: "sheko-store",
-    storageBucket: "sheko-store.appspot.com",
-    messagingSenderId: "113892775847",
-    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.database();
-  let currentUser = null;
+  <!-- زر واتساب -->
+  <a id="whatsappBtn" title="انضم لجروب واتساب" href="https://chat.whatsapp.com/EpJHhfUBTro8TZKx901A9S?mode=r_t" target="_blank">
+    <i class="fab fa-whatsapp"></i>
+  </a>
 
-  // أسعار - كما في كودك الأصلي (مقتطعة هنا للوضوح)
-  const prices = {
-"ألعاب": {
-"ببجي موبايل": {
-"60 شده": 50,
-"325 شده": 250,
-"660 شده": 500,
-"1800 شده": 1200
-},
-"كود موبايل": {
-"30 سي بي": 25,
-"88 سي بي": 60,
-"420 سي بي": 260,
-"880 سي بي": 500,
-"2400 سي بي": 1250
-},
-"فيفا موبايل": {
-"40 عمله": 25,
-"100 عمله": 60,
-"520 عمله": 300,
-"1070 عمله": 550
-},
-"فري فاير": {
-"50 جوهره": 30,
-"100 جوهره": 60,
-"200 جوهره": 120,
-"310 جوهره": 180,
-"520 جوهره": 300,
-"1060 جوهره": 550
-},
-"Delta Force": {
-"18 عمله": 20,
-"30 عمله": 30,
-"60 عمله": 55,
-"300 عمله": 250,
-"420 عمله": 350,
-"680 عمله": 500,
-"1280 عمله": 1000
-},
-"Valorant": {
-"475 عمله": 270,
-"1000 عمله": 530,
-"2050 عمله": 1000,
-"3650 عمله": 1800
-},
-"league of legends": {
-"575 ار بي": 260,
-"1380 ار بي": 600,
-"2800 ار بي": 1120,
-"4500 ار بي": 1900
-}
-},
-"سوشيال": {
-"تيك توك": {
-"1000 متابع بث مباشر": 60,
-"1000 متابع بدون بث": 100,
-"1000 مشاهده": 10,
-"1000 لايك": 20,
-"1000 الحفظ": 10,
-"1000 لايك في الكومنتات": 20,
-"1000 لايك في البث": 20,
-"1000 الاستوري": 30,
-"1000 مشاهدات استوري": 20,
-"1000 مشاركات استوري": 20,
-"1000 اكسبلور": 20,
-"1000 كومنتات بث": 20,
-"1000 مشاهدات بث": 40
-},
-"انستجرام": {
-"1000 لايك": 25,
-"1000 متابعين": 70,
-"1000 لايكات [عرب]": 40,
-"1000 مشاهدات استوري": 20,
-"1000 مشاهدات": 10,
-"1000 حفظ": 15,
-"1000 مشاركه": 10,
-"1000 لايكات في الكومنت": 190,
-"1000 مشاركه استوري": 30,
-"1000 مشاهدات بث": 90
-},
-"يوتيوب": {
-"1000 مشتركين": 150,
-"1000 كومنت": 130,
-"1000 لايكات": 30,
-"1000 مشاهدات حقيقي": 90,
-"1000 مشاهدات عاديه": 80,
-"1000 مشاركات المصدر فيسبوك": 70,
-"1000 لايكات فيديوهات قصيره": 60,
-"1000 مشاهدات فيديوهات قصيره": 100,
-"1000 تفاعل بث ايموجي": 30,
-"1000 مشاهدات بث ربع ساعه": 70,
-"1000 مشاهدات بث نص ساعه": 140,
-"1000 مشاهدات بث ساعه": 250
-}
-},
-"الشحن الالكتروني": {
-"كروت الفكه": {
-"كرت فودافون 15 جنيه": 15,
-"كرت فودافون 18 جنيه": 18,
-"كرت فودافون 22 جنيه": 22,
-"كرت فودافون 28 جنيه": 28,
-"كرت اورنج 15 جنيه": 15,
-"كرت اورنج 18 جنيه": 18,
-"كرت اورنج 22 جنيه": 22,
-"كرت اورنج 28 جنيه": 28,
-"كرت اورنج 40 جنيه": 40,
-"كرت اورنج 45 جنيه": 45,
-"كرت اورنج 55 جنيه": 55,
-"كرت اورنج 65 جنيه": 65,
-"كرت إتصالات 15 جنيه": 15,
-"كرت إتصالات 18 جنيه": 18,
-"كرت إتصالات 22 جنيه": 22,
-"كرت إتصالات 28 جنيه": 28,
-"كرت إتصالات 40 جنيه": 40,
-"كرت إتصالات 42 جنيه": 42,
-"كرت إتصالات 65 جنيه": 65
-}
-}
-};
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
-  const mainService = document.getElementById("mainService");
-  const subService = document.getElementById("subService");
-  const packageEl = document.getElementById("package");
-  const accountInput = document.getElementById("accountInput");
-  const accountLabel = document.getElementById("accountLabel");
-  const balanceEl = document.getElementById("balance");
-  const notifBadge = document.getElementById("notifBadge");
-  const chatBadge = document.getElementById("chatBadge");
-  const whatsappBtn = document.getElementById("whatsappBtn");
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+    const balanceEl = document.getElementById("balance");
+    const notifBadge = document.getElementById("notifBadge");
+    const chatBadge = document.getElementById("chatBadge");
 
-  // تغيير الخدمات بناءً على النوع
-  mainService.addEventListener("change", () => {
-    subService.innerHTML = "";
-    packageEl.innerHTML = "";
-    const selectedMain = prices[mainService.value];
-    if (!selectedMain) return;
-    for (let sub in selectedMain) {
-      let opt = document.createElement("option");
-      opt.value = sub;
-      opt.textContent = sub;
-      subService.appendChild(opt);
-    }
-    updatePackage();
+    let currentUser = null;
 
-    // تغيير نص وعناصر الإدخال حسب النوع
-    if (mainService.value === "ألعاب") {
-      accountLabel.textContent = "ID فقط:";
-      accountInput.placeholder = "أدخل رقم الـ ID فقط";
-      accountInput.type = "tel";
-      accountInput.pattern = "\\d*"; // أرقام فقط
-      accountInput.title = "يرجى إدخال أرقام فقط";
-    } else if (mainService.value === "سوشيال") {
-      accountLabel.textContent = "رابط الحساب [متابعين-بث] او رابط الفيديو:";
-      accountInput.placeholder = "أدخل الرابط";
-      accountInput.type = "text";
-      accountInput.removeAttribute("pattern");
-      accountInput.removeAttribute("title");
-    } else if (mainService.value === "الشحن الالكتروني") {
-      accountLabel.textContent = "رقم هاتفك:";
-      accountInput.placeholder = "أدخل رقم هاتفك";
-      accountInput.type = "tel";
-      accountInput.removeAttribute("pattern");
-      accountInput.removeAttribute("title");
-    } else {
-      accountLabel.textContent = "رابط الحساب / رابط الفيديو / ID:";
-      accountInput.placeholder = "";
-      accountInput.type = "text";
-      accountInput.removeAttribute("pattern");
-      accountInput.removeAttribute("title");
-    }
-  });
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = user;
+        loadBalance();
+        watchNotifications();
+        watchChat();
+      } else {
+        window.location.href = "login.html";
+      }
+    });
 
-  subService.addEventListener("change", updatePackage);
-
-  function updatePackage() {
-    packageEl.innerHTML = "";
-    const selected = prices[mainService.value]?.[subService.value];
-    if (!selected) return;
-    for (let pack in selected) {
-      let opt = document.createElement("option");
-      opt.value = pack;
-      opt.textContent = pack + " - السعر: " + selected[pack] + " جنيه";
-      packageEl.appendChild(opt);
-    }
-  }
-
-  // دالة لإظهار التنبيه المخصص
-  function showCustomAlert(message, iconClass = "fa-info-circle", iconColor = "#007bff") {
-    const alertDiv = document.getElementById("customAlert");
-    const alertText = document.getElementById("alertText");
-    const alertIcon = document.getElementById("alertIcon");
-    alertText.textContent = message;
-    alertIcon.className = "fa " + iconClass;
-    alertIcon.style.color = iconColor;
-    alertDiv.style.display = "block";
-  }
-  function hideCustomAlert() {
-    document.getElementById("customAlert").style.display = "none";
-  }
-
-  // دالة تسجيل خروج بسيطة
-  function logout() {
-    auth.signOut()
-      .then(() => {
-        window.location.href = "index.html"; // إعادة توجيه لصفحة الدخول
-      })
-      .catch(error => {
-        showCustomAlert("حدث خطأ أثناء تسجيل الخروج: " + error.message, "fa-exclamation-triangle", "red");
-      });
-  }
-
-  // التحقق من تسجيل الدخول
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      currentUser = user;
-      loadUserBalance();
-      listenNotifications();
-      listenChatMessages();
-    } else {
-      window.location.href = "login.html";
-    }
-  });
-
-  // تحميل رصيد المستخدم وعرضه
-  function loadUserBalance() {
-    const uid = currentUser.uid;
-    db.ref("users/" + uid + "/balance").once("value")
-      .then(snapshot => {
-        let bal = snapshot.val();
-        if (bal == null) bal = 0;
+    function loadBalance() {
+      db.ref("users/" + currentUser.uid + "/balance").once("value").then(snap => {
+        let bal = snap.val() || 0;
         balanceEl.textContent = "رصيدك: " + bal + " جنيه";
       });
-  }
+    }
 
-  // مراقبة الإشعارات الجديدة
-  function listenNotifications() {
-    const uid = currentUser.uid;
-    const notifRef = db.ref("notifications/" + uid);
-    notifRef.on("value", snapshot => {
-      const notifs = snapshot.val();
-      let count = 0;
-      for (const key in notifs) {
-        if (notifs[key].seen === false) count++;
-      }
-      if (count > 0) {
-        notifBadge.style.display = "inline-block";
-        notifBadge.textContent = count;
-      } else {
-        notifBadge.style.display = "none";
-      }
-    });
-  }
+    function logout() {
+      auth.signOut().then(() => {
+        window.location.href = "login.html";
+      });
+    }
 
-  // مراقبة رسائل الدردشة الجديدة
-  function listenChatMessages() {
-    const chatRef = db.ref("chat/messages");
-    chatRef.on("value", snapshot => {
-      const messages = snapshot.val();
-      let unreadCount = 0;
-      for (const key in messages) {
-        if (!messages[key].seenBy || !messages[key].seenBy[currentUser.uid]) {
-          unreadCount++;
+    function watchNotifications() {
+      db.ref("notifications/" + currentUser.uid).on("value", snap => {
+        const data = snap.val();
+        let count = 0;
+        for (const key in data) {
+          if (data[key].seen === false) count++;
         }
-      }
-      if (unreadCount > 0) {
-        chatBadge.style.display = "inline-block";
-        chatBadge.textContent = unreadCount;
+        notifBadge.style.display = count > 0 ? "inline-block" : "none";
+        notifBadge.textContent = count;
+      });
+    }
+
+    function watchChat() {
+      db.ref("chat/messages").on("value", snap => {
+        const msgs = snap.val();
+        let unread = 0;
+        for (const key in msgs) {
+          if (!msgs[key].seenBy || !msgs[key].seenBy[currentUser.uid]) {
+            unread++;
+          }
+        }
+        chatBadge.style.display = unread > 0 ? "inline-block" : "none";
+        chatBadge.textContent = unread;
+      });
+    }
+
+    function shareSite() {
+      if (navigator.share) {
+        navigator.share({
+          title: 'Sheko Store',
+          text: 'شارك موقع Sheko Store مع أصدقائك!',
+          url: window.location.href
+        });
       } else {
-        chatBadge.style.display = "none";
+        alert("هذه الميزة غير مدعومة في متصفحك.");
       }
-    });
-  }
-
-  // دالة إرسال الطلب
-  function submitOrder() {
-    const service = mainService.value;
-    const sub = subService.value;
-    const pack = packageEl.value;
-    const account = accountInput.value.trim();
-
-    if (!service || !sub || !pack || !account) {
-      showCustomAlert("يرجى تعبئة جميع الحقول!", "fa-exclamation-triangle", "red");
-      return;
     }
 
-    // تحقق من الرصيد
-    const price = prices[service][sub][pack];
-    const uid = currentUser.uid;
-    db.ref("users/" + uid + "/balance").once("value").then(snapshot => {
-      let bal = snapshot.val() || 0;
-      if (bal < price) {
-        showCustomAlert("رصيدك غير كافٍ لإتمام الطلب!", "fa-exclamation-triangle", "red");
-        return;
-      }
-      // خصم الرصيد
-      db.ref("users/" + uid + "/balance").set(bal - price);
-
-      // إنشاء الطلب في قاعدة البيانات
-      const newOrderRef = db.ref("orders").push();
-      newOrderRef.set({
-        userId: uid,
-        service: service,
-        subService: sub,
-        package: pack,
-        price: price,
-        accountInfo: account,
-        status: "قيد التنفيذ",
-        timestamp: Date.now()
-      }).then(() => {
-        showCustomAlert("تم إرسال الطلب بنجاح", "fa-check-circle", "green");
-        // إعادة تعيين الحقول
-        mainService.value = "";
-        subService.innerHTML = "";
-        packageEl.innerHTML = "";
-        accountInput.value = "";
-        balanceEl.textContent = "رصيدك: " + (bal - price) + " جنيه";
-      }).catch(error => {
-        showCustomAlert("حدث خطأ أثناء إرسال الطلب: " + error.message, "fa-exclamation-triangle", "red");
+    function copyLink() {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        alert("تم نسخ الرابط");
       });
-    });
-  }
-
-  // مشاركة الموقع
-  function shareSite() {
-    if (navigator.share) {
-      navigator.share({
-        title: 'Sheko Store',
-        text: 'شارك موقع Sheko Store مع أصدقائك!',
-        url: window.location.href
-      }).catch(err => {
-        showCustomAlert("تعذر مشاركة الموقع: " + err.message, "fa-exclamation-triangle", "red");
-      });
-    } else {
-      showCustomAlert("هذه الميزة غير مدعومة في متصفحك.", "fa-info-circle", "#007bff");
     }
-  }
 
-  // نسخ رابط الموقع
-  function copyLink() {
-    navigator.clipboard.writeText(window.location.href).then(() => {
-      showCustomAlert("تم نسخ رابط الموقع بنجاح", "fa-check-circle", "green");
-    }).catch(err => {
-      showCustomAlert("تعذر نسخ الرابط: " + err.message, "fa-exclamation-triangle", "red");
+    document.getElementById("askMeBtn").addEventListener("click", () => {
+      location.href = "ai_chat.html";
     });
-  }
-
-  document.getElementById("askMeBtn").addEventListener("click", () => {
-    window.location.href = "ai_chat.html";
-  });
-
-  document.getElementById("whatsappBtn").addEventListener("click", () => {
-    window.open("https://chat.whatsapp.com/EpJHhfUBTro8TZKx901A9S?mode=r_t", "_blank");
-  });
-
-  
-
-</script>
+  </script>
 </body>
 </html>
