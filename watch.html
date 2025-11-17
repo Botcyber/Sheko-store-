@@ -7,16 +7,23 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 <style>
-body{margin:0;background:#111;color:white;font-family:Arial;padding:20px;}
-.video-wrapper{max-width:800px;margin:auto;}
-video, iframe{width:100%;border-radius:10px;}
-h2{margin-top:10px;}
+body {margin:0; background:#111; color:white; font-family:Arial; padding:20px;}
+.video-wrapper {max-width:900px; margin:auto; position:relative;}
+video, iframe {width:100%; border-radius:10px; transition: all 0.3s ease;}
+h2 {margin-top:10px;}
+.controls {margin:10px 0;}
+button {padding:8px 15px; margin-right:5px; border:none; border-radius:5px; cursor:pointer; background:#ff0000; color:white;}
+button:hover {background:#cc0000;}
 </style>
 </head>
 <body>
 
 <div class="video-wrapper">
   <div id="playerContainer"></div>
+  <div class="controls">
+    <button onclick="resizeVideo(1.2)">تكبير</button>
+    <button onclick="resizeVideo(0.8)">تصغير</button>
+  </div>
   <h2 id="videoTitle"></h2>
   <p>عدد المشاهدات: <span id="videoViews">0</span></p>
 </div>
@@ -40,34 +47,56 @@ const playerContainer = document.getElementById('playerContainer');
 const videoTitle = document.getElementById('videoTitle');
 const videoViews = document.getElementById('videoViews');
 
+function resizeVideo(factor){
+  const player = document.querySelector('#playerContainer iframe, #playerContainer video');
+  if(!player) return;
+  const width = player.offsetWidth * factor;
+  const height = player.offsetHeight * factor;
+  player.style.width = width + "px";
+  player.style.height = height + "px";
+}
+
+const viewedVideos = JSON.parse(localStorage.getItem('viewedVideos') || '[]');
+
 if(videoId){
   const videoRef = db.ref('videos/'+videoId);
   videoRef.once('value').then(snapshot=>{
     const data = snapshot.val();
     if(data){
       let embedHTML = '';
-      // تحديد نوع الفيديو
       if(data.video.includes("youtube.com") || data.video.includes("youtu.be")){
-        let vid="";
+        let vid = "";
         if(data.video.includes("youtube.com/watch?v=")){
           vid = data.video.split("v=")[1].split("&")[0];
         } else if(data.video.includes("youtu.be/")){
           vid = data.video.split("youtu.be/")[1].split("?")[0];
         }
-        embedHTML = `<iframe src="https://www.youtube.com/embed/${vid}" frameborder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        // iframe مع خيارات إخفاء اسم الفيديو وعلامة YouTube قدر الإمكان
+        embedHTML = `<iframe src="https://www.youtube.com/embed/${vid}?controls=1&modestbranding=1&rel=0&showinfo=0" 
+                      frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowfullscreen></iframe>`;
       } else {
         embedHTML = `<video src="${data.video}" controls autoplay></video>`;
       }
+
       playerContainer.innerHTML = embedHTML;
       videoTitle.innerText = data.title;
-      videoViews.innerText = data.views || 0;
 
-      // زيادة عدد المشاهدات
-      videoRef.child('views').transaction(current=>(current||0)+1)
-        .then(()=> videoRef.child('views').once('value')
-        .then(snap=>{ videoViews.innerText=snap.val(); }));
+      // عدد المشاهدات
+      if(!viewedVideos.includes(videoId)){
+        videoRef.child('views').transaction(current=>(current||0)+1).then(()=>{
+          viewedVideos.push(videoId);
+          localStorage.setItem('viewedVideos', JSON.stringify(viewedVideos));
+          videoRef.child('views').once('value').then(snap=>{
+            videoViews.innerText = snap.val();
+          });
+        });
+      } else {
+        videoRef.child('views').once('value').then(snap=>{
+          videoViews.innerText = snap.val();
+        });
+      }
+
     } else videoTitle.innerText='الفيديو غير موجود';
   });
 } else videoTitle.innerText='لم يتم تحديد فيديو';
