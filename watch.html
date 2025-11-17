@@ -65,6 +65,7 @@ const db = firebase.database();
 
 const urlParams = new URLSearchParams(window.location.search);
 const videoId = urlParams.get('id');
+
 const playerContainer = document.getElementById('playerContainer');
 const videoTitle = document.getElementById('videoTitle');
 const videoViews = document.getElementById('videoViews');
@@ -83,9 +84,11 @@ let dislikedVideos = JSON.parse(localStorage.getItem('dislikedVideos') || '[]');
 if(videoId){
   const videoRef = db.ref('videos/'+videoId);
 
+  // تحميل كل البيانات مرة واحدة
   videoRef.once('value').then(snapshot=>{
     const data = snapshot.val();
     if(data){
+      // عرض الفيديو
       let embedHTML = '';
       if(data.video.includes("youtube.com") || data.video.includes("youtu.be")){
         let vid = "";
@@ -102,104 +105,98 @@ if(videoId){
       playerContainer.innerHTML = embedHTML;
       videoTitle.innerText = data.title;
 
-      // مشاهدة الفيديو
+      // حساب المشاهدة
       if(!viewedVideos.includes(videoId)){
         videoRef.child('views').transaction(current=>(current||0)+1);
         viewedVideos.push(videoId);
         localStorage.setItem('viewedVideos', JSON.stringify(viewedVideos));
       }
-      videoRef.child('views').once('value').then(snap=>{videoViews.innerText = snap.val();});
+      videoViews.innerText = data.views || 0;
 
-      // عرض اللايكات والديسلايكات
+      // الإعجابات والديسلايكات
       likeCount.innerText = data.likes || 0;
       dislikeCount.innerText = data.dislikes || 0;
+      if(likedVideos.includes(videoId)) likeBtn.classList.add('active');
+      if(dislikedVideos.includes(videoId)) dislikeBtn.classList.add('active');
 
-      // عرض التعليقات مباشرة
-      db.ref('videos/'+videoId+'/comments').on('value',snap=>{
+      // التعليقات (جديدة أعلى)
+      db.ref('videos/'+videoId+'/comments').on('value', snap=>{
         commentList.innerHTML = "";
+        const comments = [];
         snap.forEach(c=>{
-          const val = c.val();
+          comments.push(c.val());
+        });
+        comments.reverse().forEach(val=>{
           const div = document.createElement('div');
           div.className='comment-item';
           div.innerHTML = `<strong>${val.name}</strong>: ${val.comment}`;
           commentList.appendChild(div);
         });
       });
-
-      // تفعيل الحالة الحالية للإعجاب والديسلايك
-      if(likedVideos.includes(videoId)) likeBtn.classList.add('active');
-      if(dislikedVideos.includes(videoId)) dislikeBtn.classList.add('active');
-
     } else videoTitle.innerText='الفيديو غير موجود';
   });
 
   // Like button
   likeBtn.addEventListener('click', ()=>{
-    videoRef.once('value').then(snap=>{
-      let likes = snap.val().likes || 0;
-      let dislikes = snap.val().dislikes || 0;
-
-      if(likedVideos.includes(videoId)){
-        // إلغاء اللايك
-        likes = Math.max(likes-1,0);
-        videoRef.update({likes});
-        likedVideos = likedVideos.filter(id=>id!==videoId);
-        localStorage.setItem('likedVideos', JSON.stringify(likedVideos));
-        likeBtn.classList.remove('active');
-      } else {
-        likes += 1;
-        videoRef.update({likes});
-        likedVideos.push(videoId);
-        localStorage.setItem('likedVideos', JSON.stringify(likedVideos));
-        likeBtn.classList.add('active');
-
-        // إزالة الديسلايك إذا موجود
-        if(dislikedVideos.includes(videoId)){
-          dislikes = Math.max(dislikes-1,0);
-          videoRef.update({dislikes});
-          dislikedVideos = dislikedVideos.filter(id=>id!==videoId);
-          localStorage.setItem('dislikedVideos', JSON.stringify(dislikedVideos));
-          dislikeBtn.classList.remove('active');
+    videoRef.transaction(v=>{
+      if(v){
+        v.likes = v.likes||0;
+        v.dislikes = v.dislikes||0;
+        if(likedVideos.includes(videoId)){
+          v.likes = Math.max(v.likes-1,0);
+          likedVideos = likedVideos.filter(id=>id!==videoId);
+          likeBtn.classList.remove('active');
+        } else {
+          v.likes += 1;
+          likedVideos.push(videoId);
+          likeBtn.classList.add('active');
+          if(dislikedVideos.includes(videoId)){
+            v.dislikes = Math.max(v.dislikes-1,0);
+            dislikedVideos = dislikedVideos.filter(id=>id!==videoId);
+            dislikeBtn.classList.remove('active');
+          }
         }
       }
-
-      likeCount.innerText = likes;
-      dislikeCount.innerText = dislikes;
+      return v;
+    }).then(()=>{ 
+      localStorage.setItem('likedVideos', JSON.stringify(likedVideos));
+      localStorage.setItem('dislikedVideos', JSON.stringify(dislikedVideos));
+      videoRef.once('value').then(snap=>{
+        likeCount.innerText = snap.val().likes || 0;
+        dislikeCount.innerText = snap.val().dislikes || 0;
+      });
     });
   });
 
   // Dislike button
   dislikeBtn.addEventListener('click', ()=>{
-    videoRef.once('value').then(snap=>{
-      let likes = snap.val().likes || 0;
-      let dislikes = snap.val().dislikes || 0;
-
-      if(dislikedVideos.includes(videoId)){
-        // إلغاء الديسلايك
-        dislikes = Math.max(dislikes-1,0);
-        videoRef.update({dislikes});
-        dislikedVideos = dislikedVideos.filter(id=>id!==videoId);
-        localStorage.setItem('dislikedVideos', JSON.stringify(dislikedVideos));
-        dislikeBtn.classList.remove('active');
-      } else {
-        dislikes += 1;
-        videoRef.update({dislikes});
-        dislikedVideos.push(videoId);
-        localStorage.setItem('dislikedVideos', JSON.stringify(dislikedVideos));
-        dislikeBtn.classList.add('active');
-
-        // إزالة اللايك إذا موجود
-        if(likedVideos.includes(videoId)){
-          likes = Math.max(likes-1,0);
-          videoRef.update({likes});
-          likedVideos = likedVideos.filter(id=>id!==videoId);
-          localStorage.setItem('likedVideos', JSON.stringify(likedVideos));
-          likeBtn.classList.remove('active');
+    videoRef.transaction(v=>{
+      if(v){
+        v.likes = v.likes||0;
+        v.dislikes = v.dislikes||0;
+        if(dislikedVideos.includes(videoId)){
+          v.dislikes = Math.max(v.dislikes-1,0);
+          dislikedVideos = dislikedVideos.filter(id=>id!==videoId);
+          dislikeBtn.classList.remove('active');
+        } else {
+          v.dislikes += 1;
+          dislikedVideos.push(videoId);
+          dislikeBtn.classList.add('active');
+          if(likedVideos.includes(videoId)){
+            v.likes = Math.max(v.likes-1,0);
+            likedVideos = likedVideos.filter(id=>id!==videoId);
+            likeBtn.classList.remove('active');
+          }
         }
       }
-
-      likeCount.innerText = likes;
-      dislikeCount.innerText = dislikes;
+      return v;
+    }).then(()=>{
+      localStorage.setItem('likedVideos', JSON.stringify(likedVideos));
+      localStorage.setItem('dislikedVideos', JSON.stringify(dislikedVideos));
+      videoRef.once('value').then(snap=>{
+        likeCount.innerText = snap.val().likes || 0;
+        dislikeCount.innerText = snap.val().dislikes || 0;
+      });
     });
   });
 
