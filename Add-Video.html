@@ -40,8 +40,8 @@
   </style>
 </head>
 <body>  <h2>إضافة فيديو جديد</h2>  <input id="title" type="text" placeholder="عنوان الفيديو" />
-  <input id="thumbnail" type="text" placeholder="رابط الصورة المصغرة Thumbnail" />
-  <input id="videoUrl" type="text" placeholder="رابط الفيديو (mp4) — سيتم حفظه في Realtime DB فقط" /><button onclick="addVideo()">إضافة الفيديو</button>
+  <input id="thumbnailFile" type="file" accept="image/*" style="border:2px solid #333;" />
+  <input id="videoUrl" type="text" placeholder="رابط الفيديو (مثال: https://...)" /><button onclick="addVideo()">إضافة الفيديو</button>
 
   <div id="doneMsg" class="success">تم إضافة الفيديو بنجاح!</div>  <script>
     const firebaseConfig = {
@@ -59,27 +59,42 @@
 
     function addVideo() {
       const title = document.getElementById("title").value;
-      const thumbnail = document.getElementById("thumbnail").value;
+      const thumbFile = document.getElementById("thumbnailFile").files[0];
       const videoUrl = document.getElementById("videoUrl").value;
+      const doneMsg = document.getElementById("doneMsg");
 
-      if (!title || !thumbnail || !videoUrl) {
+      if (!title || !thumbFile || !videoUrl) {
         alert("يرجى ملء جميع الحقول");
         return;
       }
 
-      const newVideoKey = db.ref("videos").push().key;
+      const readerThumb = new FileReader();
 
-      db.ref("videos/" + newVideoKey).set({
-        title: title,
-        thumbnail: thumbnail,
-        video: videoUrl,
-        uploadedAt: Date.now()
-      }).then(() => {
-        document.getElementById("doneMsg").style.display = "block";
-        document.getElementById("title").value = "";
-        document.getElementById("thumbnail").value = "";
-        document.getElementById("videoUrl").value = "";
-      });
+      // شريط التحميل
+      doneMsg.style.display = "block";
+      doneMsg.style.background = "#0277bd";
+      doneMsg.innerText = "جاري إضافة الفيديو...";
+
+      readerThumb.onload = function(e2) {
+        const thumbBase64 = e2.target.result;
+
+        const newVideoKey = db.ref("videos").push().key;
+
+        db.ref("videos/" + newVideoKey).set({
+          title: title,
+          thumbnail: thumbBase64,
+          video: videoUrl,
+          uploadedAt: Date.now()
+        }).then(() => {
+          doneMsg.style.background = "#00c853";
+          doneMsg.innerText = "✔️ تم إضافة الفيديو بنجاح!";
+          document.getElementById("title").value = "";
+          document.getElementById("thumbnailFile").value = "";
+          document.getElementById("videoUrl").value = "";
+        });
+      };
+
+      readerThumb.readAsDataURL(thumbFile);
     }
   </script></body>
 </html>
