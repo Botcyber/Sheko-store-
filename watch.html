@@ -8,24 +8,41 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 <style>
 body {margin:0; background:#111; color:white; font-family:Arial; padding:20px;}
-.video-wrapper {max-width:900px; margin:auto; position:relative;}
-video, iframe {width:100%; border-radius:10px; transition: all 0.3s ease;}
+.video-wrapper {max-width:900px; margin:auto;}
+video, iframe {width:100%; height:500px; border-radius:10px;}
 h2 {margin-top:10px;}
-.controls {margin:10px 0;}
-button {padding:8px 15px; margin-right:5px; border:none; border-radius:5px; cursor:pointer; background:#ff0000; color:white;}
-button:hover {background:#cc0000;}
+.controls button {padding:8px 15px; margin-right:5px; border:none; border-radius:5px; cursor:pointer; background:#ff0000; color:white;}
+.controls button:hover {background:#cc0000;}
+.likes {margin-top:10px;}
+.likes button {margin-right:10px; padding:8px 12px; border:none; border-radius:5px; cursor:pointer;}
+.comments {margin-top:20px; border-top:1px solid #444; padding-top:10px;}
+.comment-form input, .comment-form textarea {width:100%; padding:10px; margin:5px 0; border-radius:5px; border:none;}
+.comment-form button {padding:10px 15px; background:#ff0000; border:none; border-radius:5px; color:white; cursor:pointer;}
+.comment-item {border-bottom:1px solid #444; padding:5px 0;}
+.comment-item strong {color:#ff4444;}
 </style>
 </head>
 <body>
 
 <div class="video-wrapper">
   <div id="playerContainer"></div>
-  <div class="controls">
-    <button onclick="resizeVideo(1.2)">تكبير</button>
-    <button onclick="resizeVideo(0.8)">تصغير</button>
-  </div>
   <h2 id="videoTitle"></h2>
   <p>عدد المشاهدات: <span id="videoViews">0</span></p>
+
+  <div class="likes">
+    <button id="likeBtn">👍 <span id="likeCount">0</span></button>
+    <button id="dislikeBtn">👎 <span id="dislikeCount">0</span></button>
+  </div>
+
+  <div class="comments">
+    <h3>التعليقات</h3>
+    <div class="comment-form">
+      <input type="text" id="userName" placeholder="اسمك">
+      <textarea id="userComment" rows="3" placeholder="تعليقك..."></textarea>
+      <button onclick="addComment()">إضافة تعليق</button>
+    </div>
+    <div id="commentList"></div>
+  </div>
 </div>
 
 <script>
@@ -46,20 +63,19 @@ const videoId = urlParams.get('id');
 const playerContainer = document.getElementById('playerContainer');
 const videoTitle = document.getElementById('videoTitle');
 const videoViews = document.getElementById('videoViews');
-
-function resizeVideo(factor){
-  const player = document.querySelector('#playerContainer iframe, #playerContainer video');
-  if(!player) return;
-  const width = player.offsetWidth * factor;
-  const height = player.offsetHeight * factor;
-  player.style.width = width + "px";
-  player.style.height = height + "px";
-}
+const likeBtn = document.getElementById('likeBtn');
+const dislikeBtn = document.getElementById('dislikeBtn');
+const likeCount = document.getElementById('likeCount');
+const dislikeCount = document.getElementById('dislikeCount');
+const commentList = document.getElementById('commentList');
 
 const viewedVideos = JSON.parse(localStorage.getItem('viewedVideos') || '[]');
+const likedVideos = JSON.parse(localStorage.getItem('likedVideos') || '[]');
+const dislikedVideos = JSON.parse(localStorage.getItem('dislikedVideos') || '[]');
 
 if(videoId){
   const videoRef = db.ref('videos/'+videoId);
+
   videoRef.once('value').then(snapshot=>{
     const data = snapshot.val();
     if(data){
@@ -71,35 +87,75 @@ if(videoId){
         } else if(data.video.includes("youtu.be/")){
           vid = data.video.split("youtu.be/")[1].split("?")[0];
         }
-        // iframe مع خيارات إخفاء اسم الفيديو وعلامة YouTube قدر الإمكان
-        embedHTML = `<iframe src="https://www.youtube.com/embed/${vid}?controls=1&modestbranding=1&rel=0&showinfo=0" 
-                      frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowfullscreen></iframe>`;
+        embedHTML = `<iframe src="https://www.youtube.com/embed/${vid}?controls=1&modestbranding=1&rel=0&showinfo=0" frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
       } else {
         embedHTML = `<video src="${data.video}" controls autoplay></video>`;
       }
-
       playerContainer.innerHTML = embedHTML;
       videoTitle.innerText = data.title;
 
-      // عدد المشاهدات
+      // مشاهدة الفيديو
       if(!viewedVideos.includes(videoId)){
         videoRef.child('views').transaction(current=>(current||0)+1).then(()=>{
           viewedVideos.push(videoId);
           localStorage.setItem('viewedVideos', JSON.stringify(viewedVideos));
-          videoRef.child('views').once('value').then(snap=>{
-            videoViews.innerText = snap.val();
-          });
+          videoRef.child('views').once('value').then(snap=>{videoViews.innerText = snap.val();});
         });
       } else {
-        videoRef.child('views').once('value').then(snap=>{
-          videoViews.innerText = snap.val();
-        });
+        videoRef.child('views').once('value').then(snap=>{videoViews.innerText = snap.val();});
       }
+
+      // عرض اللايكات والديسلايكات
+      likeCount.innerText = data.likes || 0;
+      dislikeCount.innerText = data.dislikes || 0;
+
+      // تعليق الفيديو
+      db.ref('videos/'+videoId+'/comments').on('value',snap=>{
+        commentList.innerHTML = "";
+        snap.forEach(c=>{
+          const val = c.val();
+          const div = document.createElement('div');
+          div.className='comment-item';
+          div.innerHTML = `<strong>${val.name}</strong>: ${val.comment}`;
+          commentList.appendChild(div);
+        });
+      });
 
     } else videoTitle.innerText='الفيديو غير موجود';
   });
-} else videoTitle.innerText='لم يتم تحديد فيديو';
+
+  // Like button
+  likeBtn.addEventListener('click', ()=>{
+    if(likedVideos.includes(videoId)) return; // لا يمكن الإعجاب مرتين
+    videoRef.child('likes').transaction(current=>(current||0)+1);
+    likedVideos.push(videoId);
+    localStorage.setItem('likedVideos', JSON.stringify(likedVideos));
+    likeCount.innerText = parseInt(likeCount.innerText)+1;
+  });
+
+  // Dislike button
+  dislikeBtn.addEventListener('click', ()=>{
+    if(dislikedVideos.includes(videoId)) return;
+    videoRef.child('dislikes').transaction(current=>(current||0)+1);
+    dislikedVideos.push(videoId);
+    localStorage.setItem('dislikedVideos', JSON.stringify(dislikedVideos));
+    dislikeCount.innerText = parseInt(dislikeCount.innerText)+1;
+  });
+
+}
+
+// إضافة تعليق
+function addComment(){
+  const name = document.getElementById('userName').value.trim();
+  const comment = document.getElementById('userComment').value.trim();
+  if(!name || !comment){alert("يرجى كتابة الاسم والتعليق"); return;}
+  const commentRef = db.ref('videos/'+videoId+'/comments').push();
+  commentRef.set({name:name, comment:comment}).then(()=>{
+    document.getElementById('userName').value="";
+    document.getElementById('userComment').value="";
+  });
+}
 </script>
 
 </body>
