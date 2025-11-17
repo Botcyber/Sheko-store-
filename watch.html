@@ -41,7 +41,7 @@ h2 {margin-top:10px;}
   <div id="commentForm">
     <input type="text" id="userName" placeholder="اسمك">
     <textarea id="userComment" rows="3" placeholder="تعليقك..."></textarea>
-    <button onclick="addComment()">إرسال التعليق</button>
+    <button id="submitCommentBtn">إرسال التعليق</button>
   </div>
 
   <div class="comment-section">
@@ -76,6 +76,7 @@ const dislikeCount = document.getElementById('dislikeCount');
 const showCommentFormBtn = document.getElementById('showCommentFormBtn');
 const commentForm = document.getElementById('commentForm');
 const commentList = document.getElementById('commentList');
+const submitCommentBtn = document.getElementById('submitCommentBtn');
 
 let viewedVideos = JSON.parse(localStorage.getItem('viewedVideos') || '[]');
 let likedVideos = JSON.parse(localStorage.getItem('likedVideos') || '[]');
@@ -205,21 +206,21 @@ if(videoId){
     commentForm.style.display = commentForm.style.display==='none'?'block':'none';
   });
 
+  // إضافة تعليق
+  submitCommentBtn.addEventListener('click', ()=>{
+    const name = document.getElementById('userName').value.trim();
+    const comment = document.getElementById('userComment').value.trim();
+    if(!name || !comment){alert("يرجى كتابة الاسم والتعليق"); return;}
+    const commentRef = db.ref('videos/'+videoId+'/comments').push();
+    commentRef.set({name:name, comment:comment}).then(()=>{
+      document.getElementById('userName').value="";
+      document.getElementById('userComment').value="";
+      commentForm.style.display='none';
+    });
+  });
+
 } else videoTitle.innerText='لم يتم تحديد فيديو';
 
-// إضافة تعليق
-function addComment(){
-  const name = document.getElementById('userName').value.trim();
-  const comment = document.getElementById('userComment').value.trim();
-  if(!name || !comment){alert("يرجى كتابة الاسم والتعليق"); return;}
-  const commentRef = db.ref('videos/'+videoId+'/comments').push();
-  commentRef.set({name:name, comment:comment}).then(()=>{
-    document.getElementById('userName').value="";
-    document.getElementById('userComment').value="";
-    commentForm.style.display='none';
-  });
-}
 </script>
-
 </body>
 </html>
