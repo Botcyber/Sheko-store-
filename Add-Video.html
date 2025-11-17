@@ -1,0 +1,85 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Video</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: Arial;
+      padding: 20px;
+    }
+    h2 { color: #ff4444; }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: none;
+    }
+    button {
+      padding: 12px 20px;
+      background: #ff0000;
+      border: none;
+      color: white;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover { background: #cc0000; }
+    .success {
+      background: #00c853;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+      display: none;
+    }
+  </style>
+</head>
+<body>  <h2>إضافة فيديو جديد</h2>  <input id="title" type="text" placeholder="عنوان الفيديو" />
+  <input id="thumbnail" type="text" placeholder="رابط الصورة المصغرة Thumbnail" />
+  <input id="videoUrl" type="text" placeholder="رابط الفيديو (mp4) — سيتم حفظه في Realtime DB فقط" /><button onclick="addVideo()">إضافة الفيديو</button>
+
+  <div id="doneMsg" class="success">تم إضافة الفيديو بنجاح!</div>  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function addVideo() {
+      const title = document.getElementById("title").value;
+      const thumbnail = document.getElementById("thumbnail").value;
+      const videoUrl = document.getElementById("videoUrl").value;
+
+      if (!title || !thumbnail || !videoUrl) {
+        alert("يرجى ملء جميع الحقول");
+        return;
+      }
+
+      const newVideoKey = db.ref("videos").push().key;
+
+      db.ref("videos/" + newVideoKey).set({
+        title: title,
+        thumbnail: thumbnail,
+        video: videoUrl,
+        uploadedAt: Date.now()
+      }).then(() => {
+        document.getElementById("doneMsg").style.display = "block";
+        document.getElementById("title").value = "";
+        document.getElementById("thumbnail").value = "";
+        document.getElementById("videoUrl").value = "";
+      });
+    }
+  </script></body>
+</html>
