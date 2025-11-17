@@ -39,12 +39,12 @@ const videoList = document.getElementById("videoList");
 db.ref("videos").on("value",snapshot=>{
   videoList.innerHTML="";
   snapshot.forEach(child=>{
-    const data=child.val();
+    const data = child.val();
     if(data && data.thumbnail && data.video && data.title){
-      const card=document.createElement("div");
-      card.className="video-card";
-      card.onclick=()=>{window.location.href=`watch.html?id=${child.key}`};
-      card.innerHTML=`<img class="thumbnail" src="${data.thumbnail}"/>
+      const card = document.createElement("div");
+      card.className = "video-card";
+      card.onclick = ()=>{ window.location.href = `watch.html?id=${child.key}` };
+      card.innerHTML = `<img class="thumbnail" src="${data.thumbnail}"/>
                         <div class="info"><h4>${data.title}</h4></div>`;
       videoList.appendChild(card);
     }
