@@ -9,14 +9,14 @@
 <style>
 body{margin:0;background:#111;color:white;font-family:Arial;padding:20px;}
 .video-wrapper{max-width:800px;margin:auto;}
-video{width:100%;border-radius:10px;}
+video, iframe{width:100%;border-radius:10px;}
 h2{margin-top:10px;}
 </style>
 </head>
 <body>
 
 <div class="video-wrapper">
-  <video id="videoPlayer" controls autoplay></video>
+  <div id="playerContainer"></div>
   <h2 id="videoTitle"></h2>
   <p>عدد المشاهدات: <span id="videoViews">0</span></p>
 </div>
@@ -36,7 +36,7 @@ const db = firebase.database();
 
 const urlParams = new URLSearchParams(window.location.search);
 const videoId = urlParams.get('id');
-const videoPlayer = document.getElementById('videoPlayer');
+const playerContainer = document.getElementById('playerContainer');
 const videoTitle = document.getElementById('videoTitle');
 const videoViews = document.getElementById('videoViews');
 
@@ -45,21 +45,32 @@ if(videoId){
   videoRef.once('value').then(snapshot=>{
     const data = snapshot.val();
     if(data){
-      videoPlayer.src = data.video; 
+      let embedHTML = '';
+      // تحديد نوع الفيديو
+      if(data.video.includes("youtube.com") || data.video.includes("youtu.be")){
+        let vid="";
+        if(data.video.includes("youtube.com/watch?v=")){
+          vid = data.video.split("v=")[1].split("&")[0];
+        } else if(data.video.includes("youtu.be/")){
+          vid = data.video.split("youtu.be/")[1].split("?")[0];
+        }
+        embedHTML = `<iframe src="https://www.youtube.com/embed/${vid}" frameborder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowfullscreen></iframe>`;
+      } else {
+        embedHTML = `<video src="${data.video}" controls autoplay></video>`;
+      }
+      playerContainer.innerHTML = embedHTML;
       videoTitle.innerText = data.title;
       videoViews.innerText = data.views || 0;
 
-      // تحديث عدد المشاهدات تلقائياً
-      videoRef.child('views').transaction(current=>{
-        return (current||0)+1;
-      }).then(()=>{videoRef.child('views').once('value').then(snap=>{videoViews.innerText=snap.val()})});
-    } else {
-      videoTitle.innerText='الفيديو غير موجود';
-    }
+      // زيادة عدد المشاهدات
+      videoRef.child('views').transaction(current=>(current||0)+1)
+        .then(()=> videoRef.child('views').once('value')
+        .then(snap=>{ videoViews.innerText=snap.val(); }));
+    } else videoTitle.innerText='الفيديو غير موجود';
   });
-}else{
-  videoTitle.innerText='لم يتم تحديد فيديو';
-}
+} else videoTitle.innerText='لم يتم تحديد فيديو';
 </script>
 
 </body>
