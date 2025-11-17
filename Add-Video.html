@@ -68,17 +68,28 @@
         return;
       }
 
+      let progress = 0;
       const readerThumb = new FileReader();
 
       // شريط التحميل
       doneMsg.style.display = "block";
       doneMsg.style.background = "#0277bd";
-      doneMsg.innerText = "جاري إضافة الفيديو...";
+      doneMsg.innerText = `0%`;
+
+      // مؤقت لحساب النسبة من 1 إلى 100
+      const interval = setInterval(() => {
+        if (progress < 95) {
+          progress++;
+          doneMsg.innerText = `${progress}%`;
+        }
+      }, 40);...";
 
       readerThumb.onload = function(e2) {
         const thumbBase64 = e2.target.result;
 
-        const newVideoKey = db.ref("videos").push().key;
+        const newVideoKey = clearInterval(interval);
+          doneMsg.innerText = `100%`;
+          db.ref("videos").push().key;
 
         db.ref("videos/" + newVideoKey).set({
           title: title,
