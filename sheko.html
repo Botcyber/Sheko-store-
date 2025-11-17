@@ -1,73 +1,33 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>YouTube Style Page</title>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js"></script>
+  <title>ShekoTube</title>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
   <style>
-    body {
-      margin: 0;
-      background: #111;
-      font-family: Arial;
-      color: white;
-    }/* Navbar */
-.navbar {
-  display: flex;
-  align-items: center;
-  padding: 10px;
-  background: #181818;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.navbar h2 {
-  margin-left: 10px;
-  color: #ff0000;
-}
-
-/* Video Grid */
-.video-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 15px;
-  padding: 20px;
-}
-
-.video-card {
-  background: #222;
-  border-radius: 10px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.video-card:hover {
-  transform: scale(1.03);
-}
-
-.thumbnail {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-}
-
-.info {
-  padding: 10px;
-}
-
-.info h4 {
-  margin: 0;
-  font-size: 15px;
-}
-
+    body { margin:0; background:#111; font-family:Arial; color:white; }
+    .navbar { display:flex; align-items:center; padding:10px; background:#181818; position:sticky; top:0; z-index:10; }
+    .navbar h2 { margin-left:10px; color:#ff0000; }
+    .video-container { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:15px; padding:20px; }
+    .video-card { background:#222; border-radius:10px; overflow:hidden; cursor:pointer; transition:.3s; }
+    .video-card:hover { transform:scale(1.03); }
+    .thumbnail { width:100%; height:150px; object-fit:cover; }
+    .info { padding:10px; }
+    .info h4 { margin:0; font-size:15px; }
   </style>
 </head>
-<body>  <div class="navbar">
+<body>
+
+  <div class="navbar">
     <h2>ShekoTube</h2>
-  </div>  <div class="video-container" id="videoList"></div>  <script>
+  </div>
+
+  <div class="video-container" id="videoList"></div>
+
+  <script>
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -78,21 +38,19 @@
       appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
 
-    const app = firebase.initializeApp(firebaseConfig);
+    firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
     const videoList = document.getElementById("videoList");
 
-    // Fetch videos from Firebase
+    // قراءة الفيديوهات مباشرة من قاعدة البيانات
     db.ref("videos").on("value", snapshot => {
       videoList.innerHTML = "";
       snapshot.forEach(child => {
         const data = child.val();
-
         const card = document.createElement("div");
         card.className = "video-card";
         card.onclick = () => {
-          window.location.href = `watch.html?id=${child.key}`;
+          window.open(data.video, "_blank"); // يفتح الفيديو في صفحة جديدة
         };
 
         card.innerHTML = `
@@ -101,9 +59,10 @@
             <h4>${data.title}</h4>
           </div>
         `;
-
         videoList.appendChild(card);
       });
     });
-  </script></body>
+  </script>
+
+</body>
 </html>
