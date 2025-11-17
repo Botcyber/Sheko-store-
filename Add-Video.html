@@ -1,111 +1,103 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Add Video</title>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
   <style>
-    body {
-      background: #111;
-      color: white;
-      font-family: Arial;
-      padding: 20px;
-    }
-    h2 { color: #ff4444; }
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 8px;
-      border: none;
-    }
-    button {
-      padding: 12px 20px;
-      background: #ff0000;
-      border: none;
-      color: white;
-      font-size: 16px;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    button:hover { background: #cc0000; }
-    .success {
-      background: #00c853;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 8px;
-      display: none;
+    body { background:#111; color:white; font-family:Arial; padding:20px; }
+    h2 { color:#ff4444; }
+    input { width:100%; padding:10px; margin:10px 0; border-radius:8px; border:none; }
+    button { background:red; border:none; color:white; padding:12px 20px; border-radius:8px; cursor:pointer; }
+    #doneMsg {
+      display:none; padding:10px; margin-top:10px; border-radius:8px; text-align:center;
+      background:#0277bd;
     }
   </style>
 </head>
-<body>  <h2>إضافة فيديو جديد</h2>  <input id="title" type="text" placeholder="عنوان الفيديو" />
-  <input id="thumbnailFile" type="file" accept="image/*" style="border:2px solid #333;" />
-  <input id="videoUrl" type="text" placeholder="رابط الفيديو (مثال: https://...)" /><button onclick="addVideo()">إضافة الفيديو</button>
+<body>
 
-  <div id="doneMsg" class="success">تم إضافة الفيديو بنجاح!</div>  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-      authDomain: "sheko-store.firebaseapp.com",
-      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-      projectId: "sheko-store",
-      storageBucket: "sheko-store.appspot.com",
-      messagingSenderId: "113892775847",
-      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+  <h2>إضافة فيديو جديد</h2>
+
+  <input id="title" type="text" placeholder="عنوان الفيديو">
+  <input id="thumbnailFile" type="file" accept="image/*">
+  <input id="videoUrl" type="text" placeholder="رابط الفيديو (مثال https://...)">
+
+  <button onclick="addVideo()">إضافة الفيديو</button>
+
+  <div id="doneMsg">0%</div>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+    authDomain: "sheko-store.firebaseapp.com",
+    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+    projectId: "sheko-store",
+    storageBucket: "sheko-store.appspot.com",
+    messagingSenderId: "113892775847",
+    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  function addVideo() {
+    const title = document.getElementById("title").value;
+    const thumbFile = document.getElementById("thumbnailFile").files[0];
+    const videoUrl = document.getElementById("videoUrl").value;
+    const doneMsg = document.getElementById("doneMsg");
+
+    if (!title || !thumbFile || !videoUrl) {
+      alert("يرجى ملء جميع الحقول");
+      return;
+    }
+
+    let progress = 0;
+    doneMsg.style.display = "block";
+    doneMsg.style.background = "#0277bd";
+    doneMsg.innerText = "0%";
+
+    // نسبة التحميل (0 → 95%)
+    const interval = setInterval(() => {
+      if (progress < 95) {
+        progress++;
+        doneMsg.innerText = progress + "%";
+      }
+    }, 40);
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const thumbnailBase64 = e.target.result;
+
+      // إيقاف المؤقت
+      clearInterval(interval);
+      doneMsg.innerText = "100%";
+
+      // إنشاء مفتاح جديد
+      const newVideoKey = db.ref("videos").push().key;
+
+      // حفظ البيانات
+      db.ref("videos/" + newVideoKey).set({
+        title: title,
+        thumbnail: thumbnailBase64,
+        video: videoUrl,
+        uploadedAt: Date.now()
+      }).then(() => {
+        doneMsg.style.background = "#00c853";
+        doneMsg.innerText = "✔️ تم إضافة الفيديو بنجاح!";
+
+        document.getElementById("title").value = "";
+        document.getElementById("thumbnailFile").value = "";
+        document.getElementById("videoUrl").value = "";
+      });
     };
 
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    reader.readAsDataURL(thumbFile);
+  }
+</script>
 
-    function addVideo() {
-      const title = document.getElementById("title").value;
-      const thumbFile = document.getElementById("thumbnailFile").files[0];
-      const videoUrl = document.getElementById("videoUrl").value;
-      const doneMsg = document.getElementById("doneMsg");
-
-      if (!title || !thumbFile || !videoUrl) {
-        alert("يرجى ملء جميع الحقول");
-        return;
-      }
-
-      let progress = 0;
-      const readerThumb = new FileReader();
-
-      // شريط التحميل
-      doneMsg.style.display = "block";
-      doneMsg.style.background = "#0277bd";
-      doneMsg.innerText = `0%`;
-
-      // مؤقت لحساب النسبة من 1 إلى 100
-      const interval = setInterval(() => {
-        if (progress < 95) {
-          progress++;
-          doneMsg.innerText = `${progress}%`;
-        }
-      }, 40);...";
-
-      readerThumb.onload = function(e2) {
-        const thumbBase64 = e2.target.result;
-
-        const newVideoKey = clearInterval(interval);
-          doneMsg.innerText = `100%`;
-          db.ref("videos").push().key;
-
-        db.ref("videos/" + newVideoKey).set({
-          title: title,
-          thumbnail: thumbBase64,
-          video: videoUrl,
-          uploadedAt: Date.now()
-        }).then(() => {
-          doneMsg.style.background = "#00c853";
-          doneMsg.innerText = "✔️ تم إضافة الفيديو بنجاح!";
-          document.getElementById("title").value = "";
-          document.getElementById("thumbnailFile").value = "";
-          document.getElementById("videoUrl").value = "";
-        });
-      };
-
-      readerThumb.readAsDataURL(thumbFile);
-    }
-  </script></body>
+</body>
 </html>
