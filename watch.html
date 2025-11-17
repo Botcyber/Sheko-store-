@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,17 +7,18 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 <style>
-body {margin:0;background:#111;color:white;font-family:Arial;padding:20px;}
-.video-wrapper {max-width:800px;margin:auto;}
-video {width:100%;border-radius:10px;}
-h2 {margin-top:10px;}
+body{margin:0;background:#111;color:white;font-family:Arial;padding:20px;}
+.video-wrapper{max-width:800px;margin:auto;}
+video{width:100%;border-radius:10px;}
+h2{margin-top:10px;}
 </style>
 </head>
 <body>
 
 <div class="video-wrapper">
-  <video id="videoPlayer" controls></video>
+  <video id="videoPlayer" controls autoplay></video>
   <h2 id="videoTitle"></h2>
+  <p>عدد المشاهدات: <span id="videoViews">0</span></p>
 </div>
 
 <script>
@@ -33,25 +34,31 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// جلب مفتاح الفيديو من الرابط
 const urlParams = new URLSearchParams(window.location.search);
 const videoId = urlParams.get('id');
-
 const videoPlayer = document.getElementById('videoPlayer');
 const videoTitle = document.getElementById('videoTitle');
+const videoViews = document.getElementById('videoViews');
 
 if(videoId){
-  db.ref('videos/' + videoId).once('value').then(snapshot=>{
+  const videoRef = db.ref('videos/'+videoId);
+  videoRef.once('value').then(snapshot=>{
     const data = snapshot.val();
     if(data){
-      videoPlayer.src = data.video; // الرابط الذي وضعته في صفحة الإضافة
+      videoPlayer.src = data.video; 
       videoTitle.innerText = data.title;
-    }else{
-      videoTitle.innerText = 'الفيديو غير موجود';
+      videoViews.innerText = data.views || 0;
+
+      // تحديث عدد المشاهدات تلقائياً
+      videoRef.child('views').transaction(current=>{
+        return (current||0)+1;
+      }).then(()=>{videoRef.child('views').once('value').then(snap=>{videoViews.innerText=snap.val()})});
+    } else {
+      videoTitle.innerText='الفيديو غير موجود';
     }
   });
 }else{
-  videoTitle.innerText = 'لم يتم تحديد فيديو';
+  videoTitle.innerText='لم يتم تحديد فيديو';
 }
 </script>
 
