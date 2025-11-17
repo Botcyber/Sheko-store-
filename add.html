@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>إضافة فيديو</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<style>
+body {background:#111;color:white;font-family:Arial;padding:20px;}
+input,button {width:100%;padding:10px;margin:10px 0;border-radius:8px;border:none;}
+button {background:red;color:white;font-size:16px;cursor:pointer;}
+.success {display:none;padding:10px;margin-top:10px;border-radius:8px;background:#00c853;text-align:center;}
+</style>
+</head>
+<body>
+<h2>إضافة فيديو جديد</h2>
+<input id="title" type="text" placeholder="عنوان الفيديو">
+<input id="thumbnailFile" type="file" accept="image/*">
+<input id="videoUrl" type="text" placeholder="رابط الفيديو MP4 مباشر">
+<button onclick="addVideo()">إضافة الفيديو</button>
+<div id="doneMsg" class="success">تم إضافة الفيديو بنجاح!</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+  authDomain: "sheko-store.firebaseapp.com",
+  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+  projectId: "sheko-store",
+  storageBucket: "sheko-store.appspot.com",
+  messagingSenderId: "113892775847",
+  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+function addVideo(){
+  const title = document.getElementById("title").value;
+  const thumbFile = document.getElementById("thumbnailFile").files[0];
+  const videoUrl = document.getElementById("videoUrl").value;
+  const doneMsg = document.getElementById("doneMsg");
+
+  if(!title || !thumbFile || !videoUrl){
+    alert("يرجى ملء جميع الحقول");
+    return;
+  }
+
+  doneMsg.style.display="block";
+  doneMsg.innerText="0%";
+  let progress=0;
+  const interval = setInterval(()=>{
+    if(progress<95){progress++; doneMsg.innerText=progress+"%";}
+  },40);
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    clearInterval(interval);
+    doneMsg.innerText="100%";
+    const thumbBase64 = e.target.result;
+    const newVideoKey = db.ref("videos").push().key;
+    db.ref("videos/"+newVideoKey).set({
+      title:title,
+      thumbnail:thumbBase64,
+      video:videoUrl,
+      uploadedAt:Date.now(),
+      views:0
+    }).then(()=>{
+      doneMsg.innerText="✔️ تم إضافة الفيديو بنجاح!";
+      document.getElementById("title").value="";
+      document.getElementById("thumbnailFile").value="";
+      document.getElementById("videoUrl").value="";
+    });
+  };
+  reader.readAsDataURL(thumbFile);
+}
+</script>
+</body>
+</html>
