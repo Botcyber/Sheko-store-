@@ -8,68 +8,54 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-<!-- CROP JAVASCRIPT -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<!-- CropperJS -->
+<link  href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
 <style>
 body {font-family: Arial; background:#111; color:white; padding:20px; text-align:center;}
-input, button {padding:10px; margin:10px; border-radius:6px; border:none;}
+input, button, select {padding:10px; margin:10px; border-radius:6px; border:none;}
 button {background:red; color:white; cursor:pointer;}
 .box {background:#222; padding:15px; border-radius:8px; margin-top:20px;}
 
-#cropArea {width:300px; max-height:300px; margin:auto; display:none;}
+#cropArea {display:none; margin-top:20px;}
 #cropArea img {max-width:100%; border-radius:10px;}
+
+.crop-controls button {
+    background:#333;
+    margin:5px;
+    padding:10px 12px;
+}
 </style>
 
 </head>
 <body>
 
-<h2>🔥 لوحة التحكم – تعديل الصورة + الروابط + السوشيال 🔥</h2>
+<h2>🔥 لوحة التحكم – قص الصورة ورفعها 🔥</h2>
 
-<!-- رفع الصورة -->
 <div class="box">
   <h3>رفع صورة الصفحة الرئيسية</h3>
+  <input type="file" id="mainImage">
+</div>
 
-  <input type="file" id="mainImage" accept="image/*">
-
-  <!-- منطقة القص -->
-  <div id="cropArea">
+<!-- منطقة القص -->
+<div id="cropArea">
+    <h3>✂ قص الصورة</h3>
     <img id="imageToCrop">
-  </div>
 
-  <button onclick="uploadCroppedImage()">رفع الصورة</button>
+    <!-- أزرار التحكم -->
+    <div class="crop-controls">
+        <button onclick="cropper.zoom(0.1)">➕ تكبير</button>
+        <button onclick="cropper.zoom(-0.1)">➖ تصغير</button>
+        <button onclick="cropper.rotate(90)">↪ تدوير يمين</button>
+        <button onclick="cropper.rotate(-90)">↩ تدوير يسار</button>
+        <button onclick="resetCrop()">🔄 إعادة</button>
+        <button onclick="uploadCroppedImage()">✔ حفظ الصورة</button>
+    </div>
 </div>
-
-
-<!-- إضافة رابط -->
-<div class="box">
-  <h3>إضافة رابط للصفحة</h3>
-  <input id="linkText" placeholder="اسم الرابط">
-  <input id="linkURL" placeholder="الرابط">
-  <button onclick="addLink()">إضافة الرابط</button>
-</div>
-
-<!-- إضافة السوشيال -->
-<div class="box">
-  <h3>إضافة حساب سوشيال ميديا</h3>
-
-  <select id="socialType">
-    <option value="facebook">Facebook</option>
-    <option value="instagram">Instagram</option>
-    <option value="youtube">YouTube</option>
-    <option value="tiktok">TikTok</option>
-    <option value="twitter">Twitter</option>
-    <option value="snapchat">Snapchat</option>
-  </select>
-
-  <input id="socialURL" placeholder="رابط الحساب">
-  <button onclick="addSocial()">إضافة حساب</button>
-</div>
-
 
 <script>
-/* --------------------------- Firebase --------------------------- */
+/* ------------------------ Firebase ------------------------ */
 const firebaseConfig = {
   apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
   authDomain: "sheko-store.firebaseapp.com",
@@ -79,80 +65,71 @@ const firebaseConfig = {
   messagingSenderId: "113892775847",
   appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
 };
+
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-/* ------------------------ CROP IMAGE ------------------------ */
+
 let cropper;
 
-document.getElementById("mainImage").addEventListener("change", function(){
-  const file = this.files[0];
-  if(!file) return;
+/* ------------------------ عند اختيار صورة ------------------------ */
+document.getElementById("mainImage").addEventListener("change", function () {
+    const file = this.files[0];
+    if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = function(e){
-    document.getElementById("cropArea").style.display = "block";
-    const img = document.getElementById("imageToCrop");
-    img.src = e.target.result;
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const img = document.getElementById("imageToCrop");
+        img.onload = function () {
 
-    // تدمير كروبر القديم لو موجود
-    if(cropper){
-      cropper.destroy();
-    }
+            document.getElementById("cropArea").style.display = "block";
 
-    cropper = new Cropper(img, {
-      aspectRatio: 1,  // مربع
-      viewMode: 1,
-      autoCropArea: 1,
-      dragMode: 'move'
-    });
-  };
-  reader.readAsDataURL(file);
+            if (cropper) cropper.destroy();
+
+            cropper = new Cropper(img, {
+                aspectRatio: 1,
+                viewMode: 1,
+                autoCropArea: 1,
+                background:false
+            });
+        };
+
+        img.src = e.target.result;
+    };
+
+    reader.readAsDataURL(file);
 });
 
 
-/* ------------------------ رفع الصورة بعد القص ------------------------ */
-function uploadCroppedImage(){
-  if(!cropper){
-    alert("اختر صورة أولاً");
-    return;
-  }
-
-  const base64 = cropper.getCroppedCanvas({ width: 600, height: 600 }).toDataURL();
-
-  db.ref("mainPage/image").set(base64)
-    .then(()=> alert("✔ تم رفع الصورة بعد القص"))
-    .catch(()=> alert("❌ حدث خطأ أثناء الحفظ"));
+/* ------------------------ إعادة القص ------------------------ */
+function resetCrop(){
+    if (cropper) {
+        cropper.reset();
+    }
 }
 
 
-/* ------------------------ إضافة رابط ------------------------ */
-function addLink(){
-  const name = document.getElementById("linkText").value.trim();
-  const url = document.getElementById("linkURL").value.trim();
+/* ------------------------ حفظ الصورة بعد القص ------------------------ */
+function uploadCroppedImage() {
+    if (!cropper) {
+        alert("❌ اختر صورة أولاً!");
+        return;
+    }
 
-  if(!name || !url){ alert("اكتب الاسم والرابط"); return; }
+    const canvas = cropper.getCroppedCanvas({
+        width: 800,
+        height: 800,
+        fillColor: "#000"
+    });
 
-  db.ref("mainPage/links").push({ name, url });
+    const base64 = canvas.toDataURL("image/jpeg", 0.9);
 
-  document.getElementById("linkText").value="";
-  document.getElementById("linkURL").value="";
-  alert("✔ تم إضافة الرابط");
+    db.ref("mainPage/image")
+      .set(base64)
+      .then(() => alert("✔ تم رفع الصورة بنجاح!"))
+      .catch(err => alert("❌ خطأ: " + err.message));
 }
 
-
-/* ------------------------ إضافة سوشيال ------------------------ */
-function addSocial(){
-  const type = document.getElementById("socialType").value;
-  const url = document.getElementById("socialURL").value.trim();
-
-  if(!url){ alert("اكتب الرابط"); return; }
-
-  db.ref("mainPage/social").push({ type, url });
-
-  document.getElementById("socialURL").value="";
-  alert("✔ تم إضافة الحساب");
-}
 </script>
 
 </body>
