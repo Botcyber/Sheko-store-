@@ -6,29 +6,46 @@
 <style>
 body {
     font-family:sans-serif;
-    background:#111;
+    background: linear-gradient(120deg, #0f0f0f, #1a1a1a, #111);
     color:white;
     text-align:center;
-    padding:40px 20px;
+    padding:50px 20px;
     max-width: 800px;
     margin: auto;
     overflow-x: hidden;
 }
 
-/* صورة الصفحة */
-#mainImage {
-    border-radius:10px;
-    max-width:300px;
-    width:80%;
+/* عنوان */
+h2 {
+    font-size:28px;
     margin-bottom:30px;
-    transform: translateY(-50px);
-    opacity:0;
-    animation: fadeDown 1s forwards;
+    animation: fadeInDown 1s forwards;
 }
 
-/* حركة الانيميشن */
+/* صورة الصفحة */
+#mainImage {
+    border-radius:20px;
+    max-width:350px;
+    width:90%;
+    margin-bottom:40px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    transform: translateY(-50px) scale(0.9);
+    opacity:0;
+    transition: transform 0.3s, box-shadow 0.3s;
+    animation: fadeDown 1s forwards 0.3s;
+}
+#mainImage:hover {
+    transform: scale(1.05);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.7);
+}
+
+/* حركة الصورة */
 @keyframes fadeDown {
-    to { transform: translateY(0); opacity:1; }
+    to { transform: translateY(0) scale(1); opacity:1; }
+}
+@keyframes fadeInDown {
+    from { opacity:0; transform: translateY(-30px); }
+    to { opacity:1; transform: translateY(0); }
 }
 
 /* شبكة الأيقونات عمودية */
@@ -44,18 +61,20 @@ body {
     display:flex;
     flex-direction:column;
     align-items:center;
-    background:#1a1a1a;
+    background: #222;
     padding:15px;
-    border-radius:15px;
-    width:200px;
+    border-radius:20px;
+    width:220px;
     cursor:pointer;
-    transform: translateX(100px);
+    transform: translateX(100px) scale(0.8);
     opacity:0;
-    animation: slideLeft 0.8s forwards;
-    transition: transform 0.3s;
+    animation: slideLeftFade 0.8s forwards;
+    transition: transform 0.3s, box-shadow 0.3s;
 }
-
-.link-item:hover { transform: translateX(0) scale(1.05); }
+.link-item:hover {
+    transform: translateX(0) scale(1.05);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
 
 /* نص الاسم */
 .link-item span {
@@ -66,14 +85,17 @@ body {
 }
 
 /* حركة الأيقونات من اليمين لليسار */
-@keyframes slideLeft {
-    to { transform: translateX(0); opacity:1; }
+@keyframes slideLeftFade {
+    to { transform: translateX(0) scale(1); opacity:1; }
 }
 
 .link-item img {
-    width:40px;
-    height:40px;
+    width:45px;
+    height:45px;
+    transition: transform 0.3s;
 }
+
+/* تأثير دخول تدريجي */
 </style>
 </head>
 <body>
@@ -105,7 +127,7 @@ db.ref("mainPage/image").on("value", snap => {
     if(img) document.getElementById("mainImage").src = img;
 });
 
-// تحميل الروابط مع تأخير لتطبيق الانميشن بشكل متتابع
+// تحميل الروابط مع تأثير دخول متتابع
 db.ref("mainPage/links").on("value", snap => {
     let html = "";
     let delay = 0;
