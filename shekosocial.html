@@ -6,48 +6,35 @@
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css" rel="stylesheet"/>
 
 <style>
-body {
-    font-family: Arial;
-    background:#111;
-    color:white;
-    padding:20px;
-    text-align:center;
-}
+body { font-family: Arial; background:#111; color:white; padding:20px; text-align:center; }
 h2 { margin-bottom:30px; }
-
-input, button, select {
-    padding:10px; margin:10px;
-    border-radius:6px; border:none;
-}
-button {
-    background:red; color:white; cursor:pointer;
-}
+input, button, select { padding:10px; margin:10px; border-radius:6px; border:none; }
+button { background:red; color:white; cursor:pointer; }
 
 /* صناديق */
-.box {
-    background:#222; padding:15px;
-    border-radius:8px; margin-top:20px;
-    text-align:center;
-}
+.box { background:#222; padding:15px; border-radius:8px; margin-top:20px; text-align:center; }
 
 /* جدول الروابط */
 table { width:100%; margin-top:10px; border-collapse: collapse; }
 th, td { padding:10px; border-bottom:1px solid #444; text-align:center; }
 th { background:#333; }
 
-img { max-width:100px; border-radius:10px; }
+#preview { max-width:300px; max-height:300px; display:block; margin:auto; border-radius:10px; margin-top:10px; }
 </style>
 </head>
 <body>
 
 <h2>🔥 لوحة التحكم – الصورة + الروابط + السوشيال 🔥</h2>
 
-<!-- رفع الصورة -->
+<!-- رفع الصورة مع قص -->
 <div class="box">
   <h3>رفع صورة الصفحة الرئيسية</h3>
   <input type="file" id="mainImage">
+  <img id="preview" alt="Preview">
   <button onclick="uploadImage()">رفع الصورة</button>
 </div>
 
@@ -62,10 +49,12 @@ img { max-width:100px; border-radius:10px; }
     <option value="🛒">متجر</option>
     <option value="💬">دردشة</option>
     <option value="🔥">شائع</option>
+    <option value="🌐">موقع</option>
+    <option value="📱">تطبيق</option>
+    <option value="⬇️">تحميل</option>
   </select>
   <button onclick="addLink()">إضافة الرابط</button>
 
-  <!-- جدول عرض الروابط الحالية -->
   <table id="linksTable">
     <thead>
       <tr><th>الأيقونة</th><th>الاسم</th><th>الرابط</th><th>تحرير</th><th>حذف</th></tr>
@@ -84,6 +73,7 @@ img { max-width:100px; border-radius:10px; }
     <option value="tiktok">TikTok</option>
     <option value="twitter">Twitter</option>
     <option value="snapchat">Snapchat</option>
+    <option value="whatsapp">WhatsApp</option>
   </select>
   <input id="socialURL" placeholder="رابط الحساب">
   <button onclick="addSocial()">إضافة الحساب</button>
@@ -102,17 +92,30 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// رفع الصورة كـ Base64
-function uploadImage(){
-  const file = document.getElementById("mainImage").files[0];
-  if(!file){ alert("اختر صورة أولاً"); return; }
+let cropper;
+const preview = document.getElementById('preview');
+const mainImageInput = document.getElementById('mainImage');
+
+mainImageInput.addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
   const reader = new FileReader();
-  reader.onload = function(e){
-    const base64 = e.target.result;
-    db.ref("mainPage/image").set(base64)
-      .then(()=> alert("✔ تم رفع الصورة بنجاح"));
-  };
+  reader.onload = function(event){
+    preview.src = event.target.result;
+    if(cropper) cropper.destroy();
+    cropper = new Cropper(preview, {
+      aspectRatio: 1,
+      viewMode: 1
+    });
+  }
   reader.readAsDataURL(file);
+});
+
+function uploadImage(){
+  if(!cropper){ alert("اختر الصورة أولاً"); return; }
+  const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
+  const base64 = canvas.toDataURL("image/png");
+  db.ref("mainPage/image").set(base64).then(()=>alert("✔ تم رفع الصورة بنجاح"));
 }
 
 // إضافة رابط
@@ -120,14 +123,10 @@ function addLink(){
   const name = document.getElementById("linkText").value.trim();
   const url = document.getElementById("linkURL").value.trim();
   const icon = document.getElementById("linkIcon").value;
-
   if(!name || !url){ alert("اكتب الاسم والرابط"); return; }
-
   db.ref("mainPage/links").push({ name, url, icon });
-
   document.getElementById("linkText").value="";
   document.getElementById("linkURL").value="";
-  alert("✔ تم إضافة الرابط");
 }
 
 // عرض الروابط مع خيارات تعديل وحذف
@@ -137,7 +136,6 @@ db.ref("mainPage/links").on("value", snap=>{
   snap.forEach(child=>{
     const data = child.val();
     const tr = document.createElement("tr");
-
     tr.innerHTML = `
       <td>${data.icon}</td>
       <td>${data.name}</td>
@@ -149,7 +147,6 @@ db.ref("mainPage/links").on("value", snap=>{
   });
 });
 
-// تعديل رابط
 function editLink(key){
   db.ref("mainPage/links/"+key).once("value", snap=>{
     const data = snap.val();
@@ -161,7 +158,6 @@ function editLink(key){
   });
 }
 
-// حذف رابط
 function deleteLink(key){
   if(confirm("هل تريد حذف هذا الرابط؟")){
     db.ref("mainPage/links/"+key).remove();
@@ -175,7 +171,6 @@ function addSocial(){
   if(!url){ alert("اكتب الرابط"); return; }
   db.ref("mainPage/social").push({ type, url });
   document.getElementById("socialURL").value="";
-  alert("✔ تم إضافة الحساب");
 }
 </script>
 
