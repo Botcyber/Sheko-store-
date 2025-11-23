@@ -2,110 +2,182 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>لوحة الإدارة</title>
+<title>لوحة التحكم – SHEKO</title>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
 <style>
-body { font-family: sans-serif; background:#111; color:white; text-align:center; padding:20px; }
-input, select, button { width:90%; padding:10px; margin:5px 0; border-radius:10px; border:none; }
-button { cursor:pointer; background:#0f6; color:#000; }
-button.delete { background:#f33; color:white; }
-.link-item { background:#1a1a1a; padding:10px; margin:10px auto; border-radius:10px; text-align:right; }
-.actions button { margin-left:5px; }
+body {
+    font-family: Arial;
+    background:#111;
+    color:white;
+    padding:20px;
+    text-align:center;
+}
+h2 { margin-bottom:30px; }
+
+input, button, select {
+    padding:10px; margin:10px;
+    border-radius:6px; border:none;
+}
+button {
+    background:red; color:white; cursor:pointer;
+}
+
+/* صناديق */
+.box {
+    background:#222; padding:15px;
+    border-radius:8px; margin-top:20px;
+    text-align:center;
+}
+
+/* جدول الروابط */
+table { width:100%; margin-top:10px; border-collapse: collapse; }
+th, td { padding:10px; border-bottom:1px solid #444; text-align:center; }
+th { background:#333; }
+
+img { max-width:100px; border-radius:10px; }
 </style>
 </head>
 <body>
 
-<h2>لوحة الإدارة</h2>
+<h2>🔥 لوحة التحكم – الصورة + الروابط + السوشيال 🔥</h2>
 
-<h3>إضافة رابط جديد</h3>
-<select id="iconSelect">
+<!-- رفع الصورة -->
+<div class="box">
+  <h3>رفع صورة الصفحة الرئيسية</h3>
+  <input type="file" id="mainImage">
+  <button onclick="uploadImage()">رفع الصورة</button>
+</div>
+
+<!-- إضافة رابط -->
+<div class="box">
+  <h3>إضافة رابط للصفحة</h3>
+  <input id="linkText" placeholder="اسم الرابط">
+  <input id="linkURL" placeholder="الرابط">
+  <select id="linkIcon">
+    <option value="🎵">موسيقى</option>
+    <option value="📺">فيديو</option>
+    <option value="🛒">متجر</option>
+    <option value="💬">دردشة</option>
+    <option value="🔥">شائع</option>
+  </select>
+  <button onclick="addLink()">إضافة الرابط</button>
+
+  <!-- جدول عرض الروابط الحالية -->
+  <table id="linksTable">
+    <thead>
+      <tr><th>الأيقونة</th><th>الاسم</th><th>الرابط</th><th>تحرير</th><th>حذف</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<!-- إضافة حساب سوشيال -->
+<div class="box">
+  <h3>إضافة حساب سوشيال ميديا</h3>
+  <select id="socialType">
     <option value="facebook">Facebook</option>
     <option value="instagram">Instagram</option>
     <option value="youtube">YouTube</option>
     <option value="tiktok">TikTok</option>
     <option value="twitter">Twitter</option>
     <option value="snapchat">Snapchat</option>
-</select>
-<input id="nameInput" placeholder="اسم الرابط">
-<input id="urlInput" placeholder="الرابط">
-<button onclick="addLink()">إضافة</button>
+  </select>
+  <input id="socialURL" placeholder="رابط الحساب">
+  <button onclick="addSocial()">إضافة الحساب</button>
+</div>
 
-<hr>
-
-<h3>الروابط الحالية</h3>
-<div id="linksList"></div>
-
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 <script>
-// Firebase
 const firebaseConfig = {
-    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-    authDomain: "sheko-store.firebaseapp.com",
-    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-    projectId: "sheko-store",
-    storageBucket: "sheko-store.appspot.com",
-    messagingSenderId: "113892775847",
-    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+  authDomain: "sheko-store.firebaseapp.com",
+  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+  projectId: "sheko-store",
+  storageBucket: "sheko-store.appspot.com",
+  messagingSenderId: "113892775847",
+  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// خريطة الأيقونات كصور SVG صغيرة
-const iconMap = {
-    facebook: '<img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg" width="30">',
-    instagram: '<img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" width="30">',
-    youtube: '<img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg" width="30">',
-    tiktok: '<img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" width="30">',
-    twitter: '<img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/twitter.svg" width="30">',
-    snapchat: '<img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/snapchat.svg" width="30">'
-};
-
-// إضافة رابط جديد
-function addLink(){
-    let type = document.getElementById("iconSelect").value;
-    let name = document.getElementById("nameInput").value.trim();
-    let url  = document.getElementById("urlInput").value.trim();
-    if(!name || !url) return alert("أكمل البيانات!");
-
-    let icon = iconMap[type];
-    let id = db.ref("mainPage/links").push().key;
-    db.ref("mainPage/links/" + id).set({ icon, name, url });
-
-    document.getElementById("nameInput").value = "";
-    document.getElementById("urlInput").value = "";
+// رفع الصورة كـ Base64
+function uploadImage(){
+  const file = document.getElementById("mainImage").files[0];
+  if(!file){ alert("اختر صورة أولاً"); return; }
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const base64 = e.target.result;
+    db.ref("mainPage/image").set(base64)
+      .then(()=> alert("✔ تم رفع الصورة بنجاح"));
+  };
+  reader.readAsDataURL(file);
 }
 
-// عرض الروابط الحالية مع تعديل وحذف
-db.ref("mainPage/links").on("value", snap => {
-    let html = "";
-    snap.forEach(child => {
-        let id = child.key;
-        let data = child.val();
-        html += `
-        <div class="link-item">
-            ${data.icon} <b>${data.name}</b> — ${data.url}<br>
-            <div class="actions">
-                <button onclick="editLink('${id}', '${data.name}', '${data.url}')">تعديل</button>
-                <button class="delete" onclick="deleteLink('${id}')">حذف</button>
-            </div>
-        </div>`;
-    });
-    document.getElementById("linksList").innerHTML = html;
+// إضافة رابط
+function addLink(){
+  const name = document.getElementById("linkText").value.trim();
+  const url = document.getElementById("linkURL").value.trim();
+  const icon = document.getElementById("linkIcon").value;
+
+  if(!name || !url){ alert("اكتب الاسم والرابط"); return; }
+
+  db.ref("mainPage/links").push({ name, url, icon });
+
+  document.getElementById("linkText").value="";
+  document.getElementById("linkURL").value="";
+  alert("✔ تم إضافة الرابط");
+}
+
+// عرض الروابط مع خيارات تعديل وحذف
+db.ref("mainPage/links").on("value", snap=>{
+  const tbody = document.querySelector("#linksTable tbody");
+  tbody.innerHTML="";
+  snap.forEach(child=>{
+    const data = child.val();
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${data.icon}</td>
+      <td>${data.name}</td>
+      <td>${data.url}</td>
+      <td><button onclick="editLink('${child.key}')">✏️</button></td>
+      <td><button onclick="deleteLink('${child.key}')">❌</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
 });
 
-function editLink(id, oldName, oldUrl){
-    let newName = prompt("اسم جديد:", oldName);
-    if(!newName) return;
-    let newUrl  = prompt("رابط جديد:", oldUrl);
-    if(!newUrl) return;
-    db.ref("mainPage/links/" + id).update({ name:newName, url:newUrl });
+// تعديل رابط
+function editLink(key){
+  db.ref("mainPage/links/"+key).once("value", snap=>{
+    const data = snap.val();
+    const newName = prompt("اسم جديد:", data.name);
+    const newURL = prompt("رابط جديد:", data.url);
+    if(newName && newURL){
+      db.ref("mainPage/links/"+key).update({name:newName, url:newURL});
+    }
+  });
 }
 
-function deleteLink(id){
-    if(confirm("هل تريد الحذف؟")){
-        db.ref("mainPage/links/" + id).remove();
-    }
+// حذف رابط
+function deleteLink(key){
+  if(confirm("هل تريد حذف هذا الرابط؟")){
+    db.ref("mainPage/links/"+key).remove();
+  }
+}
+
+// إضافة حساب سوشيال
+function addSocial(){
+  const type = document.getElementById("socialType").value;
+  const url = document.getElementById("socialURL").value.trim();
+  if(!url){ alert("اكتب الرابط"); return; }
+  db.ref("mainPage/social").push({ type, url });
+  document.getElementById("socialURL").value="";
+  alert("✔ تم إضافة الحساب");
 }
 </script>
+
 </body>
 </html>
