@@ -9,30 +9,71 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <!-- CropperJS -->
-<link  href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
 <style>
-body {font-family: Arial; background:#111; color:white; padding:20px; text-align:center;}
-input, button, select {padding:10px; margin:10px; border-radius:6px; border:none;}
-button {background:red; color:white; cursor:pointer;}
-.box {background:#222; padding:15px; border-radius:8px; margin-top:20px;}
+body {
+  font-family: Arial;
+  background:#111;
+  color:white;
+  padding:20px;
+  text-align:center;
+}
 
-#cropArea {display:none; margin-top:20px;}
-#cropArea img {max-width:100%; border-radius:10px;}
+input, button, select {
+  padding:10px;
+  margin:10px;
+  border-radius:6px;
+  border:none;
+}
 
+button {
+  background:red;
+  color:white;
+  cursor:pointer;
+}
+
+.box {
+  background:#222;
+  padding:15px;
+  border-radius:8px;
+  margin-top:20px;
+}
+
+/* منطقة القص الجديدة */
+#cropArea {
+  display:none;
+  margin-top:20px;
+}
+
+.crop-container {
+  width: 300px;
+  height: 300px;
+  margin:auto;
+  background:#000;
+  border-radius:10px;
+  overflow:hidden;
+}
+
+.crop-container img {
+  max-width:100%;
+}
+
+/* أزرار التحكم */
 .crop-controls button {
-    background:#333;
-    margin:5px;
-    padding:10px 12px;
+  background:#333;
+  margin:5px;
+  padding:10px 12px;
 }
 </style>
 
 </head>
 <body>
 
-<h2>🔥 لوحة التحكم – قص الصورة ورفعها 🔥</h2>
+<h2>🔥 لوحة التحكم – تعديل الصورة + الروابط + السوشيال 🔥</h2>
 
+<!-- رفع الصورة -->
 <div class="box">
   <h3>رفع صورة الصفحة الرئيسية</h3>
   <input type="file" id="mainImage">
@@ -41,17 +82,44 @@ button {background:red; color:white; cursor:pointer;}
 <!-- منطقة القص -->
 <div id="cropArea">
     <h3>✂ قص الصورة</h3>
-    <img id="imageToCrop">
 
-    <!-- أزرار التحكم -->
+    <div class="crop-container">
+        <img id="imageToCrop">
+    </div>
+
     <div class="crop-controls">
         <button onclick="cropper.zoom(0.1)">➕ تكبير</button>
         <button onclick="cropper.zoom(-0.1)">➖ تصغير</button>
-        <button onclick="cropper.rotate(90)">↪ تدوير يمين</button>
-        <button onclick="cropper.rotate(-90)">↩ تدوير يسار</button>
+        <button onclick="cropper.rotate(90)">↪ تدوير</button>
+        <button onclick="cropper.rotate(-90)">↩ تدوير</button>
         <button onclick="resetCrop()">🔄 إعادة</button>
         <button onclick="uploadCroppedImage()">✔ حفظ الصورة</button>
     </div>
+</div>
+
+<!-- إضافة رابط -->
+<div class="box">
+  <h3>إضافة رابط للصفحة</h3>
+  <input id="linkText" placeholder="اسم الرابط">
+  <input id="linkURL" placeholder="الرابط">
+  <button onclick="addLink()">إضافة الرابط</button>
+</div>
+
+<!-- إضافة السوشيال -->
+<div class="box">
+  <h3>إضافة حساب سوشيال ميديا</h3>
+
+  <select id="socialType">
+    <option value="facebook">Facebook</option>
+    <option value="instagram">Instagram</option>
+    <option value="youtube">YouTube</option>
+    <option value="tiktok">TikTok</option>
+    <option value="twitter">Twitter</option>
+    <option value="snapchat">Snapchat</option>
+  </select>
+
+  <input id="socialURL" placeholder="رابط الحساب">
+  <button onclick="addSocial()">إضافة الحساب</button>
 </div>
 
 <script>
@@ -69,10 +137,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-
 let cropper;
 
-/* ------------------------ عند اختيار صورة ------------------------ */
+/* ------------------------ اختيار صورة ------------------------ */
 document.getElementById("mainImage").addEventListener("change", function () {
     const file = this.files[0];
     if (!file) return;
@@ -80,8 +147,8 @@ document.getElementById("mainImage").addEventListener("change", function () {
     const reader = new FileReader();
     reader.onload = function (e) {
         const img = document.getElementById("imageToCrop");
-        img.onload = function () {
 
+        img.onload = function () {
             document.getElementById("cropArea").style.display = "block";
 
             if (cropper) cropper.destroy();
@@ -90,7 +157,7 @@ document.getElementById("mainImage").addEventListener("change", function () {
                 aspectRatio: 1,
                 viewMode: 1,
                 autoCropArea: 1,
-                background:false
+                background: false
             });
         };
 
@@ -100,25 +167,18 @@ document.getElementById("mainImage").addEventListener("change", function () {
     reader.readAsDataURL(file);
 });
 
-
 /* ------------------------ إعادة القص ------------------------ */
 function resetCrop(){
-    if (cropper) {
-        cropper.reset();
-    }
+    if (cropper) cropper.reset();
 }
 
-
-/* ------------------------ حفظ الصورة بعد القص ------------------------ */
+/* ------------------------ رفع الصورة بعد القص ------------------------ */
 function uploadCroppedImage() {
-    if (!cropper) {
-        alert("❌ اختر صورة أولاً!");
-        return;
-    }
+    if (!cropper) return;
 
     const canvas = cropper.getCroppedCanvas({
-        width: 800,
-        height: 800,
+        width: 600,
+        height: 600,
         fillColor: "#000"
     });
 
@@ -126,10 +186,35 @@ function uploadCroppedImage() {
 
     db.ref("mainPage/image")
       .set(base64)
-      .then(() => alert("✔ تم رفع الصورة بنجاح!"))
-      .catch(err => alert("❌ خطأ: " + err.message));
+      .then(() => alert("✔ تم رفع الصورة بنجاح!"));
 }
 
+/* ------------------------ إضافة رابط ------------------------ */
+function addLink(){
+  const name = document.getElementById("linkText").value.trim();
+  const url = document.getElementById("linkURL").value.trim();
+
+  if(!name || !url){ alert("اكتب الاسم والرابط"); return; }
+
+  db.ref("mainPage/links").push({ name, url });
+
+  document.getElementById("linkText").value="";
+  document.getElementById("linkURL").value="";
+  alert("✔ تم إضافة الرابط");
+}
+
+/* ------------------------ إضافة سوشيال ------------------------ */
+function addSocial(){
+  const type = document.getElementById("socialType").value;
+  const url = document.getElementById("socialURL").value.trim();
+
+  if(!url){ alert("اكتب الرابط"); return; }
+
+  db.ref("mainPage/social").push({ type, url });
+
+  document.getElementById("socialURL").value="";
+  alert("✔ تم إضافة الحساب");
+}
 </script>
 
 </body>
