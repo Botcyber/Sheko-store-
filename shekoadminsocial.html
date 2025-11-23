@@ -2,156 +2,94 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>الصفحة الرئيسية</title>
-<style>
-body {
-    font-family:sans-serif;
-    color:#111;
-    text-align:center;
-    padding:50px 20px;
-    max-width: 800px;
-    margin: auto;
-    overflow-x: hidden;
-
-    /* خلفية متدرجة أبيض وأسود متحركة */
-    background: linear-gradient(270deg, #fff, #111, #fff, #111);
-    background-size: 800% 800%;
-    animation: gradientAnim 15s ease infinite;
-}
-
-/* حركة تدرج الخلفية */
-@keyframes gradientAnim {
-    0% {background-position:0% 50%;}
-    50% {background-position:100% 50%;}
-    100% {background-position:0% 50%;}
-}
-
-/* عنوان */
-h2 {
-    font-size:28px;
-    margin-bottom:30px;
-    animation: fadeInDown 1s forwards;
-    color:#111;
-}
-
-/* صورة الصفحة */
-#mainImage {
-    border-radius:20px;
-    max-width:350px;
-    width:90%;
-    margin-bottom:40px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-    transform: translateY(-50px) scale(0.9);
-    opacity:0;
-    transition: transform 0.3s, box-shadow 0.3s;
-    animation: fadeDown 1s forwards 0.3s;
-}
-#mainImage:hover {
-    transform: scale(1.05);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-}
-
-/* حركة الصورة */
-@keyframes fadeDown {
-    to { transform: translateY(0) scale(1); opacity:1; }
-}
-@keyframes fadeInDown {
-    from { opacity:0; transform: translateY(-30px); }
-    to { opacity:1; transform: translateY(0); }
-}
-
-/* شبكة الأيقونات عمودية */
-.link-grid {
-    display:flex;
-    flex-direction: column;
-    align-items: center;
-    gap:20px;
-}
-
-/* كل أيقونة */
-.link-item {
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    background: #f0f0f0;
-    color:#111;
-    padding:15px;
-    border-radius:20px;
-    width:220px;
-    cursor:pointer;
-    transform: translateX(100px) scale(0.8);
-    opacity:0;
-    animation: slideLeftFade 0.8s forwards;
-    transition: transform 0.3s, box-shadow 0.3s;
-}
-.link-item:hover {
-    transform: translateX(0) scale(1.05);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-}
-
-/* نص الاسم */
-.link-item span {
-    margin-top:8px;
-    font-size:14px;
-    text-align:center;
-    word-break: break-word;
-}
-
-/* حركة الأيقونات من اليمين لليسار */
-@keyframes slideLeftFade {
-    to { transform: translateX(0) scale(1); opacity:1; }
-}
-
-.link-item img {
-    width:45px;
-    height:45px;
-    transition: transform 0.3s;
-}
-</style>
-</head>
-<body>
-
-<h2>SHEKO | شـــيكــو</h2>
-<img id="mainImage" src="" alt="الصورة الرئيسية">
-
-<div class="link-grid" id="linksList"></div>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SHEKO – الصفحة الرئيسية</title>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
+<style>
+body { font-family: Arial; background: linear-gradient(135deg, #fff, #000); color:#111; text-align:center; padding:20px; }
+#mainImage { max-width:300px; border-radius:10px; margin-bottom:20px; transition: transform 0.5s; }
+#mainImage:hover { transform: scale(1.05); }
+
+/* روابط */
+.links, .socials { display:flex; flex-direction: column; gap:15px; margin:20px auto; max-width:400px; }
+
+/* كل رابط */
+.link-item, .social-item {
+  display:flex; align-items:center; justify-content:flex-start;
+  background:#222; color:white; border-radius:10px; padding:10px;
+  cursor:pointer; transition: transform 0.3s, background 0.3s;
+}
+.link-item:hover, .social-item:hover { transform: translateX(10px); background:#444; }
+.link-icon { font-size:24px; margin-right:10px; }
+.link-name { font-size:16px; }
+</style>
+</head>
+<body>
+
+<img id="mainImage" src="" alt="صورة رئيسية">
+
+<div class="links" id="linksList"></div>
+<div class="socials" id="socialList"></div>
+
 <script>
 const firebaseConfig = {
-    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-    authDomain: "sheko-store.firebaseapp.com",
-    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-    projectId: "sheko-store",
-    storageBucket: "sheko-store.appspot.com",
-    messagingSenderId: "113892775847",
-    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+  authDomain: "sheko-store.firebaseapp.com",
+  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+  projectId: "sheko-store",
+  storageBucket: "sheko-store.appspot.com",
+  messagingSenderId: "113892775847",
+  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// تحميل الصورة الرئيسية
-db.ref("mainPage/image").on("value", snap => {
-    let img = snap.val();
-    if(img) document.getElementById("mainImage").src = img;
+// الصورة الرئيسية
+db.ref("mainPage/image").on("value", snap=>{
+  const val = snap.val();
+  if(val) document.getElementById("mainImage").src = val;
 });
 
-// تحميل الروابط مع تأثير دخول متتابع
-db.ref("mainPage/links").on("value", snap => {
-    let html = "";
-    let delay = 0;
-    snap.forEach(child => {
-        let data = child.val();
-        html += `
-        <div class="link-item" onclick="window.open('${data.url}', '_blank')" style="animation-delay:${delay}s">
-            ${data.icon}
-            <span>${data.name}</span>
-        </div>`;
-        delay += 0.2;
-    });
-    document.getElementById("linksList").innerHTML = html;
+// الروابط
+db.ref("mainPage/links").on("value", snap=>{
+  const container = document.getElementById("linksList");
+  container.innerHTML = "";
+  snap.forEach(child=>{
+    const data = child.val();
+    const div = document.createElement("div");
+    div.className = "link-item";
+    div.onclick = ()=> window.open(data.url,"_blank");
+    div.innerHTML = `<span class="link-icon">${data.icon}</span><span class="link-name">${data.name}</span>`;
+    container.appendChild(div);
+  });
+});
+
+// السوشيال
+const socialIcons = {
+  facebook:"📘",
+  instagram:"📸",
+  youtube:"📺",
+  tiktok:"🎵",
+  twitter:"🐦",
+  snapchat:"👻",
+  whatsapp:"💬"
+};
+
+db.ref("mainPage/social").on("value", snap=>{
+  const container = document.getElementById("socialList");
+  container.innerHTML="";
+  snap.forEach(child=>{
+    const data = child.val();
+    const div = document.createElement("div");
+    div.className="social-item";
+    div.onclick = ()=> window.open(data.url,"_blank");
+    const icon = socialIcons[data.type] || "🌐";
+    div.innerHTML = `<span class="link-icon">${icon}</span><span class="link-name">${data.type}</span>`;
+    container.appendChild(div);
+  });
 });
 </script>
 </body>
