@@ -9,32 +9,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
 <style>
-body {
-    font-family: sans-serif;
-    background: #111;
-    color: white;
-    text-align: center;
-    padding: 20px;
-}
-input, select, button {
-    width: 90%;
-    padding: 10px;
-    margin: 5px 0;
-    border-radius: 10px;
-    border: none;
-}
-button { cursor: pointer; background: #0f6; color: #000; }
-button.delete { background: #f33; color: #fff; }
-.link-item {
-    background: #1a1a1a;
-    padding: 15px;
-    margin: 8px;
-    border-radius: 10px;
-    text-align: right;
-}
-.actions button { margin-left: 5px; }
-#cropContainer { display: none; margin-top: 10px; }
-#cropImage { max-width: 100%; border-radius: 10px; }
+body { font-family: sans-serif; background:#111; color:white; text-align:center; padding:20px; }
+input, select, button { width:90%; padding:10px; margin:5px 0; border-radius:10px; border:none; }
+button { cursor:pointer; background:#0f6; color:#000; }
+button.delete { background:#f33; color:#fff; }
+.link-item { background:#1a1a1a; padding:15px; margin:8px; border-radius:10px; text-align:right; }
+.actions button { margin-left:5px; }
+#cropContainer { display:none; margin-top:10px; }
+#cropImage { max-width:100%; border-radius:10px; }
 </style>
 </head>
 <body>
@@ -79,18 +61,18 @@ button.delete { background: #f33; color: #fff; }
 <script>
 // Firebase Config
 const firebaseConfig = {
-    apiKey: "",
-    authDomain: "",
-    databaseURL: "",
-    projectId: "",
-    storageBucket: "",
-    messagingSenderId: "",
-    appId: ""
+    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+    authDomain: "sheko-store.firebaseapp.com",
+    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+    projectId: "sheko-store",
+    storageBucket: "sheko-store.appspot.com",
+    messagingSenderId: "113892775847",
+    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// المتغيرات
+// متغيرات
 let cropper;
 let selectedFile;
 
@@ -118,7 +100,7 @@ function saveCropped() {
     if (!cropper) return alert("لم يتم اختيار الصورة بعد!");
     let canvas = cropper.getCroppedCanvas({ width: 400, height: 400 });
     let base64 = canvas.toDataURL("image/png");
-    db.ref("profile/image").set(base64).then(() => alert("تم رفع الصورة بنجاح!"));
+    db.ref("mainPage/image").set(base64).then(() => alert("تم رفع الصورة بنجاح!"));
     document.getElementById("cropContainer").style.display = "none";
 }
 
@@ -129,15 +111,15 @@ function addLink() {
     let url  = document.getElementById("urlInput").value.trim();
     if (!name || !url) return alert("أكمل البيانات!");
 
-    let id = db.ref("profile/links").push().key;
-    db.ref("profile/links/" + id).set({ icon, name, url });
+    let id = db.ref("mainPage/links").push().key;
+    db.ref("mainPage/links/" + id).set({ icon, name, url });
 
     document.getElementById("nameInput").value = "";
     document.getElementById("urlInput").value = "";
 }
 
 // تحميل الروابط مع تعديل وحذف
-db.ref("profile/links").on("value", snap => {
+db.ref("mainPage/links").on("value", snap => {
     let html = "";
     snap.forEach(child => {
         let id = child.key;
@@ -162,13 +144,13 @@ function editLink(id, oldName, oldUrl) {
     let newUrl = prompt("رابط جديد:", oldUrl);
     if (!newUrl) return;
 
-    db.ref("profile/links/" + id).update({ name: newName, url: newUrl });
+    db.ref("mainPage/links/" + id).update({ name: newName, url: newUrl });
 }
 
 // حذف الرابط
 function deleteLink(id) {
     if (confirm("هل تريد الحذف؟")) {
-        db.ref("profile/links/" + id).remove();
+        db.ref("mainPage/links/" + id).remove();
     }
 }
 </script>
