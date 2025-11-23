@@ -16,7 +16,6 @@ body {
   font-family: Arial;
   text-align: center;
   padding: 20px;
-  /* خلفية متدرجة مع حركة */
   background: linear-gradient(-45deg, #ff9a9e, #fad0c4, #a1c4fd, #c2e9fb);
   background-size: 400% 400%;
   animation: gradientBG 15s ease infinite;
@@ -36,11 +35,10 @@ body {
   max-width:350px;
   border-radius:10px;
   margin-bottom:15px;
-  transition: transform 0.6s ease;
-  animation: imageEntry 1.2s ease forwards;
+  opacity:0;
+  transform: scale(0.8) rotate(-5deg);
+  animation: imageEntry 1.2s forwards;
 }
-
-/* أنيميشن دخول الصورة */
 @keyframes imageEntry {
   0% {opacity:0; transform: scale(0.8) rotate(-5deg);}
   100% {opacity:1; transform: scale(1) rotate(0);}
@@ -52,15 +50,11 @@ body {
   font-weight:bold;
   margin-bottom:30px;
   opacity:0;
-  animation: textEntry 1.5s forwards 0.5s;
+  transform: translateY(-20px);
+  transition: opacity 1s, transform 1s;
 }
 
-@keyframes textEntry {
-  0% {opacity:0; transform: translateY(-20px);}
-  100% {opacity:1; transform: translateY(0);}
-}
-
-/* روابط */
+/* روابط وسوشيال */
 .links, .socials {
   display:flex;
   flex-direction: column;
@@ -69,7 +63,7 @@ body {
   max-width:400px;
 }
 
-/* كل رابط */
+/* حركة الأزرار من اليمين لليسار */
 .link-item, .social-item {
   display:flex;
   align-items:center;
@@ -79,10 +73,12 @@ body {
   border-radius:10px;
   padding:10px;
   cursor:pointer;
-  transition: transform 0.3s, background 0.3s;
+  opacity:0;
+  transform: translateX(50px);
+  transition: transform 0.6s ease, opacity 0.6s ease, background 0.3s;
 }
 .link-item:hover, .social-item:hover { 
-  transform: translateX(15px) scale(1.05); 
+  transform: translateX(10px) scale(1.05); 
   background: rgba(0,0,0,0.8);
 }
 
@@ -117,8 +113,31 @@ const db = firebase.database();
 // الصورة الرئيسية
 db.ref("mainPage/image").on("value", snap=>{
   const val = snap.val();
-  if(val) document.getElementById("mainImage").src = val;
+  if(val) {
+    const img = document.getElementById("mainImage");
+    img.src = val;
+    img.onload = ()=> { showTextAndButtons(); }
+  }
 });
+
+// النص والأزرار يظهرون بعد تحميل الصورة
+function showTextAndButtons(){
+  const text = document.getElementById("mainText");
+  text.style.opacity = "1";
+  text.style.transform = "translateY(0)";
+  
+  // الروابط
+  const linkItems = document.querySelectorAll('.link-item');
+  linkItems.forEach((item,i)=>{
+    setTimeout(()=>{ item.style.opacity="1"; item.style.transform="translateX(0)"; }, i*200);
+  });
+
+  // السوشيال
+  const socialItems = document.querySelectorAll('.social-item');
+  socialItems.forEach((item,i)=>{
+    setTimeout(()=>{ item.style.opacity="1"; item.style.transform="translateX(0)"; }, i*200);
+  });
+}
 
 // الروابط
 db.ref("mainPage/links").on("value", snap=>{
