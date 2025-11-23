@@ -18,7 +18,7 @@ button { background:red; color:white; cursor:pointer; }
 /* صناديق */
 .box { background:#222; padding:15px; border-radius:8px; margin-top:20px; text-align:center; }
 
-/* جدول الروابط */
+/* جدول الروابط والسوشيال */
 table { width:100%; margin-top:10px; border-collapse: collapse; }
 th, td { padding:10px; border-bottom:1px solid #444; text-align:center; }
 th { background:#333; }
@@ -77,6 +77,13 @@ th { background:#333; }
   </select>
   <input id="socialURL" placeholder="رابط الحساب">
   <button onclick="addSocial()">إضافة الحساب</button>
+
+  <table id="socialTable">
+    <thead>
+      <tr><th>الأيقونة</th><th>الرابط</th><th>تعديل</th><th>حذف</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 </div>
 
 <script>
@@ -92,6 +99,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// Cropper.js للقص
 let cropper;
 const preview = document.getElementById('preview');
 const mainImageInput = document.getElementById('mainImage');
@@ -103,10 +111,7 @@ mainImageInput.addEventListener('change', (e)=>{
   reader.onload = function(event){
     preview.src = event.target.result;
     if(cropper) cropper.destroy();
-    cropper = new Cropper(preview, {
-      aspectRatio: 1,
-      viewMode: 1
-    });
+    cropper = new Cropper(preview, { aspectRatio: 1, viewMode: 1 });
   }
   reader.readAsDataURL(file);
 });
@@ -171,6 +176,39 @@ function addSocial(){
   if(!url){ alert("اكتب الرابط"); return; }
   db.ref("mainPage/social").push({ type, url });
   document.getElementById("socialURL").value="";
+}
+
+// عرض السوشيال
+db.ref("mainPage/social").on("value", snap=>{
+  const tbody = document.querySelector("#socialTable tbody");
+  tbody.innerHTML="";
+  snap.forEach(child=>{
+    const data = child.val();
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${data.type}</td>
+      <td>${data.url}</td>
+      <td><button onclick="editSocial('${child.key}')">✏️</button></td>
+      <td><button onclick="deleteSocial('${child.key}')">❌</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+});
+
+function editSocial(key){
+  db.ref("mainPage/social/"+key).once("value", snap=>{
+    const data = snap.val();
+    const newURL = prompt("رابط جديد:", data.url);
+    if(newURL){
+      db.ref("mainPage/social/"+key).update({url:newURL});
+    }
+  });
+}
+
+function deleteSocial(key){
+  if(confirm("هل تريد حذف هذا الحساب؟")){
+    db.ref("mainPage/social/"+key).remove();
+  }
 }
 </script>
 
