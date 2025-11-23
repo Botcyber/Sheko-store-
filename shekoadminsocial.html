@@ -5,26 +5,57 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SHEKO – الصفحة الرئيسية</title>
 
+<!-- Font Awesome للـ Social Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <style>
-body { font-family: Arial; background: linear-gradient(135deg, #fff, #000); color:#111; text-align:center; padding:20px; }
-#mainImage { max-width:300px; border-radius:10px; margin-bottom:20px; transition: transform 0.5s; }
+body {
+  font-family: Arial;
+  background: linear-gradient(135deg, #fff, #000);
+  color:#111;
+  text-align:center;
+  padding:20px;
+}
+
+#mainImage {
+  max-width:350px;
+  border-radius:10px;
+  margin-bottom:20px;
+  transition: transform 0.5s;
+}
 #mainImage:hover { transform: scale(1.05); }
 
 /* روابط */
-.links, .socials { display:flex; flex-direction: column; gap:15px; margin:20px auto; max-width:400px; }
+.links, .socials {
+  display:flex;
+  flex-direction: column;
+  gap:15px;
+  margin:20px auto;
+  max-width:400px;
+}
 
 /* كل رابط */
 .link-item, .social-item {
-  display:flex; align-items:center; justify-content:flex-start;
-  background:#222; color:white; border-radius:10px; padding:10px;
-  cursor:pointer; transition: transform 0.3s, background 0.3s;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  background:#222;
+  color:white;
+  border-radius:10px;
+  padding:10px;
+  cursor:pointer;
+  transition: transform 0.3s, background 0.3s;
 }
 .link-item:hover, .social-item:hover { transform: translateX(10px); background:#444; }
-.link-icon { font-size:24px; margin-right:10px; }
-.link-name { font-size:16px; }
+
+.link-icon, .social-icon {
+  font-size:24px;
+  margin-right:10px;
+}
+.link-name, .social-name { font-size:16px; }
 </style>
 </head>
 <body>
@@ -67,15 +98,15 @@ db.ref("mainPage/links").on("value", snap=>{
   });
 });
 
-// السوشيال
+// السوشيال – أيقونات حقيقية من Font Awesome
 const socialIcons = {
-  facebook:"📘",
-  instagram:"📸",
-  youtube:"📺",
-  tiktok:"🎵",
-  twitter:"🐦",
-  snapchat:"👻",
-  whatsapp:"💬"
+  facebook:"<i class='fab fa-facebook'></i>",
+  instagram:"<i class='fab fa-instagram'></i>",
+  youtube:"<i class='fab fa-youtube'></i>",
+  tiktok:"<i class='fab fa-tiktok'></i>",
+  twitter:"<i class='fab fa-twitter'></i>",
+  snapchat:"<i class='fab fa-snapchat'></i>",
+  whatsapp:"<i class='fab fa-whatsapp'></i>"
 };
 
 db.ref("mainPage/social").on("value", snap=>{
@@ -86,8 +117,8 @@ db.ref("mainPage/social").on("value", snap=>{
     const div = document.createElement("div");
     div.className="social-item";
     div.onclick = ()=> window.open(data.url,"_blank");
-    const icon = socialIcons[data.type] || "🌐";
-    div.innerHTML = `<span class="link-icon">${icon}</span><span class="link-name">${data.type}</span>`;
+    const icon = socialIcons[data.type] || "<i class='fas fa-globe'></i>";
+    div.innerHTML = `<span class="social-icon">${icon}</span><span class="social-name">${data.type}</span>`;
     container.appendChild(div);
   });
 });
