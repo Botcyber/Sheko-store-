@@ -6,13 +6,24 @@
 <style>
 body {
     font-family:sans-serif;
-    background: linear-gradient(120deg, #0f0f0f, #1a1a1a, #111);
-    color:white;
+    color:#111;
     text-align:center;
     padding:50px 20px;
     max-width: 800px;
     margin: auto;
     overflow-x: hidden;
+
+    /* خلفية متدرجة أبيض وأسود متحركة */
+    background: linear-gradient(270deg, #fff, #111, #fff, #111);
+    background-size: 800% 800%;
+    animation: gradientAnim 15s ease infinite;
+}
+
+/* حركة تدرج الخلفية */
+@keyframes gradientAnim {
+    0% {background-position:0% 50%;}
+    50% {background-position:100% 50%;}
+    100% {background-position:0% 50%;}
 }
 
 /* عنوان */
@@ -20,6 +31,7 @@ h2 {
     font-size:28px;
     margin-bottom:30px;
     animation: fadeInDown 1s forwards;
+    color:#111;
 }
 
 /* صورة الصفحة */
@@ -28,7 +40,7 @@ h2 {
     max-width:350px;
     width:90%;
     margin-bottom:40px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
     transform: translateY(-50px) scale(0.9);
     opacity:0;
     transition: transform 0.3s, box-shadow 0.3s;
@@ -36,7 +48,7 @@ h2 {
 }
 #mainImage:hover {
     transform: scale(1.05);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.7);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
 }
 
 /* حركة الصورة */
@@ -61,7 +73,8 @@ h2 {
     display:flex;
     flex-direction:column;
     align-items:center;
-    background: #222;
+    background: #f0f0f0;
+    color:#111;
     padding:15px;
     border-radius:20px;
     width:220px;
@@ -73,7 +86,7 @@ h2 {
 }
 .link-item:hover {
     transform: translateX(0) scale(1.05);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
 }
 
 /* نص الاسم */
@@ -94,8 +107,6 @@ h2 {
     height:45px;
     transition: transform 0.3s;
 }
-
-/* تأثير دخول تدريجي */
 </style>
 </head>
 <body>
@@ -138,7 +149,7 @@ db.ref("mainPage/links").on("value", snap => {
             ${data.icon}
             <span>${data.name}</span>
         </div>`;
-        delay += 0.2; // كل أيقونة تظهر بعد 0.2 ثانية
+        delay += 0.2;
     });
     document.getElementById("linksList").innerHTML = html;
 });
