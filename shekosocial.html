@@ -2,24 +2,55 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>SHEKO</title>
+<title>لوحة التحكم</title>
+
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+
 <style>
-body {font-family: Arial; background:#111; color:white; text-align:center; padding:20px;}
-img {width: 300px; border-radius: 15px; margin-bottom:20px;}
-.link-item {background:#222; padding:15px; margin:8px auto; width:300px; border-radius:8px;}
-a {color:#ff4444; text-decoration:none; font-size:18px;}
+body {font-family: Arial; background:#111; color:white; padding:20px; text-align:center;}
+input, button {padding:10px; margin:10px; border-radius:6px; border:none;}
+button {background:red; color:white; cursor:pointer;}
+.box {background:#222; padding:15px; border-radius:8px; margin-top:20px;}
 </style>
+
 </head>
 <body>
 
-<div id="imageContainer"></div>
+<h2>🔥 لوحة التحكم – الصورة + الروابط + السوشيال 🔥</h2>
 
-<h1>SHEKO | شـــيـــكـــو</h1>
+<!-- رفع الصورة -->
+<div class="box">
+  <h3>رفع صورة الصفحة الرئيسية</h3>
+  <input type="file" id="mainImage">
+  <button onclick="uploadImage()">رفع الصورة</button>
+</div>
 
-<div id="linksBox"></div>
+<!-- إضافة رابط -->
+<div class="box">
+  <h3>إضافة رابط للصفحة</h3>
+  <input id="linkText" placeholder="اسم الرابط">
+  <input id="linkURL" placeholder="الرابط">
+  <button onclick="addLink()">إضافة الرابط</button>
+</div>
+
+<!-- إضافة السوشيال -->
+<div class="box">
+  <h3>إضافة حساب سوشيال ميديا</h3>
+
+  <select id="socialType">
+    <option value="facebook">Facebook</option>
+    <option value="instagram">Instagram</option>
+    <option value="youtube">YouTube</option>
+    <option value="tiktok">TikTok</option>
+    <option value="twitter">Twitter</option>
+    <option value="snapchat">Snapchat</option>
+  </select>
+
+  <input id="socialURL" placeholder="رابط الحساب">
+  <button onclick="addSocial()">إضافة حساب</button>
+</div>
+
 
 <script>
 const firebaseConfig = {
@@ -31,32 +62,59 @@ const firebaseConfig = {
   messagingSenderId: "113892775847",
   appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
 };
-firebase.initializeApp(firebaseConfig);
 
+firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// تحميل الصورة
-db.ref("mainPage/image").on("value", snap=>{
-  if(snap.exists()){
-    document.getElementById("imageContainer").innerHTML =
-      `<img src="${snap.val()}">`;
-  }
-});
 
-// تحميل الروابط
-db.ref("mainPage/links").on("value", snapshot=>{
-  const box = document.getElementById("linksBox");
-  box.innerHTML="";
+// رفع الصورة لـ Database كـ Base64
+function uploadImage(){
+  const file = document.getElementById("mainImage").files[0];
+  if(!file){ alert("اختر صورة أولاً"); return; }
 
-  snapshot.forEach(item=>{
-    const v = item.val();
-    box.innerHTML += `
-      <div class="link-item">
-        <a href="${v.url}" target="_blank">${v.name}</a>
-      </div>
-    `;
+  const reader = new FileReader();
+
+  reader.onload = function(e){
+    const base64 = e.target.result;
+
+    db.ref("mainPage/image").set(base64)
+      .then(()=> alert("✔ تم رفع الصورة بنجاح"));
+  };
+
+  reader.readAsDataURL(file);
+}
+
+
+// إضافة رابط
+function addLink(){
+  const name = document.getElementById("linkText").value.trim();
+  const url = document.getElementById("linkURL").value.trim();
+
+  if(!name || !url){ alert("اكتب الاسم والرابط"); return; }
+
+  db.ref("mainPage/links").push({ name, url });
+
+  document.getElementById("linkText").value="";
+  document.getElementById("linkURL").value="";
+  alert("✔ تم إضافة الرابط");
+}
+
+
+// إضافة حساب سوشيال ميديا
+function addSocial(){
+  const type = document.getElementById("socialType").value;
+  const url = document.getElementById("socialURL").value.trim();
+
+  if(!url){ alert("اكتب الرابط"); return; }
+
+  db.ref("mainPage/social").push({
+    type: type,
+    url: url
   });
-});
+
+  document.getElementById("socialURL").value="";
+  alert("✔ تم إضافة الحساب");
+}
 </script>
 
 </body>
