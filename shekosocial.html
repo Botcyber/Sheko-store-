@@ -9,24 +9,43 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
 <style>
-    body { font-family:sans-serif; background:#111; color:white; text-align:center; }
-    input, select { width:90%; padding:10px; margin:7px 0; border-radius:10px; border:none; }
-    button { background:#0f6; border:none; padding:10px 20px; margin-top:10px; border-radius:10px; cursor:pointer; }
-    .link-item { background:#1a1a1a; padding:15px; border-radius:10px; margin:8px; text-align:right; }
-    .actions button { margin-left:5px; }
-    #cropContainer { width: 90%; margin:auto; display:none; }
-    #cropImage { max-width:100%; border-radius:10px; }
+body {
+    font-family: sans-serif;
+    background: #111;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+input, select, button {
+    width: 90%;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 10px;
+    border: none;
+}
+button { cursor: pointer; background: #0f6; color: #000; }
+button.delete { background: #f33; color: #fff; }
+.link-item {
+    background: #1a1a1a;
+    padding: 15px;
+    margin: 8px;
+    border-radius: 10px;
+    text-align: right;
+}
+.actions button { margin-left: 5px; }
+#cropContainer { display: none; margin-top: 10px; }
+#cropImage { max-width: 100%; border-radius: 10px; }
 </style>
 </head>
 <body>
 
 <h2>لوحة الإدارة</h2>
 
+<!-- رفع الصورة -->
 <h3>رفع صورة (مع قص)</h3>
 <input type="file" id="imgInput">
-
 <div id="cropContainer">
-    <h3>قص الصورة</h3>
+    <h4>قص الصورة</h4>
     <img id="cropImage">
     <br>
     <button onclick="saveCropped()">حفظ الصورة</button>
@@ -34,8 +53,8 @@
 
 <hr>
 
+<!-- إضافة رابط -->
 <h3>إضافة رابط جديد</h3>
-
 <select id="iconSelect">
     <option value="🌐">موقع</option>
     <option value="📸">Instagram</option>
@@ -45,7 +64,6 @@
     <option value="💬">WhatsApp</option>
     <option value="🐦">Twitter</option>
 </select>
-
 <input id="nameInput" placeholder="اسم الرابط">
 <input id="urlInput" placeholder="الرابط">
 <button onclick="addLink()">إضافة</button>
@@ -59,7 +77,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <script>
-// Firebase
+// Firebase Config
 const firebaseConfig = {
     apiKey: "",
     authDomain: "",
@@ -72,10 +90,11 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// المتغيرات
 let cropper;
 let selectedFile;
 
-// تحميل الصورة للقص
+// اختيار الصورة
 document.getElementById("imgInput").addEventListener("change", function(e) {
     selectedFile = e.target.files[0];
     if (!selectedFile) return;
@@ -87,7 +106,7 @@ document.getElementById("imgInput").addEventListener("change", function(e) {
 
         if (cropper) cropper.destroy();
         cropper = new Cropper(document.getElementById("cropImage"), {
-            aspectRatio: 1,  // مربع
+            aspectRatio: 1, // مربع
             viewMode: 1
         });
     };
@@ -96,28 +115,19 @@ document.getElementById("imgInput").addEventListener("change", function(e) {
 
 // حفظ الصورة بعد القص
 function saveCropped() {
-    if (!cropper) return;
-
-    let canvas = cropper.getCroppedCanvas({
-        width: 400,
-        height: 400
-    });
-
+    if (!cropper) return alert("لم يتم اختيار الصورة بعد!");
+    let canvas = cropper.getCroppedCanvas({ width: 400, height: 400 });
     let base64 = canvas.toDataURL("image/png");
-
-    db.ref("profile/image").set(base64);
-    alert("تم رفع الصورة بعد قصها ✔");
-
+    db.ref("profile/image").set(base64).then(() => alert("تم رفع الصورة بنجاح!"));
     document.getElementById("cropContainer").style.display = "none";
 }
 
 // إضافة رابط جديد
 function addLink() {
     let icon = document.getElementById("iconSelect").value;
-    let name = document.getElementById("nameInput").value;
-    let url  = document.getElementById("urlInput").value;
-
-    if (!name || !url) return alert("أدخل بيانات الرابط");
+    let name = document.getElementById("nameInput").value.trim();
+    let url  = document.getElementById("urlInput").value.trim();
+    if (!name || !url) return alert("أكمل البيانات!");
 
     let id = db.ref("profile/links").push().key;
     db.ref("profile/links/" + id).set({ icon, name, url });
@@ -126,19 +136,18 @@ function addLink() {
     document.getElementById("urlInput").value = "";
 }
 
-// تحميل الروابط مع التعديل والحذف
+// تحميل الروابط مع تعديل وحذف
 db.ref("profile/links").on("value", snap => {
     let html = "";
     snap.forEach(child => {
         let id = child.key;
         let data = child.val();
-
         html += `
         <div class="link-item">
             <b>${data.icon} ${data.name}</b> — ${data.url}<br>
             <div class="actions">
                 <button onclick="editLink('${id}', '${data.name}', '${data.url}')">تعديل</button>
-                <button onclick="deleteLink('${id}')" style="background:#f33">حذف</button>
+                <button class="delete" onclick="deleteLink('${id}')">حذف</button>
             </div>
         </div>
         `;
@@ -150,23 +159,18 @@ db.ref("profile/links").on("value", snap => {
 function editLink(id, oldName, oldUrl) {
     let newName = prompt("اسم جديد:", oldName);
     if (!newName) return;
-
-    let newUrl  = prompt("رابط جديد:", oldUrl);
+    let newUrl = prompt("رابط جديد:", oldUrl);
     if (!newUrl) return;
 
-    db.ref("profile/links/" + id).update({
-        name: newName,
-        url: newUrl
-    });
+    db.ref("profile/links/" + id).update({ name: newName, url: newUrl });
 }
 
 // حذف الرابط
 function deleteLink(id) {
-    if (confirm("متأكد من الحذف؟")) {
+    if (confirm("هل تريد الحذف؟")) {
         db.ref("profile/links/" + id).remove();
     }
 }
 </script>
-
 </body>
 </html>
