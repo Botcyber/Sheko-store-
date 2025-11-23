@@ -2,96 +2,52 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>SHEKO</title>
+<title>الصفحة الرئيسية</title>
+<style>
+body { font-family:sans-serif; background:#111; color:white; text-align:center; padding:20px; }
+img { border-radius:10px; max-width:200px; }
+.link-item { background:#1a1a1a; padding:10px; margin:10px auto; border-radius:10px; width:90%; text-align:right; }
+</style>
+</head>
+<body>
+
+<h2>SHEKO | شـــيكــو</h2>
+<img id="mainImage" src="" alt="الصورة الرئيسية">
+
+<div id="linksList"></div>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-<style>
-body {font-family: Arial; background:#111; color:white; text-align:center; padding:20px;}
-img {width: 300px; border-radius: 15px; margin-bottom:20px;}
-.link-item {background:#222; padding:15px; margin:8px auto; width:300px; border-radius:8px;}
-a {color:#ff4444; text-decoration:none; font-size:18px;}
-.social-icons {margin-top:20px;}
-.social-icons img {width:35px; margin:5px;}
-</style>
-
-</head>
-<body>
-
-<div id="imageContainer"></div>
-
-<h1>SHEKO | شـــيـــكـــو</h1>
-
-<div class="social-icons" id="socialBox"></div>
-
-<div id="linksBox"></div>
-
 <script>
+// Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-  authDomain: "sheko-store.firebaseapp.com",
-  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-  projectId: "sheko-store",
-  storageBucket: "sheko-store.appspot.com",
-  messagingSenderId: "113892775847",
-  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+    authDomain: "sheko-store.firebaseapp.com",
+    databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+    projectId: "sheko-store",
+    storageBucket: "sheko-store.appspot.com",
+    messagingSenderId: "113892775847",
+    appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
 };
 firebase.initializeApp(firebaseConfig);
-
 const db = firebase.database();
 
-
 // تحميل الصورة
-db.ref("mainPage/image").on("value", snap=>{
-  if(snap.exists()){
-    document.getElementById("imageContainer").innerHTML =
-      `<img src="${snap.val()}">`;
-  }
+db.ref("mainPage/image").on("value", snap => {
+    let img = snap.val();
+    if(img) document.getElementById("mainImage").src = img;
 });
-
 
 // تحميل الروابط
-db.ref("mainPage/links").on("value", snapshot=>{
-  const box = document.getElementById("linksBox");
-  box.innerHTML="";
-
-  snapshot.forEach(item=>{
-    const v = item.val();
-    box.innerHTML += `
-      <div class="link-item">
-        <a href="${v.url}" target="_blank">${v.name}</a>
-      </div>
-    `;
-  });
-});
-
-
-// تحميل السوشيال ميديا
-db.ref("mainPage/social").on("value", snapshot=>{
-  const box = document.getElementById("socialBox");
-  box.innerHTML="";
-
-  snapshot.forEach(item=>{
-    const v = item.val();
-
-    const icon = {
-      facebook: "https://cdn-icons-png.flaticon.com/512/733/733547.png",
-      instagram: "https://cdn-icons-png.flaticon.com/512/733/733558.png",
-      youtube: "https://cdn-icons-png.flaticon.com/512/733/733646.png",
-      tiktok: "https://cdn-icons-png.flaticon.com/512/3046/3046121.png",
-      twitter: "https://cdn-icons-png.flaticon.com/512/733/733579.png",
-      snapchat: "https://cdn-icons-png.flaticon.com/512/1384/1384063.png"
-    };
-
-    box.innerHTML += `
-      <a href="${v.url}" target="_blank">
-        <img src="${icon[v.type]}">
-      </a>
-    `;
-  });
+db.ref("mainPage/links").on("value", snap => {
+    let html = "";
+    snap.forEach(child => {
+        let data = child.val();
+        html += `<div class="link-item">${data.icon} <b>${data.name}</b> — <a href="${data.url}" target="_blank">${data.url}</a></div>`;
+    });
+    document.getElementById("linksList").innerHTML = html;
 });
 </script>
-
 </body>
 </html>
