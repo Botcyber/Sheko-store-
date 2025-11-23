@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>SHEKO</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+<style>
+body {font-family: Arial; background:#111; color:white; text-align:center; padding:20px;}
+img {width: 300px; border-radius: 15px; margin-bottom:20px;}
+.link-item {background:#222; padding:15px; margin:8px auto; width:300px; border-radius:8px;}
+a {color:#ff4444; text-decoration:none; font-size:18px;}
+</style>
+</head>
+<body>
+
+<div id="imageContainer"></div>
+
+<h1>SHEKO | شـــيـــكـــو</h1>
+
+<div id="linksBox"></div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+  authDomain: "sheko-store.firebaseapp.com",
+  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+  projectId: "sheko-store",
+  storageBucket: "sheko-store.appspot.com",
+  messagingSenderId: "113892775847",
+  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+};
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.database();
+
+// تحميل الصورة
+db.ref("mainPage/image").on("value", snap=>{
+  if(snap.exists()){
+    document.getElementById("imageContainer").innerHTML =
+      `<img src="${snap.val()}">`;
+  }
+});
+
+// تحميل الروابط
+db.ref("mainPage/links").on("value", snapshot=>{
+  const box = document.getElementById("linksBox");
+  box.innerHTML="";
+
+  snapshot.forEach(item=>{
+    const v = item.val();
+    box.innerHTML += `
+      <div class="link-item">
+        <a href="${v.url}" target="_blank">${v.name}</a>
+      </div>
+    `;
+  });
+});
+</script>
+
+</body>
+</html>
