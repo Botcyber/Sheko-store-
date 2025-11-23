@@ -25,15 +25,9 @@ img { border-radius:10px; max-width:200px; margin-bottom:20px; }
     cursor:pointer;
     transition:0.3s;
 }
-.link-item:hover {
-    transform: scale(1.1);
-}
-.link-item span {
-    margin-top:5px;
-    font-size:12px;
-    text-align:center;
-    word-break: break-word;
-}
+.link-item:hover { transform: scale(1.1); }
+.link-item span { margin-top:5px; font-size:12px; text-align:center; word-break: break-word; }
+.link-item img { width:30px; height:30px; }
 </style>
 </head>
 <body>
@@ -47,7 +41,6 @@ img { border-radius:10px; max-width:200px; margin-bottom:20px; }
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <script>
-// Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
     authDomain: "sheko-store.firebaseapp.com",
@@ -73,7 +66,7 @@ db.ref("mainPage/links").on("value", snap => {
         let data = child.val();
         html += `
         <div class="link-item" onclick="window.open('${data.url}', '_blank')">
-            <div style="font-size:24px;">${data.icon}</div>
+            ${data.icon}
             <span>${data.name}</span>
         </div>`;
     });
