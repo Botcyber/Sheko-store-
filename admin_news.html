@@ -53,7 +53,8 @@
     <h3>إضافة خبر جديد</h3>
     <input type="text" id="newTitle" placeholder="عنوان الخبر" />
     <textarea id="newText" rows="4" placeholder="نص الخبر"></textarea>
-    <input type="text" id="newImage" placeholder="رابط الصورة (اختياري)" />
+    <label for="newImageFile">رفع صورة الخبر (اختياري)</label>
+    <input type="file" id="newImageFile" accept="image/*" />
     <button class="btn btn-edit" onclick="addNews()">➕ إضافة الخبر</button>
   </div>
 
@@ -79,21 +80,33 @@
     const auth = firebase.auth();
     const db = firebase.database();
 
-    // التأكد من تسجيل الدخول
     auth.onAuthStateChanged(user=>{
       if(!user) location.href="login.html";
     });
 
+    const newsList = document.getElementById("newsList");
+
     function addNews(){
       const title = document.getElementById("newTitle").value.trim();
       const text = document.getElementById("newText").value.trim();
-      const image = document.getElementById("newImage").value.trim();
-
+      const fileInput = document.getElementById("newImageFile");
       if(!title || !text){
         alert("⚠️ الرجاء تعبئة العنوان والنص");
         return;
       }
 
+      if(fileInput.files[0]){
+        const reader = new FileReader();
+        reader.onload = function(e){
+          saveNews(title,text,e.target.result);
+        };
+        reader.readAsDataURL(fileInput.files[0]);
+      } else {
+        saveNews(title,text,"");
+      }
+    }
+
+    function saveNews(title,text,image){
       const newNewsRef = db.ref("news").push();
       newNewsRef.set({
         title, text, image,
@@ -101,11 +114,9 @@
       }).then(()=>{
         document.getElementById("newTitle").value="";
         document.getElementById("newText").value="";
-        document.getElementById("newImage").value="";
+        document.getElementById("newImageFile").value="";
       });
     }
-
-    const newsList = document.getElementById("newsList");
 
     function loadNews(){
       db.ref("news").orderByChild("time").on("value", snap=>{
@@ -148,14 +159,31 @@
       const newText = prompt("عدل نص الخبر:", text);
       if(newText===null) return;
 
-      const newImage = prompt("عدل رابط الصورة (فارغ لإزالة):", image);
-
-      db.ref("news/"+key).update({
-        title:newTitle,
-        text:newText,
-        image:newImage,
-        time:Date.now() // تحديث الوقت ليظهر في الأعلى
-      });
+      const fileInput = document.createElement("input");
+      fileInput.type="file";
+      fileInput.accept="image/*";
+      fileInput.onchange = function(e){
+        if(e.target.files[0]){
+          const reader = new FileReader();
+          reader.onload = function(ev){
+            db.ref("news/"+key).update({
+              title:newTitle,
+              text:newText,
+              image:ev.target.result,
+              time:Date.now()
+            });
+          };
+          reader.readAsDataURL(e.target.files[0]);
+        } else {
+          db.ref("news/"+key).update({
+            title:newTitle,
+            text:newText,
+            image:image,
+            time:Date.now()
+          });
+        }
+      };
+      fileInput.click();
     }
 
     loadNews();
