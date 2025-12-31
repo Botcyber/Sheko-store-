@@ -110,7 +110,7 @@
       const newNewsRef = db.ref("news").push();
       newNewsRef.set({
         title, text, image,
-        time: Date.now()
+        timestamp: Date.now()   // مهم للترتيب
       }).then(()=>{
         document.getElementById("newTitle").value="";
         document.getElementById("newText").value="";
@@ -119,7 +119,7 @@
     }
 
     function loadNews(){
-      db.ref("news").orderByChild("time").on("value", snap=>{
+      db.ref("news").orderByChild("timestamp").on("value", snap=>{
         newsList.innerHTML = "<h3>قائمة الأخبار</h3>";
         let arr=[];
         snap.forEach(child=>arr.push({key:child.key, ...child.val()}));
@@ -133,7 +133,7 @@
             ${n.image ? `<img class="news-img" src="${n.image}">` : ""}
             <div class="news-text">${n.text}</div>
             <div style="margin-top:8px;">
-              <button class="btn btn-edit" onclick="editNews('${n.key}','${encodeURIComponent(n.title)}','${encodeURIComponent(n.text)}','${encodeURIComponent(n.image||'')}')">تعديل</button>
+              <button class="btn btn-edit" onclick="editNews('${n.key}')">تعديل</button>
               <button class="btn btn-delete" onclick="deleteNews('${n.key}')">حذف</button>
             </div>
           `;
@@ -148,42 +148,41 @@
       }
     }
 
-    function editNews(key,title,text,image){
-      title = decodeURIComponent(title);
-      text = decodeURIComponent(text);
-      image = decodeURIComponent(image);
+    function editNews(key){
+      db.ref("news/"+key).once("value").then(snap=>{
+        if(!snap.exists()) return;
+        const data = snap.val();
+        const newTitle = prompt("عدل عنوان الخبر:", data.title);
+        if(newTitle===null) return;
+        const newText = prompt("عدل نص الخبر:", data.text);
+        if(newText===null) return;
 
-      const newTitle = prompt("عدل عنوان الخبر:", title);
-      if(newTitle===null) return;
-
-      const newText = prompt("عدل نص الخبر:", text);
-      if(newText===null) return;
-
-      const fileInput = document.createElement("input");
-      fileInput.type="file";
-      fileInput.accept="image/*";
-      fileInput.onchange = function(e){
-        if(e.target.files[0]){
-          const reader = new FileReader();
-          reader.onload = function(ev){
+        const fileInput = document.createElement("input");
+        fileInput.type="file";
+        fileInput.accept="image/*";
+        fileInput.onchange = function(e){
+          if(e.target.files[0]){
+            const reader = new FileReader();
+            reader.onload = function(ev){
+              db.ref("news/"+key).update({
+                title:newTitle,
+                text:newText,
+                image:ev.target.result,
+                timestamp: Date.now()
+              });
+            };
+            reader.readAsDataURL(e.target.files[0]);
+          } else {
             db.ref("news/"+key).update({
               title:newTitle,
               text:newText,
-              image:ev.target.result,
-              time:Date.now()
+              image:data.image,
+              timestamp: Date.now()
             });
-          };
-          reader.readAsDataURL(e.target.files[0]);
-        } else {
-          db.ref("news/"+key).update({
-            title:newTitle,
-            text:newText,
-            image:image,
-            time:Date.now()
-          });
-        }
-      };
-      fileInput.click();
+          }
+        };
+        fileInput.click();
+      });
     }
 
     loadNews();
