@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>فريق الدعم والشكاوى - Sheko Store</title>
+  <title>فريق VIBE - Sheko Store</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
   <style>
@@ -158,9 +158,7 @@
   <div id="modalOverlay">
     <div id="modalContent">
       <p>
-        يرجى عدم إرسال أكثر من رسالة لفريق الدعم لتجنب حظر حسابك
-        \nيرجى إرسال رسالة تحتوي على تفاصيل الشكوى الخاصة بك
-        \nوانتظر حين يرد عليك فريق الدعم
+        يرجى عدم إرسال رسائل مسيئه لتجنب حظر حسابك
       </p>
       <div id="modalButtons">
         <button id="btnAgree">فهمت</button>
@@ -271,7 +269,7 @@
       messagesEl.innerHTML = '';
       const keys = Object.keys(messages);
       if (keys.length === 0) {
-        messagesEl.textContent = 'لا توجد رسائل بعد. ابدأ بكتابة شكواك!';
+        messagesEl.textContent = 'لا توجد رسائل بعد. ابدأ بكتابة رسالتك!';
         return;
       }
       keys.forEach(key => {
