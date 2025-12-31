@@ -2,74 +2,132 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>News Admin</title>
+<title>News Admin - Sheko Store</title>
 
 <style>
 body{
   background:#000;
   color:white;
-  font-family:Arial;
+  font-family:'Cairo', sans-serif;
   direction:rtl;
   padding:20px;
 }
+
+h2{
+  text-align:center;
+}
+
 input,textarea{
   width:100%;
   padding:10px;
   margin:6px 0;
-  border-radius:8px;
-  border:none;
-}
-button{
-  padding:10px 20px;
   border-radius:10px;
+  border:none;
+  outline:none;
+}
+
+button{
+  padding:12px 20px;
+  border-radius:12px;
   border:none;
   font-weight:bold;
   cursor:pointer;
+  background:#ffcc00;
+}
+
+#previewImg{
+  width:180px;
+  border-radius:12px;
+  display:none;
+  margin-top:8px;
+  border:2px solid #444;
 }
 </style>
 
 <!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-// ضع إعدادات مشروعك هنا
+// =======================
+// إعداد Firebase نفس مشروعك
+// =======================
 const firebaseConfig = {
-  apiKey: "YOUR-KEY",
-  authDomain: "YOUR-APP.firebaseapp.com",
-  databaseURL: "https://YOUR-APP.firebaseio.com",
-  projectId: "YOUR-ID",
+  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+  authDomain: "sheko-store.firebaseapp.com",
+  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+  projectId: "sheko-store",
+  storageBucket: "sheko-store.appspot.com",
+  messagingSenderId: "113892775847",
+  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
 };
+
 firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
+let newsImageBase64 = ""; // حفظ صورة الخبر
+// =======================
+
+
+// رفع صورة الخبر وتحويلها Base64 مثل صورة الحساب
+function handleImageUpload(event){
+  const file = event.target.files[0];
+  if(!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e){
+    newsImageBase64 = e.target.result;
+    const img = document.getElementById("previewImg");
+    img.src = newsImageBase64;
+    img.style.display = "block";
+  };
+  reader.readAsDataURL(file);
+}
+
+
+// نشر الخبر وحفظه في Realtime Database
 function addNews(){
-  const title = document.getElementById("title").value;
-  const text = document.getElementById("text").value;
-  const image = document.getElementById("image").value;
+  const title = document.getElementById("title").value.trim();
+  const text = document.getElementById("text").value.trim();
 
-  const newsRef = firebase.database().ref("news").push();
-  newsRef.set({
-    title:title,
-    text:text,
-    image:image,
+  if(title === "" || text === ""){
+    alert("اكتب العنوان والنص أولا");
+    return;
+  }
+
+  const ref = db.ref("news").push();
+
+  ref.set({
+    title: title,
+    text: text,
+    image: newsImageBase64 || "",
     time: Date.now()
-  });
+  }).then(()=>{
 
-  alert("تم نشر الخبر ✔️");
-  document.getElementById("title").value="";
-  document.getElementById("text").value="";
-  document.getElementById("image").value="";
+    alert("✔️ تم نشر الخبر بنجاح");
+
+    document.getElementById("title").value="";
+    document.getElementById("text").value="";
+    newsImageBase64="";
+    document.getElementById("previewImg").style.display="none";
+  });
 }
 </script>
 
 </head>
+
 <body>
 
-<h2>✍️ إضافة خبر جديد</h2>
+<h2>📰 لوحة تحكم الأخبار</h2>
 
 <input id="title" placeholder="عنوان الخبر">
-<textarea id="text" placeholder="نص الخبر" rows="5"></textarea>
-<input id="image" placeholder="رابط الصورة (اختياري)">
+
+<textarea id="text" rows="5" placeholder="نص الخبر"></textarea>
+
+<label>📷 صورة الخبر</label>
+<input type="file" accept="image/*" onchange="handleImageUpload(event)">
+
+<img id="previewImg">
 
 <button onclick="addNews()">نشر الخبر</button>
 
