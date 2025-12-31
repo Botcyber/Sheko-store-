@@ -7,17 +7,88 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
   <style>
     body { font-family: 'Cairo', sans-serif; margin: 0; background: #f1f1f1; }
-    .top-bar { display: flex; justify-content: space-between; align-items: center; background: #222; padding: 10px 20px; color: white; flex-wrap: wrap; }
-    .nav-icons { display: flex; gap: 25px; flex-direction: column; }
-    .nav-icons a { color: white; text-decoration: none; display: flex; align-items: center; font-size: 14px; gap: 8px; position: relative; }
+
+    .top-bar { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      background: #222; 
+      padding: 10px 20px; 
+      color: white; 
+      flex-wrap: wrap; 
+    }
+
+    .nav-icons { 
+      display: flex; 
+      gap: 25px; 
+      flex-direction: column; 
+    }
+
+    .nav-icons a { 
+      color: white; 
+      text-decoration: none; 
+      display: flex; 
+      align-items: center; 
+      font-size: 14px; 
+      gap: 8px; 
+      position: relative; 
+    }
+
     .nav-icons a i { font-size: 20px; }
+
     .nav-icons a:hover { color: #ffb700; }
-    .user-area { display: flex; align-items: center; gap: 15px; font-size: 15px; }
-    #balance { font-weight: bold; }
-    button { background: #444; border: none; color: white; padding: 10px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 14px; transition: background 0.3s ease; }
-    button i { font-size: 16px; }
+
+    .user-area { 
+      display: flex; 
+      align-items: center; 
+      gap: 15px; 
+      font-size: 15px; 
+    }
+
+    button { 
+      background: #444; 
+      border: none; 
+      color: white; 
+      padding: 10px; 
+      border-radius: 5px; 
+      cursor: pointer; 
+      display: flex; 
+      align-items: center; 
+      gap: 8px; 
+      font-weight: bold; 
+      font-size: 14px; 
+      transition: background 0.3s ease; 
+    }
+
     button:hover { background: #ffb700; color: #222; }
-    .dashboard { max-width: 800px; margin: auto; padding: 20px; background: white; border-radius: 12px; margin-top: 30px; min-height: 200px; }
+
+    /* عنوان VIBE Studio */
+    .page-title {
+      text-align: center;
+      font-size: 26px;
+      font-weight: bold;
+      margin-top: 25px;
+      margin-bottom: 20px;
+    }
+
+    .dashboard { 
+      max-width: 800px; 
+      margin: auto; 
+      padding: 40px 20px; 
+      background: white; 
+      border-radius: 12px; 
+      margin-top: 20px; 
+      min-height: 200px; 
+    }
+
+    /* كلمة الأخبار داخل الصندوق */
+    .news-title{
+      text-align:center;
+      font-size:22px;
+      font-weight:bold;
+      margin-top:20px;
+    }
+
   </style>
 </head>
 <body>
@@ -33,48 +104,34 @@
     </div>
   </div>
 
+  <!-- عنوان أعلى الصفحة -->
+  <div class="page-title">
+     VIBE Studio
+  </div>
+
+  <!-- الصندوق الأبيض -->
   <div class="dashboard">
-    <!-- مساحة فارغة للحفاظ على شكل الصفحة فقط -->
+
+      <!-- كلمة الأخبار في المنتصف -->
+      <div class="news-title">
+        الأخبار
+      </div>
+
   </div>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
-      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
       projectId: "sheko-store",
-      storageBucket: "sheko-store.appspot.com",
-      messagingSenderId: "113892775847",
-      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-    const db = firebase.database();
-    const balanceEl = document.getElementById("balance");
-
-    let currentUser = null;
-
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        currentUser = user;
-        loadBalance();
-      } else {
-        window.location.href = "login.html";
-      }
-    });
-
-    function loadBalance() {
-      db.ref("users/" + currentUser.uid + "/balance").once("value").then(snap => {
-        let bal = snap.val() || 0;
-        
-      });
-    }
 
     function logout() {
       auth.signOut().then(() => {
