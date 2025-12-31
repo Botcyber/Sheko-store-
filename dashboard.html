@@ -13,7 +13,6 @@
       background: #222; 
       padding: 10px 20px; 
       color: white; 
-      flex-wrap: wrap;
     }
 
     .nav-icons { 
@@ -30,10 +29,7 @@
       align-items: center; 
       font-size: 14px; 
       gap: 8px; 
-      position: relative; 
     }
-
-    .nav-icons a i { font-size: 20px; }
 
     .nav-icons a:hover { color: #ffb700; }
 
@@ -45,41 +41,51 @@
       font-size: 15px; 
     }
 
-    button { 
-      background: #444; 
-      border: none; 
-      color: white; 
-      padding: 10px; 
-      border-radius: 5px; 
-      cursor: pointer; 
-      display: flex; 
-      align-items: center; 
-      gap: 8px; 
-      font-weight: bold; 
-      font-size: 14px; 
-      transition: background 0.3s ease; 
-    }
-
     button:hover { background: #ffb700; color: #222; }
 
-    .dashboard { 
-      max-width: 800px; 
-      margin: 40px auto 0; 
-      padding: 30px; 
-      background: white; 
-      border-radius: 12px; 
-      min-height: 200px; 
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    /* أنيميشن و توهج العنوان */
+    /* عنوان الصفحة */
     @keyframes glowTitle {
       0% { text-shadow: 0 0 6px #ffb700; }
       50% { text-shadow: 0 0 18px #ffd966; }
       100% { text-shadow: 0 0 6px #ffb700; }
     }
+
+    /* حاوية الأخبار */
+    .news-container{
+      max-width: 900px;
+      margin: 25px auto;
+      padding: 10px;
+    }
+
+    /* صندوق خبر واحد */
+    .news-card{
+      background:white;
+      padding:15px;
+      margin-bottom:15px;
+      border-radius:12px;
+      text-align:right;
+      border-left:6px solid #ffb700;
+    }
+
+    .news-title{
+      font-size:20px;
+      font-weight:bold;
+      margin-bottom:8px;
+    }
+
+    .news-text{
+      font-size:15px;
+      color:#444;
+      margin-top:5px;
+    }
+
+    .news-img{
+      width:140px;
+      border-radius:10px;
+      margin-top:8px;
+      display:block;
+    }
+
   </style>
 </head>
 
@@ -87,7 +93,7 @@
 
   <div class="top-bar">
 
-    <!-- العنوان الذهبي أعلى الصفحة -->
+    <!-- العنوان الذهبي -->
     <div style="
       width: 100%;
       text-align: center;
@@ -114,9 +120,9 @@
 
   </div>
 
-  <!-- صندوق المحتوى -->
-  <div class="dashboard">
-    الأخبار
+  <!-- هنا ستظهر الأخبار -->
+  <div class="news-container" id="newsBox">
+    <div style="text-align:center;font-size:22px;font-weight:bold;">📰 الأخبار</div>
   </div>
 
   <!-- Firebase -->
@@ -150,6 +156,44 @@
         window.location.href = "login.html";
       });
     }
+
+    // ===========================
+    // جلب الأخبار من قاعدة البيانات
+    // ===========================
+    const newsBox = document.getElementById("newsBox");
+
+    db.ref("news").orderByChild("time").on("value", snap => {
+      newsBox.innerHTML = "<div style='text-align:center;font-size:22px;font-weight:bold;'>📰 الأخبار</div>";
+
+      let list = [];
+
+      snap.forEach(child => {
+        list.push(child.val());
+      });
+
+      // ترتيب من الأحدث للأقدم
+      list.reverse();
+
+      list.forEach(n => {
+        newsBox.innerHTML += `
+          <div class="news-card">
+
+            <div class="news-title">${n.title || ""}</div>
+
+            ${n.image ? `<img class="news-img" src="${n.image}">` : ""}
+
+            <div class="news-text">
+              ${n.text || ""}
+            </div>
+
+          </div>
+        `;
+      });
+
+      if(list.length === 0){
+        newsBox.innerHTML += "<p style='text-align:center;color:#777'>لا توجد أخبار حالياً</p>";
+      }
+    });
   </script>
 
 </body>
