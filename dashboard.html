@@ -12,78 +12,12 @@
     .nav-icons a { color: white; text-decoration: none; display: flex; align-items: center; font-size: 14px; gap: 8px; position: relative; }
     .nav-icons a i { font-size: 20px; }
     .nav-icons a:hover { color: #ffb700; }
-    #notifBadge, #chatBadge {
-      position: absolute;
-      top: 0;
-      left: 5px;
-      background: red;
-      color: white;
-      font-size: 12px;
-      font-weight: bold;
-      border-radius: 50%;
-      padding: 2px 6px;
-      display: none;
-      transform: translate(-50%, 50%);
-    }
     .user-area { display: flex; align-items: center; gap: 15px; font-size: 15px; }
     #balance { font-weight: bold; }
     button { background: #444; border: none; color: white; padding: 10px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 14px; transition: background 0.3s ease; }
     button i { font-size: 16px; }
     button:hover { background: #ffb700; color: #222; }
-    .dashboard { max-width: 800px; margin: auto; padding: 20px; background: white; border-radius: 12px; margin-top: 30px; }
-    .footer-contact { max-width: 800px; margin: 30px auto 20px; text-align: center; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
-    .note { font-size: 14px; color: #666; text-align: center; margin-top: 20px; }
-
-    #askMeBtn {
-      position: fixed;
-      left: 20px;
-      bottom: 20px;
-      background-color: #ffb700;
-      color: #222;
-      font-size: 22px;
-      padding: 12px 14px;
-      border-radius: 50%;
-      box-shadow: 0 0 15px rgba(0,0,0,0.2);
-      animation: floatUpDown 2s infinite ease-in-out;
-      z-index: 9999;
-      transition: transform 0.2s ease;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    #askMeBtn:hover {
-      transform: scale(1.1);
-      background-color: #ffd44d;
-    }
-    @keyframes floatUpDown {
-      0% { transform: translateY(0); }
-      50% { transform: translateY(-6px); }
-      100% { transform: translateY(0); }
-    }
-
-    #whatsappBtn {
-      position: fixed;
-      left: 20px;
-      bottom: 90px;
-      background-color: #25d366;
-      color: white;
-      font-size: 22px;
-      padding: 12px 14px;
-      border-radius: 50%;
-      box-shadow: 0 0 15px rgba(0,0,0,0.2);
-      animation: floatUpDown 2s infinite ease-in-out;
-      z-index: 9999;
-      transition: transform 0.2s ease;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    #whatsappBtn:hover {
-      transform: scale(1.1);
-      background-color: #1ebea5;
-    }
+    .dashboard { max-width: 800px; margin: auto; padding: 20px; background: white; border-radius: 12px; margin-top: 30px; min-height: 200px; }
   </style>
 </head>
 <body>
@@ -91,18 +25,9 @@
   <div class="top-bar">
     <nav class="nav-icons">
       <a href="account.html"><i class="fa fa-user"></i><span>حسابك</span></a>
-      <a href="orders.html"><i class="fa fa-box"></i><span>طلباتك</span></a>
-      <a href="add-money.html"><i class="fa fa-wallet"></i><span>إضافة أموال</span></a>
-      <a href="reviews_complaints.html"><i class="fa fa-comments"></i><span>التقييمات</span></a>
-      <a href="notifications.html" style="position: relative;"><i class="fa fa-bell"></i><span>الإشعارات</span><span id="notifBadge">0</span></a>
-      <a href="ranking.html"><i class="fa fa-crown"></i><span>التصنيف</span></a>
-      <a href="#" style="pointer-events: none; opacity: 0.6;"><i class="fa fa-lock"></i><span>الفعاليات</span></a>
       <a href="support_chat.html"><i class="fa fa-headset"></i><span>الدعم والشكاوى</span></a>
-      <a href="#" style="pointer-events: none; opacity: 0.6;"><i class="fa fa-lock"></i><span>عجلة الحظ</span></a>
-      <a href="suggest.html"><i class="fa fa-ticket-alt"></i><span>اقتراح أو خطأ</span></a>
-      <a href="chat.html" id="chatLink" style="position: relative;"><i class="fa fa-comments"></i><span>الدردشة</span><span id="chatBadge">0</span></a>
-      <a href="news.html"><i class="fa fa-newspaper"></i><span>الأخبار</span></a>
     </nav>
+
     <div class="user-area">
       <span id="balance">رصيدك: ...</span>
       <button onclick="logout()"><i class="fa fa-sign-out-alt"></i> خروج</button>
@@ -110,28 +35,8 @@
   </div>
 
   <div class="dashboard">
-    <h2 style="text-align: center;">لوحة التحكم</h2>
-    <button class="order-btn" onclick="location.href='send_message.html'"><i class="fa fa-paper-plane"></i> إرسال رسائل للأصدقاء</button>
-    <button class="order-btn" onclick="location.href='chat_rooms.html'"><i class="fa fa-comments"></i> غرف دردشة</button>
-    <button class="order-btn" onclick="location.href='pending_orders.html'"><i class="fa fa-hourglass-half"></i> الطلبات المعلقة</button>
-    <button class="order-btn" onclick="location.href='my_profile.html'"><i class="fa fa-user-circle"></i> ملفي الشخصي</button>
-    <button class="order-btn" onclick="location.href='vip_badges.html'"><i class="fa fa-star"></i> شارات VIP</button>
-    <button class="order-btn" onclick="location.href='achievements.html'"><i class="fa fa-trophy"></i> الإنجازات</button>
-    <button class="order-btn" onclick="location.href='support_chat.html'"><i class="fa fa-headset"></i> الدعم الفني</button>
-    <p class="note">اختر ما تريد من القائمة أعلاه</p>
+    <!-- مساحة فارغة للحفاظ على شكل الصفحة فقط -->
   </div>
-
-  <div class="footer-contact">
-    <button onclick="shareSite()">مشاركة الموقع</button>
-    <button onclick="copyLink()">نسخ رابط الموقع</button>
-  </div>
-
-  <!-- زر اسألني -->
-  <button id="askMeBtn" title="اسألني؟"><i class="fa fa-robot"></i></button>
-  <!-- زر واتساب -->
-  <a id="whatsappBtn" title="انضم لجروب واتساب" href="https://chat.whatsapp.com/EpJHhfUBTro8TZKx901A9S?mode=r_t" target="_blank">
-    <i class="fab fa-whatsapp"></i>
-  </a>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -148,12 +53,11 @@
       messagingSenderId: "113892775847",
       appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
+
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
     const balanceEl = document.getElementById("balance");
-    const notifBadge = document.getElementById("notifBadge");
-    const chatBadge = document.getElementById("chatBadge");
 
     let currentUser = null;
 
@@ -161,8 +65,6 @@
       if (user) {
         currentUser = user;
         loadBalance();
-        watchNotifications();
-        watchChat();
       } else {
         window.location.href = "login.html";
       }
@@ -180,54 +82,7 @@
         window.location.href = "login.html";
       });
     }
-
-    function watchNotifications() {
-      db.ref("notifications/" + currentUser.uid).on("value", snap => {
-        const data = snap.val();
-        let count = 0;
-        for (const key in data) {
-          if (data[key].seen === false) count++;
-        }
-        notifBadge.style.display = count > 0 ? "inline-block" : "none";
-        notifBadge.textContent = count;
-      });
-    }
-
-    function watchChat() {
-      db.ref("chat/messages").on("value", snap => {
-        const msgs = snap.val();
-        let unread = 0;
-        for (const key in msgs) {
-          if (!msgs[key].seenBy || !msgs[key].seenBy[currentUser.uid]) {
-            unread++;
-          }
-        }
-        chatBadge.style.display = unread > 0 ? "inline-block" : "none";
-        chatBadge.textContent = unread;
-      });
-    }
-
-    function shareSite() {
-      if (navigator.share) {
-        navigator.share({
-          title: 'Sheko Store',
-          text: 'شارك موقع Sheko Store مع أصدقائك!',
-          url: window.location.href
-        });
-      } else {
-        alert("هذه الميزة غير مدعومة في متصفحك.");
-      }
-    }
-
-    function copyLink() {
-      navigator.clipboard.writeText(window.location.href).then(() => {
-        alert("تم نسخ الرابط");
-      });
-    }
-
-    document.getElementById("askMeBtn").addEventListener("click", () => {
-      location.href = "ai_chat.html";
-    });
   </script>
+
 </body>
 </html>
