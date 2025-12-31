@@ -5,23 +5,22 @@
   <title> الاخبار - VIBE </title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
+
   <style>
     body { font-family: 'Cairo', sans-serif; margin: 0; background: #f1f1f1; }
 
     .top-bar { 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
       background: #222; 
       padding: 10px 20px; 
       color: white; 
-      flex-wrap: wrap; 
+      flex-wrap: wrap;
     }
 
     .nav-icons { 
       display: flex; 
       gap: 25px; 
       flex-direction: column; 
+      margin-top: 10px;
     }
 
     .nav-icons a { 
@@ -40,6 +39,7 @@
 
     .user-area { 
       display: flex; 
+      justify-content: flex-end; 
       align-items: center; 
       gap: 15px; 
       font-size: 15px; 
@@ -62,38 +62,47 @@
 
     button:hover { background: #ffb700; color: #222; }
 
-    /* عنوان VIBE Studio */
-    .page-title {
-      text-align: center;
-      font-size: 26px;
-      font-weight: bold;
-      margin-top: 25px;
-      margin-bottom: 20px;
-    }
-
     .dashboard { 
       max-width: 800px; 
-      margin: auto; 
-      padding: 40px 20px; 
+      margin: 40px auto 0; 
+      padding: 30px; 
       background: white; 
       border-radius: 12px; 
-      margin-top: 20px; 
       min-height: 200px; 
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
     }
 
-    /* كلمة الأخبار داخل الصندوق */
-    .news-title{
-      text-align:center;
-      font-size:22px;
-      font-weight:bold;
-      margin-top:20px;
+    /* أنيميشن و توهج العنوان */
+    @keyframes glowTitle {
+      0% { text-shadow: 0 0 6px #ffb700; }
+      50% { text-shadow: 0 0 18px #ffd966; }
+      100% { text-shadow: 0 0 6px #ffb700; }
     }
-
   </style>
 </head>
+
 <body>
 
   <div class="top-bar">
+
+    <!-- العنوان الذهبي أعلى الصفحة -->
+    <div style="
+      width: 100%;
+      text-align: center;
+      font-size: 30px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #ffcc33;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 0 0 8px rgba(255, 204, 0, 0.8);
+      animation: glowTitle 2s infinite ease-in-out;
+    ">
+      VIBE STUDIO
+    </div>
+
     <nav class="nav-icons">
       <a href="account.html"><i class="fa fa-user"></i><span>حسابك</span></a>
       <a href="support_chat.html"><i class="fa fa-headset"></i><span>الدعم والشكاوى</span></a>
@@ -102,36 +111,39 @@
     <div class="user-area">
       <button onclick="logout()"><i class="fa fa-sign-out-alt"></i> خروج</button>
     </div>
+
   </div>
 
-  <!-- عنوان أعلى الصفحة -->
-  <div class="page-title">
-     VIBE Studio
-  </div>
-
-  <!-- الصندوق الأبيض -->
+  <!-- صندوق المحتوى -->
   <div class="dashboard">
-
-      <!-- كلمة الأخبار في المنتصف -->
-      <div class="news-title">
-        الأخبار
-      </div>
-
+    الأخبار
   </div>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
       projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
     };
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+    const db = firebase.database();
+
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = "login.html";
+      }
+    });
 
     function logout() {
       auth.signOut().then(() => {
