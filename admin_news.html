@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>News Admin</title>
+
+<style>
+body{
+  background:#000;
+  color:white;
+  font-family:Arial;
+  direction:rtl;
+  padding:20px;
+}
+input,textarea{
+  width:100%;
+  padding:10px;
+  margin:6px 0;
+  border-radius:8px;
+  border:none;
+}
+button{
+  padding:10px 20px;
+  border-radius:10px;
+  border:none;
+  font-weight:bold;
+  cursor:pointer;
+}
+</style>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script>
+// ضع إعدادات مشروعك هنا
+const firebaseConfig = {
+  apiKey: "YOUR-KEY",
+  authDomain: "YOUR-APP.firebaseapp.com",
+  databaseURL: "https://YOUR-APP.firebaseio.com",
+  projectId: "YOUR-ID",
+};
+firebase.initializeApp(firebaseConfig);
+
+function addNews(){
+  const title = document.getElementById("title").value;
+  const text = document.getElementById("text").value;
+  const image = document.getElementById("image").value;
+
+  const newsRef = firebase.database().ref("news").push();
+  newsRef.set({
+    title:title,
+    text:text,
+    image:image,
+    time: Date.now()
+  });
+
+  alert("تم نشر الخبر ✔️");
+  document.getElementById("title").value="";
+  document.getElementById("text").value="";
+  document.getElementById("image").value="";
+}
+</script>
+
+</head>
+<body>
+
+<h2>✍️ إضافة خبر جديد</h2>
+
+<input id="title" placeholder="عنوان الخبر">
+<textarea id="text" placeholder="نص الخبر" rows="5"></textarea>
+<input id="image" placeholder="رابط الصورة (اختياري)">
+
+<button onclick="addNews()">نشر الخبر</button>
+
+</body>
+</html>
