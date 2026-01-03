@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>إدارة أعضاء VIBE Studio</title>
+
+<style>
+body{
+  background:#08090d;
+  color:white;
+  font-family:Tahoma;
+  text-align:center;
+}
+
+.form{
+  background:#0f1118;
+  padding:15px;
+  width:90%;
+  max-width:750px;
+  margin:20px auto;
+  border-radius:16px;
+}
+
+input,select{
+  width:100%;
+  padding:9px;
+  margin-bottom:10px;
+  border-radius:10px;
+  border:0;
+}
+
+button{
+  width:100%;
+  padding:9px;
+  border-radius:10px;
+  border:0;
+  cursor:pointer;
+}
+
+.add{background:#16c784}
+.update{background:#3399ff}
+.delete{background:#ff3b3b}
+
+.member-item{
+  background:#0f1118;
+  margin:10px auto;
+  padding:10px;
+  width:90%;
+  max-width:750px;
+  border-radius:12px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>لوحة إدارة الأعضاء</h2>
+
+<div class="form">
+
+  <label>صورة العضو</label>
+  <input type="file" id="image">
+
+  <label>اسم العضو</label>
+  <input type="text" id="name">
+
+  <label>المهنة</label>
+  <select id="role">
+    <option>موسيقار</option>
+    <option>مغني</option>
+  </select>
+
+  <label>
+    <input type="checkbox" id="featuredCheck">
+    عضو مميز ⭐
+  </label>
+
+  <button class="add" onclick="addMember()">إضافة عضو</button>
+
+</div>
+
+<div id="members"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+  authDomain: "sheko-store.firebaseapp.com",
+  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+  projectId: "sheko-store",
+  storageBucket: "sheko-store.appspot.com",
+  messagingSenderId: "113892775847",
+  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let editKey = null;
+
+// تحويل الصورة Base64
+function getFile(file){
+  return new Promise(res=>{
+    let r = new FileReader();
+    r.onload =()=>res(r.result);
+    r.readAsDataURL(file);
+  });
+}
+
+// إضافة عضو
+async function addMember(){
+
+  let name = document.getElementById("name").value;
+  let role = document.getElementById("role").value;
+  let featured = document.getElementById("featuredCheck").checked;
+  let file = document.getElementById("image").files[0];
+
+  if(!name || !file){
+    alert("اكتب الاسم وارفع صورة");
+    return;
+  }
+
+  let img = await getFile(file);
+
+  let key = db.ref().child("vibeMembers").push().key;
+
+  db.ref("vibeMembers/"+key).set({
+    key,
+    name,
+    role,
+    featured,
+    image: img,
+    time: Date.now()
+  });
+}
+
+// عرض الأعضاء
+db.ref("vibeMembers").on("value",snap=>{
+
+  let box = document.getElementById("members");
+  box.innerHTML = "";
+
+  let list=[];
+
+  snap.forEach(c=> list.push(c.val()));
+  list.reverse();
+
+  list.forEach(m=>{
+
+    box.innerHTML += `
+      <div class="member-item">
+        <b>${m.name}</b> — ${m.role}
+        <br>
+        ${m.featured?"⭐ عضو مميز":"عضو عادي"}
+        <br><br>
+        <button class="update" onclick='loadEdit("${m.key}")'>تعديل</button>
+        <button class="delete" onclick='deleteMember("${m.key}")'>حذف</button>
+      </div>
+    `;
+  });
+
+});
+
+// حذف عضو
+function deleteMember(key){
+  db.ref("vibeMembers/"+key).remove();
+}
+
+// تحميل عضو للتعديل
+function loadEdit(key){
+
+  editKey = key;
+
+  db.ref("vibeMembers/"+key).once("value").then(s=>{
+
+    let m = s.val();
+
+    document.getElementById("name").value = m.name;
+    document.getElementById("role").value = m.role;
+    document.getElementById("featuredCheck").checked = m.featured;
+
+    document.querySelector(".add").innerText = "حفظ التعديل";
+    document.querySelector(".add").onclick = saveEdit;
+  });
+}
+
+// حفظ التعديل
+async function saveEdit(){
+
+  let name = document.getElementById("name").value;
+  let role = document.getElementById("role").value;
+  let featured = document.getElementById("featuredCheck").checked;
+
+  let updateData = {name, role, featured};
+
+  let file = document.getElementById("image").files[0];
+  if(file){
+    updateData.image = await getFile(file);
+  }
+
+  db.ref("vibeMembers/"+editKey).update(updateData);
+
+  location.reload();
+}
+</script>
+
+</body>
+</html>
