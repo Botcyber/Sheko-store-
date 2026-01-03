@@ -2,14 +2,13 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>إدارة أعضاء VIBE Studio</title>
 
 <style>
 body{
   background:#08090d;
   color:white;
-  font-family:'Cairo',sans-serif;
+  font-family:Tahoma;
   text-align:center;
 }
 
@@ -49,7 +48,6 @@ button{
   width:90%;
   max-width:750px;
   border-radius:12px;
-  text-align:right;
 }
 </style>
 </head>
@@ -91,9 +89,6 @@ button{
     <option>سوشيال ميديا</option>
   </select>
 
-  <label>معلومة إضافية (اختياري)</label>
-  <input type="text" id="extra" placeholder="مثلاً: Lead Vocal / DJ Set ...">
-
   <label>
     <input type="checkbox" id="featuredCheck">
     عضو مميز ⭐
@@ -105,7 +100,6 @@ button{
 
 <div id="members"></div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -127,62 +121,53 @@ let editKey = null;
 
 // تحويل الصورة Base64
 function getFile(file){
-  return new Promise((resolve,reject)=>{
-    if(!file){ resolve(""); return; }
-    let reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject("فشل رفع الصورة");
-    reader.readAsDataURL(file);
+  return new Promise(res=>{
+    let r = new FileReader();
+    r.onload =()=>res(r.result);
+    r.readAsDataURL(file);
   });
 }
 
 // إضافة عضو
 async function addMember(){
-  let name = document.getElementById("name").value.trim();
+  let name = document.getElementById("name").value;
   let role = document.getElementById("role").value;
-  let extra = document.getElementById("extra").value.trim();
   let featured = document.getElementById("featuredCheck").checked;
   let file = document.getElementById("image").files[0];
 
-  if(!name){
-    alert("الاسم مطلوب");
+  if(!name || !file){
+    alert("اكتب الاسم وارفع صورة");
     return;
   }
 
-  try{
-    let img = await getFile(file);
-    let key = db.ref().child("vibeMembers").push().key;
+  let img = await getFile(file);
+  let key = db.ref().child("vibeMembers").push().key;
 
-    db.ref("vibeMembers/"+key).set({
-      key,
-      name,
-      role,
-      extra,
-      featured,
-      image: img,
-      time: Date.now()
-    });
+  db.ref("vibeMembers/"+key).set({
+    key,
+    name,
+    role,
+    featured,
+    image: img,
+    time: Date.now()
+  });
 
-    alert("تم إضافة العضو بنجاح!");
-    location.reload();
-  } catch(e){
-    alert("حدث خطأ: " + e);
-  }
+  location.reload();
 }
 
 // عرض الأعضاء
-db.ref("vibeMembers").orderByChild("time").on("value",snap=>{
+db.ref("vibeMembers").on("value",snap=>{
   let box = document.getElementById("members");
   box.innerHTML = "";
+
   let list=[];
   snap.forEach(c=> list.push(c.val()));
   list.reverse();
 
   list.forEach(m=>{
-    let displayRole = m.extra ? `${m.role} - ${m.extra}` : m.role;
     box.innerHTML += `
       <div class="member-item">
-        <b>${m.name}</b> — ${displayRole}
+        <b>${m.name}</b> — ${m.role}
         <br>
         ${m.featured?"⭐ عضو مميز":"عضو عادي"}
         <br><br>
@@ -205,7 +190,6 @@ function loadEdit(key){
     let m = s.val();
     document.getElementById("name").value = m.name;
     document.getElementById("role").value = m.role;
-    document.getElementById("extra").value = m.extra || "";
     document.getElementById("featuredCheck").checked = m.featured;
 
     document.querySelector(".add").innerText = "حفظ التعديل";
@@ -215,12 +199,11 @@ function loadEdit(key){
 
 // حفظ التعديل
 async function saveEdit(){
-  let name = document.getElementById("name").value.trim();
+  let name = document.getElementById("name").value;
   let role = document.getElementById("role").value;
-  let extra = document.getElementById("extra").value.trim();
   let featured = document.getElementById("featuredCheck").checked;
 
-  let updateData = {name, role, extra, featured};
+  let updateData = {name, role, featured};
 
   let file = document.getElementById("image").files[0];
   if(file){
@@ -228,7 +211,7 @@ async function saveEdit(){
   }
 
   db.ref("vibeMembers/"+editKey).update(updateData);
-  alert("تم تحديث العضو!");
+
   location.reload();
 }
 </script>
