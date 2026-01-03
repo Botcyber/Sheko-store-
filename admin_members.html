@@ -2,62 +2,64 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>إدارة أعضاء VIBE Studio</title>
-
 <style>
 body{
   background:#08090d;
   color:white;
-  font-family:Tahoma;
+  font-family:'Cairo',sans-serif;
   text-align:center;
+  margin:0;
+  padding:0;
 }
-
+h2{margin:20px 0;}
 .form{
   background:#0f1118;
-  padding:15px;
+  padding:20px;
   width:90%;
   max-width:750px;
   margin:20px auto;
   border-radius:16px;
+  box-shadow:0 0 20px rgba(0,0,0,.6);
 }
-
-input,select{
+input, select{
   width:100%;
-  padding:9px;
+  padding:10px;
   margin-bottom:10px;
   border-radius:10px;
   border:0;
+  font-size:15px;
 }
-
 button{
   width:100%;
-  padding:9px;
+  padding:10px;
   border-radius:10px;
   border:0;
   cursor:pointer;
+  font-size:15px;
+  margin-bottom:10px;
 }
-
-.add{background:#16c784}
-.update{background:#3399ff}
-.delete{background:#ff3b3b}
+.add{background:#16c784;color:black;}
+.update{background:#3399ff;color:white;}
+.delete{background:#ff3b3b;color:white;}
 
 .member-item{
   background:#0f1118;
   margin:10px auto;
-  padding:10px;
+  padding:12px;
   width:90%;
   max-width:750px;
   border-radius:12px;
+  box-shadow:0 0 15px rgba(0,0,0,.5);
 }
 </style>
 </head>
-
 <body>
 
 <h2>لوحة إدارة الأعضاء</h2>
 
 <div class="form">
-
   <label>صورة العضو</label>
   <input type="file" id="image">
 
@@ -68,7 +70,13 @@ button{
   <select id="role">
     <option>موسيقار</option>
     <option>مغني</option>
+    <option>منتج</option>
+    <option>دي جي</option>
+    <option>مهندس صوت</option>
   </select>
+
+  <label>معلومة إضافية (اختياري)</label>
+  <input type="text" id="extra" placeholder="مثلاً: عازف بيانو">
 
   <label>
     <input type="checkbox" id="featuredCheck">
@@ -76,14 +84,12 @@ button{
   </label>
 
   <button class="add" onclick="addMember()">إضافة عضو</button>
-
 </div>
 
 <div id="members"></div>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
@@ -111,47 +117,49 @@ function getFile(file){
 
 // إضافة عضو
 async function addMember(){
-
-  let name = document.getElementById("name").value;
+  let name = document.getElementById("name").value.trim();
   let role = document.getElementById("role").value;
+  let extra = document.getElementById("extra").value.trim();
   let featured = document.getElementById("featuredCheck").checked;
   let file = document.getElementById("image").files[0];
 
   if(!name || !file){
-    alert("اكتب الاسم وارفع صورة");
+    alert("اكتب الاسم وارفع صورة العضو");
     return;
   }
 
   let img = await getFile(file);
-
   let key = db.ref().child("vibeMembers").push().key;
 
   db.ref("vibeMembers/"+key).set({
     key,
     name,
     role,
+    extra,
     featured,
     image: img,
     time: Date.now()
+  }).then(()=>{
+    alert("تم إضافة العضو بنجاح!");
+    document.getElementById("name").value="";
+    document.getElementById("extra").value="";
+    document.getElementById("featuredCheck").checked=false;
+    document.getElementById("image").value="";
   });
 }
 
 // عرض الأعضاء
 db.ref("vibeMembers").on("value",snap=>{
-
   let box = document.getElementById("members");
-  box.innerHTML = "";
-
-  let list=[];
-
-  snap.forEach(c=> list.push(c.val()));
+  box.innerHTML="";
+  let list = [];
+  snap.forEach(c=>list.push(c.val()));
   list.reverse();
 
   list.forEach(m=>{
-
     box.innerHTML += `
       <div class="member-item">
-        <b>${m.name}</b> — ${m.role}
+        <b>${m.name}</b> — ${m.role}${m.extra? " - "+m.extra:""}
         <br>
         ${m.featured?"⭐ عضو مميز":"عضو عادي"}
         <br><br>
@@ -160,49 +168,47 @@ db.ref("vibeMembers").on("value",snap=>{
       </div>
     `;
   });
-
 });
 
 // حذف عضو
 function deleteMember(key){
-  db.ref("vibeMembers/"+key).remove();
+  if(confirm("هل أنت متأكد من حذف العضو؟")){
+    db.ref("vibeMembers/"+key).remove();
+  }
 }
 
 // تحميل عضو للتعديل
 function loadEdit(key){
-
   editKey = key;
-
   db.ref("vibeMembers/"+key).once("value").then(s=>{
-
     let m = s.val();
-
     document.getElementById("name").value = m.name;
     document.getElementById("role").value = m.role;
+    document.getElementById("extra").value = m.extra || "";
     document.getElementById("featuredCheck").checked = m.featured;
-
-    document.querySelector(".add").innerText = "حفظ التعديل";
+    document.querySelector(".add").innerText="حفظ التعديل";
     document.querySelector(".add").onclick = saveEdit;
   });
 }
 
 // حفظ التعديل
 async function saveEdit(){
-
-  let name = document.getElementById("name").value;
+  let name = document.getElementById("name").value.trim();
   let role = document.getElementById("role").value;
+  let extra = document.getElementById("extra").value.trim();
   let featured = document.getElementById("featuredCheck").checked;
 
-  let updateData = {name, role, featured};
+  let updateData = {name, role, extra, featured};
 
   let file = document.getElementById("image").files[0];
   if(file){
     updateData.image = await getFile(file);
   }
 
-  db.ref("vibeMembers/"+editKey).update(updateData);
-
-  location.reload();
+  db.ref("vibeMembers/"+editKey).update(updateData).then(()=>{
+    alert("تم حفظ التعديلات!");
+    location.reload();
+  });
 }
 </script>
 
