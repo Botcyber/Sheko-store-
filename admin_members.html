@@ -89,6 +89,9 @@ button{
     <option>سوشيال ميديا</option>
   </select>
 
+  <label>معلومة إضافية (اختياري)</label>
+  <input type="text" id="extra" placeholder="مثلاً: Lead Vocal / DJ Set ...">
+
   <label>
     <input type="checkbox" id="featuredCheck">
     عضو مميز ⭐
@@ -132,6 +135,7 @@ function getFile(file){
 async function addMember(){
   let name = document.getElementById("name").value;
   let role = document.getElementById("role").value;
+  let extra = document.getElementById("extra").value.trim();
   let featured = document.getElementById("featuredCheck").checked;
   let file = document.getElementById("image").files[0];
 
@@ -147,6 +151,7 @@ async function addMember(){
     key,
     name,
     role,
+    extra,
     featured,
     image: img,
     time: Date.now()
@@ -165,9 +170,10 @@ db.ref("vibeMembers").on("value",snap=>{
   list.reverse();
 
   list.forEach(m=>{
+    let displayRole = m.extra ? `${m.role} - ${m.extra}` : m.role;
     box.innerHTML += `
       <div class="member-item">
-        <b>${m.name}</b> — ${m.role}
+        <b>${m.name}</b> — ${displayRole}
         <br>
         ${m.featured?"⭐ عضو مميز":"عضو عادي"}
         <br><br>
@@ -190,6 +196,7 @@ function loadEdit(key){
     let m = s.val();
     document.getElementById("name").value = m.name;
     document.getElementById("role").value = m.role;
+    document.getElementById("extra").value = m.extra || "";
     document.getElementById("featuredCheck").checked = m.featured;
 
     document.querySelector(".add").innerText = "حفظ التعديل";
@@ -201,9 +208,10 @@ function loadEdit(key){
 async function saveEdit(){
   let name = document.getElementById("name").value;
   let role = document.getElementById("role").value;
+  let extra = document.getElementById("extra").value.trim();
   let featured = document.getElementById("featuredCheck").checked;
 
-  let updateData = {name, role, featured};
+  let updateData = {name, role, extra, featured};
 
   let file = document.getElementById("image").files[0];
   if(file){
