@@ -64,29 +64,10 @@ button{
   <label>اسم العضو</label>
   <input type="text" id="name">
 
-  <label>الدور / المهنة</label>
+  <label>المهنة</label>
   <select id="role">
-    <option>المغني / المطرب</option>
-    <option>المؤدي الصوتي / الرابر</option>
-    <option>الكورال / Back Vocal</option>
-    <option>الملحن</option>
-    <option>كاتب الكلمات</option>
-    <option>الموزع الموسيقي</option>
-    <option>DJ</option>
-    <option>Live Performer</option>
-    <option>عازف بيانو / أورج</option>
-    <option>عازف جيتار كهرباء / كلاسيك</option>
-    <option>عازف كمان</option>
-    <option>عازف درامز</option>
-    <option>عازف ناي / قانون / عود</option>
-    <option>مهندس صوت</option>
-    <option>ميكس وماستر</option>
-    <option>مخرج فني</option>
-    <option>مصمم فيديوهات للحفلات</option>
-    <option>مصور فيديو وفوتوغرافي</option>
-    <option>مدير الاستوديو</option>
-    <option>مدير أعمال</option>
-    <option>سوشيال ميديا</option>
+    <option>موسيقار</option>
+    <option>مغني</option>
   </select>
 
   <label>
@@ -130,6 +111,7 @@ function getFile(file){
 
 // إضافة عضو
 async function addMember(){
+
   let name = document.getElementById("name").value;
   let role = document.getElementById("role").value;
   let featured = document.getElementById("featuredCheck").checked;
@@ -141,6 +123,7 @@ async function addMember(){
   }
 
   let img = await getFile(file);
+
   let key = db.ref().child("vibeMembers").push().key;
 
   db.ref("vibeMembers/"+key).set({
@@ -151,20 +134,21 @@ async function addMember(){
     image: img,
     time: Date.now()
   });
-
-  location.reload();
 }
 
 // عرض الأعضاء
 db.ref("vibeMembers").on("value",snap=>{
+
   let box = document.getElementById("members");
   box.innerHTML = "";
 
   let list=[];
+
   snap.forEach(c=> list.push(c.val()));
   list.reverse();
 
   list.forEach(m=>{
+
     box.innerHTML += `
       <div class="member-item">
         <b>${m.name}</b> — ${m.role}
@@ -176,6 +160,7 @@ db.ref("vibeMembers").on("value",snap=>{
       </div>
     `;
   });
+
 });
 
 // حذف عضو
@@ -185,9 +170,13 @@ function deleteMember(key){
 
 // تحميل عضو للتعديل
 function loadEdit(key){
+
   editKey = key;
+
   db.ref("vibeMembers/"+key).once("value").then(s=>{
+
     let m = s.val();
+
     document.getElementById("name").value = m.name;
     document.getElementById("role").value = m.role;
     document.getElementById("featuredCheck").checked = m.featured;
@@ -199,6 +188,7 @@ function loadEdit(key){
 
 // حفظ التعديل
 async function saveEdit(){
+
   let name = document.getElementById("name").value;
   let role = document.getElementById("role").value;
   let featured = document.getElementById("featuredCheck").checked;
