@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>أعضاء VIBE Studio</title>
+
+<style>
+
+body{
+  margin:0;
+  background:radial-gradient(circle at top,#0b1220,#05060a);
+  color:white;
+  font-family:'Cairo',sans-serif;
+}
+
+/* عنوان متحرك */
+.header{
+  text-align:center;
+  padding:25px 0;
+  font-size:28px;
+  font-weight:900;
+  letter-spacing:2px;
+  text-shadow:0 0 15px rgba(255,255,255,.2);
+  animation:pulse 3s infinite;
+}
+@keyframes pulse{
+  0%{opacity:.7}
+  50%{opacity:1}
+  100%{opacity:.7}
+}
+
+/* صندوق عام */
+.container{
+  width:92%;
+  max-width:950px;
+  margin:auto;
+}
+
+/* خانة البحث */
+.search{
+  width:100%;
+  padding:10px;
+  font-size:15px;
+  border-radius:14px;
+  border:0;
+  margin-bottom:15px;
+}
+
+/* عنوان القسم */
+.section-title{
+  font-size:18px;
+  margin-top:15px;
+  margin-bottom:8px;
+}
+
+/* كارت عضو */
+.member-card{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px;
+  background:linear-gradient(145deg,#0c1423,#0a0f18);
+  border-radius:16px;
+  box-shadow:0 0 20px rgba(0,0,0,.5);
+  margin-bottom:10px;
+  border:1px solid rgba(255,255,255,.05);
+  transition:.25s;
+  position:relative;
+}
+.member-card:hover{
+  transform:translateY(-4px) scale(1.01);
+  box-shadow:0 0 30px rgba(0,0,0,.8);
+}
+
+/* صورة دائرية */
+.member-img{
+  width:65px;
+  height:65px;
+  border-radius:50%;
+  object-fit:cover;
+  border:2px solid transparent;
+}
+
+/* نص */
+.member-name{
+  font-size:18px;
+  font-weight:800;
+}
+
+.member-role{
+  font-size:13px;
+  opacity:.8;
+}
+
+/* عضو مميز */
+.featured{
+  border:1px solid gold;
+  background:linear-gradient(160deg,#161003,#000);
+}
+
+.featured .member-img{
+  border:2px solid gold;
+}
+
+/* تاج متحرك */
+.featured::before{
+  content:"👑 عضو مميز";
+  position:absolute;
+  top:-10px;
+  right:10px;
+  background:gold;
+  color:black;
+  font-size:12px;
+  padding:3px 8px;
+  border-radius:12px;
+  animation:glow 2s infinite;
+}
+@keyframes glow{
+  0%{box-shadow:0 0 4px gold}
+  50%{box-shadow:0 0 16px gold}
+  100%{box-shadow:0 0 4px gold}
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">أعضاء VIBE Studio</div>
+
+<div class="container">
+
+<input class="search" id="search" placeholder="🔍 ابحث عن عضو بالاسم">
+
+<div class="section-title">⭐ الأعضاء المميزون</div>
+<div id="featured"></div>
+
+<div class="section-title">👥 جميع الأعضاء</div>
+<div id="normal"></div>
+
+</div>
+
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script>
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+  authDomain: "sheko-store.firebaseapp.com",
+  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+  projectId: "sheko-store",
+  storageBucket: "sheko-store.appspot.com",
+  messagingSenderId: "113892775847",
+  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let featuredBox = document.getElementById("featured");
+let normalBox = document.getElementById("normal");
+let search = document.getElementById("search");
+
+let members = [];
+
+db.ref("vibeMembers").orderByChild("time").on("value",snap=>{
+  members = [];
+  snap.forEach(c=> members.push(c.val()));
+  members.reverse();
+  render();
+});
+
+/* دالة عرض مع البحث */
+function render(){
+
+  featuredBox.innerHTML = "";
+  normalBox.innerHTML = "";
+
+  let text = search.value.toLowerCase();
+
+  members.forEach(m=>{
+    if(!m.name.toLowerCase().includes(text)) return;
+
+    let card = `
+      <div class="member-card ${m.featured?"featured":""}">
+        <img class="member-img" src="${m.image}">
+        <div>
+          <div class="member-name">${m.name}</div>
+          <div class="member-role">${m.role}</div>
+        </div>
+      </div>
+    `;
+
+    if(m.featured) featuredBox.innerHTML += card;
+    else normalBox.innerHTML += card;
+
+  });
+
+}
+
+search.oninput = render;
+
+</script>
+
+</body>
+</html>
