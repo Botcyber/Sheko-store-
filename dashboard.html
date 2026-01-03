@@ -43,47 +43,50 @@
 
     button:hover { background: #ffb700; color: #222; }
 
-    /* عنوان الصفحة */
     @keyframes glowTitle {
       0% { text-shadow: 0 0 6px #ffb700; }
       50% { text-shadow: 0 0 18px #ffd966; }
       100% { text-shadow: 0 0 6px #ffb700; }
     }
 
-    /* حاوية الأخبار */
+    /* الحاوية العامة للأخبار */
     .news-container{
       max-width: 900px;
       margin: 25px auto;
       padding: 10px;
     }
 
-    /* صندوق خبر واحد */
+    /* تصميم بطاقة الخبر مثل سكاي نيوز */
     .news-card{
       background:white;
-      padding:15px;
-      margin-bottom:15px;
+      margin-bottom:18px;
       border-radius:12px;
-      text-align:right;
-      border-left:6px solid #ffb700;
+      overflow:hidden;
+      box-shadow:0 4px 15px rgba(0,0,0,.08);
     }
 
+    /* الصورة أعلى الكارت بعرض كامل */
+    .news-img{
+      width:100%;
+      height:220px;
+      object-fit:cover;
+      display:block;
+    }
+
+    /* العنوان */
     .news-title{
       font-size:20px;
-      font-weight:bold;
-      margin-bottom:8px;
+      font-weight:800;
+      padding:12px 15px 5px 15px;
+      line-height:1.6;
     }
 
+    /* نص الخبر */
     .news-text{
       font-size:15px;
       color:#444;
-      margin-top:5px;
-    }
-
-    .news-img{
-      width:140px;
-      border-radius:10px;
-      margin-top:8px;
-      display:block;
+      padding:0 15px 15px 15px;
+      line-height:1.8;
     }
 
   </style>
@@ -93,7 +96,6 @@
 
   <div class="top-bar">
 
-    <!-- العنوان الذهبي -->
     <div style="
       width: 100%;
       text-align: center;
@@ -120,7 +122,6 @@
 
   </div>
 
-  <!-- هنا ستظهر الأخبار -->
   <div class="news-container" id="newsBox">
     <div style="text-align:center;font-size:22px;font-weight:bold;">📰 الأخبار</div>
   </div>
@@ -157,34 +158,25 @@
       });
     }
 
-    // ===========================
-    // جلب الأخبار من قاعدة البيانات
-    // ===========================
     const newsBox = document.getElementById("newsBox");
 
     db.ref("news").orderByChild("time").on("value", snap => {
       newsBox.innerHTML = "<div style='text-align:center;font-size:22px;font-weight:bold;'>📰 الأخبار</div>";
 
       let list = [];
+      snap.forEach(child => list.push(child.val()));
 
-      snap.forEach(child => {
-        list.push(child.val());
-      });
-
-      // ترتيب من الأحدث للأقدم
       list.reverse();
 
       list.forEach(n => {
         newsBox.innerHTML += `
           <div class="news-card">
 
-            <div class="news-title">${n.title || ""}</div>
-
             ${n.image ? `<img class="news-img" src="${n.image}">` : ""}
 
-            <div class="news-text">
-              ${n.text || ""}
-            </div>
+            <div class="news-title">${n.title || ""}</div>
+
+            <div class="news-text">${n.text || ""}</div>
 
           </div>
         `;
