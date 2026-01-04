@@ -34,7 +34,11 @@ body{
   margin:auto;
 }
 
+/* بطاقة عامة */
 .card{
+  display:flex;
+  gap:10px;
+  align-items:center;
   background:linear-gradient(140deg,#0c1423,#0a0f18);
   padding:12px;
   margin-top:10px;
@@ -48,6 +52,15 @@ body{
  to{opacity:1;transform:translateY(0)}
 }
 
+/* صورة دائرية */
+.card img{
+ width:55px;
+ height:55px;
+ border-radius:50%;
+ object-fit:cover;
+}
+
+/* نص */
 .name{
  font-size:17px;
  font-weight:900;
@@ -58,6 +71,37 @@ body{
  font-size:13px;
 }
 
+/* مميز */
+.featured{
+ background:linear-gradient(160deg,#2c2403,#000);
+ border:1px solid gold;
+}
+
+.featured img{
+ border:2px solid gold;
+}
+
+.featured::before{
+ content:"👑 عضو مميز";
+ position:absolute;
+ top:-8px;
+ right:10px;
+ background:gold;
+ color:black;
+ font-size:11px;
+ padding:3px 8px;
+ border-radius:12px;
+}
+
+.wrapper{
+ position:relative;
+}
+
+.section-title{
+ margin-top:15px;
+ font-weight:800;
+}
+
 </style>
 </head>
 
@@ -65,7 +109,15 @@ body{
 
 <div class="header">أعضاء VIBE Studio</div>
 
-<div class="container" id="members"></div>
+<div class="container">
+
+<div class="section-title">⭐ الأعضاء المميزون</div>
+<div id="featured"></div>
+
+<div class="section-title">👥 جميع الأعضاء</div>
+<div id="normal"></div>
+
+</div>
 
 <script>
 
@@ -73,16 +125,28 @@ function showMembers(){
 
  let data = JSON.parse(localStorage.getItem("members") || "[]");
 
- let box = document.getElementById("members");
- box.innerHTML = "";
+ let f = document.getElementById("featured");
+ let n = document.getElementById("normal");
+
+ f.innerHTML="";
+ n.innerHTML="";
 
  data.forEach(m=>{
-  box.innerHTML += `
-   <div class="card">
-    <div class="name">${m.name}</div>
-    <div class="role">${m.role}${m.extra ? " - "+m.extra:""}</div>
+
+  let card = `
+  <div class="wrapper">
+   <div class="card ${m.featured ? "featured":""}">
+    <img src="${m.img || "https://i.postimg.cc/5t8Q7H8B/user.png"}">
+    <div>
+      <div class="name">${m.name}</div>
+      <div class="role">${m.role}${m.extra ? " - "+m.extra:""}</div>
+    </div>
    </div>
+  </div>
   `;
+
+  if(m.featured) f.innerHTML += card;
+  else n.innerHTML += card;
  });
 
 }
