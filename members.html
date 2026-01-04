@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <title>أعضاء VIBE Studio</title>
 
 <style>
@@ -17,14 +16,12 @@ body{
 
 .header{
   text-align:center;
-  padding:22px 0;
+  padding:20px 0;
   font-size:26px;
   font-weight:900;
-  letter-spacing:1px;
-  text-shadow:0 0 15px rgba(255,255,255,.25);
+  text-shadow:0 0 15px rgba(255,255,255,.2);
   animation:pulse 3s infinite;
 }
-
 @keyframes pulse{
   0%{opacity:.7}
   50%{opacity:1}
@@ -44,6 +41,7 @@ body{
   border-radius:14px;
   border:0;
   margin-bottom:15px;
+  outline:none;
 }
 
 .section-title{
@@ -52,7 +50,6 @@ body{
   margin-bottom:6px;
 }
 
-/* بطاقة عضو */
 .member-card{
   display:flex;
   align-items:center;
@@ -60,21 +57,16 @@ body{
   padding:12px;
   background:linear-gradient(145deg,#0c1423,#0a0f18);
   border-radius:18px;
-  box-shadow:0 0 14px rgba(0,0,0,.6);
+  box-shadow:0 0 12px rgba(0,0,0,.6);
   margin-bottom:10px;
   border:1px solid rgba(255,255,255,.05);
   transition:.25s;
   position:relative;
 }
 
-.member-card:hover{
-  transform:translateY(-2px) scale(1.01);
-}
-
-/* صورة */
 .member-img{
-  width:62px;
-  height:62px;
+  width:60px;
+  height:60px;
   border-radius:50%;
   object-fit:cover;
 }
@@ -86,20 +78,18 @@ body{
 
 .member-role{
   font-size:13px;
-  opacity:.85;
+  opacity:.8;
 }
 
-/* مميز */
 .featured{
   border:1px solid gold;
-  background:linear-gradient(160deg,#181100,#000);
+  background:linear-gradient(160deg,#161003,#000);
 }
 
 .featured .member-img{
   border:2px solid gold;
 }
 
-/* تاج */
 .featured::before{
   content:"👑 عضو مميز";
   position:absolute;
@@ -110,13 +100,6 @@ body{
   font-size:11px;
   padding:3px 8px;
   border-radius:12px;
-  animation:glow 2s infinite;
-}
-
-@keyframes glow{
-  0%{box-shadow:0 0 4px gold}
-  50%{box-shadow:0 0 18px gold}
-  100%{box-shadow:0 0 4px gold}
 }
 
 </style>
@@ -128,7 +111,7 @@ body{
 
 <div class="container">
 
-<input id="search" class="search" placeholder="🔍 ابحث عن عضو">
+<input class="search" id="search" placeholder="🔍 ابحث عن عضو بالاسم">
 
 <div class="section-title">⭐ الأعضاء المميزون</div>
 <div id="featured"></div>
@@ -163,22 +146,21 @@ let search = document.getElementById("search");
 let members = [];
 
 db.ref("vibeMembers").orderByChild("time").on("value",snap=>{
-  members=[];
-  snap.forEach(c=>members.push(c.val()));
+  members = [];
+  snap.forEach(c=> members.push({...c.val(), key:c.key}));
   members.reverse();
   render();
 });
 
 function render(){
 
-  featuredBox.innerHTML="";
-  normalBox.innerHTML="";
+  featuredBox.innerHTML = "";
+  normalBox.innerHTML = "";
 
-  let txt = search.value.toLowerCase();
+  let text = search.value.toLowerCase();
 
   members.forEach(m=>{
-
-    if(!m.name.toLowerCase().includes(txt)) return;
+    if(!m.name.toLowerCase().includes(text)) return;
 
     let card = `
       <div class="member-card ${m.featured?"featured":""}">
@@ -194,6 +176,7 @@ function render(){
     else normalBox.innerHTML += card;
 
   });
+
 }
 
 search.oninput = render;
