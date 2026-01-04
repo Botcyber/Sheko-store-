@@ -3,24 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>إدارة أعضاء VIBE Studio</title>
+<title>لوحة إدارة أعضاء VIBE Studio</title>
+
 <style>
-body{background:#08090d;color:white;font-family:'Cairo',sans-serif;text-align:center;margin:0;padding:0;}
-h2{margin:20px 0;}
-.form{background:#0f1118;padding:20px;width:90%;max-width:750px;margin:20px auto;border-radius:16px;box-shadow:0 0 20px rgba(0,0,0,.6);}
-input, select{width:100%;padding:10px;margin-bottom:10px;border-radius:10px;border:0;font-size:15px;}
-button{width:100%;padding:10px;border-radius:10px;border:0;cursor:pointer;font-size:15px;margin-bottom:10px;}
-.add{background:#16c784;color:black;}
-.update{background:#3399ff;color:white;}
-.delete{background:#ff3b3b;color:white;}
-.member-item{background:#0f1118;margin:10px auto;padding:12px;width:90%;max-width:750px;border-radius:12px;box-shadow:0 0 15px rgba(0,0,0,.5);}
+body{background:#08090d;color:white;font-family:'Cairo',sans-serif;text-align:center;margin:0}
+h2{margin-top:15px}
+.form{background:#0f1118;padding:15px;width:92%;max-width:750px;margin:15px auto;border-radius:16px}
+input,select{width:100%;padding:9px;margin-bottom:10px;border-radius:10px;border:0}
+button{width:100%;padding:10px;border-radius:10px;border:0;cursor:pointer}
+.add{background:#16c784}
+.update{background:#3399ff}
+.delete{background:#ff3b3b}
+.member-item{background:#0f1118;margin:10px auto;padding:10px;width:92%;max-width:750px;border-radius:12px}
 </style>
 </head>
+
 <body>
 
 <h2>لوحة إدارة الأعضاء</h2>
 
 <div class="form">
+
   <label>صورة العضو</label>
   <input type="file" id="image">
 
@@ -29,19 +32,26 @@ button{width:100%;padding:10px;border-radius:10px;border:0;cursor:pointer;font-s
 
   <label>المهنة</label>
   <select id="role">
-    <option>موسيقار</option>
     <option>مغني</option>
-    <option>منتج</option>
+    <option>ملحن</option>
+    <option>موزع موسيقي</option>
     <option>دي جي</option>
     <option>مهندس صوت</option>
+    <option>كاتب أغاني</option>
+    <option>مشرف مسرح</option>
+    <option>عازف</option>
   </select>
 
-  <label>معلومة إضافية (اختياري)</label>
-  <input type="text" id="extra" placeholder="مثلاً: عازف بيانو">
+  <label>خانة إضافية (اختياري)</label>
+  <input type="text" id="extra" placeholder="مثال: عازف بيانو - قائد الفريق">
 
-  <label><input type="checkbox" id="featuredCheck"> عضو مميز ⭐</label>
+  <label>
+    <input type="checkbox" id="featuredCheck">
+    عضو مميز ⭐
+  </label>
 
   <button class="add" id="addBtn">إضافة عضو</button>
+
 </div>
 
 <div id="members"></div>
@@ -73,59 +83,69 @@ function getFile(file){
   });
 }
 
-document.getElementById("addBtn").addEventListener("click", async ()=>{
-  if(editKey){
-    saveEdit();
-    return;
-  }
-  await addMember();
-});
+document.getElementById("addBtn").onclick = async ()=>{
+  if(editKey) return saveEdit();
+  addMember();
+};
 
 async function addMember(){
-  let name = document.getElementById("name").value.trim();
-  let role = document.getElementById("role").value;
-  let extra = document.getElementById("extra").value.trim();
-  let featured = document.getElementById("featuredCheck").checked;
-  let file = document.getElementById("image").files[0];
+
+  let name = nameInput.value.trim();
+  let role = roleInput.value;
+  let extra = extraInput.value.trim();
+  let featured = featuredCheck.checked;
+  let file = image.files[0];
 
   if(!name || !file){
-    alert("اكتب الاسم وارفع صورة العضو");
+    alert("اكتب الاسم وارفع صورة");
     return;
   }
 
   let img = await getFile(file);
 
-  let newRef = db.ref("vibeMembers").push();
-  let key = newRef.key;
-
-  let data = {key, name, role, extra, featured, image: img, time: Date.now()};
-
-  console.log("إرسال البيانات:", data); // للتأكد من البيانات
-
-  newRef.set(data).then(()=>{
-    alert("تم إضافة العضو بنجاح!");
-    document.getElementById("name").value="";
-    document.getElementById("extra").value="";
-    document.getElementById("featuredCheck").checked=false;
-    document.getElementById("image").value="";
-  }).catch(e=>{
-    console.error(e);
-    alert("حدث خطأ أثناء الإضافة!");
+  let ref = db.ref("vibeMembers").push();
+  ref.set({
+    key: ref.key,
+    name,
+    role,
+    extra,
+    featured,
+    image: img,
+    time: Date.now()
+  }).then(()=>{
+    alert("تم إضافة العضو");
+    clearForm();
   });
 }
 
-// عرض الأعضاء
-db.ref("vibeMembers").on("value", snap=>{
-  let box = document.getElementById("members");
-  box.innerHTML="";
+function clearForm(){
+  nameInput.value="";
+  extraInput.value="";
+  image.value="";
+  featuredCheck.checked=false;
+  addBtn.innerText="إضافة عضو";
+  editKey=null;
+}
+
+const nameInput=document.getElementById("name");
+const roleInput=document.getElementById("role");
+const extraInput=document.getElementById("extra");
+const featuredCheck=document.getElementById("featuredCheck");
+const addBtn=document.getElementById("addBtn");
+
+// عرض
+db.ref("vibeMembers").on("value",snap=>{
+  members.innerHTML="";
   let list=[];
   snap.forEach(c=>list.push(c.val()));
   list.reverse();
+
   list.forEach(m=>{
-    box.innerHTML += `
+    members.innerHTML += `
       <div class="member-item">
-        <b>${m.name}</b> — ${m.role}${m.extra? " - "+m.extra:""}
-        <br>${m.featured?"⭐ عضو مميز":"عضو عادي"}
+        <b>${m.name}</b><br>
+        ${m.role}${m.extra?" - "+m.extra:""}<br>
+        ${m.featured?"⭐ عضو مميز":"عضو عادي"}
         <br><br>
         <button class="update" onclick='loadEdit("${m.key}")'>تعديل</button>
         <button class="delete" onclick='deleteMember("${m.key}")'>حذف</button>
@@ -134,47 +154,37 @@ db.ref("vibeMembers").on("value", snap=>{
   });
 });
 
-// حذف عضو
 function deleteMember(key){
-  if(confirm("هل أنت متأكد من حذف العضو؟")){
-    db.ref("vibeMembers/"+key).remove();
-  }
+  if(confirm("حذف العضو؟"))
+  db.ref("vibeMembers/"+key).remove();
 }
 
-// تعديل عضو
 function loadEdit(key){
-  editKey = key;
+  editKey=key;
   db.ref("vibeMembers/"+key).once("value").then(s=>{
-    let m = s.val();
-    document.getElementById("name").value = m.name;
-    document.getElementById("role").value = m.role;
-    document.getElementById("extra").value = m.extra || "";
-    document.getElementById("featuredCheck").checked = m.featured;
-    document.getElementById("addBtn").innerText = "حفظ التعديل";
+    let m=s.val();
+    nameInput.value=m.name;
+    roleInput.value=m.role;
+    extraInput.value=m.extra||"";
+    featuredCheck.checked=m.featured;
+    addBtn.innerText="حفظ التعديل";
   });
 }
 
 async function saveEdit(){
-  let name = document.getElementById("name").value.trim();
-  let role = document.getElementById("role").value;
-  let extra = document.getElementById("extra").value.trim();
-  let featured = document.getElementById("featuredCheck").checked;
+  let updateData={
+    name:nameInput.value,
+    role:roleInput.value,
+    extra:extraInput.value,
+    featured:featuredCheck.checked
+  };
 
-  let updateData = {name, role, extra, featured};
-
-  let file = document.getElementById("image").files[0];
-  if(file){
-    updateData.image = await getFile(file);
-  }
+  let file=image.files[0];
+  if(file) updateData.image=await getFile(file);
 
   db.ref("vibeMembers/"+editKey).update(updateData).then(()=>{
-    alert("تم حفظ التعديلات!");
-    editKey=null;
-    document.getElementById("addBtn").innerText = "إضافة عضو";
-    document.getElementById("name").value="";
-    document.getElementById("extra").value="";
-    document.getElementById("featuredCheck").checked=false;
-    document.getElementById("image").value="";
+    alert("تم التعديل");
+    clearForm();
   });
 }
 </script>
