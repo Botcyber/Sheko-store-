@@ -2,89 +2,39 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>أعضاء VIBE Studio</title>
+<title>قائمة الاعضاء</title>
 
 <style>
-body{margin:0;background:radial-gradient(circle,#0b1220,#020308);color:white;font-family:'Cairo',sans-serif}
-.header{text-align:center;padding:18px 0;font-size:24px;font-weight:900}
-.container{width:94%;max-width:900px;margin:auto}
-.search{width:100%;padding:11px;border-radius:15px;border:0;margin-bottom:10px}
-.section-title{font-size:16px;margin:6px 0}
-.member-card{display:flex;align-items:center;gap:12px;background:#0c1423;padding:12px;border-radius:16px;margin-bottom:8px;border:1px solid rgba(255,255,255,.05)}
-.member-img{width:60px;height:60px;border-radius:50%;object-fit:cover}
-.member-name{font-weight:900}
-.member-role{opacity:.8;font-size:13px}
-.featured{border:1px solid gold}
-.featured::before{content:"👑 عضو مميز";font-size:11px;position:absolute;margin-top:-10px}
+body{font-family:Arial;background:#000;color:white;margin:0;padding:10px}
+.card{
+background:#111;margin:8px 0;padding:12px;border-radius:14px
+}
+.name{font-size:18px;font-weight:bold}
+.role{color:#00c8ff}
 </style>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
 <body>
 
-<div class="header">أعضاء VIBE Studio</div>
-
-<div class="container">
-
-<input id="search" class="search" placeholder="🔍 ابحث باسم العضو">
-
-<div class="section-title">⭐ الأعضاء المميزون</div>
-<div id="featured"></div>
-
-<div class="section-title">👥 جميع الأعضاء</div>
-<div id="normal"></div>
-
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<h2>الأعضاء</h2>
+<div id="members"></div>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-  authDomain: "sheko-store.firebaseapp.com",
-  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-  projectId: "sheko-store",
-  storageBucket: "sheko-store.appspot.com",
-  messagingSenderId: "113892775847",
-  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
-
-let members=[];
-
-db.ref("vibeMembers").orderByChild("time").on("value",snap=>{
-  members=[];
-  snap.forEach(c=>members.push(c.val()));
-  members.reverse();
-  render();
+function showMembers(){
+let data = JSON.parse(localStorage.getItem("members") || "[]");
+let box = document.getElementById("members");
+box.innerHTML = "";
+data.forEach(m=>{
+box.innerHTML += `
+<div class="card">
+<div class="name">${m.name}</div>
+<div class="role">${m.role} ${m.extra ? "- "+m.extra:""}</div>
+</div>`;
 });
-
-function render(){
-  let text=search.value.toLowerCase();
-  featured.innerHTML="";
-  normal.innerHTML="";
-
-  members.forEach(m=>{
-    if(!m.name.toLowerCase().includes(text)) return;
-
-    let card=`
-      <div class="member-card ${m.featured?"featured":""}">
-        <img class="member-img" src="${m.image}">
-        <div>
-          <div class="member-name">${m.name}</div>
-          <div class="member-role">${m.role}${m.extra?" - "+m.extra:""}</div>
-        </div>
-      </div>`;
-
-    if(m.featured) featured.innerHTML+=card;
-    else normal.innerHTML+=card;
-  });
 }
-
-search.oninput=render;
+showMembers();
 </script>
 
 </body>
