@@ -2,106 +2,175 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>صفحة الادمن</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لوحة إدارة أعضاء VIBE Studio</title>
 
 <style>
-body{font-family:Arial;background:#0f0f0f;color:white;padding:15px}
-.container{max-width:450px;margin:auto}
-input,select,button{
-width:100%;padding:10px;margin:7px 0;border-radius:10px;border:none
+
+body{
+  margin:0;
+  font-family:'Cairo',sans-serif;
+  background:radial-gradient(circle at top , #0b1220 , #05060a);
+  color:white;
 }
-.member-box{
-background:#191919;padding:10px;border-radius:12px;margin-top:10px
+
+/* عنوان */
+.header{
+  text-align:center;
+  padding:20px 0;
+  font-size:24px;
+  font-weight:900;
+  text-shadow:0 0 15px rgba(255,255,255,.4);
+  animation:pulse 3s infinite;
 }
-button{background:#0b84ff;color:white;font-size:16px}
-.delete{background:#ff2e2e}
+@keyframes pulse{
+  0%{opacity:.8}
+  50%{opacity:1}
+  100%{opacity:.8}
+}
+
+/* صندوق */
+.box{
+  width:92%;
+  max-width:900px;
+  margin:auto;
+}
+
+/* الحقول */
+input,select{
+  width:100%;
+  padding:12px;
+  margin:7px 0;
+  border-radius:14px;
+  border:0;
+  outline:none;
+  background:#0d1322;
+  color:white;
+}
+
+/* زر */
+button{
+  width:100%;
+  padding:12px;
+  border-radius:14px;
+  border:0;
+  background:linear-gradient(140deg , #1c3cff , #03d8ff);
+  color:white;
+  font-size:15px;
+  margin-top:6px;
+  box-shadow:0 0 15px rgba(0,200,255,.4);
+  transition:.3s;
+}
+button:active{
+  transform:scale(.97);
+}
+
+/* بطاقة عضو */
+.member-card{
+  padding:12px;
+  margin-top:10px;
+  border-radius:18px;
+  background:linear-gradient(145deg,#0c1423,#0a0f18);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 0 12px rgba(0,0,0,.7);
+}
+
+.delete{
+  background:linear-gradient(140deg , #ff3c3c , #ff6600);
+  margin-top:8px;
+}
+
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="header">لوحة إدارة أعضاء VIBE Studio</div>
 
-<h2>لوحة التحكم – إضافة عضو</h2>
+<div class="box">
 
-<input id="name" placeholder="اسم العضو">
+<input id="name" placeholder="✍️ اسم العضو">
 
 <select id="role">
 <option>مغني</option>
+<option>DJ</option>
 <option>ملحن</option>
 <option>موزع موسيقي</option>
-<option>DJ</option>
 <option>Sound Engineer</option>
 <option>Mixing Engineer</option>
 <option>Mastering Engineer</option>
 <option>كاتب كلمات</option>
-<option>مدير اعمال</option>
+<option>مدير أعمال</option>
 <option>عازف جيتار</option>
 <option>عازف بيانو</option>
 <option>عازف كمان</option>
 <option>عازف درمز</option>
-<option>فني اضاءة</option>
 <option>VJ</option>
-<option>مونتير فيديو</option>
-<option>تصميم جرافيك</option>
+<option>فني إضاءة</option>
 <option>مخرج حفلات</option>
-<option>تقني مسرح</option>
+<option>مونتير فيديو</option>
+<option>مصمم جرافيك</option>
 </select>
 
-<input id="extra" placeholder="خانة إضافية اختيارية مثال: محترف – متاح – VIP">
+<input id="extra" placeholder="📝 خانة إضافية اختيارية">
 
-<button onclick="addMember()">إضافة العضو</button>
+<button onclick="addMember()">➕ إضافة عضو</button>
 
-<h3>الأعضاء المضافين</h3>
+<h3>الأعضاء</h3>
+
 <div id="list"></div>
 
 </div>
 
 <script>
+
 function loadMembers(){
-let data = JSON.parse(localStorage.getItem("members") || "[]");
-let box = document.getElementById("list");
-box.innerHTML = "";
-data.forEach((m,i)=>{
-box.innerHTML += `
-<div class='member-box'>
-اسم: ${m.name}<br>
-الوظيفة: ${m.role} ${m.extra ? "- "+m.extra:""}
-<br>
-<button class='delete' onclick='deleteMember(${i})'>حذف</button>
-</div>`;
-});
+ let data = JSON.parse(localStorage.getItem("members") || "[]");
+ let box = document.getElementById("list");
+ box.innerHTML = "";
+
+ data.forEach((m,i)=>{
+  box.innerHTML += `
+   <div class="member-card">
+     <div><b>${m.name}</b></div>
+     <div>${m.role}${m.extra ? " - "+m.extra:""}</div>
+     <button class="delete" onclick="deleteMember(${i})">حذف</button>
+   </div>
+  `;
+ });
 }
 
 function addMember(){
-let name = document.getElementById("name").value.trim();
-let role = document.getElementById("role").value;
-let extra = document.getElementById("extra").value.trim();
 
-if(!name){
-alert("اكتب اسم العضو");
-return;
-}
+ let name = document.getElementById("name").value.trim();
+ let role = document.getElementById("role").value;
+ let extra = document.getElementById("extra").value.trim();
 
-let data = JSON.parse(localStorage.getItem("members") || "[]");
-data.push({name,role,extra});
-localStorage.setItem("members",JSON.stringify(data));
+ if(!name){
+   alert("اكتب اسم العضو");
+   return;
+ }
 
-document.getElementById("name").value="";
-document.getElementById("extra").value="";
+ let data = JSON.parse(localStorage.getItem("members") || "[]");
+ data.push({name,role,extra});
+ localStorage.setItem("members",JSON.stringify(data));
 
-alert("تم إضافة العضو");
-loadMembers();
+ document.getElementById("name").value="";
+ document.getElementById("extra").value="";
+
+ alert("تم إضافة العضو بنجاح");
+ loadMembers();
 }
 
 function deleteMember(i){
-let data = JSON.parse(localStorage.getItem("members") || "[]");
-data.splice(i,1);
-localStorage.setItem("members",JSON.stringify(data));
-loadMembers();
+ let data = JSON.parse(localStorage.getItem("members") || "[]");
+ data.splice(i,1);
+ localStorage.setItem("members",JSON.stringify(data));
+ loadMembers();
 }
 
 loadMembers();
+
 </script>
 
 </body>
