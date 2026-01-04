@@ -14,7 +14,6 @@ body{
   color:white;
 }
 
-/* عنوان */
 .header{
   text-align:center;
   padding:20px 0;
@@ -29,14 +28,12 @@ body{
   100%{opacity:.8}
 }
 
-/* صندوق */
 .box{
   width:92%;
   max-width:900px;
   margin:auto;
 }
 
-/* الحقول */
 input,select{
   width:100%;
   padding:12px;
@@ -48,7 +45,6 @@ input,select{
   color:white;
 }
 
-/* زر */
 button{
   width:100%;
   padding:12px;
@@ -65,7 +61,6 @@ button:active{
   transform:scale(.97);
 }
 
-/* بطاقة عضو */
 .member-card{
   padding:12px;
   margin-top:10px;
@@ -114,6 +109,13 @@ button:active{
 
 <input id="extra" placeholder="📝 خانة إضافية اختيارية">
 
+<label>
+<input type="checkbox" id="featured"> ⭐ عضو مميز
+</label>
+
+<label>📸 صورة العضو</label>
+<input type="file" id="img">
+
 <button onclick="addMember()">➕ إضافة عضو</button>
 
 <h3>الأعضاء</h3>
@@ -123,6 +125,61 @@ button:active{
 </div>
 
 <script>
+
+function getFile(file){
+ return new Promise(res=>{
+  let r = new FileReader();
+  r.onload=()=>res(r.result);
+  r.readAsDataURL(file);
+ });
+}
+
+async function addMember(){
+
+ let name = document.getElementById("name").value.trim();
+ let role = document.getElementById("role").value;
+ let extra = document.getElementById("extra").value.trim();
+ let featured = document.getElementById("featured").checked;
+ let imgFile = document.getElementById("img").files[0];
+
+ if(!name){
+   alert("اكتب اسم العضو");
+   return;
+ }
+
+ let img = "";
+ if(imgFile){
+   img = await getFile(imgFile);
+ }
+
+ let data = JSON.parse(localStorage.getItem("members") || "[]");
+
+ data.push({
+  name,
+  role,
+  extra,
+  featured,
+  img
+ });
+
+ localStorage.setItem("members",JSON.stringify(data));
+
+ alert("تم إضافة العضو بنجاح");
+
+ document.getElementById("name").value="";
+ document.getElementById("extra").value="";
+ document.getElementById("img").value="";
+ document.getElementById("featured").checked=false;
+
+ loadMembers();
+}
+
+function deleteMember(i){
+ let data = JSON.parse(localStorage.getItem("members") || "[]");
+ data.splice(i,1);
+ localStorage.setItem("members",JSON.stringify(data));
+ loadMembers();
+}
 
 function loadMembers(){
  let data = JSON.parse(localStorage.getItem("members") || "[]");
@@ -138,35 +195,6 @@ function loadMembers(){
    </div>
   `;
  });
-}
-
-function addMember(){
-
- let name = document.getElementById("name").value.trim();
- let role = document.getElementById("role").value;
- let extra = document.getElementById("extra").value.trim();
-
- if(!name){
-   alert("اكتب اسم العضو");
-   return;
- }
-
- let data = JSON.parse(localStorage.getItem("members") || "[]");
- data.push({name,role,extra});
- localStorage.setItem("members",JSON.stringify(data));
-
- document.getElementById("name").value="";
- document.getElementById("extra").value="";
-
- alert("تم إضافة العضو بنجاح");
- loadMembers();
-}
-
-function deleteMember(i){
- let data = JSON.parse(localStorage.getItem("members") || "[]");
- data.splice(i,1);
- localStorage.setItem("members",JSON.stringify(data));
- loadMembers();
 }
 
 loadMembers();
