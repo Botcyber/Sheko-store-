@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <title>أعضاء VIBE Studio</title>
 
 <style>
@@ -16,16 +17,18 @@ body{
 
 .header{
   text-align:center;
-  padding:20px 0;
+  padding:22px 0;
   font-size:26px;
   font-weight:900;
+  letter-spacing:1px;
   text-shadow:0 0 15px rgba(255,255,255,.25);
   animation:pulse 3s infinite;
 }
+
 @keyframes pulse{
- 0%{opacity:.7}
- 50%{opacity:1}
- 100%{opacity:.7}
+  0%{opacity:.7}
+  50%{opacity:1}
+  100%{opacity:.7}
 }
 
 .container{
@@ -34,72 +37,86 @@ body{
   margin:auto;
 }
 
-/* بطاقة عامة */
-.card{
-  display:flex;
-  gap:10px;
-  align-items:center;
-  background:linear-gradient(140deg,#0c1423,#0a0f18);
+.search{
+  width:100%;
   padding:12px;
+  font-size:15px;
+  border-radius:14px;
+  border:0;
+  margin-bottom:15px;
+}
+
+.section-title{
+  font-size:17px;
   margin-top:10px;
+  margin-bottom:6px;
+}
+
+/* بطاقة عضو */
+.member-card{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px;
+  background:linear-gradient(145deg,#0c1423,#0a0f18);
   border-radius:18px;
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow:0 0 12px rgba(0,0,0,.7);
-  animation:fade .6s ease;
-}
-@keyframes fade{
- from{opacity:0;transform:translateY(10px)}
- to{opacity:1;transform:translateY(0)}
+  box-shadow:0 0 14px rgba(0,0,0,.6);
+  margin-bottom:10px;
+  border:1px solid rgba(255,255,255,.05);
+  transition:.25s;
+  position:relative;
 }
 
-/* صورة دائرية */
-.card img{
- width:55px;
- height:55px;
- border-radius:50%;
- object-fit:cover;
+.member-card:hover{
+  transform:translateY(-2px) scale(1.01);
 }
 
-/* نص */
-.name{
- font-size:17px;
- font-weight:900;
+/* صورة */
+.member-img{
+  width:62px;
+  height:62px;
+  border-radius:50%;
+  object-fit:cover;
 }
 
-.role{
- opacity:.8;
- font-size:13px;
+.member-name{
+  font-size:17px;
+  font-weight:800;
+}
+
+.member-role{
+  font-size:13px;
+  opacity:.85;
 }
 
 /* مميز */
 .featured{
- background:linear-gradient(160deg,#2c2403,#000);
- border:1px solid gold;
+  border:1px solid gold;
+  background:linear-gradient(160deg,#181100,#000);
 }
 
-.featured img{
- border:2px solid gold;
+.featured .member-img{
+  border:2px solid gold;
 }
 
+/* تاج */
 .featured::before{
- content:"👑 عضو مميز";
- position:absolute;
- top:-8px;
- right:10px;
- background:gold;
- color:black;
- font-size:11px;
- padding:3px 8px;
- border-radius:12px;
+  content:"👑 عضو مميز";
+  position:absolute;
+  top:-8px;
+  right:10px;
+  background:gold;
+  color:black;
+  font-size:11px;
+  padding:3px 8px;
+  border-radius:12px;
+  animation:glow 2s infinite;
 }
 
-.wrapper{
- position:relative;
-}
-
-.section-title{
- margin-top:15px;
- font-weight:800;
+@keyframes glow{
+  0%{box-shadow:0 0 4px gold}
+  50%{box-shadow:0 0 18px gold}
+  100%{box-shadow:0 0 4px gold}
 }
 
 </style>
@@ -111,6 +128,8 @@ body{
 
 <div class="container">
 
+<input id="search" class="search" placeholder="🔍 ابحث عن عضو">
+
 <div class="section-title">⭐ الأعضاء المميزون</div>
 <div id="featured"></div>
 
@@ -119,39 +138,65 @@ body{
 
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
 <script>
 
-function showMembers(){
+const firebaseConfig = {
+  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+  authDomain: "sheko-store.firebaseapp.com",
+  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+  projectId: "sheko-store",
+  storageBucket: "sheko-store.appspot.com",
+  messagingSenderId: "113892775847",
+  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+};
 
- let data = JSON.parse(localStorage.getItem("members") || "[]");
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
- let f = document.getElementById("featured");
- let n = document.getElementById("normal");
+let featuredBox = document.getElementById("featured");
+let normalBox = document.getElementById("normal");
+let search = document.getElementById("search");
 
- f.innerHTML="";
- n.innerHTML="";
+let members = [];
 
- data.forEach(m=>{
+db.ref("vibeMembers").orderByChild("time").on("value",snap=>{
+  members=[];
+  snap.forEach(c=>members.push(c.val()));
+  members.reverse();
+  render();
+});
 
-  let card = `
-  <div class="wrapper">
-   <div class="card ${m.featured ? "featured":""}">
-    <img src="${m.img || "https://i.postimg.cc/5t8Q7H8B/user.png"}">
-    <div>
-      <div class="name">${m.name}</div>
-      <div class="role">${m.role}${m.extra ? " - "+m.extra:""}</div>
-    </div>
-   </div>
-  </div>
-  `;
+function render(){
 
-  if(m.featured) f.innerHTML += card;
-  else n.innerHTML += card;
- });
+  featuredBox.innerHTML="";
+  normalBox.innerHTML="";
 
+  let txt = search.value.toLowerCase();
+
+  members.forEach(m=>{
+
+    if(!m.name.toLowerCase().includes(txt)) return;
+
+    let card = `
+      <div class="member-card ${m.featured?"featured":""}">
+        <img class="member-img" src="${m.image}">
+        <div>
+          <div class="member-name">${m.name}</div>
+          <div class="member-role">${m.role}</div>
+        </div>
+      </div>
+    `;
+
+    if(m.featured) featuredBox.innerHTML += card;
+    else normalBox.innerHTML += card;
+
+  });
 }
 
-showMembers();
+search.oninput = render;
 
 </script>
 
