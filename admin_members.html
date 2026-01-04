@@ -3,76 +3,60 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>لوحة إدارة أعضاء VIBE Studio</title>
+
+<title>إدارة أعضاء VIBE Studio</title>
 
 <style>
 
 body{
-  margin:0;
-  font-family:'Cairo',sans-serif;
-  background:radial-gradient(circle at top , #0b1220 , #05060a);
+  background:#08090d;
   color:white;
-}
-
-.header{
+  font-family:'Cairo',sans-serif;
   text-align:center;
-  padding:20px 0;
-  font-size:24px;
-  font-weight:900;
-  text-shadow:0 0 15px rgba(255,255,255,.4);
-  animation:pulse 3s infinite;
-}
-@keyframes pulse{
-  0%{opacity:.8}
-  50%{opacity:1}
-  100%{opacity:.8}
 }
 
-.box{
+h2{
+  margin-top:15px;
+}
+
+.form{
+  background:#0f1118;
+  padding:15px;
   width:92%;
-  max-width:900px;
-  margin:auto;
+  max-width:750px;
+  margin:15px auto;
+  border-radius:16px;
+  box-shadow:0 0 15px rgba(0,0,0,.5);
 }
 
 input,select{
   width:100%;
-  padding:12px;
-  margin:7px 0;
-  border-radius:14px;
+  padding:10px;
+  margin-bottom:10px;
+  border-radius:10px;
   border:0;
-  outline:none;
-  background:#0d1322;
-  color:white;
 }
 
 button{
   width:100%;
-  padding:12px;
-  border-radius:14px;
+  padding:10px;
+  border-radius:10px;
   border:0;
-  background:linear-gradient(140deg , #1c3cff , #03d8ff);
-  color:white;
-  font-size:15px;
-  margin-top:6px;
-  box-shadow:0 0 15px rgba(0,200,255,.4);
-  transition:.3s;
-}
-button:active{
-  transform:scale(.97);
+  cursor:pointer;
+  font-weight:bold;
 }
 
-.member-card{
-  padding:12px;
-  margin-top:10px;
-  border-radius:18px;
-  background:linear-gradient(145deg,#0c1423,#0a0f18);
-  border:1px solid rgba(255,255,255,.08);
-  box-shadow:0 0 12px rgba(0,0,0,.7);
-}
+.add{background:#16c784}
+.update{background:#3399ff}
+.delete{background:#ff3b3b}
 
-.delete{
-  background:linear-gradient(140deg , #ff3c3c , #ff6600);
-  margin-top:8px;
+.member-item{
+  background:#0f1118;
+  margin:10px auto;
+  padding:10px;
+  width:92%;
+  max-width:750px;
+  border-radius:12px;
 }
 
 </style>
@@ -80,126 +64,129 @@ button:active{
 
 <body>
 
-<div class="header">لوحة إدارة أعضاء VIBE Studio</div>
+<h2>لوحة إدارة الأعضاء</h2>
 
-<div class="box">
+<div class="form">
 
-<input id="name" placeholder="✍️ اسم العضو">
+  <label>صورة العضو</label>
+  <input type="file" id="image">
 
-<select id="role">
-<option>مغني</option>
+  <label>اسم العضو</label>
+  <input type="text" id="name">
+
+  <label>المهنة</label>
+  <select id="role">
+
+<option>المغني</option>
+<option>المؤدي الصوتي</option>
+<option>الرابر</option>
+<option>الكورال</option>
+<option>الملحن</option>
+<option>كاتب الكلمات</option>
+<option>الموزع الموسيقي</option>
 <option>DJ</option>
-<option>ملحن</option>
-<option>موزع موسيقي</option>
-<option>Sound Engineer</option>
-<option>Mixing Engineer</option>
-<option>Mastering Engineer</option>
-<option>كاتب كلمات</option>
-<option>مدير أعمال</option>
-<option>عازف جيتار</option>
+<option>Live Performer</option>
 <option>عازف بيانو</option>
+<option>عازف أورج</option>
+<option>عازف جيتار</option>
 <option>عازف كمان</option>
-<option>عازف درمز</option>
-<option>VJ</option>
-<option>فني إضاءة</option>
-<option>مخرج حفلات</option>
-<option>مونتير فيديو</option>
-<option>مصمم جرافيك</option>
-</select>
+<option>عازف درامز</option>
+<option>عازف ناي</option>
+<option>عازف عود</option>
+<option>عازف قانون</option>
+<option>مهندس صوت</option>
+<option>ميكس وماستر</option>
+<option>مصور</option>
+<option>مخرج فني</option>
+<option>سوشيال ميديا</option>
 
-<input id="extra" placeholder="📝 خانة إضافية اختيارية">
+  </select>
 
-<label>
-<input type="checkbox" id="featured"> ⭐ عضو مميز
-</label>
+  <label>حقل إضافي بجانب المهنة (اختياري)</label>
+  <input type="text" id="extra" placeholder="مثال: محترف – دولي – لايف">
 
-<label>📸 صورة العضو</label>
-<input type="file" id="img">
+  <label>
+    <input type="checkbox" id="featuredCheck">
+    ⭐ عضو مميز
+  </label>
 
-<button onclick="addMember()">➕ إضافة عضو</button>
-
-<h3>الأعضاء</h3>
-
-<div id="list"></div>
+  <button class="add" onclick="addMember()">إضافة عضو</button>
 
 </div>
 
+<div id="members"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
 <script>
 
+const firebaseConfig = {
+  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+  authDomain: "sheko-store.firebaseapp.com",
+  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+  projectId: "sheko-store",
+  storageBucket: "sheko-store.appspot.com",
+  messagingSenderId: "113892775847",
+  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let editKey = null;
+
 function getFile(file){
- return new Promise(res=>{
-  let r = new FileReader();
-  r.onload=()=>res(r.result);
-  r.readAsDataURL(file);
- });
+  return new Promise(res=>{
+    let r = new FileReader();
+    r.onload =()=>res(r.result);
+    r.readAsDataURL(file);
+  });
 }
 
 async function addMember(){
 
- let name = document.getElementById("name").value.trim();
- let role = document.getElementById("role").value;
- let extra = document.getElementById("extra").value.trim();
- let featured = document.getElementById("featured").checked;
- let imgFile = document.getElementById("img").files[0];
+  let name = nameInput.value;
+  let role = roleInput.value;
+  let extra = extraInput.value;
+  let featured = featuredCheck.checked;
+  let file = image.files[0];
 
- if(!name){
-   alert("اكتب اسم العضو");
-   return;
- }
+  if(!name || !file){
+    alert("اكتب الاسم وارفع صورة");
+    return;
+  }
 
- let img = "";
- if(imgFile){
-   img = await getFile(imgFile);
- }
+  let img = await getFile(file);
 
- let data = JSON.parse(localStorage.getItem("members") || "[]");
+  let key = db.ref().child("vibeMembers").push().key;
 
- data.push({
-  name,
-  role,
-  extra,
-  featured,
-  img
- });
+  db.ref("vibeMembers/"+key).set({
+    key,
+    name,
+    role: extra ? role+" - "+extra : role,
+    featured,
+    image: img,
+    time: Date.now()
+  });
 
- localStorage.setItem("members",JSON.stringify(data));
-
- alert("تم إضافة العضو بنجاح");
-
- document.getElementById("name").value="";
- document.getElementById("extra").value="";
- document.getElementById("img").value="";
- document.getElementById("featured").checked=false;
-
- loadMembers();
+  alert("تمت إضافة العضو ✔️");
 }
 
-function deleteMember(i){
- let data = JSON.parse(localStorage.getItem("members") || "[]");
- data.splice(i,1);
- localStorage.setItem("members",JSON.stringify(data));
- loadMembers();
-}
+let nameInput = document.getElementById("name");
+let roleInput = document.getElementById("role");
+let extraInput = document.getElementById("extra");
 
-function loadMembers(){
- let data = JSON.parse(localStorage.getItem("members") || "[]");
- let box = document.getElementById("list");
- box.innerHTML = "";
+db.ref("vibeMembers").on("value",snap=>{
 
- data.forEach((m,i)=>{
-  box.innerHTML += `
-   <div class="member-card">
-     <div><b>${m.name}</b></div>
-     <div>${m.role}${m.extra ? " - "+m.extra:""}</div>
-     <button class="delete" onclick="deleteMember(${i})">حذف</button>
-   </div>
-  `;
- });
-}
+  let box = document.getElementById("members");
+  box.innerHTML = "";
 
-loadMembers();
+  let arr=[];
+  snap.forEach(c=>arr.push(c.val()));
+  arr.reverse();
 
-</script>
-
-</body>
-</html>
+  arr.forEach(m=>{
+    box.innerHTML += `
+      <div class="member-item">
+        <b>${m.name}</b><br>
