@@ -6,115 +6,17 @@
 <title>أعضاء VIBE Studio</title>
 
 <style>
-
-body{
-  margin:0;
-  background:radial-gradient(circle at top,#0b1220,#05060a);
-  color:white;
-  font-family:'Cairo',sans-serif;
-}
-
-/* عنوان متحرك */
-.header{
-  text-align:center;
-  padding:20px 0;
-  font-size:26px;
-  font-weight:900;
-  text-shadow:0 0 15px rgba(255,255,255,.2);
-  animation:pulse 3s infinite;
-}
-@keyframes pulse{
-  0%{opacity:.7}
-  50%{opacity:1}
-  100%{opacity:.7}
-}
-
-/* صندوق عام */
-.container{
-  width:94%;
-  max-width:900px;
-  margin:auto;
-}
-
-/* خانة البحث */
-.search{
-  width:100%;
-  padding:12px;
-  font-size:15px;
-  border-radius:14px;
-  border:0;
-  margin-bottom:15px;
-  outline:none;
-}
-
-/* عنوان القسم */
-.section-title{
-  font-size:17px;
-  margin-top:10px;
-  margin-bottom:6px;
-}
-
-/* كارت عضو */
-.member-card{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:12px;
-  background:linear-gradient(145deg,#0c1423,#0a0f18);
-  border-radius:18px;
-  box-shadow:0 0 12px rgba(0,0,0,.6);
-  margin-bottom:10px;
-  border:1px solid rgba(255,255,255,.05);
-  transition:.25s;
-  position:relative;
-}
-
-.member-card:active{
-  transform:scale(.98);
-}
-
-/* صورة دائرية */
-.member-img{
-  width:60px;
-  height:60px;
-  border-radius:50%;
-  object-fit:cover;
-}
-
-/* نص */
-.member-name{
-  font-size:17px;
-  font-weight:800;
-}
-
-.member-role{
-  font-size:13px;
-  opacity:.8;
-}
-
-/* عضو مميز ذهبي */
-.featured{
-  border:1px solid gold;
-  background:linear-gradient(160deg,#161003,#000);
-}
-
-.featured .member-img{
-  border:2px solid gold;
-}
-
-/* تاج */
-.featured::before{
-  content:"👑 عضو مميز";
-  position:absolute;
-  top:-8px;
-  right:10px;
-  background:gold;
-  color:black;
-  font-size:11px;
-  padding:3px 8px;
-  border-radius:12px;
-}
-
+body{margin:0;background:radial-gradient(circle,#0b1220,#020308);color:white;font-family:'Cairo',sans-serif}
+.header{text-align:center;padding:18px 0;font-size:24px;font-weight:900}
+.container{width:94%;max-width:900px;margin:auto}
+.search{width:100%;padding:11px;border-radius:15px;border:0;margin-bottom:10px}
+.section-title{font-size:16px;margin:6px 0}
+.member-card{display:flex;align-items:center;gap:12px;background:#0c1423;padding:12px;border-radius:16px;margin-bottom:8px;border:1px solid rgba(255,255,255,.05)}
+.member-img{width:60px;height:60px;border-radius:50%;object-fit:cover}
+.member-name{font-weight:900}
+.member-role{opacity:.8;font-size:13px}
+.featured{border:1px solid gold}
+.featured::before{content:"👑 عضو مميز";font-size:11px;position:absolute;margin-top:-10px}
 </style>
 </head>
 
@@ -124,7 +26,7 @@ body{
 
 <div class="container">
 
-<input class="search" id="search" placeholder="🔍 ابحث عن عضو بالاسم">
+<input id="search" class="search" placeholder="🔍 ابحث باسم العضو">
 
 <div class="section-title">⭐ الأعضاء المميزون</div>
 <div id="featured"></div>
@@ -134,12 +36,10 @@ body{
 
 </div>
 
-
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <script>
-
 const firebaseConfig = {
   apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
   authDomain: "sheko-store.firebaseapp.com",
@@ -151,52 +51,40 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+const db=firebase.database();
 
-let featuredBox = document.getElementById("featured");
-let normalBox = document.getElementById("normal");
-let search = document.getElementById("search");
+let members=[];
 
-let members = [];
-
-/* جلب البيانات بترتيب أحدث أولاً */
 db.ref("vibeMembers").orderByChild("time").on("value",snap=>{
-  members = [];
-  snap.forEach(c=> members.push(c.val()));
+  members=[];
+  snap.forEach(c=>members.push(c.val()));
   members.reverse();
   render();
 });
 
-/* عرض + بحث */
 function render(){
-
-  featuredBox.innerHTML = "";
-  normalBox.innerHTML = "";
-
-  let text = search.value.toLowerCase();
+  let text=search.value.toLowerCase();
+  featured.innerHTML="";
+  normal.innerHTML="";
 
   members.forEach(m=>{
     if(!m.name.toLowerCase().includes(text)) return;
 
-    let card = `
+    let card=`
       <div class="member-card ${m.featured?"featured":""}">
         <img class="member-img" src="${m.image}">
         <div>
           <div class="member-name">${m.name}</div>
-          <div class="member-role">${m.role}</div>
+          <div class="member-role">${m.role}${m.extra?" - "+m.extra:""}</div>
         </div>
-      </div>
-    `;
+      </div>`;
 
-    if(m.featured) featuredBox.innerHTML += card;
-    else normalBox.innerHTML += card;
-
+    if(m.featured) featured.innerHTML+=card;
+    else normal.innerHTML+=card;
   });
-
 }
 
-search.oninput = render;
-
+search.oninput=render;
 </script>
 
 </body>
