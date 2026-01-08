@@ -84,22 +84,28 @@ function logout() { auth.signOut().then(()=>location.href="index.html"); }
 
 const newsBox = document.getElementById("newsBox");
 
-// الحل النهائي: استخدام child_added مع insertBefore للأحدث أولاً
-db.ref("news").orderByChild("timestamp").on("child_added", snap => {
-  const n = snap.val();
-  const card = document.createElement("div");
-  card.className = "news-card";
-  card.innerHTML = `
-    ${n.image ? `<img class="news-img" src="${n.image}" onclick="openImage('${n.image}')">` : ""}
-    <div class="news-title">${n.title || ""}</div>
-    <div class="news-text">${n.text || ""}</div>
-  `;
-  // الأحدث أولاً
-  if(newsBox.children.length > 1){
-    newsBox.insertBefore(card, newsBox.children[1]);
-  } else {
+// استخدام "value" لجلب كل الأخبار عند كل تغيير
+db.ref("news").orderByChild("timestamp").on("value", snap => {
+  newsBox.innerHTML = "<div style='text-align:center;font-size:22px;font-weight:bold;'>📰 الأخبار</div>";
+
+  const list = [];
+  snap.forEach(child => {
+    list.push(child.val());
+  });
+
+  // ترتيب من الأحدث للأقدم
+  list.sort((a,b)=>b.timestamp - a.timestamp);
+
+  list.forEach(n => {
+    const card = document.createElement("div");
+    card.className = "news-card";
+    card.innerHTML = `
+      ${n.image ? `<img class="news-img" src="${n.image}" onclick="openImage('${n.image}')">` : ""}
+      <div class="news-title">${n.title || ""}</div>
+      <div class="news-text">${n.text || ""}</div>
+    `;
     newsBox.appendChild(card);
-  }
+  });
 });
 
 /* فتح وغلق الصورة */
@@ -107,9 +113,7 @@ function openImage(src){
   document.getElementById("modalImage").src = src;
   document.getElementById("imageModal").style.display = "flex";
 }
-function closeImage(){
-  document.getElementById("imageModal").style.display = "none";
-}
+function closeImage(){ document.getElementById("imageModal").style.display = "none"; }
 document.getElementById("imageModal").addEventListener("click", e=>{
   if(e.target.id === "imageModal") closeImage();
 });
