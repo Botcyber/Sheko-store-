@@ -1,82 +1,82 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>إدارة الأخبار - VIBE Admin</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>إدارة الأخبار - VIBE Admin</title>
 
-  <style>
-    body { font-family: 'Cairo', sans-serif; margin:0; background:#f1f1f1; }
-    .top-bar {
-      background:#222; color:white; padding:10px 20px; text-align:center;
-      font-size:22px; font-weight:bold;
-    }
-
-    .container {
-      max-width:900px;
-      margin:20px auto;
-      padding:20px;
-      background:white;
-      border-radius:12px;
-    }
-
-    .news-card{
-      background:#fdfdfd;
-      padding:15px;
-      margin-bottom:15px;
-      border-radius:10px;
-      text-align:right;
-      border-left:6px solid #ffb700;
-      position:relative;
-    }
-
-    .news-title{ font-weight:bold; font-size:18px; margin-bottom:8px; }
-    .news-text{ font-size:15px; color:#444; margin-top:5px; }
-    .news-img{ width:140px; border-radius:10px; margin-top:8px; display:block; }
-
-    .btn{
-      padding:6px 12px;
-      border:none;
-      border-radius:8px;
-      cursor:pointer;
-      margin-left:5px;
-      font-weight:bold;
-    }
-    .btn-edit{ background:#007bff; color:white; }
-    .btn-delete{ background:#dc3545; color:white; }
-
-    input[type="text"], textarea{
-      width:100%;
-      padding:8px;
-      margin:5px 0 10px;
-      border-radius:6px;
-      border:1px solid #ccc;
-      font-family:'Cairo', sans-serif;
-    }
-  </style>
+<style>
+body{
+  font-family:'Cairo',sans-serif;
+  margin:0;
+  background:#f1f1f1;
+}
+.top-bar{
+  background:#222;
+  color:white;
+  padding:12px;
+  text-align:center;
+  font-size:22px;
+  font-weight:bold;
+}
+.container{
+  max-width:900px;
+  margin:20px auto;
+  padding:20px;
+  background:white;
+  border-radius:12px;
+}
+.news-card{
+  background:#fff;
+  padding:15px;
+  margin-bottom:15px;
+  border-radius:10px;
+  border-left:6px solid gold;
+}
+.news-title{font-size:18px;font-weight:bold;}
+.news-text{margin-top:6px;color:#444;}
+.news-img{
+  width:140px;
+  border-radius:10px;
+  margin-top:8px;
+}
+.btn{
+  padding:6px 12px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  margin-left:5px;
+  font-weight:bold;
+}
+.btn-edit{background:#007bff;color:white;}
+.btn-delete{background:#dc3545;color:white;}
+input,textarea{
+  width:100%;
+  padding:8px;
+  margin-bottom:10px;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+</style>
 </head>
 
 <body>
 
-<div class="top-bar">إدارة الأخبار - VIBE Admin</div>
+<div class="top-bar">إدارة الأخبار</div>
 
 <div class="container">
-  <h3>إضافة خبر جديد</h3>
-
-  <input type="text" id="newTitle" placeholder="عنوان الخبر">
-  <textarea id="newText" rows="4" placeholder="نص الخبر"></textarea>
-
-  <label>رفع صورة الخبر (اختياري)</label>
-  <input type="file" id="newImageFile" accept="image/*">
-
-  <button class="btn btn-edit" id="addBtn" onclick="addNews()">➕ إضافة الخبر</button>
+  <h3>إضافة خبر</h3>
+  <input id="title" placeholder="عنوان الخبر">
+  <textarea id="text" rows="4" placeholder="نص الخبر"></textarea>
+  <input type="file" id="image">
+  <button class="btn btn-edit" onclick="addNews()">➕ إضافة</button>
 </div>
 
-<div class="container" id="newsList">
-  <h3>قائمة الأخبار</h3>
+<div class="container">
+  <h3>كل الأخبار</h3>
+  <div id="newsList"></div>
 </div>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
@@ -85,119 +85,93 @@ const firebaseConfig = {
   apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
   authDomain: "sheko-store.firebaseapp.com",
   databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-  projectId: "sheko-store",
-  storageBucket: "sheko-store.appspot.com",
-  messagingSenderId: "113892775847",
-  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+  projectId: "sheko-store"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-
-const newTitle = document.getElementById("newTitle");
-const newText = document.getElementById("newText");
-const newImageFile = document.getElementById("newImageFile");
-const addBtn = document.getElementById("addBtn");
-const newsList = document.getElementById("newsList");
+const list = document.getElementById("newsList");
 
 /* إضافة خبر */
 function addNews(){
-
-  const title = newTitle.value.trim();
-  const text  = newText.value.trim();
-  const file  = newImageFile.files[0];
+  const title = titleInput.value.trim();
+  const text  = textInput.value.trim();
+  const file  = imageInput.files[0];
 
   if(!title || !text){
-    alert("⚠️ الرجاء تعبئة العنوان والنص");
+    alert("اكتب العنوان والنص");
     return;
   }
 
-  addBtn.disabled = true;
-  addBtn.innerText = "جاري الإضافة...";
-
   if(file){
-    const reader = new FileReader();
-    reader.onload = e => saveNews(title,text,e.target.result);
-    reader.readAsDataURL(file);
+    const r = new FileReader();
+    r.onload = e => save(title,text,e.target.result);
+    r.readAsDataURL(file);
   }else{
-    saveNews(title,text,"");
+    save(title,text,"");
   }
 }
 
-/* حفظ في Firebase */
-function saveNews(title,text,image){
-
+function save(title,text,image){
   db.ref("news").push({
     title,
     text,
     image,
-    timestamp: Date.now()
-  })
-  .then(()=>{
-    newTitle.value="";
-    newText.value="";
-    newImageFile.value="";
-  })
-  .catch(err=>{
-    alert("❌ خطأ: " + err.message);
-  })
-  .finally(()=>{
-    addBtn.disabled = false;
-    addBtn.innerText = "➕ إضافة الخبر";
+    time: Date.now()
   });
+  titleInput.value="";
+  textInput.value="";
+  imageInput.value="";
 }
 
-/* عرض الأخبار */
-db.ref("news").orderByChild("timestamp").on("value",snap=>{
+/* عرض الأخبار (الحل الصحيح) */
+db.ref("news").orderByChild("time").on("child_added",snap=>{
+  const n = snap.val();
+  const key = snap.key;
 
-  newsList.innerHTML = "<h3>قائمة الأخبار</h3>";
-  let arr=[];
-
-  snap.forEach(c=> arr.push({key:c.key,...c.val()}));
-  arr.reverse();
-
-  arr.forEach(n=>{
-    newsList.innerHTML += `
-      <div class="news-card">
-        <div class="news-title">${n.title}</div>
-        ${n.image ? `<img class="news-img" src="${n.image}">` : ""}
-        <div class="news-text">${n.text}</div>
-        <div style="margin-top:8px;">
-          <button class="btn btn-edit" onclick="editNews('${n.key}')">تعديل</button>
-          <button class="btn btn-delete" onclick="deleteNews('${n.key}')">حذف</button>
-        </div>
-      </div>
-    `;
-  });
-
+  const div = document.createElement("div");
+  div.className="news-card";
+  div.id=key;
+  div.innerHTML=`
+    <div class="news-title">${n.title}</div>
+    ${n.image ? `<img class="news-img" src="${n.image}">` : ""}
+    <div class="news-text">${n.text}</div>
+    <br>
+    <button class="btn btn-edit" onclick="editNews('${key}')">تعديل</button>
+    <button class="btn btn-delete" onclick="deleteNews('${key}')">حذف</button>
+  `;
+  list.prepend(div); // الأحدث فوق
 });
 
 /* حذف */
 function deleteNews(key){
   if(confirm("حذف الخبر؟")){
     db.ref("news/"+key).remove();
+    document.getElementById(key).remove();
   }
 }
 
 /* تعديل */
 function editNews(key){
   db.ref("news/"+key).once("value").then(s=>{
-    if(!s.exists()) return;
-    let d=s.val();
-
-    let t = prompt("عدل العنوان",d.title);
+    const d=s.val();
+    let t=prompt("العنوان",d.title);
     if(t===null) return;
-    let x = prompt("عدل النص",d.text);
+    let x=prompt("النص",d.text);
     if(x===null) return;
 
     db.ref("news/"+key).update({
       title:t,
       text:x,
-      image:d.image,
-      timestamp:Date.now()
+      time:Date.now()
     });
   });
 }
+
+/* عناصر */
+const titleInput=document.getElementById("title");
+const textInput=document.getElementById("text");
+const imageInput=document.getElementById("image");
 </script>
 
 </body>
