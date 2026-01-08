@@ -86,39 +86,59 @@
 
     const newsList = document.getElementById("newsList");
 
-    function addNews(){
-      const title = document.getElementById("newTitle").value.trim();
-      const text = document.getElementById("newText").value.trim();
-      const fileInput = document.getElementById("newImageFile");
-      if(!title || !text){
-        alert("⚠️ الرجاء تعبئة العنوان والنص");
-        return;
-      }
+     <script>
+function addNews(){
 
-      if(fileInput.files[0]){
-        const reader = new FileReader();
-        reader.onload = function(e){
-          saveNews(title,text,e.target.result);
-        };
-        reader.readAsDataURL(fileInput.files[0]);
-      } else {
-        saveNews(title,text,"");
-      }
-    }
+  <button class="btn btn-edit" id="addBtn" onclick="addNews()">➕ إضافة الخبر</button>
 
-    function saveNews(title,text,image){
-      const newNewsRef = db.ref("news").push();
-      newNewsRef.set({
-        title, text, image,
-        timestamp: Date.now()   // مهم للترتيب
-      }).then(()=>{
-        document.getElementById("newTitle").value="";
-        document.getElementById("newText").value="";
-        document.getElementById("newImageFile").value="";
-      });
-    }
+  const title = newTitle.value.trim();
+  const text = newText.value.trim();
+  const file = newImageFile.files[0];
 
-    function loadNews(){
+  if(!title || !text){
+    alert("⚠️ الرجاء تعبئة العنوان والنص");
+    btn.disabled = false;
+    btn.innerText = "➕ إضافة الخبر";
+    return;
+  }
+
+  if(file){
+    const reader = new FileReader();
+    reader.onload = e => saveNews(title,text,e.target.result);
+    reader.readAsDataURL(file);
+  }else{
+    saveNews(title,text,"");
+  }
+}
+</script>
+
+    <script>
+function saveNews(title,text,image){
+
+  db.ref("news").push({
+    title,
+    text,
+    image,
+    timestamp: Date.now()
+  })
+  .then(()=>{
+    newTitle.value="";
+    newText.value="";
+    newImageFile.value="";
+    alert("✅ تم إضافة الخبر بنجاح");
+  })
+  .catch(err=>{
+    alert("❌ حدث خطأ: " + err.message);
+  })
+  .finally(()=>{
+    addBtn.disabled = false;
+    addBtn.innerText = "➕ إضافة الخبر";
+  });
+
+}
+</script
+  
+  function loadNews(){
       db.ref("news").orderByChild("timestamp").on("value", snap=>{
         newsList.innerHTML = "<h3>قائمة الأخبار</h3>";
         let arr=[];
@@ -136,7 +156,6 @@
               <button class="btn btn-edit" onclick="editNews('${n.key}')">تعديل</button>
               <button class="btn btn-delete" onclick="deleteNews('${n.key}')">حذف</button>
             </div>
-          `;
           newsList.appendChild(div);
         });
       });
