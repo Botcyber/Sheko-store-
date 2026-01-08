@@ -4,12 +4,17 @@
   <meta charset="UTF-8" />
   <title> الاخبار - VIBE </title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <link rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     crossorigin="anonymous" />
 
   <style>
-    body { font-family: 'Cairo', sans-serif; margin: 0; background: #f1f1f1; }
+    body {
+      font-family: 'Cairo', sans-serif;
+      margin: 0;
+      background: #f1f1f1;
+    }
 
     .top-bar {
       background: #222;
@@ -33,7 +38,9 @@
       gap: 8px;
     }
 
-    .nav-icons a:hover { color: #ffb700; }
+    .nav-icons a:hover {
+      color: #ffb700;
+    }
 
     .user-area {
       display: flex;
@@ -43,7 +50,10 @@
       font-size: 15px;
     }
 
-    button:hover { background: #ffb700; color: #222; }
+    button:hover {
+      background: #ffb700;
+      color: #222;
+    }
 
     @keyframes glowTitle {
       0% { text-shadow: 0 0 6px #ffb700; }
@@ -51,19 +61,26 @@
       100% { text-shadow: 0 0 6px #ffb700; }
     }
 
-    /* الأخبار */
+    /* حاوية الأخبار */
     .news-container {
       max-width: 900px;
       margin: 25px auto;
       padding: 10px;
     }
 
+    /* كارت الخبر */
     .news-card {
       background: white;
       margin-bottom: 18px;
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 4px 15px rgba(0,0,0,.08);
+      animation: fadeIn .4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .news-img {
@@ -71,7 +88,6 @@
       height: 220px;
       object-fit: cover;
       display: block;
-      cursor: pointer;
     }
 
     .news-title {
@@ -87,156 +103,95 @@
       padding: 0 15px 15px 15px;
       line-height: 1.8;
     }
-
-    /* نافذة الصورة */
-    .image-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.9);
-      z-index: 9999;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .image-modal img {
-      max-width: 95%;
-      max-height: 95%;
-      border-radius: 12px;
-    }
-
-    .close-modal {
-      position: absolute;
-      top: 20px;
-      right: 25px;
-      font-size: 35px;
-      color: white;
-      cursor: pointer;
-    }
   </style>
 </head>
 
 <body>
 
-<div class="top-bar">
-  <div style="
-    width: 100%;
-    text-align: center;
-    font-size: 30px;
-    font-weight: bold;
-    margin-bottom: 8px;
-    color: #ffcc33;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    text-shadow: 0 0 8px rgba(255, 204, 0, 0.8);
-    animation: glowTitle 2s infinite ease-in-out;">
-    VIBE STUDIO
+  <div class="top-bar">
+
+    <div style="
+      width:100%;
+      text-align:center;
+      font-size:30px;
+      font-weight:bold;
+      margin-bottom:8px;
+      color:#ffcc33;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      text-shadow:0 0 8px rgba(255,204,0,.8);
+      animation:glowTitle 2s infinite ease-in-out;
+    ">
+      VIBE STUDIO
+    </div>
+
+    <nav class="nav-icons">
+      <a href="account.html"><i class="fa fa-user"></i><span>حسابك</span></a>
+      <a href="support_chat.html"><i class="fa fa-headset"></i><span>للتواصل مع الفريق</span></a>
+    </nav>
+
+    <div class="user-area">
+      <button onclick="logout()">
+        <i class="fa fa-sign-out-alt"></i> خروج
+      </button>
+    </div>
+
   </div>
 
-  <nav class="nav-icons">
-    <a href="account.html"><i class="fa fa-user"></i><span>حسابك</span></a>
-    <a href="support_chat.html"><i class="fa fa-headset"></i><span>للتواصل مع الفريق</span></a>
-  </nav>
-
-  <div class="user-area">
-    <button onclick="logout()"><i class="fa fa-sign-out-alt"></i> خروج</button>
+  <div class="news-container" id="newsBox">
+    <div style="text-align:center;font-size:22px;font-weight:bold;">📰 الأخبار</div>
   </div>
-</div>
 
-<div class="news-container" id="newsBox">
-  <div style="text-align:center;font-size:22px;font-weight:bold;">📰 الأخبار</div>
-</div>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
-<!-- نافذة الصورة -->
-<div id="imageModal" class="image-modal">
-  <span class="close-modal" onclick="closeImage()">×</span>
-  <img id="modalImage">
-</div>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
 
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-  authDomain: "sheko-store.firebaseapp.com",
-  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-  projectId: "sheko-store",
-  storageBucket: "sheko-store.appspot.com",
-  messagingSenderId: "113892775847",
-  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-};
+    auth.onAuthStateChanged(user => {
+      if (!user) location.href = "index.html";
+    });
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
-
-auth.onAuthStateChanged(user => {
-  if (!user) window.location.href = "index.html";
-});
-
-function logout() {
-  auth.signOut().then(() => window.location.href = "index.html");
-}
-
-const newsBox = document.getElementById("newsBox");
-
-// تحميل الأخبار وعرضها بشكل صحيح
-db.ref("news").orderByChild("timestamp").on("value", snap => {
-  newsBox.innerHTML = "<div style='text-align:center;font-size:22px;font-weight:bold;'>📰 الأخبار</div>";
-
-  if (!snap.exists()) {
-    newsBox.innerHTML += "<p style='text-align:center;color:#777'>لا توجد أخبار حالياً</p>";
-    return;
-  }
-
-  let list = [];
-  snap.forEach(child => list.push({ key: child.key, ...child.val() }));
-  list.reverse();
-
-  // إنشاء كل كارت كعنصر DOM لتجنب مشاكل innerHTML
-  list.forEach(n => {
-    const card = document.createElement("div");
-    card.className = "news-card";
-
-    if (n.image) {
-      const img = document.createElement("img");
-      img.src = n.image;
-      img.className = "news-img";
-      img.onclick = () => openImage(n.image);
-      card.appendChild(img);
+    function logout() {
+      auth.signOut().then(() => location.href = "index.html");
     }
 
-    const title = document.createElement("div");
-    title.className = "news-title";
-    title.textContent = n.title || "";
-    card.appendChild(title);
+    const newsBox = document.getElementById("newsBox");
 
-    const text = document.createElement("div");
-    text.className = "news-text";
-    text.textContent = n.text || "";
-    card.appendChild(text);
+    /* تحميل الأخبار – الحل النهائي */
+    db.ref("news")
+      .orderByChild("time")
+      .on("child_added", snap => {
 
-    newsBox.appendChild(card);
-  });
-});
+        const n = snap.val();
 
-// فتح وغلق الصورة
-function openImage(src) {
-  document.getElementById("modalImage").src = src;
-  document.getElementById("imageModal").style.display = "flex";
-}
+        const card = document.createElement("div");
+        card.className = "news-card";
 
-function closeImage() {
-  document.getElementById("imageModal").style.display = "none";
-}
+        card.innerHTML = `
+          ${n.image ? `<img class="news-img" src="${n.image}">` : ""}
+          <div class="news-title">${n.title || ""}</div>
+          <div class="news-text">${n.text || ""}</div>
+        `;
 
-document.getElementById("imageModal").addEventListener("click", e => {
-  if (e.target.id === "imageModal") closeImage();
-});
-</script>
+        /* الأحدث في الأعلى */
+        newsBox.insertBefore(card, newsBox.children[1]);
+      });
+  </script>
 
 </body>
 </html>
