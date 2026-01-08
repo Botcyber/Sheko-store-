@@ -105,7 +105,7 @@
       line-height: 1.8;
     }
 
-    /* نافذة عرض الصورة */
+    /* نافذة الصورة */
     .image-modal {
       display: none;
       position: fixed;
@@ -130,6 +130,7 @@
       color: white;
       cursor: pointer;
     }
+
   </style>
 </head>
 
@@ -137,17 +138,16 @@
 
 <div class="top-bar">
   <div style="
-      width:100%;
-      text-align:center;
-      font-size:30px;
-      font-weight:bold;
-      margin-bottom:8px;
-      color:#ffcc33;
-      letter-spacing:2px;
-      text-transform:uppercase;
-      text-shadow:0 0 8px rgba(255,204,0,.8);
-      animation:glowTitle 2s infinite ease-in-out;
-    ">
+    width:100%;
+    text-align:center;
+    font-size:30px;
+    font-weight:bold;
+    margin-bottom:8px;
+    color:#ffcc33;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    text-shadow:0 0 8px rgba(255,204,0,.8);
+    animation:glowTitle 2s infinite ease-in-out;">
     VIBE STUDIO
   </div>
 
@@ -167,7 +167,7 @@
   <div style="text-align:center;font-size:22px;font-weight:bold;">📰 الأخبار</div>
 </div>
 
-<!-- نافذة عرض الصورة -->
+<!-- نافذة الصورة -->
 <div id="imageModal" class="image-modal">
   <span class="close-modal" onclick="closeImage()">×</span>
   <img id="modalImage">
@@ -203,36 +203,46 @@ function logout() {
 
 const newsBox = document.getElementById("newsBox");
 
-/* تحميل الأخبار وعرضها بشكل صحيح */
+/* تحميل الأخبار مع ترتيب الأحدث أولاً */
 db.ref("news")
-  .orderByChild("timestamp")
-  .on("child_added", snap => {
+  .orderByChild("time")
+  .on("value", snap => {
+    newsBox.innerHTML = "<div style='text-align:center;font-size:22px;font-weight:bold;'>📰 الأخبار</div>";
 
-    const n = snap.val();
+    let list = [];
+    snap.forEach(child => list.push(child.val()));
 
-    const card = document.createElement("div");
-    card.className = "news-card";
+    // الترتيب: الأحدث أولاً
+    list.sort((a, b) => b.time - a.time);
 
-    if (n.image) {
-      const img = document.createElement("img");
-      img.src = n.image;
-      img.className = "news-img";
-      img.onclick = () => openImage(n.image); // فتح الصورة fullscreen
-      card.appendChild(img);
+    list.forEach(n => {
+      const card = document.createElement("div");
+      card.className = "news-card";
+
+      if (n.image) {
+        const img = document.createElement("img");
+        img.src = n.image;
+        img.className = "news-img";
+        img.onclick = () => openImage(n.image);
+        card.appendChild(img);
+      }
+
+      const title = document.createElement("div");
+      title.className = "news-title";
+      title.textContent = n.title || "";
+      card.appendChild(title);
+
+      const text = document.createElement("div");
+      text.className = "news-text";
+      text.textContent = n.text || "";
+      card.appendChild(text);
+
+      newsBox.appendChild(card);
+    });
+
+    if(list.length === 0){
+      newsBox.innerHTML += "<p style='text-align:center;color:#777'>لا توجد أخبار حالياً</p>";
     }
-
-    const title = document.createElement("div");
-    title.className = "news-title";
-    title.textContent = n.title || "";
-    card.appendChild(title);
-
-    const text = document.createElement("div");
-    text.className = "news-text";
-    text.textContent = n.text || "";
-    card.appendChild(text);
-
-    // ظهور الأحدث فوق
-    newsBox.insertBefore(card, newsBox.children[1]);
   });
 
 /* فتح وغلق الصورة */
