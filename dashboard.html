@@ -4,44 +4,49 @@
   <meta charset="UTF-8" />
   <title>الأخبار - VIBE</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
   <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    crossorigin="anonymous" />
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        crossorigin="anonymous" />
 
   <style>
     body { font-family: 'Cairo', sans-serif; margin:0; background:#f1f1f1; }
+
     .top-bar { background:#222; padding:10px 20px; color:white; }
     .nav-icons { display:flex; flex-direction:column; gap:25px; margin-top:10px; }
     .nav-icons a { color:white; text-decoration:none; display:flex; align-items:center; gap:8px; font-size:14px; }
     .nav-icons a:hover { color:#ffb700; }
     .user-area { display:flex; justify-content:flex-end; align-items:center; gap:15px; font-size:15px; }
     button:hover { background:#ffb700; color:#222; }
-    @keyframes glowTitle { 0% {text-shadow:0 0 6px #ffb700;} 50% {text-shadow:0 0 18px #ffd966;} 100% {text-shadow:0 0 6px #ffb700;} }
+
+    @keyframes glowTitle {
+      0% { text-shadow:0 0 6px #ffb700; }
+      50% { text-shadow:0 0 18px #ffd966; }
+      100% { text-shadow:0 0 6px #ffb700; }
+    }
+
     .news-container { max-width:900px; margin:25px auto; padding:10px; }
     .news-card { background:white; margin-bottom:18px; border-radius:12px; overflow:hidden; box-shadow:0 4px 15px rgba(0,0,0,.08); animation:fadeIn .4s ease; }
-    @keyframes fadeIn { from {opacity:0; transform:translateY(10px);} to {opacity:1; transform:translateY(0);} }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
     .news-img { width:100%; height:220px; object-fit:cover; display:block; cursor:pointer; }
     .news-title { font-size:20px; font-weight:800; padding:12px 15px 5px 15px; line-height:1.6; }
     .news-text { font-size:15px; color:#444; padding:0 15px 15px 15px; line-height:1.8; }
-    .image-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.95); z-index:9999; justify-content:center; align-items:center; }
+
+    /* نافذة الصورة */
+    .image-modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.9); z-index:9999; justify-content:center; align-items:center; }
     .image-modal img { max-width:95%; max-height:95%; border-radius:12px; }
     .close-modal { position:absolute; top:20px; right:25px; font-size:35px; color:white; cursor:pointer; }
   </style>
 </head>
-
 <body>
 
 <div class="top-bar">
   <div style="width:100%; text-align:center; font-size:30px; font-weight:bold; margin-bottom:8px; color:#ffcc33; letter-spacing:2px; text-transform:uppercase; text-shadow:0 0 8px rgba(255,204,0,.8); animation:glowTitle 2s infinite ease-in-out;">
     VIBE STUDIO
   </div>
-
   <nav class="nav-icons">
     <a href="account.html"><i class="fa fa-user"></i><span>حسابك</span></a>
     <a href="support_chat.html"><i class="fa fa-headset"></i><span>للتواصل مع الفريق</span></a>
   </nav>
-
   <div class="user-area">
     <button onclick="logout()"><i class="fa fa-sign-out-alt"></i> خروج</button>
   </div>
@@ -80,21 +85,19 @@ auth.onAuthStateChanged(user => {
   if (!user) location.href = "index.html";
 });
 
-function logout() { auth.signOut().then(()=>location.href="index.html"); }
+function logout() { auth.signOut().then(() => location.href="index.html"); }
 
 const newsBox = document.getElementById("newsBox");
 
-// استخدام "value" لجلب كل الأخبار عند كل تغيير
+/* جلب الأخبار بشكل صحيح */
 db.ref("news").orderByChild("timestamp").on("value", snap => {
   newsBox.innerHTML = "<div style='text-align:center;font-size:22px;font-weight:bold;'>📰 الأخبار</div>";
 
   const list = [];
-  snap.forEach(child => {
-    list.push(child.val());
-  });
+  snap.forEach(child => list.push(child.val()));
 
-  // ترتيب من الأحدث للأقدم
-  list.sort((a,b)=>b.timestamp - a.timestamp);
+  // ترتيب الأحدث أولاً
+  list.sort((a,b)=> b.timestamp - a.timestamp);
 
   list.forEach(n => {
     const card = document.createElement("div");
@@ -109,14 +112,12 @@ db.ref("news").orderByChild("timestamp").on("value", snap => {
 });
 
 /* فتح وغلق الصورة */
-function openImage(src){
+function openImage(src) {
   document.getElementById("modalImage").src = src;
   document.getElementById("imageModal").style.display = "flex";
 }
-function closeImage(){ document.getElementById("imageModal").style.display = "none"; }
-document.getElementById("imageModal").addEventListener("click", e=>{
-  if(e.target.id === "imageModal") closeImage();
-});
+function closeImage() { document.getElementById("imageModal").style.display = "none"; }
+document.getElementById("imageModal").addEventListener("click", e => { if(e.target.id==="imageModal") closeImage(); });
 </script>
 
 </body>
