@@ -50,20 +50,6 @@
       color: #0069d9;
       user-select: none;
     }
-    .btn-share {
-      margin-top: 20px;
-      background: #28a745;
-    }
-    .btn-copy {
-      margin-top: 10px;
-      background: #17a2b8;
-    }
-    .whatsapp {
-      margin-top: 15px;
-      color: #0069d9;
-      font-size: 14px;
-      user-select: none;
-    }
     #toast {
       display: none;
       position: fixed;
@@ -79,9 +65,29 @@
       z-index: 1000;
       user-select: none;
     }
+    /* زر اللغة */
+    #langBtn {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      background: #0069d9;
+      color: white;
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: bold;
+      z-index: 9999;
+    }
   </style>
 </head>
 <body>
+  <!-- زر اللغة -->
+  <div id="langBtn">🌐</div>
+
   <div class="container">
     <h2 id="formTitle">تسجيل الدخول</h2>
     <input type="text" id="username" placeholder="الاسم" style="display:none;" />
@@ -90,7 +96,6 @@
     <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور" style="display:none;" />
     <button id="actionBtn">دخول</button>
     <div class="toggle" id="toggleForm">ليس لديك حساب؟ أنشئ الآن</div>
-
   </div>
 
   <div id="toast"></div>
@@ -125,13 +130,65 @@
     const formTitle = document.getElementById("formTitle");
     const toggleForm = document.getElementById("toggleForm");
 
+    // قاموس الترجمة
+    const translations = {
+      ar: {
+        title: "تسجيل الدخول",
+        login: "دخول",
+        register: "تسجيل",
+        toggleToRegister: "ليس لديك حساب؟ أنشئ الآن",
+        toggleToLogin: "لديك حساب؟ تسجيل الدخول",
+        email: "البريد الإلكتروني",
+        password: "كلمة المرور",
+        confirm: "تأكيد كلمة المرور",
+        name: "الاسم"
+      },
+      en: {
+        title: "Login",
+        login: "Login",
+        register: "Register",
+        toggleToRegister: "Don't have an account? Sign up",
+        toggleToLogin: "Already have an account? Login",
+        email: "Email",
+        password: "Password",
+        confirm: "Confirm Password",
+        name: "Name"
+      }
+    };
+
+    // قراءة اللغة الحالية من التخزين
+    let currentLang = localStorage.getItem("lang") || "ar";
+
+    function applyLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem("lang", lang);
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+
+      formTitle.textContent = translations[lang].title;
+      actionBtn.textContent = isRegister ? translations[lang].register : translations[lang].login;
+      toggleForm.textContent = isRegister ? translations[lang].toggleToLogin : translations[lang].toggleToRegister;
+      email.placeholder = translations[lang].email;
+      password.placeholder = translations[lang].password;
+      confirmPassword.placeholder = translations[lang].confirm;
+      username.placeholder = translations[lang].name;
+    }
+
+    // تطبيق اللغة عند التحميل
+    applyLanguage(currentLang);
+
+    // زر تغيير اللغة
+    document.getElementById("langBtn").onclick = () => {
+      applyLanguage(currentLang === "ar" ? "en" : "ar");
+    };
+
     toggleForm.onclick = () => {
       isRegister = !isRegister;
-      formTitle.textContent = isRegister ? "إنشاء حساب" : "تسجيل الدخول";
-      actionBtn.textContent = isRegister ? "تسجيل" : "دخول";
+      formTitle.textContent = isRegister ? translations[currentLang].title : translations[currentLang].title;
+      actionBtn.textContent = isRegister ? translations[currentLang].register : translations[currentLang].login;
       confirmPassword.style.display = isRegister ? "block" : "none";
       username.style.display = isRegister ? "block" : "none";
-      toggleForm.textContent = isRegister ? "لديك حساب؟ تسجيل الدخول" : "ليس لديك حساب؟ أنشئ الآن";
+      toggleForm.textContent = isRegister ? translations[currentLang].toggleToLogin : translations[currentLang].toggleToRegister;
     };
 
     actionBtn.onclick = async () => {
@@ -141,14 +198,8 @@
       const userName = username.value.trim();
 
       if (isRegister) {
-        if (userPass !== confirmPass) {
-          return showToast("كلمتا المرور غير متطابقتين", "error");
-        }
-
-        if (userName === "") {
-          return showToast("الرجاء إدخال الاسم", "error");
-        }
-
+        if (userPass !== confirmPass) return showToast(currentLang === "ar" ? "كلمتا المرور غير متطابقتين" : "Passwords do not match", "error");
+        if (userName === "") return showToast(currentLang === "ar" ? "الرجاء إدخال الاسم" : "Please enter your name", "error");
         try {
           const userCredential = await createUserWithEmailAndPassword(auth, userEmail, userPass);
           const user = userCredential.user;
@@ -159,7 +210,7 @@
             balance: 0,
             points: 0
           });
-          showToast("✅ تم إنشاء الحساب", "success");
+          showToast(currentLang === "ar" ? "✅ تم إنشاء الحساب" : "Account created ✅", "success");
           window.location.href = "dashboard.html";
         } catch (error) {
           showToast(error.message, "error");
@@ -167,7 +218,7 @@
       } else {
         try {
           await signInWithEmailAndPassword(auth, userEmail, userPass);
-          showToast("✅ تم تسجيل الدخول", "success");
+          showToast(currentLang === "ar" ? "✅ تم تسجيل الدخول" : "Login successful ✅", "success");
           window.location.href = "dashboard.html";
         } catch (error) {
           showToast(error.message, "error");
@@ -175,48 +226,15 @@
       }
     };
 
-    window.shareSite = () => {
-      const shareData = {
-        title: "Sheko Store",
-        text: "جرب هذا الموقع لشحن الألعاب 🔥",
-        url: "https://botcyber.github.io/Sheko-store-/"
-      };
-
-      if (navigator.share) {
-        navigator.share(shareData)
-          .then(() => showToast("✅ تمت المشاركة بنجاح", "success"))
-          .catch(() => showToast("❌ لم يتم الإرسال", "error"));
-      } else {
-        showToast("❗ جهازك لا يدعم المشاركة. انسخ الرابط يدويًا.", "warning");
-      }
-    };
-
-    window.copyLink = () => {
-      const link = "https://botcyber.github.io/Sheko-store-/";
-      navigator.clipboard.writeText(link)
-        .then(() => showToast("📋 تم نسخ الرابط!", "success"))
-        .catch(() => showToast("❌ لم يتم النسخ.", "error"));
-    };
-
     function showToast(message, type = "info") {
       const toast = document.getElementById("toast");
       toast.textContent = message;
       toast.style.display = "block";
-
-      if (type === "success") {
-        toast.style.backgroundColor = "#28a745";
-      } else if (type === "error") {
-        toast.style.backgroundColor = "#dc3545";
-      } else if (type === "warning") {
-        toast.style.backgroundColor = "#ffc107";
-        toast.style.color = "#000";
-      } else {
-        toast.style.backgroundColor = "#333";
-      }
-
-      setTimeout(() => {
-        toast.style.display = "none";
-      }, 3000);
+      if (type === "success") toast.style.backgroundColor = "#28a745";
+      else if (type === "error") toast.style.backgroundColor = "#dc3545";
+      else if (type === "warning") { toast.style.backgroundColor = "#ffc107"; toast.style.color = "#000"; }
+      else toast.style.backgroundColor = "#333";
+      setTimeout(() => { toast.style.display = "none"; }, 3000);
     }
   </script>
 </body>
