@@ -388,22 +388,42 @@ function renderMessage(id, msg) {
   textDiv.textContent = msg.text;
   content.appendChild(textDiv);
 
-  // 🟢 زر الترجمة لكل رسالة
-  const translateBtn = document.createElement("button");
-  translateBtn.textContent = "🌐 ترجمة";
-  translateBtn.style = "margin-top:5px; padding:3px 8px; border-radius:8px; font-size:0.8rem; cursor:pointer; background:#1976d2; color:white; border:none;";
-  let isArabic = true;
-  translateBtn.onclick = () => {
+// 🟢 زر الترجمة لكل رسالة
+const translateBtn = document.createElement("button");
+translateBtn.textContent = "🌐 ترجمة";
+translateBtn.style = "margin-top:5px; padding:3px 8px; border-radius:8px; font-size:0.8rem; cursor:pointer; background:#1976d2; color:white; border:none;";
+let isArabic = true;
+translateBtn.onclick = async () => {
+  const originalText = textDiv.textContent;
+  // إنشاء دائرة تحميل
+  translateBtn.disabled = true;
+  const loadingSpan = document.createElement("span");
+  loadingSpan.textContent = " ⏳...";
+  translateBtn.appendChild(loadingSpan);
+
+  try {
+    let translated = "";
     if(isArabic){
+      // هنا يمكن استبدال translateToEnglish بأي API سريع مثل Google Translate
+      translated = translateToEnglish(originalText);
       translateBtn.textContent = "🌐 Arabic";
-      textDiv.textContent = translateToEnglish(textDiv.textContent);
     } else {
+      translated = translateToArabic(originalText);
       translateBtn.textContent = "🌐 ترجمة";
-      textDiv.textContent = translateToArabic(textDiv.textContent);
     }
+    // إضافة النص المترجم
+    textDiv.textContent = translated;
     isArabic = !isArabic;
-  };
-  content.appendChild(translateBtn);
+  } catch(e){
+    alert("حدث خطأ أثناء الترجمة");
+    console.error(e);
+  } finally {
+    // إزالة دائرة التحميل
+    translateBtn.disabled = false;
+    if(translateBtn.contains(loadingSpan)) translateBtn.removeChild(loadingSpan);
+  }
+};
+content.appendChild(translateBtn);
 
   const timeDiv = document.createElement("div");
   timeDiv.className = "timestamp";
