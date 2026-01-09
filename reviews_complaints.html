@@ -31,6 +31,7 @@
 <body>
   <div class="container">
     <h2 id="reviewsTitle">⭐ تقييمات المستخدمين</h2>
+
     <label id="starsLabel">اختر عدد النجوم:</label>
     <div class="stars" id="starRating">
       <span data-value="1">&#9733;</span>
@@ -39,8 +40,9 @@
       <span data-value="4">&#9733;</span>
       <span data-value="5">&#9733;</span>
     </div>
+
     <textarea id="reviewText" placeholder="اكتب تعليقك هنا..." rows="4"></textarea>
-    <button onclick="submitReview()">إرسال التقييم</button>
+    <button id="submitReviewBtn">إرسال التقييم</button>
 
     <div class="section">
       <h2 id="reviewsListTitle">⭐ تقييمات المستخدمين</h2>
@@ -66,65 +68,71 @@
   const auth = firebase.auth();
   const db = firebase.database();
 
+  // ترجمة كل النصوص
   const t = {
     ar: {
       reviewsTitle: "⭐ تقييمات المستخدمين",
       reviewPlaceholder: "اكتب تعليقك هنا...",
-      starsError: "اختر عدد النجوم واكتب تعليقك.",
-      deleteBtn: "🗑 حذف التقييم"
+      starsLabel: "اختر عدد النجوم:",
+      submitBtn: "إرسال التقييم",
+      deleteBtn: "🗑 حذف التقييم",
+      starsError: "اختر عدد النجوم واكتب تعليقك."
     },
     en: {
       reviewsTitle: "⭐ User Reviews",
       reviewPlaceholder: "Write your review here...",
-      starsError: "Select star rating and write a comment.",
-      deleteBtn: "🗑 Delete Review"
+      starsLabel: "Select star rating:",
+      submitBtn: "Submit Review",
+      deleteBtn: "🗑 Delete Review",
+      starsError: "Select star rating and write a comment."
     }
   };
 
-  let currentUid = null;
-  let currentUserName = "";
-  let currentUserImg = "";
+  let currentUid=null;
+  let currentUserName="";
+  let currentUserImg="";
 
   function applyLang(lang){
     localStorage.setItem("lang",lang);
     document.body.style.direction = (lang==="ar"?"rtl":"ltr");
     document.getElementById("reviewsTitle").innerText = t[lang].reviewsTitle;
     document.getElementById("reviewText").placeholder = t[lang].reviewPlaceholder;
+    document.getElementById("starsLabel").innerText = t[lang].starsLabel;
+    document.getElementById("submitReviewBtn").innerText = t[lang].submitBtn;
   }
   applyLang(localStorage.getItem("lang")||"ar");
 
-  auth.onAuthStateChanged(user => {
+  auth.onAuthStateChanged(user=>{
     if(!user) return location.href="index.html";
-    currentUid = user.uid;
-    // جلب اسم المستخدم
-    db.ref("users/"+user.uid+"/username").once("value").then(snap=>{if(snap.exists()) currentUserName = snap.val();});
-    // جلب صورة المستخدم
-    db.ref("users/"+user.uid+"/profileImage").once("value").then(snap=>{if(snap.exists()) currentUserImg = snap.val();});
+    currentUid=user.uid;
+    db.ref("users/"+user.uid+"/username").once("value").then(snap=>{if(snap.exists()) currentUserName=snap.val();});
+    db.ref("users/"+user.uid+"/profileImage").once("value").then(snap=>{if(snap.exists()) currentUserImg=snap.val();});
     loadReviews();
   });
 
-  const stars = document.querySelectorAll("#starRating span");
-  let selectedStars = 0;
-  stars.forEach((star,i)=>{star.addEventListener("click",()=>{selectedStars=parseInt(star.dataset.value); updateStars(selectedStars);});});
+  const stars=document.querySelectorAll("#starRating span");
+  let selectedStars=0;
+  stars.forEach(star=>{star.addEventListener("click",()=>{selectedStars=parseInt(star.dataset.value); updateStars(selectedStars);});});
   function updateStars(rating){stars.forEach((s,i)=>s.classList.toggle("active",i<rating));}
 
-  function submitReview(){
-    const text = document.getElementById("reviewText").value.trim();
-    const lang = localStorage.getItem("lang")||"ar";
+  document.getElementById("submitReviewBtn").onclick=submitReview;
 
+  function submitReview(){
+    const text=document.getElementById("reviewText").value.trim();
+    const lang=localStorage.getItem("lang")||"ar";
     if(!selectedStars || !text) return alert(t[lang].starsError);
 
-    const data = {
-      uid: currentUid,
-      name: currentUserName,
-      profileImage: currentUserImg,
-      stars: selectedStars,
+    const data={
+      uid:currentUid,
+      name:currentUserName,
+      profileImage:currentUserImg,
+      stars:selectedStars,
       text,
-      timestamp: new Date().toISOString(),
+      timestamp:new Date().toISOString(),
       reactions:{heart:{},like:{},dislike:{}}
     };
 
-    const key = db.ref().child("reviews").push().key;
+    const key=db.ref().child("reviews").push().key;
     db.ref("reviews/"+key).set(data).then(()=>{
       document.getElementById("reviewText").value="";
       selectedStars=0; updateStars(0);
@@ -133,66 +141,37 @@
   }
 
   function loadReviews(){
-    const container = document.getElementById("reviewsList");
+    const container=document.getElementById("reviewsList");
     db.ref("reviews").on("value",snapshot=>{
       container.innerHTML="";
       if(!snapshot.exists()){ container.innerHTML="<p>لا توجد تقييمات بعد.</p>"; return; }
-      const reviews = snapshot.val();
-      const entries = Object.entries(reviews).sort((a,b)=>new Date(b[1].timestamp)-new Date(a[1].timestamp));
-      entries.forEach(([key,r])=>{
-        const div = document.createElement("div");
-        div.className="review";
+      const reviews=Object.entries(snapshot.val()).sort((a,b)=>new Date(b[1].timestamp)-new Date(a[1].timestamp));
+      reviews.forEach(([key,r])=>{
+        const div=document.createElement("div"); div.className="review";
 
-        // رأس التقييم باسم وصورة المستخدم
-        const header = document.createElement("div");
-        header.className="review-header";
-        const img = document.createElement("img"); img.src=r.profileImage||"https://via.placeholder.com/40";
-        const nameDiv = document.createElement("div"); nameDiv.textContent = r.name||"---";
+        const header=document.createElement("div"); header.className="review-header";
+        const img=document.createElement("img"); img.src=r.profileImage||"https://via.placeholder.com/40";
+        const nameDiv=document.createElement("div"); nameDiv.textContent=r.name||"---";
         header.appendChild(img); header.appendChild(nameDiv);
         div.appendChild(header);
 
-        const starsDiv = document.createElement("div"); starsDiv.textContent = "★".repeat(r.stars);
+        const starsDiv=document.createElement("div"); starsDiv.textContent="★".repeat(r.stars);
         div.appendChild(starsDiv);
 
-        const textP = document.createElement("p"); textP.textContent = r.text;
+        const textP=document.createElement("p"); textP.textContent=r.text;
         div.appendChild(textP);
 
-        const metaDiv = document.createElement("div"); metaDiv.className="meta"; metaDiv.textContent = new Date(r.timestamp).toLocaleString("ar-EG");
+        const metaDiv=document.createElement("div"); metaDiv.className="meta"; metaDiv.textContent=new Date(r.timestamp).toLocaleString("ar-EG");
         div.appendChild(metaDiv);
 
-        const reactionsDiv = document.createElement("div"); reactionsDiv.className="reactions";
-        const createBtn=(type,icon,count)=>{
-          const btn = document.createElement("div"); btn.className="reaction-btn";
-          if(r.reactions?.[type]?.[currentUid]) btn.classList.add("active");
-          btn.innerHTML = `${icon}<span class="reaction-count">${count||0}</span>`;
-          btn.onclick = ()=> toggleReaction(key,type,btn);
-          return btn;
-        };
-        reactionsDiv.appendChild(createBtn("heart","♥️",r.reactions?.heart?Object.keys(r.reactions.heart).length:0));
-        reactionsDiv.appendChild(createBtn("like","👍",r.reactions?.like?Object.keys(r.reactions.like).length:0));
-        reactionsDiv.appendChild(createBtn("dislike","👎",r.reactions?.dislike?Object.keys(r.reactions.dislike).length:0));
-        div.appendChild(reactionsDiv);
-
-        // صلاحية الحذف للأدمن
         if(currentUid==="mlifDgEAkKMaOeuUq63cs5NAkV93"){
-          const btn = document.createElement("button");
-          btn.className="delete-btn";
-          btn.textContent = t[localStorage.getItem("lang")||"ar"].deleteBtn;
+          const btn=document.createElement("button"); btn.className="delete-btn"; btn.textContent=t[localStorage.getItem("lang")||"ar"].deleteBtn;
           btn.onclick=()=>{ if(confirm("هل أنت متأكد من حذف هذا التقييم؟")) db.ref("reviews/"+key).remove(); };
           div.appendChild(btn);
         }
 
         container.appendChild(div);
       });
-    });
-  }
-
-  function toggleReaction(reviewKey,type,btn){
-    const refPath=`reviews/${reviewKey}/reactions/${type}/${currentUid}`;
-    const reactionRef=db.ref(refPath);
-    reactionRef.once("value").then(snap=>{
-      if(snap.exists()){ reactionRef.remove(); btn.classList.remove("active"); }
-      else{ reactionRef.set(true); btn.classList.add("active"); }
     });
   }
   </script>
