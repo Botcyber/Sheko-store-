@@ -181,7 +181,7 @@ function loadReviews(){
     const entries=Object.entries(snap.val()).sort((a,b)=>new Date(b[1].timestamp)-new Date(a[1].timestamp));
     entries.forEach(([key,r])=>{
       const div=document.createElement("div"); div.className="review";
-      div.innerHTML=`<img src="${r.profileImg}" alt="User"> <strong>${r.name}</strong> ⭐ ${"★".repeat(r.stars)}<p>${r.text}</p><div class="meta">${new Date(r.timestamp).toLocaleString(lang==="ar"?"ar-EG":"en-US")}</div>`;
+      div.innerHTML=`<img src="${r.profileImg}" alt="User"> <strong>${r.name}</strong> ${"★".repeat(r.stars)}<p>${r.text}</p><div class="meta">${new Date(r.timestamp).toLocaleString(lang==="ar"?"ar-EG":"en-US")}</div>`;
       
       // ردود الفعل
       const reactionsDiv=document.createElement("div"); reactionsDiv.className="reactions";
