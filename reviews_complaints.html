@@ -6,246 +6,38 @@
   <title>التقييمات</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
-    body {
-      font-family: 'Cairo', sans-serif;
-      background: #e3f2fd;
-      margin: 0;
-      padding: 20px;
-      color: #222;
-    }
-    .container {
-      max-width: 900px;
-      margin: auto;
-      background: white;
-      padding: 30px 40px;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      animation: fadeInUp 0.8s ease forwards;
-    }
-    h2 {
-      text-align: center;
-      color: #1976d2;
-      margin-bottom: 25px;
-      font-weight: 700;
-      letter-spacing: 1.2px;
-    }
-    label {
-      font-weight: 600;
-      margin-top: 15px;
-      display: block;
-    }
-    input[type="text"], textarea {
-      width: 100%;
-      padding: 12px 15px;
-      margin-top: 8px;
-      border-radius: 10px;
-      border: 1.8px solid #90caf9;
-      font-size: 16px;
-      resize: vertical;
-      transition: border-color 0.3s ease;
-    }
-    input[type="text"]:focus, textarea:focus {
-      outline: none;
-      border-color: #1976d2;
-      box-shadow: 0 0 8px #90caf9aa;
-    }
-    button {
-      background-color: #1976d2;
-      color: white;
-      font-weight: 700;
-      border: none;
-      border-radius: 12px;
-      padding: 15px;
-      font-size: 18px;
-      margin-top: 20px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-      box-shadow: 0 5px 12px rgba(25, 118, 210, 0.4);
-    }
-    button:hover {
-      background-color: #115293;
-      box-shadow: 0 8px 20px rgba(17, 82, 147, 0.6);
-    }
-    .stars {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      margin: 15px 0 10px 0;
-    }
-    .stars span {
-      font-size: 28px;
-      cursor: pointer;
-      color: #222;
-      transition: color 0.3s ease, transform 0.3s ease, text-shadow 0.6s ease;
-      user-select: none;
-      animation: starPulse 2.5s infinite alternate ease-in-out;
-    }
-    .stars span.active {
-      color: #ffd700;
-      text-shadow:
-        0 0 8px #ffd700cc,
-        0 0 20px #ffec8599,
-        0 0 30px #fff48fbb;
-      animation: starGlow 1.5s infinite alternate ease-in-out;
-    }
-    .stars span:hover {
-      transform: scale(1.4) rotate(10deg);
-      color: #ffd700;
-      text-shadow:
-        0 0 12px #ffd700ff,
-        0 0 25px #ffec859f,
-        0 0 35px #fff48fff;
-    }
-    @keyframes starPulse {
-      0% { transform: scale(1) rotate(0deg);}
-      50% { transform: scale(1.1) rotate(5deg);}
-      100% { transform: scale(1) rotate(0deg);}
-    }
-    @keyframes starGlow {
-      0% { text-shadow: 0 0 8px #ffd700cc; }
-      100% { text-shadow: 0 0 20px #fffacdff; }
-    }
-    .section {
-      margin-top: 50px;
-    }
-    .review {
-      background: #f1f9ff;
-      border-left: 6px solid #1976d2;
-      padding: 20px 25px;
-      margin-bottom: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgb(25 118 210 / 0.15);
-      position: relative;
-      animation: fadeIn 0.8s ease forwards;
-    }
-    .meta {
-      font-size: 13px;
-      color: #555;
-      margin-top: 10px;
-      font-style: italic;
-    }
-    .delete-btn {
-      margin-top: 15px;
-      background: #e53935;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      padding: 8px 15px;
-      font-size: 14px;
-      cursor: pointer;
-      box-shadow: 0 3px 10px rgba(229, 57, 53, 0.7);
-      transition: background-color 0.3s ease;
-      display: block;
-      width: fit-content;
-    }
-    .delete-btn:hover {
-      background: #b71c1c;
-    }
-    .reactions {
-      display: flex;
-      gap: 25px;
-      margin-top: 15px;
-      justify-content: center;
-      user-select: none;
-    }
-    .reaction-btn {
-      font-size: 22px;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      color: #90a4ae;
-      transition: color 0.3s ease;
-      position: relative;
-    }
-    .reaction-btn:hover {
-      color: #1976d2;
-      transform: scale(1.1);
-    }
-    .reaction-btn.active {
-      color: #1976d2;
-      animation: pulse 1.2s infinite;
-    }
-    .reaction-count {
-      font-size: 14px;
-      margin-top: 4px;
-      color: #555;
-      font-weight: 600;
-    }
-    @keyframes fadeInUp {
-      0% {
-        opacity: 0;
-        transform: translateY(40px);
-      }
-      100% {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    @keyframes fadeIn {
-      from {opacity: 0; transform: translateY(15px);}
-      to {opacity: 1; transform: translateY(0);}
-    }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.3); }
-    }
-
-    /* === كود التنبيهات المخصصة === */
-    #customAlert {
-      position: fixed;
-      top: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: #333;
-      color: white;
-      padding: 15px 25px;
-      border-radius: 12px;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.25);
-      font-family: 'Cairo', sans-serif;
-      font-weight: 700;
-      font-size: 17px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      z-index: 9999;
-      user-select: none;
-      max-width: 90%;
-      cursor: pointer;
-    }
-    #customAlert.hidden {
-      display: none !important;
-    }
-    #customAlert.success-alert {
-      background-color: #28a745 !important;
-      color: white !important;
-    }
-    #customAlert.error-alert {
-      background-color: #dc3545 !important;
-      color: white !important;
-    }
-    #customAlert.info-alert {
-      background-color: #007bff !important;
-      color: white !important;
-    }
-    #customAlert i {
-      font-size: 22px;
-    }
-    #alertCloseBtn {
-      background: transparent;
-      border: none;
-      color: white;
-      font-weight: 900;
-      font-size: 18px;
-      margin-left: auto;
-      cursor: pointer;
-      user-select: none;
-    }
+    body { font-family: 'Cairo', sans-serif; background: #e3f2fd; margin:0; padding:20px; color:#222; }
+    .container { max-width:900px; margin:auto; background:white; padding:30px 40px; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,0.1); animation:fadeInUp 0.8s ease forwards; }
+    h2 { text-align:center; color:#1976d2; margin-bottom:25px; font-weight:700; letter-spacing:1.2px; }
+    label { font-weight:600; margin-top:15px; display:block; }
+    textarea { width:100%; padding:12px 15px; margin-top:8px; border-radius:10px; border:1.8px solid #90caf9; font-size:16px; resize:vertical; transition:border-color 0.3s ease; }
+    textarea:focus { outline:none; border-color:#1976d2; box-shadow:0 0 8px #90caf9aa; }
+    button { background-color:#1976d2; color:white; font-weight:700; border:none; border-radius:12px; padding:15px; font-size:18px; margin-top:20px; cursor:pointer; transition:background-color 0.3s ease; box-shadow:0 5px 12px rgba(25,118,210,0.4); }
+    button:hover { background-color:#115293; box-shadow:0 8px 20px rgba(17,82,147,0.6); }
+    .stars { display:flex; justify-content:center; gap:8px; margin:15px 0 10px 0; }
+    .stars span { font-size:28px; cursor:pointer; color:#222; transition:color 0.3s ease, transform 0.3s ease, text-shadow 0.6s ease; user-select:none; animation:starPulse 2.5s infinite alternate ease-in-out; }
+    .stars span.active { color:#ffd700; text-shadow:0 0 8px #ffd700cc,0 0 20px #ffec8599,0 0 30px #fff48fbb; animation:starGlow 1.5s infinite alternate ease-in-out; }
+    .stars span:hover { transform:scale(1.4) rotate(10deg); color:#ffd700; text-shadow:0 0 12px #ffd700ff,0 0 25px #ffec859f,0 0 35px #fff48fff; }
+    @keyframes starPulse { 0%{transform:scale(1) rotate(0deg);}50%{transform:scale(1.1) rotate(5deg);}100%{transform:scale(1) rotate(0deg);} }
+    @keyframes starGlow { 0%{text-shadow:0 0 8px #ffd700cc;}100%{text-shadow:0 0 20px #fffacdff;} }
+    .section { margin-top:50px; }
+    .review { background:#f1f9ff; border-left:6px solid #1976d2; padding:20px 25px; margin-bottom:20px; border-radius:12px; box-shadow:0 4px 10px rgb(25 118 210 / 0.15); position:relative; animation:fadeIn 0.8s ease forwards; }
+    .meta { font-size:13px; color:#555; margin-top:10px; font-style:italic; display:flex; align-items:center; gap:8px; }
+    .meta img { width:24px; height:24px; border-radius:50%; object-fit:cover; }
+    @keyframes fadeInUp { 0%{opacity:0; transform:translateY(40px);}100%{opacity:1; transform:translateY(0);} }
+    @keyframes fadeIn { from{opacity:0; transform:translateY(15px);} to{opacity:1; transform:translateY(0);} }
+    @keyframes pulse {0%,100%{transform:scale(1);}50%{transform:scale(1.3);} }
+    /* تنبيهات */
+    #customAlert { position: fixed; top:20px; left:50%; transform:translateX(-50%); background-color:#333; color:white; padding:15px 25px; border-radius:12px; box-shadow:0 6px 15px rgba(0,0,0,0.25); font-family:'Cairo', sans-serif; font-weight:700; font-size:17px; display:flex; align-items:center; gap:12px; z-index:9999; user-select:none; max-width:90%; cursor:pointer; }
+    #customAlert.hidden { display:none !important; }
+    #customAlert.success-alert { background-color:#28a745 !important; color:white !important; }
+    #customAlert.error-alert { background-color:#dc3545 !important; color:white !important; }
+    #customAlert.info-alert { background-color:#007bff !important; color:white !important; }
+    #customAlert i { font-size:22px; }
+    #alertCloseBtn { background:transparent; border:none; color:white; font-weight:900; font-size:18px; margin-left:auto; cursor:pointer; user-select:none; }
   </style>
 
-  <!-- مكتبة FontAwesome للأيقونات -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
-
 </head>
 <body>
   <div class="container">
@@ -258,7 +50,6 @@
       <span data-value="4">&#9733;</span>
       <span data-value="5">&#9733;</span>
     </div>
-    <input type="text" id="reviewerName" placeholder="اسمك" required />
     <textarea id="reviewText" placeholder="اكتب تعليقك هنا..." rows="4"></textarea>
     <button onclick="submitReview()">إرسال التقييم</button>
 
@@ -268,7 +59,6 @@
     </div>
   </div>
 
-  <!-- نافذة التنبيه المخصصة -->
   <div id="customAlert" class="hidden" role="alert" aria-live="assertive" aria-atomic="true" tabindex="0">
     <i id="alertIcon" class="fa fa-info-circle" aria-hidden="true"></i>
     <span id="alertMsg"></span>
@@ -278,6 +68,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
@@ -292,182 +83,83 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
-    const badWords = [
-      "كلب", "حمار", "وسخ", "تافه", "قذر", "نصاب", "حرامي", "ابن", "كس", "نيك", "طيز", "زب", "شرموط", "عبيط", "حقير", "متناك",
-      "fuck", "shit", "bitch", "asshole", "bastard", "dick", "pussy", "motherfucker", "fucking", "slut"
-    ];
+    const badWords = ["كلب","حمار","وسخ","تافه","قذر","نصاب","حرامي","ابن","كس","نيك","طيز","زب","شرموط","عبيط","حقير","متناك","fuck","shit","bitch","asshole","bastard","dick","pussy","motherfucker","fucking","slut"];
 
-    function containsBadWords(text) {
-      const lowerText = text.toLowerCase();
-      return badWords.some(word => lowerText.includes(word));
-    }
+    function containsBadWords(text){ const lowerText = text.toLowerCase(); return badWords.some(word=>lowerText.includes(word)); }
 
-    let currentUid = null;
+    let currentUser = null;
 
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        currentUid = user.uid;
-        loadReviews();
-      } else {
-        window.location.href = "index.html";
-      }
+    auth.onAuthStateChanged(user=>{
+      if(user){ currentUser = user; loadReviews(); }
+      else{ window.location.href="index.html"; }
     });
 
-    let selectedStars = 0;
-    const stars = document.querySelectorAll("#starRating span");
-    stars.forEach((star, index) => {
-      star.addEventListener("click", () => {
-        selectedStars = parseInt(star.dataset.value);
+    let selectedStars=0;
+    const stars=document.querySelectorAll("#starRating span");
+    stars.forEach((star,index)=>{
+      star.addEventListener("click",()=>{
+        selectedStars=parseInt(star.dataset.value);
         updateStars(selectedStars);
       });
     });
 
-    function updateStars(rating) {
-      stars.forEach((s, i) => {
-        s.classList.toggle("active", i < rating);
-      });
-    }
+    function updateStars(rating){ stars.forEach((s,i)=>{ s.classList.toggle("active", i<rating); }); }
 
-    // دالة التنبيه المخصص
-    function showCustomAlert(message, type = "info") {
-      const alertBox = document.getElementById("customAlert");
-      const alertMsg = document.getElementById("alertMsg");
-      const alertIcon = document.getElementById("alertIcon");
-      const closeBtn = document.getElementById("alertCloseBtn");
-
-      alertMsg.textContent = message;
-
-      alertBox.className = ""; // إعادة تعيين الكلاسات
-      alertBox.classList.add(type + "-alert");
-
-      alertIcon.className = "fa"; // إعادة تعيين أيقونة التنبيه
-      if(type === "success") alertIcon.classList.add("fa-check-circle");
-      else if(type === "error") alertIcon.classList.add("fa-times-circle");
+    function showCustomAlert(message,type="info"){
+      const alertBox=document.getElementById("customAlert");
+      const alertMsg=document.getElementById("alertMsg");
+      const alertIcon=document.getElementById("alertIcon");
+      const closeBtn=document.getElementById("alertCloseBtn");
+      alertMsg.textContent=message;
+      alertBox.className=""; 
+      alertBox.classList.add(type+"-alert");
+      alertIcon.className="fa";
+      if(type==="success") alertIcon.classList.add("fa-check-circle");
+      else if(type==="error") alertIcon.classList.add("fa-times-circle");
       else alertIcon.classList.add("fa-info-circle");
-
       alertBox.classList.remove("hidden");
       alertBox.focus();
-
-      function hideAlert() {
-        alertBox.classList.add("hidden");
-        closeBtn.removeEventListener("click", hideAlert);
-      }
-      closeBtn.addEventListener("click", hideAlert);
-
-      // إخفاء تلقائي بعد 4 ثواني
-      setTimeout(() => {
-        if(!alertBox.classList.contains("hidden")){
-          hideAlert();
-        }
-      }, 4000);
+      function hideAlert(){ alertBox.classList.add("hidden"); closeBtn.removeEventListener("click",hideAlert);}
+      closeBtn.addEventListener("click",hideAlert);
+      setTimeout(()=>{ if(!alertBox.classList.contains("hidden")){ hideAlert(); } },4000);
     }
 
-    function submitReview() {
-      const name = document.getElementById("reviewerName").value.trim();
-      const text = document.getElementById("reviewText").value.trim();
-
-      if (!name) {
-        showCustomAlert("يرجى كتابة اسمك.", "error");
-        return;
-      }
-      if (!selectedStars || !text) {
-        showCustomAlert("يرجى اختيار عدد النجوم وكتابة تعليقك.", "error");
-        return;
-      }
-      if (containsBadWords(name) || containsBadWords(text)) {
-        showCustomAlert("❌ يرجى تجنب استخدام كلمات مسيئة أو غير لائقة.", "error");
-        return;
-      }
-
-      const data = {
-        uid: currentUid,
-        name,
-        stars: selectedStars,
-        text,
-        timestamp: new Date().toISOString(),
-        reactions: { heart: {}, like: {}, dislike: {} }
-      };
-      const key = db.ref().child("reviews").push().key;
-      db.ref("reviews/" + key).set(data).then(() => {
-        showCustomAlert("✅ تم إرسال التقييم.", "success");
-        document.getElementById("reviewerName").value = "";
-        document.getElementById("reviewText").value = "";
-        selectedStars = 0;
+    function submitReview(){
+      const text=document.getElementById("reviewText").value.trim();
+      if(!selectedStars||!text){ showCustomAlert("يرجى اختيار عدد النجوم وكتابة تعليقك.","error"); return; }
+      if(containsBadWords(text)){ showCustomAlert("❌ يرجى تجنب الكلمات المسيئة.","error"); return; }
+      const data={ uid:currentUser.uid, name:currentUser.displayName || "مستخدم", photo:currentUser.photoURL || "", stars:selectedStars, text, timestamp:new Date().toISOString(), reactions:{heart:{},like:{},dislike:{}} };
+      const key=db.ref().child("reviews").push().key;
+      db.ref("reviews/"+key).set(data).then(()=>{
+        showCustomAlert("✅ تم إرسال التقييم.","success");
+        document.getElementById("reviewText").value="";
+        selectedStars=0;
         updateStars(0);
       });
     }
 
-    function loadReviews() {
-      const container = document.getElementById("reviewsList");
-      db.ref("reviews").on("value", snapshot => {
-        container.innerHTML = "";
-        if (!snapshot.exists()) {
-          container.innerHTML = "<p>لا توجد تقييمات بعد.</p>";
-          return;
-        }
-        const reviews = snapshot.val();
-        const entries = Object.entries(reviews).sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp));
-        entries.forEach(([key, r]) => {
-          const div = document.createElement("div");
-          div.className = "review";
-
-          const reactionsDiv = document.createElement("div");
-          reactionsDiv.className = "reactions";
-
-          const createBtn = (type, icon, count) => {
-            const btn = document.createElement("div");
-            btn.className = "reaction-btn";
-            if (r.reactions?.[type]?.[currentUid]) btn.classList.add("active");
-            btn.innerHTML = `${icon}<span class="reaction-count">${count || 0}</span>`;
-            btn.onclick = () => toggleReaction(key, type, btn);
-            return btn;
-          };
-
-          const heartCount = r.reactions?.heart ? Object.keys(r.reactions.heart).length : 0;
-          const likeCount = r.reactions?.like ? Object.keys(r.reactions.like).length : 0;
-          const dislikeCount = r.reactions?.dislike ? Object.keys(r.reactions.dislike).length : 0;
-
-          reactionsDiv.appendChild(createBtn("heart", "♥️", heartCount));
-          reactionsDiv.appendChild(createBtn("like", "👍", likeCount));
-          reactionsDiv.appendChild(createBtn("dislike", "👎", dislikeCount));
-
-          div.innerHTML = `
-            ⭐ ${"★".repeat(r.stars)} - ${r.name}<br>
+    function loadReviews(){
+      const container=document.getElementById("reviewsList");
+      db.ref("reviews").on("value",snapshot=>{
+        container.innerHTML="";
+        if(!snapshot.exists()){ container.innerHTML="<p>لا توجد تقييمات بعد.</p>"; return; }
+        const reviews=snapshot.val();
+        const entries=Object.entries(reviews).sort((a,b)=>new Date(b[1].timestamp)-new Date(a[1].timestamp));
+        entries.forEach(([key,r])=>{
+          const div=document.createElement("div");
+          div.className="review";
+          div.innerHTML=`⭐ ${"★".repeat(r.stars)} - ${r.name}<br>
             <p>${r.text}</p>
-            <div class="meta">${new Date(r.timestamp).toLocaleString("ar-EG")}</div>
-          `;
-          div.appendChild(reactionsDiv);
-
-          if (currentUid === "mlifDgEAkKMaOeuUq63cs5NAkV93") {
-            const btn = document.createElement("button");
-            btn.textContent = "🗑 حذف التقييم";
-            btn.className = "delete-btn";
-            btn.onclick = () => {
-              if (confirm("هل أنت متأكد من حذف هذا التقييم؟")) {
-                db.ref("reviews/" + key).remove();
-              }
-            };
-            div.appendChild(btn);
-          }
-
+            <div class="meta">${r.photo?'<img src="'+r.photo+'"/>':''}${r.name} - ${new Date(r.timestamp).toLocaleString("ar-EG")}</div>`;
           container.appendChild(div);
         });
       });
     }
 
-    function toggleReaction(reviewKey, type, btn) {
-      const refPath = `reviews/${reviewKey}/reactions/${type}/${currentUid}`;
-      const reactionRef = db.ref(refPath);
-      reactionRef.once("value").then(snap => {
-        if (snap.exists()) {
-          reactionRef.remove();
-          btn.classList.remove("active");
-        } else {
-          reactionRef.set(true);
-          btn.classList.add("active");
-        }
-      });
-    }
+    // === تغيير اللغة حسب اختيار المستخدم في الصفحة الرئيسية ===
+    const userLang = localStorage.getItem("lang") || "ar";
+    document.documentElement.lang = userLang;
+    document.documentElement.dir = userLang==="ar"?"rtl":"ltr";
   </script>
 </body>
 </html>
