@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>التقييمات</title>
+  <title>Reviews / التقييمات</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
     body {
@@ -189,7 +189,6 @@ function loadReviews(){
         const count=r.reactions?.[type]?Object.keys(r.reactions[type]).length:0;
         const btn=document.createElement("div");
         btn.className="reaction-btn"+(r.reactions?.[type]?.[currentUser.uid]?" active":"");
-        btn.innerHTML=(type==="heart"?"♥️":type==="like"?"👍":"👎")+`<span class="reaction-count">${count}</span>`;
         btn.onclick=()=>toggleReaction(key,type,btn);
         reactionsDiv.appendChild(btn);
       });
