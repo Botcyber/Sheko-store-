@@ -2,72 +2,35 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>التقييمات</title>
+<title>تقييمات المستخدمين</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
-body { font-family: 'Cairo', sans-serif; background:#e3f2fd; margin:0; padding:20px; color:#222; }
-.container { max-width:900px; margin:auto; background:white; padding:30px 40px; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,0.1); animation:fadeInUp 0.8s ease forwards; }
-h2 { text-align:center; color:#1976d2; margin-bottom:25px; font-weight:700; letter-spacing:1.2px; }
-label { font-weight:600; margin-top:15px; display:block; }
-textarea { width:100%; padding:12px 15px; margin-top:8px; border-radius:10px; border:1.8px solid #90caf9; font-size:16px; resize:vertical; transition:border-color 0.3s ease; }
-textarea:focus { outline:none; border-color:#1976d2; box-shadow:0 0 8px #90caf9aa; }
-button { background-color:#1976d2; color:white; font-weight:700; border:none; border-radius:12px; padding:15px; font-size:18px; margin-top:20px; cursor:pointer; transition:background-color 0.3s ease; box-shadow:0 5px 12px rgba(25,118,210,0.4); }
-button:hover { background-color:#115293; box-shadow:0 8px 20px rgba(17,82,147,0.6); }
-.stars { display:flex; justify-content:center; gap:8px; margin:15px 0 10px 0; }
-.stars span { font-size:28px; cursor:pointer; color:#222; transition:color 0.3s ease, transform 0.3s ease, text-shadow 0.6s ease; user-select:none; animation:starPulse 2.5s infinite alternate ease-in-out; }
-.stars span.active { color:#ffd700; text-shadow:0 0 8px #ffd700cc,0 0 20px #ffec8599,0 0 30px #fff48fbb; animation:starGlow 1.5s infinite alternate ease-in-out; }
-.stars span:hover { transform:scale(1.4) rotate(10deg); color:#ffd700; text-shadow:0 0 12px #ffd700ff,0 0 25px #ffec859f,0 0 35px #fff48fff; }
-@keyframes starPulse { 0%{transform:scale(1) rotate(0deg);}50%{transform:scale(1.1) rotate(5deg);}100%{transform:scale(1) rotate(0deg);} }
-@keyframes starGlow { 0%{text-shadow:0 0 8px #ffd700cc;}100%{text-shadow:0 0 20px #fffacdff;} }
-.section { margin-top:50px; }
-.review { background:#f1f9ff; border-left:6px solid #1976d2; padding:20px 25px; margin-bottom:20px; border-radius:12px; box-shadow:0 4px 10px rgb(25 118 210 / 0.15); position:relative; animation:fadeIn 0.8s ease forwards; }
-.meta { font-size:13px; color:#555; margin-top:10px; font-style:italic; display:flex; align-items:center; gap:8px; }
-.meta img { width:24px; height:24px; border-radius:50%; object-fit:cover; }
-.delete-btn { margin-top:15px; background:#e53935; color:white; border:none; border-radius:10px; padding:8px 15px; font-size:14px; cursor:pointer; box-shadow:0 3px 10px rgba(229,57,53,0.7); transition:background-color 0.3s ease; display:block; width:fit-content; }
+body { font-family:'Cairo',sans-serif; background:#e3f2fd; margin:0; padding:20px; color:#222; }
+.container { max-width:900px; margin:auto; background:white; padding:30px 40px; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,0.1); }
+h2 { text-align:center; color:#1976d2; margin-bottom:25px; font-weight:700; }
+
+.review { display:flex; gap:15px; background:#f1f9ff; border-radius:15px; padding:15px; margin-bottom:20px; align-items:flex-start; box-shadow:0 3px 12px rgba(0,0,0,0.1); }
+.user-img { width:60px; height:60px; border-radius:50%; object-fit:cover; }
+.review-content { flex:1; }
+.review-name { font-weight:700; margin-bottom:5px; display:flex; align-items:center; gap:10px; }
+.stars { display:flex; gap:5px; font-size:18px; color:#ffd700; margin-bottom:8px; }
+.review-text { font-size:15px; }
+.delete-btn { background:#dc3545; color:white; border:none; border-radius:8px; padding:6px 12px; font-size:14px; cursor:pointer; transition:0.3s; }
 .delete-btn:hover { background:#b71c1c; }
-@keyframes fadeInUp { 0%{opacity:0; transform:translateY(40px);}100%{opacity:1; transform:translateY(0);} }
-@keyframes fadeIn { from{opacity:0; transform:translateY(15px);} to{opacity:1; transform:translateY(0);} }
-@keyframes pulse {0%,100%{transform:scale(1);}50%{transform:scale(1.3);} }
-#customAlert { position: fixed; top:20px; left:50%; transform:translateX(-50%); background-color:#333; color:white; padding:15px 25px; border-radius:12px; box-shadow:0 6px 15px rgba(0,0,0,0.25); font-family:'Cairo',sans-serif; font-weight:700; font-size:17px; display:flex; align-items:center; gap:12px; z-index:9999; user-select:none; max-width:90%; cursor:pointer; }
-#customAlert.hidden { display:none !important; }
-#customAlert.success-alert { background-color:#28a745 !important; color:white !important; }
-#customAlert.error-alert { background-color:#dc3545 !important; color:white !important; }
-#customAlert.info-alert { background-color:#007bff !important; color:white !important; }
-#customAlert i { font-size:22px; }
-#alertCloseBtn { background:transparent; border:none; color:white; font-weight:900; font-size:18px; margin-left:auto; cursor:pointer; user-select:none; }
 </style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
 </head>
 <body>
 <div class="container">
-  <h2 id="reviewsTitle">💬 التقييمات</h2>
-  <label id="starsLabel">اختر عدد النجوم:</label>
-  <div class="stars" id="starRating" role="radiogroup" aria-label="تقييم النجوم">
-    <span data-value="1">&#9733;</span>
-    <span data-value="2">&#9733;</span>
-    <span data-value="3">&#9733;</span>
-    <span data-value="4">&#9733;</span>
-    <span data-value="5">&#9733;</span>
-  </div>
-  <textarea id="reviewText" placeholder="اكتب تعليقك هنا..." rows="4"></textarea>
-  <button id="submitBtn">إرسال التقييم</button>
-
-  <div class="section">
-    <h2 id="userReviewsTitle">⭐ تقييمات المستخدمين</h2>
-    <div id="reviewsList">جار التحميل...</div>
-  </div>
+  <h2 id="reviewsTitle">⭐ تقييمات المستخدمين</h2>
+  <div id="reviewsList">جار التحميل...</div>
 </div>
 
-<div id="customAlert" class="hidden" role="alert" aria-live="assertive" aria-atomic="true" tabindex="0">
-  <i id="alertIcon" class="fa fa-info-circle" aria-hidden="true"></i>
-  <span id="alertMsg"></span>
-  <button id="alertCloseBtn" aria-label="إغلاق التنبيه">حسناً</button>
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
 const firebaseConfig = {
@@ -80,121 +43,84 @@ const firebaseConfig = {
   appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
 };
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
 const auth = firebase.auth();
+const db = firebase.database();
 
-const badWords = ["كلب","حمار","وسخ","تافه","قذر","نصاب","حرامي","ابن","كس","نيك","طيز","زب","شرموط","عبيط","حقير","متناك","fuck","shit","bitch","asshole","bastard","dick","pussy","motherfucker","fucking","slut"];
-
-let currentUser = null;
 const adminUID = "mlifDgEAkKMaOeuUq63cs5NAkV93";
+let currentUser = null;
 
-auth.onAuthStateChanged(user=>{
-  if(user){ currentUser=user; loadReviews(); }
-  else{ window.location.href="index.html"; }
-});
+// الترجمات حسب اللغة
+const translations = {
+  ar: { noReviews:"لا توجد تقييمات بعد", deleteReview:"🗑 حذف التقييم", reviewsTitle:"⭐ تقييمات المستخدمين" },
+  en: { noReviews:"No reviews yet", deleteReview:"🗑 Delete Review", reviewsTitle:"⭐ User Reviews" }
+};
 
-let selectedStars = 0;
-const stars=document.querySelectorAll("#starRating span");
-stars.forEach(star=>{
-  star.addEventListener("click",()=>{ selectedStars=parseInt(star.dataset.value); updateStars(selectedStars); });
-});
-function updateStars(rating){ stars.forEach((s,i)=>{ s.classList.toggle("active",i<rating); }); }
-
-function showCustomAlert(message,type="info"){
-  const alertBox=document.getElementById("customAlert");
-  const alertMsg=document.getElementById("alertMsg");
-  const alertIcon=document.getElementById("alertIcon");
-  const closeBtn=document.getElementById("alertCloseBtn");
-  alertMsg.textContent=message;
-  alertBox.className=""; alertBox.classList.add(type+"-alert");
-  alertIcon.className="fa"; if(type==="success") alertIcon.classList.add("fa-check-circle"); else if(type==="error") alertIcon.classList.add("fa-times-circle"); else alertIcon.classList.add("fa-info-circle");
-  alertBox.classList.remove("hidden"); alertBox.focus();
-  function hideAlert(){ alertBox.classList.add("hidden"); closeBtn.removeEventListener("click",hideAlert);}
-  closeBtn.addEventListener("click",hideAlert);
-  setTimeout(()=>{ if(!alertBox.classList.contains("hidden")) hideAlert(); },4000);
+function getUserLang() {
+  return localStorage.getItem("lang") || "ar";
 }
 
-document.getElementById("submitBtn").addEventListener("click",submitReview);
-
-function submitReview(){
-  const text = document.getElementById("reviewText").value.trim();
-  if(!selectedStars || !text){ showCustomAlert(translations["selectStarsAndComment"], "error"); return; }
-  if(badWords.some(word=>text.toLowerCase().includes(word))){ showCustomAlert(translations["badWords"], "error"); return; }
-  const data={ uid:currentUser.uid, name:currentUser.displayName || "مستخدم", photo:currentUser.photoURL || "", stars:selectedStars, text, timestamp:new Date().toISOString() };
-  const key=db.ref().child("reviews").push().key;
-  db.ref("reviews/"+key).set(data).then(()=>{
-    showCustomAlert(translations["reviewSent"],"success");
-    document.getElementById("reviewText").value="";
-    selectedStars=0; updateStars(0);
-  });
+function applyLang() {
+  const lang = getUserLang();
+  document.body.dir = lang==="ar" ? "rtl" : "ltr";
+  document.getElementById("reviewsTitle").innerText = translations[lang].reviewsTitle;
+  loadReviews(); // إعادة تحميل التقييمات لترجمة النصوص
 }
 
+auth.onAuthStateChanged(user => {
+  if(!user) return location.href="index.html";
+  currentUser = user;
+  applyLang(); // تحميل اللغة والتقييمات
+});
+
+// دالة تحميل التقييمات
 function loadReviews(){
-  const container=document.getElementById("reviewsList");
-  db.ref("reviews").on("value",snapshot=>{
+  const lang = getUserLang();
+  const container = document.getElementById("reviewsList");
+  db.ref("reviews").once("value").then(snapshot=>{
     container.innerHTML="";
-    if(!snapshot.exists()){ container.innerHTML=`<p>${translations["noReviews"]}</p>`; return; }
-    const reviews=snapshot.val();
-    const entries=Object.entries(reviews).sort((a,b)=>new Date(b[1].timestamp)-new Date(a[1].timestamp));
+    if(!snapshot.exists()){ 
+      container.innerHTML=`<p>${translations[lang].noReviews}</p>`; 
+      return; 
+    }
+    const reviews = snapshot.val();
+    const entries = Object.entries(reviews).sort((a,b)=>new Date(b[1].timestamp)-new Date(a[1].timestamp));
     entries.forEach(([key,r])=>{
-      const div=document.createElement("div");
+      const div = document.createElement("div");
       div.className="review";
-      div.innerHTML=`⭐ ${"★".repeat(r.stars)} - ${r.name}<br>
-      <p>${r.text}</p>
-      <div class="meta">${r.photo?'<img src="'+r.photo+'"/>':''}${r.name} - ${new Date(r.timestamp).toLocaleString(userLang)}</div>`;
-      if(currentUser.uid===adminUID){
-        const delBtn=document.createElement("button");
+
+      // صورة واسم المستخدم
+      div.innerHTML = `
+        <img src="${r.photo || 'https://via.placeholder.com/60'}" class="user-img"/>
+        <div class="review-content">
+          <div class="review-name">${r.name}</div>
+          <div class="stars">${'★'.repeat(r.stars)}</div>
+          <div class="review-text">${r.text}</div>
+        </div>
+      `;
+
+      // زر الحذف للأدمن فقط
+      if(currentUser.uid === adminUID){
+        const delBtn = document.createElement("button");
         delBtn.className="delete-btn";
-        delBtn.textContent = translations["deleteReview"];
-        delBtn.onclick = ()=>{ if(confirm(translations["confirmDelete"])) db.ref("reviews/"+key).remove(); };
+        delBtn.textContent = translations[lang].deleteReview;
+        delBtn.onclick = ()=>{ 
+          if(confirm(lang==="ar"?"هل أنت متأكد من حذف هذا التقييم؟":"Are you sure to delete this review?")) 
+            db.ref("reviews/"+key).remove(); 
+        };
         div.appendChild(delBtn);
       }
+
       container.appendChild(div);
     });
   });
 }
 
-// === الترجمة حسب اللغة ===
-const userLang = localStorage.getItem("lang") || "ar";
-document.documentElement.lang = userLang;
-document.documentElement.dir = userLang==="ar"?"rtl":"ltr";
-
-const translations = {
-  ar: {
-    "selectStarsAndComment":"يرجى اختيار عدد النجوم وكتابة تعليقك.",
-    "badWords":"❌ يرجى تجنب الكلمات المسيئة.",
-    "reviewSent":"✅ تم إرسال التقييم.",
-    "noReviews":"لا توجد تقييمات بعد.",
-    "deleteReview":"🗑 حذف التقييم",
-    "confirmDelete":"هل أنت متأكد من حذف هذا التقييم؟",
-    "starsLabel":"اختر عدد النجوم:",
-    "writeComment":"اكتب تعليقك هنا...",
-    "reviewsTitle":"💬 التقييمات",
-    "userReviewsTitle":"⭐ تقييمات المستخدمين",
-    "submitBtn":"إرسال التقييم"
-  },
-  en: {
-    "selectStarsAndComment":"Please select stars and write a comment.",
-    "badWords":"❌ Please avoid offensive words.",
-    "reviewSent":"✅ Review submitted.",
-    "noReviews":"No reviews yet.",
-    "deleteReview":"🗑 Delete Review",
-    "confirmDelete":"Are you sure you want to delete this review?",
-    "starsLabel":"Select stars:",
-    "writeComment":"Write your comment here...",
-    "reviewsTitle":"💬 Reviews",
-    "userReviewsTitle":"⭐ User Reviews",
-    "submitBtn":"Submit Review"
+// مراقبة تغيير اللغة مباشرة من localStorage
+window.addEventListener("storage", e=>{
+  if(e.key==="lang"){
+    applyLang();
   }
-};
-
-// تحديث النصوص تلقائياً
-document.getElementById("starsLabel").textContent = translations[userLang]["starsLabel"];
-document.getElementById("reviewText").placeholder = translations[userLang]["writeComment"];
-document.getElementById("reviewsTitle").textContent = translations[userLang]["reviewsTitle"];
-document.getElementById("userReviewsTitle").textContent = translations[userLang]["userReviewsTitle"];
-document.getElementById("submitBtn").textContent = translations[userLang]["submitBtn"];
-
+});
 </script>
 </body>
 </html>
