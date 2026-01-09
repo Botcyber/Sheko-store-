@@ -1,189 +1,315 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>التقييمات</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
-body { font-family: 'Cairo', sans-serif; background:#e3f2fd; margin:0; padding:20px; color:#222; }
-.container { max-width:900px; margin:auto; background:white; padding:30px 40px; border-radius:16px; box-shadow:0 10px 25px rgba(0,0,0,0.1); }
-h2 { text-align:center; color:#1976d2; margin-bottom:25px; font-weight:700; letter-spacing:1.2px; }
-label { font-weight:600; margin-top:15px; display:block; }
-textarea,input[type="text"] { width:100%; padding:12px 15px; margin-top:8px; border-radius:10px; border:1.8px solid #90caf9; font-size:16px; resize:vertical; transition:border-color 0.3s ease; }
-textarea:focus,input[type="text"]:focus { outline:none; border-color:#1976d2; box-shadow:0 0 8px #90caf9aa; }
-button { background-color:#1976d2; color:white; font-weight:700; border:none; border-radius:12px; padding:15px; font-size:18px; margin-top:20px; cursor:pointer; transition: background-color 0.3s ease; box-shadow:0 5px 12px rgba(25,118,210,0.4); }
-button:hover { background-color:#115293; box-shadow:0 8px 20px rgba(17,82,147,0.6); }
-.stars { display:flex; justify-content:center; gap:8px; margin:15px 0 10px 0; }
-.stars span { font-size:28px; cursor:pointer; color:#222; transition:color 0.3s ease, transform 0.3s ease, text-shadow 0.6s ease; user-select:none; }
-.stars span.active { color:gold; text-shadow:0 0 8px #ffd700cc,0 0 20px #ffec8599,0 0 30px #fff48fbb; }
-.stars span:hover { transform:scale(1.4) rotate(10deg); color:gold; text-shadow:0 0 12px #ffd700ff,0 0 25px #ffec859f,0 0 35px #fff48fff; }
-
-#reviewsList { margin-top:30px; }
-
-.review { background:#f1f9ff; border-left:6px solid #1976d2; padding:15px 20px; margin-bottom:20px; border-radius:12px; box-shadow:0 4px 10px rgb(25 118 210 / 0.15); display:flex; flex-direction:column; gap:8px; opacity:0; transform:translateY(15px); animation:fadeIn 0.5s forwards; }
-.stars-review { display:flex; gap:2px; font-size:18px; }
-.stars-review span { color:#ccc; }
-.stars-review span.active { color:gold; }
-.review img { width:40px; height:40px; border-radius:50%; object-fit:cover; margin-left:10px; }
-.review .name { font-weight:bold; }
-
-.delete-btn { margin-top:8px; background:#e53935; color:white; border:none; border-radius:6px; padding:5px 10px; font-size:12px; cursor:pointer; width:fit-content; align-self:flex-end; }
-.delete-btn:hover { background:#b71c1c; }
-
-@keyframes fadeIn { to { opacity:1; transform:translateY(0); } }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>التقييمات</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: #e3f2fd;
+      margin: 0;
+      padding: 20px;
+      color: #222;
+    }
+    .container {
+      max-width: 900px;
+      margin: auto;
+      background: white;
+      padding: 30px 40px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      animation: fadeInUp 0.8s ease forwards;
+    }
+    h2 {
+      text-align: center;
+      color: #1976d2;
+      margin-bottom: 25px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+    }
+    label {
+      font-weight: 600;
+      margin-top: 15px;
+      display: block;
+    }
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 12px 15px;
+      margin-top: 8px;
+      border-radius: 10px;
+      border: 1.8px solid #90caf9;
+      font-size: 16px;
+      resize: vertical;
+      transition: border-color 0.3s ease;
+    }
+    input[type="text"]:focus, textarea:focus {
+      outline: none;
+      border-color: #1976d2;
+      box-shadow: 0 0 8px #90caf9aa;
+    }
+    button {
+      background-color: #1976d2;
+      color: white;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 15px;
+      font-size: 16px;
+      margin-top: 20px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 5px 12px rgba(25, 118, 210, 0.4);
+    }
+    button:hover {
+      background-color: #115293;
+      box-shadow: 0 8px 20px rgba(17, 82, 147, 0.6);
+    }
+    .stars {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 15px 0 10px 0;
+    }
+    .stars span {
+      font-size: 28px;
+      cursor: pointer;
+      color: #222;
+      transition: color 0.3s ease, transform 0.3s ease, text-shadow 0.6s ease;
+      user-select: none;
+      animation: starPulse 2.5s infinite alternate ease-in-out;
+    }
+    .stars span.active {
+      color: #ffd700;
+      text-shadow:
+        0 0 8px #ffd700cc,
+        0 0 20px #ffec8599,
+        0 0 30px #fff48fbb;
+      animation: starGlow 1.5s infinite alternate ease-in-out;
+    }
+    .stars span:hover {
+      transform: scale(1.4) rotate(10deg);
+      color: #ffd700;
+      text-shadow:
+        0 0 12px #ffd700ff,
+        0 0 25px #ffec859f,
+        0 0 35px #fff48fff;
+    }
+    @keyframes starPulse {
+      0% { transform: scale(1) rotate(0deg);}
+      50% { transform: scale(1.1) rotate(5deg);}
+      100% { transform: scale(1) rotate(0deg);}
+    }
+    @keyframes starGlow {
+      0% { text-shadow: 0 0 8px #ffd700cc; }
+      100% { text-shadow: 0 0 20px #fffacdff; }
+    }
+    .section {
+      margin-top: 50px;
+    }
+    .review {
+      background: #f1f9ff;
+      border-left: 6px solid #1976d2;
+      padding: 15px 20px;
+      margin-bottom: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgb(25 118 210 / 0.15);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      animation: fadeIn 0.8s ease forwards;
+    }
+    .stars-review span {
+      font-size: 22px;
+      color: #ccc;
+    }
+    .stars-review span.active {
+      color: #ffd700;
+    }
+    .review-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .review-header img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .delete-btn {
+      background: #e53935;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      align-self: flex-start;
+    }
+    .delete-btn:hover {
+      background: #b71c1c;
+    }
+    @keyframes fadeInUp {
+      0% { opacity: 0; transform: translateY(40px);}
+      100% { opacity: 1; transform: translateY(0);}
+    }
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(15px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+  </style>
 </head>
 <body>
-<div class="container">
-  <h2 id="reviewsTitle">💬 التقييمات</h2>
-  <label id="starLabel">اختر عدد النجوم:</label>
-  <div class="stars" id="starRating" role="radiogroup" aria-label="تقييم النجوم">
-    <span data-value="1">&#9733;</span>
-    <span data-value="2">&#9733;</span>
-    <span data-value="3">&#9733;</span>
-    <span data-value="4">&#9733;</span>
-    <span data-value="5">&#9733;</span>
+  <div class="container">
+    <h2 id="pageTitle">💬 التقييمات</h2>
+    <label id="labelStars">اختر عدد النجوم:</label>
+    <div class="stars" id="starRating">
+      <span data-value="1">&#9733;</span>
+      <span data-value="2">&#9733;</span>
+      <span data-value="3">&#9733;</span>
+      <span data-value="4">&#9733;</span>
+      <span data-value="5">&#9733;</span>
+    </div>
+    <textarea id="reviewText" placeholder="اكتب تعليقك هنا..." rows="4"></textarea>
+    <button id="btnSubmit">إرسال التقييم</button>
+
+    <div class="section">
+      <h2 id="reviewsTitle">⭐ تقييمات المستخدمين</h2>
+      <div id="reviewsList">جار التحميل...</div>
+    </div>
   </div>
-  <textarea id="reviewText" placeholder="اكتب تعليقك هنا..." rows="4"></textarea>
-  <button id="submitBtn">إرسال التقييم</button>
 
-  <div class="section">
-    <h2 id="userReviewsTitle">⭐ تقييمات المستخدمين</h2>
-    <div id="reviewsList">جار التحميل...</div>
-  </div>
-</div>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
 
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-  authDomain: "sheko-store.firebaseapp.com",
-  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-  projectId: "sheko-store",
-  storageBucket: "sheko-store.appspot.com",
-  messagingSenderId: "113892775847",
-  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const auth = firebase.auth();
-
-// كلمات غير مرغوب فيها
-const badWords = ["كلب","حمار","وسخ","تافه","قذر","نصاب","حرامي","ابن","كس","نيك","طيز","زب","شرموط","عبيط","حقير","متناك","fuck","shit","bitch","asshole","bastard","dick","pussy","motherfucker","fucking","slut"];
-function containsBadWords(text){ return badWords.some(w=>text.toLowerCase().includes(w)); }
-
-let currentUid = null;
-let selectedStars = 0;
-const stars = document.querySelectorAll("#starRating span");
-
-// ترجمات
-const t = {
-  ar:{
-    reviewsTitle:"💬 التقييمات",
-    starLabel:"اختر عدد النجوم:",
-    reviewPlaceholder:"اكتب تعليقك هنا...",
-    submitBtn:"إرسال التقييم",
-    userReviews:"⭐ تقييمات المستخدمين",
-    noReviews:"لا توجد تقييمات بعد."
-  },
-  en:{
-    reviewsTitle:"💬 Reviews",
-    starLabel:"Select star rating:",
-    reviewPlaceholder:"Write your review...",
-    submitBtn:"Submit Review",
-    userReviews:"⭐ User Reviews",
-    noReviews:"No reviews yet."
-  }
-};
-function applyLang(lang){
-  const tr = t[lang]||t.ar;
-  document.body.dir = lang==="ar"?"rtl":"ltr";
-  document.getElementById("reviewsTitle").innerText=tr.reviewsTitle;
-  document.getElementById("starLabel").innerText=tr.starLabel;
-  document.getElementById("reviewText").placeholder=tr.reviewPlaceholder;
-  document.getElementById("submitBtn").innerText=tr.submitBtn;
-  document.getElementById("userReviewsTitle").innerText=tr.userReviews;
-}
-applyLang(localStorage.getItem("lang")||"ar");
-
-// تحميل المستخدم وحفظ UID
-auth.onAuthStateChanged(user=>{
-  if(!user) return location.href="index.html";
-  currentUid=user.uid;
-  loadReviews();
-});
-
-// النجوم
-stars.forEach((star,idx)=>{
-  star.addEventListener("click",()=>{
-    selectedStars=parseInt(star.dataset.value);
-    stars.forEach((s,i)=> s.classList.toggle("active",i<selectedStars));
-  });
-});
-
-// إرسال التقييم
-document.getElementById("submitBtn").onclick=()=>{
-  const text=document.getElementById("reviewText").value.trim();
-  if(!selectedStars||!text){ alert("اختر عدد النجوم واكتب تعليقك"); return; }
-  if(containsBadWords(text)){ alert("❌ يرجى تجنب الكلمات المسيئة"); return; }
-
-  const user = auth.currentUser;
-  const data = {
-    uid: currentUid,
-    name: user.displayName||"---",
-    photo: user.photoURL||"",
-    stars: selectedStars,
-    text,
-    timestamp: new Date().toISOString()
-  };
-  const key = db.ref().child("reviews").push().key;
-  db.ref("reviews/"+key).set(data).then(()=>{
-    document.getElementById("reviewText").value="";
-    selectedStars=0;
-    stars.forEach(s=>s.classList.remove("active"));
-  });
-};
-
-// تحميل التقييمات
-function loadReviews(){
-  const container = document.getElementById("reviewsList");
-  db.ref("reviews").on("value", snapshot=>{
-    container.innerHTML="";
-    if(!snapshot.exists()){ container.innerText=t[localStorage.getItem("lang")||"ar"].noReviews; return; }
-    const entries=Object.entries(snapshot.val()).sort((a,b)=>new Date(b[1].timestamp)-new Date(a[1].timestamp));
-    entries.forEach(([key,r])=>{
-      const div=document.createElement("div");
-      div.className="review";
-
-      let starsHTML="";
-      for(let i=1;i<=5;i++){ starsHTML+=`<span class="${i<=r.stars?'active':''}">&#9733;</span>`; }
-
-      div.innerHTML=`
-        <div style="display:flex;align-items:center;gap:10px;">
-          <img src="${r.photo||'https://via.placeholder.com/40'}"/>
-          <span class="name">${r.name}</span>
-        </div>
-        <div class="stars-review">${starsHTML}</div>
-        <p>${r.text}</p>
-        <div class="meta">${new Date(r.timestamp).toLocaleString("ar-EG")}</div>
-      `;
-
-      if(currentUid==="mlifDgEAkKMaOeuUq63cs5NAkV93"){
-        const btn=document.createElement("button");
-        btn.className="delete-btn";
-        btn.innerText="🗑 حذف";
-        btn.onclick=()=>db.ref("reviews/"+key).remove();
-        div.appendChild(btn);
+    const t = {
+      ar: {
+        pageTitle: "💬 التقييمات",
+        labelStars: "اختر عدد النجوم:",
+        reviewPlaceholder: "اكتب تعليقك هنا...",
+        btnSubmit: "إرسال التقييم",
+        reviewsTitle: "⭐ تقييمات المستخدمين",
+        loading: "جار التحميل...",
+        noReviews: "لا توجد تقييمات بعد."
+      },
+      en: {
+        pageTitle: "💬 Reviews",
+        labelStars: "Select rating:",
+        reviewPlaceholder: "Write your comment...",
+        btnSubmit: "Submit Review",
+        reviewsTitle: "⭐ User Reviews",
+        loading: "Loading...",
+        noReviews: "No reviews yet."
       }
+    };
 
-      container.appendChild(div);
+    function applyLang(lang){
+      localStorage.setItem("lang", lang);
+      document.body.dir = lang==="ar"?"rtl":"ltr";
+      document.getElementById("pageTitle").innerText = t[lang].pageTitle;
+      document.getElementById("labelStars").innerText = t[lang].labelStars;
+      document.getElementById("reviewText").placeholder = t[lang].reviewPlaceholder;
+      document.getElementById("btnSubmit").innerText = t[lang].btnSubmit;
+      document.getElementById("reviewsTitle").innerText = t[lang].reviewsTitle;
+    }
+
+    applyLang(localStorage.getItem("lang")||"ar");
+
+    let selectedStars=0;
+    const stars = document.querySelectorAll("#starRating span");
+    stars.forEach(star=>{
+      star.addEventListener("click", ()=>{
+        selectedStars=parseInt(star.dataset.value);
+        stars.forEach((s,i)=> s.classList.toggle("active", i<selectedStars));
+      });
     });
-  });
-}
-</script>
+
+    let currentUid = null;
+    let currentUser = null;
+    auth.onAuthStateChanged(user=>{
+      if(!user) return location.href="index.html";
+      currentUid = user.uid;
+      currentUser = user;
+      loadReviews();
+    });
+
+    document.getElementById("btnSubmit").onclick = ()=>{
+      const text = document.getElementById("reviewText").value.trim();
+      if(!selectedStars || !text) return alert("اختر النجوم واكتب تعليق");
+      const data = {
+        uid: currentUid,
+        name: currentUser.displayName || "---",
+        photo: currentUser.photoURL || "https://via.placeholder.com/40",
+        stars: selectedStars,
+        text: text,
+        timestamp: new Date().toISOString()
+      };
+      const key = db.ref().child("reviews").push().key;
+      db.ref("reviews/"+key).set(data);
+      document.getElementById("reviewText").value="";
+      selectedStars=0;
+      stars.forEach(s=> s.classList.remove("active"));
+    };
+
+    const reviewsContainer = document.getElementById("reviewsList");
+
+    function loadReviews(){
+      const lang = localStorage.getItem("lang")||"ar";
+      reviewsContainer.innerText = t[lang].loading;
+      db.ref("reviews").on("value", snapshot=>{
+        reviewsContainer.innerHTML="";
+        if(!snapshot.exists()){ reviewsContainer.innerText = t[lang].noReviews; return; }
+        const entries = Object.entries(snapshot.val()).sort((a,b)=> new Date(b[1].timestamp)-new Date(a[1].timestamp));
+        entries.forEach(([key,r])=>{
+          const div = document.createElement("div");
+          div.className="review";
+
+          // نجوم التقييم
+          let starsHTML="";
+          for(let i=1;i<=5;i++){
+            starsHTML += `<span class="${i<=r.stars?'active':''}">&#9733;</span>`;
+          }
+
+          div.innerHTML = `
+            <div class="review-header">
+              <img src="${r.photo||'https://via.placeholder.com/40'}"/>
+              <span>${r.name||'---'}</span>
+            </div>
+            <div class="stars-review">${starsHTML}</div>
+            <p>${r.text}</p>
+            <div class="meta">${new Date(r.timestamp).toLocaleString(lang==="ar"?"ar-EG":"en-US")}</div>
+          `;
+
+          if(currentUid==="mlifDgEAkKMaOeuUq63cs5NAkV93"){
+            const btn=document.createElement("button");
+            btn.className="delete-btn";
+            btn.innerText = lang==="ar"?"🗑 حذف":"🗑 Delete";
+            btn.onclick = ()=> db.ref("reviews/"+key).remove();
+            div.appendChild(btn);
+          }
+
+          reviewsContainer.appendChild(div);
+        });
+      });
+    }
+  </script>
 </body>
 </html>
