@@ -256,8 +256,6 @@
       if(!selectedStars || !text) return alert("اختر النجوم واكتب تعليق");
       const data = {
         uid: currentUid,
-        name: currentUser.displayName || "---",
-        photo: currentUser.photoURL || "https://via.placeholder.com/40",
         stars: selectedStars,
         text: text,
         timestamp: new Date().toISOString()
@@ -282,31 +280,39 @@
           const div = document.createElement("div");
           div.className="review";
 
-          // نجوم التقييم
-          let starsHTML="";
-          for(let i=1;i<=5;i++){
-            starsHTML += `<span class="${i<=r.stars?'active':''}">&#9733;</span>`;
-          }
+          // جلب اسم وصورة المستخدم من قاعدة البيانات users/UID
+          db.ref("users/"+r.uid).once("value").then(userSnap=>{
+            const userData = userSnap.val() || {};
+            const name = userData.username || '---';
+            const photo = userData.profileImage || 'https://via.placeholder.com/40';
 
-          div.innerHTML = `
-            <div class="review-header">
-              <img src="${r.photo||'https://via.placeholder.com/40'}"/>
-              <span>${r.name||'---'}</span>
-            </div>
-            <div class="stars-review">${starsHTML}</div>
-            <p>${r.text}</p>
-            <div class="meta">${new Date(r.timestamp).toLocaleString(lang==="ar"?"ar-EG":"en-US")}</div>
-          `;
+            // نجوم التقييم
+            let starsHTML="";
+            for(let i=1;i<=5;i++){
+              starsHTML += `<span class="${i<=r.stars?'active':''}">&#9733;</span>`;
+            }
 
-          if(currentUid==="mlifDgEAkKMaOeuUq63cs5NAkV93"){
-            const btn=document.createElement("button");
-            btn.className="delete-btn";
-            btn.innerText = lang==="ar"?"🗑 حذف":"🗑 Delete";
-            btn.onclick = ()=> db.ref("reviews/"+key).remove();
-            div.appendChild(btn);
-          }
+            div.innerHTML = `
+              <div class="review-header">
+                <img src="${photo}"/>
+                <span>${name}</span>
+              </div>
+              <div class="stars-review">${starsHTML}</div>
+              <p>${r.text}</p>
+              <div class="meta">${new Date(r.timestamp).toLocaleString(lang==="ar"?"ar-EG":"en-US")}</div>
+            `;
 
-          reviewsContainer.appendChild(div);
+            if(currentUid==="mlifDgEAkKMaOeuUq63cs5NAkV93"){
+              const btn=document.createElement("button");
+              btn.className="delete-btn";
+              btn.innerText = lang==="ar"?"🗑 حذف":"🗑 Delete";
+              btn.onclick = ()=> db.ref("reviews/"+key).remove();
+              div.appendChild(btn);
+            }
+
+            reviewsContainer.appendChild(div);
+          });
+
         });
       });
     }
