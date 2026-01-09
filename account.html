@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 
   <style>
     body {
@@ -16,9 +16,67 @@
       direction: rtl;
     }
 
+    /* زر الرجوع */
+    .back-btn {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #007bff;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: bold;
+      z-index: 9999;
+    }
+
+    /* أيقونة اللغة */
+    .lang-btn {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: #222;
+      color: white;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 9999;
+    }
+
+    /* قائمة اللغة */
+    .lang-menu {
+      position: fixed;
+      top: 60px;
+      left: 10px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 6px 20px rgba(0,0,0,.25);
+      display: none;
+      overflow: hidden;
+      z-index: 9999;
+    }
+
+    .lang-menu button {
+      width: 100%;
+      padding: 10px 16px;
+      border: none;
+      background: white;
+      cursor: pointer;
+      font-family: 'Cairo';
+      font-weight: bold;
+    }
+
+    .lang-menu button:hover {
+      background: #f1f1f1;
+    }
+
     .container {
       max-width: 420px;
-      margin: 60px auto;
+      margin: 80px auto;
       background: white;
       padding: 30px;
       border-radius: 20px;
@@ -82,54 +140,20 @@
 
     .btn-blue { background: #007bff; color: white; }
     .btn-red { background: #dc3545; color: white; }
-
-    /* زر الرجوع */
-    .back-btn {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      background: #007bff;
-      color: white;
-      padding: 8px 14px;
-      border-radius: 10px;
-      text-decoration: none;
-      font-weight: bold;
-      z-index: 9999;
-    }
-
-    /* قائمة اللغة */
-    #langMenu {
-      position: fixed;
-      top: 55px;
-      right: 10px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,.2);
-      overflow: hidden;
-      z-index: 9999;
-    }
-
-    #langMenu button {
-      width: 100%;
-      padding: 8px 14px;
-      border: none;
-      background: white;
-      cursor: pointer;
-      font-family: 'Cairo';
-      font-weight: bold;
-    }
-
-    #langMenu button:hover {
-      background: #f1f1f1;
-    }
   </style>
 </head>
 
 <body>
 
-<a href="dashboard.html" class="back-btn">↩ الرجوع</a>
+<a href="dashboard.html" class="back-btn" id="backText">↩ الرجوع</a>
 
-<div id="langMenu">
+<!-- أيقونة اللغة -->
+<div class="lang-btn" id="langToggle">
+  <i class="fa fa-globe"></i>
+</div>
+
+<!-- قائمة اللغة -->
+<div class="lang-menu" id="langMenu">
   <button onclick="setLang('ar')">🇪🇬 عربي</button>
   <button onclick="setLang('en')">🇺🇸 English</button>
 </div>
@@ -153,11 +177,11 @@
   <div class="info-card">
     <label id="usernameLabel">👤 اسم المستخدم:</label>
     <div id="username">---</div>
-    <input type="text" id="newUsername" placeholder="أدخل اسم مستخدم جديد">
+    <input type="text" id="newUsername">
     <button class="btn-blue" id="btnSetUsername">تأكيد اسم المستخدم</button>
   </div>
 
-  <button class="btn-red" id="btnDeleteAccount">🗑️ حذف الحساب نهائيًا</button>
+  <button class="btn-red" id="btnDeleteAccount">🗑️ حذف الحساب</button>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -179,54 +203,72 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 
+/* تحميل بيانات المستخدم */
+auth.onAuthStateChanged(user => {
+  if (!user) return location.href = "index.html";
+  document.getElementById("email").innerText = user.email;
+
+  db.ref("users/" + user.uid + "/username").once("value").then(snap => {
+    if (snap.exists()) document.getElementById("username").innerText = snap.val();
+  });
+
+  db.ref("users/" + user.uid + "/profileImage").once("value").then(snap => {
+    if (snap.exists()) document.getElementById("profileImage").src = snap.val();
+  });
+});
+
 /* اللغات */
-const translations = {
+const t = {
   ar: {
     back: "↩ الرجوع",
     title: "معلومات حسابك",
     email: "📧 البريد الإلكتروني:",
-    username: "👤 اسم المستخدم:",
-    placeholder: "أدخل اسم مستخدم جديد",
-    confirm: "تأكيد اسم المستخدم",
-    delete: "🗑️ حذف الحساب نهائيًا"
+    user: "👤 اسم المستخدم:",
+    set: "تأكيد اسم المستخدم",
+    del: "🗑️ حذف الحساب"
   },
   en: {
     back: "↩ Back",
     title: "Account Information",
     email: "📧 Email:",
-    username: "👤 Username:",
-    placeholder: "Enter new username",
-    confirm: "Confirm Username",
-    delete: "🗑️ Delete Account"
+    user: "👤 Username:",
+    set: "Confirm Username",
+    del: "🗑️ Delete Account"
   }
 };
 
 function applyLang(lang) {
-  localStorage.setItem("siteLang", lang);
+  localStorage.setItem("lang", lang);
   document.body.style.direction = lang === "ar" ? "rtl" : "ltr";
 
-  document.querySelector(".back-btn").innerText = translations[lang].back;
-  document.getElementById("pageTitle").innerText = translations[lang].title;
-  document.getElementById("emailLabel").innerText = translations[lang].email;
-  document.getElementById("usernameLabel").innerText = translations[lang].username;
-  document.getElementById("newUsername").placeholder = translations[lang].placeholder;
-  document.getElementById("btnSetUsername").innerText = translations[lang].confirm;
-  document.getElementById("btnDeleteAccount").innerText = translations[lang].delete;
+  backText.innerText = t[lang].back;
+  pageTitle.innerText = t[lang].title;
+  emailLabel.innerText = t[lang].email;
+  usernameLabel.innerText = t[lang].user;
+  btnSetUsername.innerText = t[lang].set;
+  btnDeleteAccount.innerText = t[lang].del;
 }
+
+applyLang(localStorage.getItem("lang") || "ar");
+
+/* فتح وغلق القائمة */
+const langToggle = document.getElementById("langToggle");
+const langMenu = document.getElementById("langMenu");
+
+langToggle.onclick = () => {
+  langMenu.style.display = langMenu.style.display === "block" ? "none" : "block";
+};
+
+document.addEventListener("click", e => {
+  if (!langMenu.contains(e.target) && !langToggle.contains(e.target)) {
+    langMenu.style.display = "none";
+  }
+});
 
 function setLang(lang) {
   applyLang(lang);
+  langMenu.style.display = "none";
 }
-
-window.addEventListener("load", () => {
-  applyLang(localStorage.getItem("siteLang") || "ar");
-});
-
-/* تحميل بيانات المستخدم */
-auth.onAuthStateChanged(user => {
-  if (!user) return location.href = "index.html";
-  document.getElementById("email").innerText = user.email;
-});
 </script>
 
 </body>
