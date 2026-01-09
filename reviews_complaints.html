@@ -270,52 +270,56 @@
     const reviewsContainer = document.getElementById("reviewsList");
 
     function loadReviews(){
-      const lang = localStorage.getItem("lang")||"ar";
-      reviewsContainer.innerText = t[lang].loading;
-      db.ref("reviews").on("value", snapshot=>{
-        reviewsContainer.innerHTML="";
-        if(!snapshot.exists()){ reviewsContainer.innerText = t[lang].noReviews; return; }
-        const entries = Object.entries(snapshot.val()).sort((a,b)=> new Date(b[1].timestamp)-new Date(a[1].timestamp));
-        entries.forEach(([key,r])=>{
-          const div = document.createElement("div");
-          div.className="review";
+  const lang = localStorage.getItem("lang")||"ar";
+  reviewsContainer.innerText = t[lang].loading;
 
-          // جلب اسم وصورة المستخدم من قاعدة البيانات users/UID
-          db.ref("users/"+r.uid).once("value").then(userSnap=>{
-            const userData = userSnap.val() || {};
-            const name = userData.username || '---';
-            const photo = userData.profileImage || 'https://via.placeholder.com/40';
+  db.ref("reviews").on("value", async snapshot=>{
+    reviewsContainer.innerHTML="";
+    if(!snapshot.exists()){ reviewsContainer.innerText = t[lang].noReviews; return; }
 
-            // نجوم التقييم
-            let starsHTML="";
-            for(let i=1;i<=5;i++){
-              starsHTML += `<span class="${i<=r.stars?'active':''}">&#9733;</span>`;
-            }
+    // تحويل البيانات لمصفوفة وترتيبها حسب timestamp (الأحدث أولًا)
+    const entries = Object.entries(snapshot.val())
+      .sort((a,b)=> new Date(b[1].timestamp) - new Date(a[1].timestamp));
 
-            div.innerHTML = `
-              <div class="review-header">
-                <img src="${photo}"/>
-                <span>${name}</span>
-              </div>
-              <div class="stars-review">${starsHTML}</div>
-              <p>${r.text}</p>
-              <div class="meta">${new Date(r.timestamp).toLocaleString(lang==="ar"?"ar-EG":"en-US")}</div>
-            `;
+    for(const [key, r] of entries){
+      const div = document.createElement("div");
+      div.className="review";
 
-            if(currentUid==="mlifDgEAkKMaOeuUq63cs5NAkV93"){
-              const btn=document.createElement("button");
-              btn.className="delete-btn";
-              btn.innerText = lang==="ar"?"🗑 حذف":"🗑 Delete";
-              btn.onclick = ()=> db.ref("reviews/"+key).remove();
-              div.appendChild(btn);
-            }
+      // جلب اسم وصورة المستخدم من قاعدة البيانات users/UID
+      const userSnap = await db.ref("users/"+r.uid).once("value");
+      const userData = userSnap.val() || {};
+      const name = userData.username || '---';
+      const photo = userData.profileImage || 'https://via.placeholder.com/40';
 
-            reviewsContainer.appendChild(div);
-          });
+      // نجوم التقييم
+      let starsHTML="";
+      for(let i=1;i<=5;i++){
+        starsHTML += `<span class="${i<=r.stars?'active':''}">&#9733;</span>`;
+      }
 
-        });
-      });
+      div.innerHTML = `
+        <div class="review-header">
+          <img src="${photo}"/>
+          <span>${name}</span>
+        </div>
+        <div class="stars-review">${starsHTML}</div>
+        <p>${r.text}</p>
+        <div class="meta">${new Date(r.timestamp).toLocaleString(lang==="ar"?"ar-EG":"en-US")}</div>
+      `;
+
+      if(currentUid==="mlifDgEAkKMaOeuUq63cs5NAkV93"){
+        const btn=document.createElement("button");
+        btn.className="delete-btn";
+        btn.innerText = lang==="ar"?"🗑 حذف":"🗑 Delete";
+        btn.onclick = ()=> db.ref("reviews/"+key).remove();
+        div.appendChild(btn);
+      }
+
+      // إضافة كل تقييم على التوالي لضمان ترتيب صحيح
+      reviewsContainer.appendChild(div);
     }
-  </script>
+  });
+}
+    </script>
 </body>
 </html>
