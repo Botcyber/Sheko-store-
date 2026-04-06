@@ -1,275 +1,415 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-  <meta charset="UTF-8" />
-  <title>حسابي</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-
-  <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background: linear-gradient(to bottom right, #e3f2fd, #fce4ec);
-      margin: 0;
-      direction: rtl;
-    }
-
-    /* زر الرجوع */
-    .back-btn {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      background: #007bff;
-      color: white;
-      padding: 8px 14px;
-      border-radius: 10px;
-      text-decoration: none;
-      font-weight: bold;
-      z-index: 9999;
-    }
-
-    /* أيقونة اللغة */
-    .lang-btn {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      background: #222;
-      color: white;
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 9999;
-    }
-
-    /* قائمة اللغة */
-    .lang-menu {
-      position: fixed;
-      top: 60px;
-      left: 10px;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 6px 20px rgba(0,0,0,.25);
-      display: none;
-      overflow: hidden;
-      z-index: 9999;
-    }
-
-    .lang-menu button {
-      width: 100%;
-      padding: 10px 16px;
-      border: none;
-      background: white;
-      cursor: pointer;
-      font-family: 'Cairo';
-      font-weight: bold;
-    }
-
-    .lang-menu button:hover {
-      background: #f1f1f1;
-    }
-
-    .container {
-      max-width: 420px;
-      margin: 80px auto;
-      background: white;
-      padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 15px 40px rgba(0,0,0,.15);
-      text-align: center;
-    }
-
-    .profile-img-wrapper {
-      margin-top: -80px;
-      margin-bottom: 20px;
-    }
-
-    #profileImage {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      border: 5px solid #fff;
-      object-fit: cover;
-      cursor: pointer;
-    }
-
-    input[type="file"] { display: none; }
-
-    h2 {
-      margin-bottom: 25px;
-      font-weight: bold;
-    }
-
-    .info-card {
-      background: #f8f9fa;
-      border-radius: 12px;
-      padding: 15px;
-      margin-bottom: 15px;
-      text-align: right;
-    }
-
-    .info-card label {
-      font-weight: bold;
-      display: block;
-      margin-bottom: 6px;
-    }
-
-    input[type="text"] {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      margin-top: 10px;
-      font-family: 'Cairo';
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 12px;
-    }
-
-    .btn-blue { background: #007bff; color: white; }
-    .btn-red { background: #dc3545; color: white; }
-  </style>
-</head>
-
-<body>
-
-<a href="dashboard.html" class="back-btn" id="backText">↩ الرجوع</a>
-
-<!-- أيقونة اللغة -->
-<div class="lang-btn" id="langToggle">
-  <i class="fa fa-globe"></i>
-</div>
-
-<!-- قائمة اللغة -->
-<div class="lang-menu" id="langMenu">
-  <button onclick="setLang('ar')">🇪🇬 عربي</button>
-  <button onclick="setLang('en')">🇺🇸 English</button>
-</div>
-
-<div class="container">
-
-  <div class="profile-img-wrapper">
-    <label for="profileImageInput">
-      <img id="profileImage" src="https://via.placeholder.com/120" />
-    </label>
-    <input type="file" id="profileImageInput" accept="image/*">
-  </div>
-
-  <h2 id="pageTitle">معلومات حسابك</h2>
-
-  <div class="info-card">
-    <label id="emailLabel">📧 البريد الإلكتروني:</label>
-    <div id="email">...</div>
-  </div>
-
-  <div class="info-card">
-    <label id="usernameLabel">👤 اسم المستخدم:</label>
-    <div id="username">---</div>
-    <input type="text" id="newUsername">
-    <button class="btn-blue" id="btnSetUsername">تأكيد اسم المستخدم</button>
-  </div>
-
-  <button class="btn-red" id="btnDeleteAccount">🗑️ حذف الحساب</button>
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
-  authDomain: "sheko-store.firebaseapp.com",
-  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
-  projectId: "sheko-store",
-  storageBucket: "sheko-store.appspot.com",
-  messagingSenderId: "113892775847",
-  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
-
-/* تحميل بيانات المستخدم */
-auth.onAuthStateChanged(user => {
-  if (!user) return location.href = "index.html";
-  document.getElementById("email").innerText = user.email;
-
-  db.ref("users/" + user.uid + "/username").once("value").then(snap => {
-    if (snap.exists()) document.getElementById("username").innerText = snap.val();
-  });
-
-  db.ref("users/" + user.uid + "/profileImage").once("value").then(snap => {
-    if (snap.exists()) document.getElementById("profileImage").src = snap.val();
-  });
-});
-
-/* اللغات */
-const t = {
-  ar: {
-    back: "↩ الرجوع",
-    title: "معلومات حسابك",
-    email: "📧 البريد الإلكتروني:",
-    user: "👤 اسم المستخدم:",
-    set: "تأكيد اسم المستخدم",
-    del: "🗑️ حذف الحساب"
-  },
-  en: {
-    back: "↩ Back",
-    title: "Account Information",
-    email: "📧 Email:",
-    user: "👤 Username:",
-    set: "Confirm Username",
-    del: "🗑️ Delete Account"
-  }
-};
-
-function applyLang(lang) {
-  localStorage.setItem("lang", lang);
-  document.body.style.direction = lang === "ar" ? "rtl" : "ltr";
-
-  backText.innerText = t[lang].back;
-  pageTitle.innerText = t[lang].title;
-  emailLabel.innerText = t[lang].email;
-  usernameLabel.innerText = t[lang].user;
-  btnSetUsername.innerText = t[lang].set;
-  btnDeleteAccount.innerText = t[lang].del;
+<!DOCTYPE html>  <html lang="ar">  
+<head>  
+  <meta charset="UTF-8" />  
+  <title>حسابي</title>  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />  
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet" />  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />  
+  <style>  
+    body {  
+      font-family: 'Cairo', sans-serif;  
+      background: linear-gradient(to bottom right, #e3f2fd, #fce4ec);  
+      margin: 0;  
+      padding: 0;  
+      direction: rtl;  
+      animation: fadeInBackground 1.2s ease forwards;  
+    }  
+    @keyframes fadeInBackground {  
+      from { opacity: 0; background-position: 50% 0%; }  
+      to { opacity: 1; background-position: 50% 100%; }  
+    }  
+    .container {  
+      max-width: 420px;  
+      margin: 50px auto;  
+      background: white;  
+      padding: 30px;  
+      border-radius: 20px;  
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);  
+      text-align: center;  
+      opacity: 0;  
+      transform: translateY(40px);  
+      animation: fadeInUp 1s ease forwards;  
+      animation-delay: 0.3s;  
+    }  
+    @keyframes fadeInUp {  
+      to { opacity: 1; transform: translateY(0); }  
+    }  
+    .profile-img-wrapper {  
+      margin-top: -80px;  
+      margin-bottom: 15px;  
+      animation: pulse 3s ease-in-out infinite;  
+    }  
+    @keyframes pulse {  
+      0%, 100% { transform: scale(1); box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2); }  
+      50% { transform: scale(1.05); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); }  
+    }  
+    #profileImage {  
+      width: 120px;  
+      height: 120px;  
+      border-radius: 50%;  
+      border: 5px solid #fff;  
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);  
+      object-fit: cover;  
+      cursor: pointer;  
+      transition: transform 0.3s ease, box-shadow 0.3s ease;  
+    }  
+    #profileImage:hover {  
+      transform: scale(1.1) rotate(5deg);  
+      box-shadow: 0 10px 30px rgba(0, 123, 255, 0.6);  
+    }  
+    input[type="file"] { display: none; }  
+    h2 {  
+      color: #333;  
+      margin-bottom: 25px;  
+      font-weight: bold;  
+      font-size: 24px;  
+      opacity: 0;  
+      animation: fadeInUp 1s ease forwards;  
+      animation-delay: 0.5s;  
+    }  
+    .info-card {  
+      background: #f8f9fa;  
+      border: 1px solid #ddd;  
+      border-radius: 12px;  
+      padding: 15px;  
+      margin-bottom: 15px;  
+      text-align: right;  
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);  
+      opacity: 0;  
+      transform: translateX(40px);  
+      animation: fadeInRight 0.8s ease forwards;  
+    }  
+    .info-card:nth-child(1) { animation-delay: 0.6s; }  
+    .info-card:nth-child(2) { animation-delay: 0.7s; }  
+    .info-card:nth-child(3) { animation-delay: 0.8s; }  
+    .info-card:nth-child(4) { animation-delay: 0.9s; }  
+    @keyframes fadeInRight {  
+      to { opacity: 1; transform: translateX(0); }  
+    }  
+    .info-card label {  
+      font-weight: bold;  
+      color: #444;  
+      margin-bottom: 5px;  
+      display: block;  
+    }  
+    .info-card .value {  
+      color: #333;  
+      margin-top: 5px;  
+    }  
+    input[type="text"] {  
+      width: 100%;  
+      padding: 10px;  
+      border-radius: 8px;  
+      border: 1px solid #ccc;  
+      margin-top: 10px;  
+      font-family: 'Cairo', sans-serif;  
+      transition: box-shadow 0.3s ease;  
+    }  
+    input[type="text"]:focus {  
+      outline: none;  
+      box-shadow: 0 0 10px #007bffaa;  
+      border-color: #007bff;  
+    }  
+    button {  
+      width: 100%;  
+      padding: 12px;  
+      border: none;  
+      border-radius: 10px;  
+      font-size: 16px;  
+      cursor: pointer;  
+      font-weight: bold;  
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;  
+    }  
+    .btn-blue {  
+      background: #007bff;  
+      color: white;  
+      margin-top: 15px;  
+    }  
+    .btn-blue:hover {  
+      background: #0056b3;  
+      box-shadow: 0 0 12px #0056b3cc;  
+    }  
+    .btn-red {  
+      background: #dc3545;  
+      color: white;  
+      margin-top: 20px;  
+    }  
+    .btn-red:hover {  
+      background: #b02a37;  
+      box-shadow: 0 0 12px #b02a37cc;  
+    }  /* التنبيه المخصص */  
+.custom-alert {  
+  position: fixed;  
+  bottom: 30px;  
+  left: 50%;  
+  transform: translateX(-50%);  
+  background: #007bff;  
+  color: white;  
+  padding: 15px 25px;  
+  border-radius: 12px;  
+  box-shadow: 0 8px 20px rgba(0, 123, 255, 0.5);  
+  font-weight: bold;  
+  font-size: 16px;  
+  display: flex;  
+  align-items: center;  
+  gap: 12px;  
+  z-index: 9999;  
+  min-width: 280px;  
+  max-width: 90vw;  
+  animation: slideUp 0.5s ease forwards;  
+  user-select: none;  
+}  
+.custom-alert.hidden {  
+  display: none;  
+}  
+.custom-alert i {  
+  font-size: 22px;  
+}  
+.custom-alert.success {  
+  background: #28a745;  
+  box-shadow: 0 8px 20px rgba(40, 167, 69, 0.5);  
+}  
+.custom-alert.error {  
+  background: #dc3545;  
+  box-shadow: 0 8px 20px rgba(220, 53, 69, 0.5);  
+}  
+.custom-alert.info {  
+  background: #007bff;  
+  box-shadow: 0 8px 20px rgba(0, 123, 255, 0.5);  
+}  
+#alertCloseBtn {  
+  background: transparent;  
+  border: 2px solid white;  
+  border-radius: 8px;  
+  color: white;  
+  font-weight: bold;  
+  padding: 6px 14px;  
+  cursor: pointer;  
+  transition: background-color 0.3s ease, color 0.3s ease;  
+}  
+#alertCloseBtn:hover {  
+  background-color: white;  
+  color: #007bff;  
+}  
+@keyframes slideUp {  
+  from {  
+    opacity: 0;  
+    transform: translate(-50%, 40px);  
+  }  
+  to {  
+    opacity: 1;  
+    transform: translate(-50%, 0);  
+  }  
 }
 
-applyLang(localStorage.getItem("lang") || "ar");
+  </style>  
+</head>  
+<body>  <a href="dashboard.html" style="  
+position: fixed;  
+top: 10px;  
+right: 10px;  
+background: #007bff;  
+color: white;  
+padding: 8px 14px;  
+border-radius: 10px;  
+text-decoration: none;  
+font-family: 'Cairo', sans-serif;  
+font-weight: bold;  
+box-shadow: 0 4px 10px rgba(0,0,0,.2);  
+z-index: 9999;  
+">
+↩ الرجوع
+</a>
 
-/* فتح وغلق القائمة */
-const langToggle = document.getElementById("langToggle");
-const langMenu = document.getElementById("langMenu");
+  <div class="container">  
+    <div class="profile-img-wrapper">  
+      <label for="profileImageInput">  
+        <img id="profileImage" src="https://via.placeholder.com/120?text=صورة" alt="صورة الحساب" />  
+      </label>  
+      <input type="file" id="profileImageInput" accept="image/*" />  
+    </div>  <h2>معلومات حسابك</h2>  
 
-langToggle.onclick = () => {
-  langMenu.style.display = langMenu.style.display === "block" ? "none" : "block";
-};
+<div class="info-card">  
+  <label>📧 البريد الإلكتروني:</label>  
+  <div class="value" id="email">جاري التحميل...</div>  
+</div>  
 
-document.addEventListener("click", e => {
-  if (!langMenu.contains(e.target) && !langToggle.contains(e.target)) {
-    langMenu.style.display = "none";
-  }
-});
+<div class="info-card">  
+  <label>👤 اسم المستخدم:</label>  
+  <div class="value" id="username">لم يتم التعيين بعد</div>  
+  <input type="text" id="newUsername" placeholder="أدخل اسم مستخدم جديد" />  
+  <button class="btn-blue" id="btnSetUsername">تأكيد اسم المستخدم</button>  
+</div>  
 
-function setLang(lang) {
-  applyLang(lang);
-  langMenu.style.display = "none";
-}
-</script>
+<div class="info-card">  
+    
 
-</body>
+<button class="btn-red" id="btnDeleteAccount">🗑️ حذف الحساب نهائيًا</button>
+
+  </div>    <!-- نافذة التنبيه المخصصة -->    <div id="customAlert" class="custom-alert hidden">  
+    <div class="alert-content">  
+      <i id="alertIcon" class="fa fa-info-circle"></i>  
+      <span id="alertMessage">نص التنبيه هنا</span>  
+    </div>  
+    <button id="alertCloseBtn">حسناً</button>  
+  </div>    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>    <script>  
+    // إعداد Firebase  
+    const firebaseConfig = {  
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",  
+      authDomain: "sheko-store.firebaseapp.com",  
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",  
+      projectId: "sheko-store",  
+      storageBucket: "sheko-store.appspot.com",  
+      messagingSenderId: "113892775847",  
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"  
+    };  
+    firebase.initializeApp(firebaseConfig);  
+  
+    const auth = firebase.auth();  
+    const db = firebase.database();  
+  
+    // دالة عرض التنبيه المخصص  
+    function showCustomAlert(message, type = "info") {  
+      const alertBox = document.getElementById("customAlert");  
+      const alertMessage = document.getElementById("alertMessage");  
+      const alertIcon = document.getElementById("alertIcon");  
+      const closeBtn = document.getElementById("alertCloseBtn");  
+  
+      alertMessage.textContent = message;  
+  
+      alertBox.classList.remove("success", "error", "info");  
+      alertBox.classList.add(type);  
+  
+      alertIcon.className = "fa";  
+      if (type === "success") {  
+        alertIcon.classList.add("fa-check-circle");  
+    } else if (type === "error") {  
+      alertIcon.classList.add("fa-times-circle");  
+    } else {  
+      alertIcon.classList.add("fa-info-circle");  
+    }  
+  
+    alertBox.classList.remove("hidden");  
+  
+    function hideAlert() {  
+      alertBox.classList.add("hidden");  
+      closeBtn.removeEventListener("click", hideAlert);  
+    }  
+    closeBtn.addEventListener("click", hideAlert);  
+  
+    // إخفاء تلقائي بعد 4 ثواني  
+    setTimeout(() => {  
+      if (!alertBox.classList.contains("hidden")) {  
+        hideAlert();  
+      }  
+    }, 4000);  
+  }  
+  
+  // تحميل بيانات المستخدم وعرضها  
+  auth.onAuthStateChanged(user => {  
+    if (user) {  
+      const uid = user.uid;  
+      document.getElementById("email").textContent = user.email;  
+  
+      db.ref("users/" + uid + "/profileImage").once("value").then(snap => {  
+        if (snap.exists()) {  
+          document.getElementById("profileImage").src = snap.val();  
+        }  
+      });  
+  
+      db.ref("users/" + uid + "/username").once("value").then(snap => {  
+        document.getElementById("username").textContent = snap.val() || "لم يتم التعيين بعد";  
+      });  
+  
+      db.ref("users/" + uid + "/balance").on("value", snap => {  
+        document.getElementById("balance").textContent = `${snap.val() || 0} جنيه`;  
+      });  
+  
+      db.ref("users/" + uid + "/points").on("value", snap => {  
+        document.getElementById("points").textContent = `${snap.val() || 0} نقطة`;  
+      });  
+  
+    } else {  
+      location.href = "index.html";  
+    }  
+  });  
+  
+  // دالة تعيين اسم المستخدم مع التحقق من الإيموجي ✅  
+  function setUsername() {  
+    const username = document.getElementById("newUsername").value.trim();  
+    const user = auth.currentUser;  
+    if (!user) {  
+      showCustomAlert("❌ يجب تسجيل الدخول أولاً", "error");  
+      return;  
+    }  
+    const uid = user.uid;  
+  
+    if (username.includes("✅") && uid !== "mlifDgEAkKMaOeuUq63cs5NAkV93") {  
+      showCustomAlert("❌ لا يمكنك استخدام الإيموجي ✅ في اسم المستخدم إلا إذا كان حسابك موثقاً.", "error");  
+      return;  
+    }  
+    if (username.length < 2) {  
+      showCustomAlert("❌ أدخل اسم مستخدم صحيح", "error");  
+      return;  
+    }  
+  
+    db.ref("users/" + uid + "/username").set(username)  
+      .then(() => {  
+        document.getElementById("username").textContent = username;  
+        showCustomAlert("✅ تم تحديث اسم المستخدم", "success");  
+        document.getElementById("newUsername").value = "";  
+      })  
+      .catch(err => {  
+        showCustomAlert("❌ حدث خطأ أثناء تحديث اسم المستخدم: " + err.message, "error");  
+      });  
+  }  
+  
+  // دالة حذف الحساب  
+  function deleteAccount() {  
+    if (!confirm("هل أنت متأكد أنك تريد حذف الحساب نهائيًا؟")) return;  
+  
+    const user = auth.currentUser;  
+    if (!user) {  
+      showCustomAlert("❌ يجب تسجيل الدخول أولاً", "error");  
+      return;  
+    }  
+    const uid = user.uid;  
+  
+    db.ref("users/" + uid).remove()  
+      .then(() => user.delete())  
+      .then(() => {  
+        showCustomAlert("✅ تم حذف الحساب نهائيًا.", "success");  
+        location.href = "index.html";  
+      })  
+      .catch(err => {  
+        showCustomAlert("❌ حدث خطأ أثناء حذف الحساب: " + err.message, "error");  
+      });  
+  }  
+  
+  // رفع الصورة وتخزينها  
+  document.getElementById("profileImageInput").addEventListener("change", function(event) {  
+    const file = event.target.files[0];  
+    if (!file) return;  
+  
+    const reader = new FileReader();  
+    reader.onload = function(e) {  
+      const base64Image = e.target.result;  
+      document.getElementById("profileImage").src = base64Image;  
+  
+      const user = auth.currentUser;  
+      if (user) {  
+        db.ref("users/" + user.uid + "/profileImage").set(base64Image)  
+          .then(() => showCustomAlert("✅ تم حفظ الصورة", "success"))  
+          .catch(err => showCustomAlert("❌ فشل حفظ الصورة: " + err.message, "error"));  
+      }  
+    };  
+    reader.readAsDataURL(file);  
+  });  
+  
+  // ربط الأزرار بعد تحميل الصفحة (لتجنب مشاكل الـ onclick)  
+  window.addEventListener("load", () => {  
+    document.getElementById("btnSetUsername").addEventListener("click", setUsername);  
+    document.getElementById("btnDeleteAccount").addEventListener("click", deleteAccount);  
+  });  
+  </script>  </body>  
 </html>
