@@ -6,127 +6,57 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      margin: 0;
-      background: #f9f9f9;
-      padding-bottom: 60px;
-    }
-
-    .top-bar {
-      background: #222;
-      padding: 15px;
-      color: white;
-      text-align: center;
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    .admin-container {
-      max-width: 750px;
-      margin: 30px auto;
-      background: white;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 4px 15px rgba(0,0,0,.1);
-    }
-
-    h3 {
-      margin-top: 0;
-      color: #222;
-      border-bottom: 2px solid #ffb700;
-      padding-bottom: 8px;
-    }
-
-    input, button {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-      font-size: 16px;
-    }
-
-    input[type="file"] {
-      background: #fdfdfd;
-      padding: 8px;
-      cursor: pointer;
-    }
-
-    button {
-      background: #222;
-      color: white;
-      cursor: pointer;
-      font-weight: bold;
-      border: none;
-      transition: 0.3s;
-    }
-
-    button:hover {
-      background: #ffb700;
-      color: #222;
-    }
-
-    .control-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #f1f1f1;
-      padding: 15px;
-      margin: 12px 0;
-      border-radius: 8px;
-      gap: 15px;
-    }
-
-    .control-item img {
-      width: 60px;
-      height: 60px;
-      border-radius: 8px;
-      object-fit: cover;
-    }
-
-    .inject-box {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .inject-box input {
-      width: 90px;
-      text-align: center;
-      margin: 0;
-    }
-
-    .inject-box button {
-      margin: 0;
-      padding: 12px 15px;
-      width: auto;
-      background: #ffb700;
-      color: #222;
-      white-space: nowrap;
-    }
+    body { font-family: 'Cairo', sans-serif; margin: 0; background: #f9f9f9; padding-bottom: 60px; }
+    .top-bar { background: #222; padding: 15px; color: white; text-align: center; font-size: 24px; font-weight: bold; }
+    .admin-container { max-width: 750px; margin: 30px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,.1); }
+    h3 { margin-top: 0; color: #222; border-bottom: 2px solid #ffb700; padding-bottom: 8px; }
+    input, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; }
+    input[type="file"] { background: #fdfdfd; padding: 8px; cursor: pointer; }
+    button { background: #222; color: white; cursor: pointer; font-weight: bold; border: none; transition: 0.3s; }
+    button:hover { background: #ffb700; color: #222; }
+    
+    .status-panel { display: flex; gap: 15px; margin: 15px 0; }
+    .status-btn { padding: 15px; font-size: 18px; border-radius: 8px; flex: 1; color: white; font-weight: bold;}
+    .btn-open { background: #28a745; }
+    .btn-close { background: #dc3545; }
+    
+    .control-item { display: flex; align-items: center; justify-content: space-between; background: #f1f1f1; padding: 15px; margin: 12px 0; border-radius: 8px; gap: 15px; }
+    .control-item img { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; }
+    
+    .action-area { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+    .inject-box { display: flex; gap: 5px; }
+    .inject-box input { width: 80px; text-align: center; margin: 0; padding: 8px; }
+    .inject-box button { margin: 0; padding: 8px 12px; width: auto; background: #ffb700; color: #222; font-size: 14px; }
+    
+    .btn-delete { background: #dc3545; padding: 6px 12px; font-size: 13px; border-radius: 5px; width: auto; margin: 0; color: white; }
+    .btn-delete:hover { background: #bd2130; }
   </style>
 </head>
 <body>
 
 <div class="top-bar">⚙️ لوحة تحكم الإدارة والتصويت - VIBE</div>
 
+<!-- التحكم في حالة القفل والفتح -->
 <div class="admin-container">
-  <h3>➕ إضافة خيار تصويت جديد (رفع من الجهاز)</h3>
-  <input type="text" id="candidateName" placeholder="الاسم (مثال: المتسابق أحمد)" />
-  
-  <label style="font-weight:bold; font-size:14px; color:#444;">اختر صورة من جهازك:</label>
-  <input type="file" id="candidateImageFile" accept="image/*" />
-  
-  <button onclick="createNewItem()">إضافة ونشر في صفحة التصويت</button>
+  <h3>🔒 مفتاح التحكم في حالة صفحة التصويت</h3>
+  <div style="margin-bottom: 10px; font-weight: bold;">حالة الصفحة الحالية: <span id="currentStatusText" style="color: #ffb700;">جاري الفحص...</span></div>
+  <div class="status-panel">
+    <button class="status-btn btn-open" onclick="toggleSystemStatus('open')"><i class="fa fa-unlock"></i> تفعيل وفتح التصويت</button>
+    <button class="status-btn btn-close" onclick="toggleSystemStatus('closed')"><i class="fa fa-lock"></i> إغلاق التصويت والانتهاء</button>
+  </div>
 </div>
 
 <div class="admin-container">
-  <h3>📊 التحكم وتزويد الأصوات (تخطي الحماية للأدمن)</h3>
-  <div id="adminList">
-    <!-- كروت التحكم بتظهر هنا -->
-  </div>
+  <h3>➕ إضافة خيار تصويت جديد</h3>
+  <input type="text" id="candidateName" placeholder="الاسم (مثال: المتسابق أحمد)" />
+  <label style="font-weight:bold; font-size:14px; color:#444;">اختر صورة من جهازك:</label>
+  <input type="file" id="candidateImageFile" accept="image/*" />
+  <button onclick="createNewItem()">إضافة ونشر فوراً</button>
+</div>
+
+<div class="admin-container">
+  <h3>📊 إدارة المتسابقين الحالية</h3>
+  <div id="adminList"></div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -146,50 +76,56 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// دالة لمعالجة الصورة المرفوعة وتحويلها إلى نص Base64
+// دالة قفل وفتح التصويت
+function toggleSystemStatus(statusValue) {
+  db.ref("vibe_settings").set({ status: statusValue }).then(() => {
+    alert(statusValue === 'open' ? "تم فتح التصويت للجمهور بنجاح!" : "تم إغلاق التصويت وظهور شاشة الانتهاء للمستخدمين!");
+  });
+}
+
+// قراءة الحالة الحالية وعرضها بلوحة التحكم
+db.ref("vibe_settings/status").on("value", snap => {
+  const currentStatus = snap.val() || "open";
+  document.getElementById("currentStatusText").textContent = currentStatus === "open" ? "مفتوح ونشط حالياً 🟢" : "مغلق ومحجوب حالياً 🔴";
+});
+
 function createNewItem() {
   const name = document.getElementById("candidateName").value;
   const fileInput = document.getElementById("candidateImageFile");
   const file = fileInput.files[0];
 
-  if(!name) {
-    alert("برجاء كتابة الاسم أولاً!");
-    return;
-  }
+  if(!name) return alert("برجاء كتابة الاسم أولاً!");
 
   if (file) {
     const reader = new FileReader();
     reader.onload = function(e) {
-      const base64ImageText = e.target.result; // النص المشفر الخاص بالصورة
-      saveToDatabase(name, base64ImageText);
+      saveToDatabase(name, e.target.result);
     };
     reader.readAsDataURL(file);
   } else {
-    // إذا لم يتم رفع صورة، يتم تعيين صورة افتراضية
     saveToDatabase(name, "https://via.placeholder.com/250");
   }
 }
 
-// دالة الحفظ الفعلي في قاعدة البيانات
 function saveToDatabase(name, imageDataText) {
   db.ref("vibe_voting").push({
     name: name,
-    image: imageDataText, // تُحفظ هنا كنص بالكامل
+    image: imageDataText,
     votes: 0
   }).then(() => {
-    alert("تم رفع الصورة وإضافة المتسابق بنجاح!");
+    alert("تم إضافة المتسابق بنجاح!");
     document.getElementById("candidateName").value = "";
     document.getElementById("candidateImageFile").value = "";
   });
 }
 
-// عرض المتسابقين في لوحة التحكم مع إمكانية التزويد بالرقم
+// عرض المتسابقين بالأدمن مع أزرار الزيادة وزر الحذف
 db.ref("vibe_voting").on("value", snapshot => {
   const adminList = document.getElementById("adminList");
   adminList.innerHTML = "";
 
   if(!snapshot.exists()){
-    adminList.innerHTML = "<div style='text-align:center;color:#777;'>لا يوجد متسابقين مضافين حالياً.</div>";
+    adminList.innerHTML = "<div style='text-align:center;color:#777;'>لا يوجد خيارات متاحة حالياً.</div>";
     return;
   }
 
@@ -199,42 +135,42 @@ db.ref("vibe_voting").on("value", snapshot => {
 
     const div = document.createElement("div");
     div.className = "control-item";
-
     div.innerHTML = `
       <div style="display:flex; align-items:center; gap:12px;">
         <img src="${data.image}">
         <div>
-          <strong style="font-size:18px;">${data.name}</strong><br>
-          <span style="color:#666; font-size:14px;">الأصوات الحالية: <b style="color:#222;">${data.votes || 0}</b></span>
+          <strong style="font-size:17px;">${data.name}</strong><br>
+          <span style="color:#666; font-size:13px;">الأصوات الحالية: <b style="color:#222;">${data.votes || 0}</b></span>
         </div>
       </div>
-      <div class="inject-box">
-        <input type="number" id="amt-${id}" value="100" placeholder="العدد">
-        <button onclick="addCustomVotes('${id}')">إضافة أصوات</button>
+      <div class="action-area">
+        <div class="inject-box">
+          <input type="number" id="amt-${id}" value="100">
+          <button onclick="addCustomVotes('${id}')">إضافة أصوات</button>
+        </div>
+        <button class="btn-delete" onclick="deleteCandidate('${id}')"><i class="fa fa-trash"></i> حذف الشخص</button>
       </div>
     `;
     adminList.appendChild(div);
   });
 });
 
-// دالة تزويد الأصوات الخاصة بالأدمن (تخترق الحظر وتضيف أي عدد كـ 100 أو 1000)
 function addCustomVotes(id) {
   const inputAmount = document.getElementById(`amt-${id}`).value;
   const votesToAdd = parseInt(inputAmount);
+  if(isNaN(votesToAdd) || votesToAdd <= 0) return alert("أدخل رقم صحيح!");
 
-  if(isNaN(votesToAdd) || votesToAdd <= 0) {
-    alert("برجاء إدخال رقم صحيح أعلى من 0");
-    return;
+  db.ref(`vibe_voting/${id}/votes`).transaction(currentVotes => (currentVotes || 0) + votesToAdd);
+}
+
+// دالة الحذف اللحظي للشخص
+function deleteCandidate(id) {
+  if(confirm("هل أنت متأكد من رغبتك في حذف هذا المتسابق نهائياً؟")) {
+    db.ref(`vibe_voting/${id}`).remove().then(() => {
+      alert("تم حذف المتسابق من كافة الصفحات بنجاح!");
+    });
   }
-
-  const voteRef = db.ref(`vibe_voting/${id}/votes`);
-  voteRef.transaction(currentVotes => {
-    return (currentVotes || 0) + votesToAdd;
-  }).then(() => {
-    alert(`تم بنجاح حقن وزيادة ${votesToAdd} صوت!`);
-  });
 }
 </script>
-
 </body>
 </html>
