@@ -48,6 +48,12 @@
       font-size: 16px;
     }
 
+    input[type="file"] {
+      background: #fdfdfd;
+      padding: 8px;
+      cursor: pointer;
+    }
+
     button {
       background: #222;
       color: white;
@@ -100,11 +106,6 @@
       color: #222;
       white-space: nowrap;
     }
-    
-    .inject-box button:hover {
-      background: #222;
-      color: white;
-    }
   </style>
 </head>
 <body>
@@ -112,14 +113,17 @@
 <div class="top-bar">⚙️ لوحة تحكم الإدارة والتصويت - VIBE</div>
 
 <div class="admin-container">
-  <h3>➕ إضافة خيار تصويت جديد</h3>
+  <h3>➕ إضافة خيار تصويت جديد (رفع من الجهاز)</h3>
   <input type="text" id="candidateName" placeholder="الاسم (مثال: المتسابق أحمد)" />
-  <input type="text" id="candidateImage" placeholder="رابط الصورة (URL)" />
+  
+  <label style="font-weight:bold; font-size:14px; color:#444;">اختر صورة من جهازك:</label>
+  <input type="file" id="candidateImageFile" accept="image/*" />
+  
   <button onclick="createNewItem()">إضافة ونشر في صفحة التصويت</button>
 </div>
 
 <div class="admin-container">
-  <h3>📊 التحكم في الأصوات الحالية للـ متسابقين</h3>
+  <h3>📊 التحكم وتزويد الأصوات (تخطي الحماية للأدمن)</h3>
   <div id="adminList">
     <!-- كروت التحكم بتظهر هنا -->
   </div>
@@ -142,28 +146,44 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// دالة إضافة شخص جديد للتصويت
+// دالة لمعالجة الصورة المرفوعة وتحويلها إلى نص Base64
 function createNewItem() {
   const name = document.getElementById("candidateName").value;
-  const image = document.getElementById("candidateImage").value;
+  const fileInput = document.getElementById("candidateImageFile");
+  const file = fileInput.files[0];
 
   if(!name) {
     alert("برجاء كتابة الاسم أولاً!");
     return;
   }
 
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const base64ImageText = e.target.result; // النص المشفر الخاص بالصورة
+      saveToDatabase(name, base64ImageText);
+    };
+    reader.readAsDataURL(file);
+  } else {
+    // إذا لم يتم رفع صورة، يتم تعيين صورة افتراضية
+    saveToDatabase(name, "https://via.placeholder.com/250");
+  }
+}
+
+// دالة الحفظ الفعلي في قاعدة البيانات
+function saveToDatabase(name, imageDataText) {
   db.ref("vibe_voting").push({
     name: name,
-    image: image || "https://via.placeholder.com/250",
+    image: imageDataText, // تُحفظ هنا كنص بالكامل
     votes: 0
   }).then(() => {
-    alert("تم الإضافة بنجاح وظهوره بصفحة التصويت!");
+    alert("تم رفع الصورة وإضافة المتسابق بنجاح!");
     document.getElementById("candidateName").value = "";
-    document.getElementById("candidateImage").value = "";
+    document.getElementById("candidateImageFile").value = "";
   });
 }
 
-// عرض المتسابقين في لوحة التحكم مع إمكانية التزويد
+// عرض المتسابقين في لوحة التحكم مع إمكانية التزويد بالرقم
 db.ref("vibe_voting").on("value", snapshot => {
   const adminList = document.getElementById("adminList");
   adminList.innerHTML = "";
@@ -197,7 +217,7 @@ db.ref("vibe_voting").on("value", snapshot => {
   });
 });
 
-// دالة تزويد الأصوات بالعدد المكتوب (مثلا 100 او 1000)
+// دالة تزويد الأصوات الخاصة بالأدمن (تخترق الحظر وتضيف أي عدد كـ 100 أو 1000)
 function addCustomVotes(id) {
   const inputAmount = document.getElementById(`amt-${id}`).value;
   const votesToAdd = parseInt(inputAmount);
@@ -211,7 +231,7 @@ function addCustomVotes(id) {
   voteRef.transaction(currentVotes => {
     return (currentVotes || 0) + votesToAdd;
   }).then(() => {
-    alert(`تم بنجاح زيادة ${votesToAdd} صوت للمتسابق!`);
+    alert(`تم بنجاح حقن وزيادة ${votesToAdd} صوت!`);
   });
 }
 </script>
