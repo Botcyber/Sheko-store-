@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title> لوحة تحكم التصويت - VIBE </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+      padding-bottom: 60px;
+    }
+
+    .top-bar {
+      background: #222;
+      padding: 15px;
+      color: white;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .admin-container {
+      max-width: 750px;
+      margin: 30px auto;
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,.1);
+    }
+
+    h3 {
+      margin-top: 0;
+      color: #222;
+      border-bottom: 2px solid #ffb700;
+      padding-bottom: 8px;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+
+    button {
+      background: #222;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      border: none;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #ffb700;
+      color: #222;
+    }
+
+    .control-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f1f1f1;
+      padding: 15px;
+      margin: 12px 0;
+      border-radius: 8px;
+      gap: 15px;
+    }
+
+    .control-item img {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      object-fit: cover;
+    }
+
+    .inject-box {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .inject-box input {
+      width: 90px;
+      text-align: center;
+      margin: 0;
+    }
+
+    .inject-box button {
+      margin: 0;
+      padding: 12px 15px;
+      width: auto;
+      background: #ffb700;
+      color: #222;
+      white-space: nowrap;
+    }
+    
+    .inject-box button:hover {
+      background: #222;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">⚙️ لوحة تحكم الإدارة والتصويت - VIBE</div>
+
+<div class="admin-container">
+  <h3>➕ إضافة خيار تصويت جديد</h3>
+  <input type="text" id="candidateName" placeholder="الاسم (مثال: المتسابق أحمد)" />
+  <input type="text" id="candidateImage" placeholder="رابط الصورة (URL)" />
+  <button onclick="createNewItem()">إضافة ونشر في صفحة التصويت</button>
+</div>
+
+<div class="admin-container">
+  <h3>📊 التحكم في الأصوات الحالية للـ متسابقين</h3>
+  <div id="adminList">
+    <!-- كروت التحكم بتظهر هنا -->
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+  authDomain: "sheko-store.firebaseapp.com",
+  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+  projectId: "sheko-store",
+  storageBucket: "sheko-store.appspot.com",
+  messagingSenderId: "113892775847",
+  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// دالة إضافة شخص جديد للتصويت
+function createNewItem() {
+  const name = document.getElementById("candidateName").value;
+  const image = document.getElementById("candidateImage").value;
+
+  if(!name) {
+    alert("برجاء كتابة الاسم أولاً!");
+    return;
+  }
+
+  db.ref("vibe_voting").push({
+    name: name,
+    image: image || "https://via.placeholder.com/250",
+    votes: 0
+  }).then(() => {
+    alert("تم الإضافة بنجاح وظهوره بصفحة التصويت!");
+    document.getElementById("candidateName").value = "";
+    document.getElementById("candidateImage").value = "";
+  });
+}
+
+// عرض المتسابقين في لوحة التحكم مع إمكانية التزويد
+db.ref("vibe_voting").on("value", snapshot => {
+  const adminList = document.getElementById("adminList");
+  adminList.innerHTML = "";
+
+  if(!snapshot.exists()){
+    adminList.innerHTML = "<div style='text-align:center;color:#777;'>لا يوجد متسابقين مضافين حالياً.</div>";
+    return;
+  }
+
+  snapshot.forEach(childSnapshot => {
+    const id = childSnapshot.key;
+    const data = childSnapshot.val();
+
+    const div = document.createElement("div");
+    div.className = "control-item";
+
+    div.innerHTML = `
+      <div style="display:flex; align-items:center; gap:12px;">
+        <img src="${data.image}">
+        <div>
+          <strong style="font-size:18px;">${data.name}</strong><br>
+          <span style="color:#666; font-size:14px;">الأصوات الحالية: <b style="color:#222;">${data.votes || 0}</b></span>
+        </div>
+      </div>
+      <div class="inject-box">
+        <input type="number" id="amt-${id}" value="100" placeholder="العدد">
+        <button onclick="addCustomVotes('${id}')">إضافة أصوات</button>
+      </div>
+    `;
+    adminList.appendChild(div);
+  });
+});
+
+// دالة تزويد الأصوات بالعدد المكتوب (مثلا 100 او 1000)
+function addCustomVotes(id) {
+  const inputAmount = document.getElementById(`amt-${id}`).value;
+  const votesToAdd = parseInt(inputAmount);
+
+  if(isNaN(votesToAdd) || votesToAdd <= 0) {
+    alert("برجاء إدخال رقم صحيح أعلى من 0");
+    return;
+  }
+
+  const voteRef = db.ref(`vibe_voting/${id}/votes`);
+  voteRef.transaction(currentVotes => {
+    return (currentVotes || 0) + votesToAdd;
+  }).then(() => {
+    alert(`تم بنجاح زيادة ${votesToAdd} صوت للمتسابق!`);
+  });
+}
+</script>
+
+</body>
+</html>
