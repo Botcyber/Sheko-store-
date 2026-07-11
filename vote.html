@@ -17,15 +17,21 @@
       100% { text-shadow: 0 0 6px #ffb700; }
     }
     .vote-container { max-width: 1000px; margin: 30px auto; padding: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; }
-    .vote-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,.08); text-align: center; padding-bottom: 20px; transition: transform 0.3s ease; }
+    
+    /* كارت التصويت مع إضافة شارة المركز */
+    .vote-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,.08); text-align: center; padding-bottom: 20px; transition: transform 0.3s ease; position: relative; }
     .vote-card:hover { transform: translateY(-5px); }
-    .candidate-img { width: 100%; height: 260px; object-fit: cover; }
+    
+    /* شارة الترتيب */
+    .rank-badge { position: absolute; top: 10px; right: 10px; background: rgba(0, 0, 0, 0.75); color: #ffb700; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; border: 1px solid #ffb700; z-index: 10; }
+    .rank-first { background: #ffb700 !important; color: #222 !important; font-size: 16px; box-shadow: 0 0 10px rgba(255,183,0,0.5); }
+
+    .candidate-img { width: 100%; height: 260px; object-fit: cover; background: #e0e0e0; }
     .candidate-name { font-size: 22px; font-weight: 800; padding: 15px 15px 5px; color: #222; }
     .vote-count { font-size: 26px; color: #ffb700; font-weight: bold; margin: 10px 0 15px; }
     .vote-btn { background: #222; color: white; border: none; padding: 12px 35px; font-size: 16px; font-weight: bold; border-radius: 25px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
     .vote-btn:hover { background: #ffb700; color: #222; }
     
-    /* شاشة إغلاق التصويت */
     .closed-msg { display: none; text-align: center; max-width: 600px; margin: 80px auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
     .closed-msg i { font-size: 60px; color: #ffb700; margin-bottom: 15px; }
     .closed-msg h2 { font-size: 28px; color: #222; margin: 10px 0; }
@@ -44,7 +50,6 @@
   </div>
 </div>
 
-<!-- رسالة إغلاق التصويت الافتراضية -->
 <div class="closed-msg" id="closedMessage">
   <i class="fa fa-clock"></i>
   <h2>تم الانتهاء من فترة التصويت</h2>
@@ -52,7 +57,7 @@
 </div>
 
 <div class="vote-container" id="voteBox">
-  <!-- تظهر كروت المتسابقين هنا -->
+  <!-- تظهر كروت المتسابقين هنا مرتبة تلقائياً -->
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -93,7 +98,7 @@ function logout() {
   });
 }
 
-// مراقبة حالة الإغلاق والفتح مع قائمة المشتركين معاً
+// جلب البيانات وترتيبها تلقائياً وسريعاً
 db.ref().on("value", mainSnapshot => {
   const settings = mainSnapshot.child("vibe_settings").val() || { status: "open" };
   const candidatesData = mainSnapshot.child("vibe_voting");
@@ -101,7 +106,6 @@ db.ref().on("value", mainSnapshot => {
   const voteBox = document.getElementById("voteBox");
   const closedMessage = document.getElementById("closedMessage");
 
-  // الفحص إذا كانت الإدارة أغلقت التصويت
   if (settings.status === "closed") {
     voteBox.style.display = "none";
     closedMessage.style.display = "block";
@@ -118,17 +122,36 @@ db.ref().on("value", mainSnapshot => {
     return;
   }
 
+  // تحويل البيانات إلى مصفوفة (Array) لتسهيل ترتيبها وسرعة معالجتها
+  let candidatesList = [];
   candidatesData.forEach(childSnapshot => {
-    const id = childSnapshot.key;
-    const data = childSnapshot.val();
+    candidatesList.push({
+      id: childSnapshot.key,
+      name: childSnapshot.val().name,
+      image: childSnapshot.val().image,
+      votes: childSnapshot.val().votes || 0
+    });
+  });
+
+  // ترتيب القائمة: الأصوات الأكثر أولاً (ترتيب تنازلي)
+  candidatesList.sort((a, b) => b.votes - a.votes);
+
+  // عرض كروت المتسابقين بعد الترتيب
+  candidatesList.forEach((candidate, index) => {
+    const position = index + 1; // الترتيب يبدأ من 1
+    
+    // تمييز المركز الأول بشارة ذهبية
+    const badgeClass = position === 1 ? "rank-badge rank-first" : "rank-badge";
+    const badgeText = position === 1 ? "🏆 المركز الأول" : `المركز ${position}`;
 
     const card = document.createElement("div");
     card.className = "vote-card";
     card.innerHTML = `
-      <img src="${data.image || 'https://via.placeholder.com/250'}" class="candidate-img">
-      <div class="candidate-name">${data.name}</div>
-      <div class="vote-count">🔥 <span>${data.votes || 0}</span> صوت</div>
-      <button class="vote-btn" onclick="castVote('${id}')">تـصـويـت <i class="fa fa-thumbs-up"></i></button>
+      <div class="${badgeClass}">${badgeText}</div>
+      <img src="${candidate.image || 'https://via.placeholder.com/250'}" class="candidate-img" loading="lazy">
+      <div class="candidate-name">${candidate.name}</div>
+      <div class="vote-count">🔥 <span>${candidate.votes}</span> صوت</div>
+      <button class="vote-btn" onclick="castVote('${candidate.id}')">تـصـويـت <i class="fa fa-thumbs-up"></i></button>
     `;
     voteBox.appendChild(card);
   });
