@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title> التصويت - VIBE </title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    crossorigin="anonymous" />
+
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      margin: 0;
+      background: #f1f1f1;
+    }
+
+    .top-bar {
+      background: #222;
+      padding: 15px 20px;
+      color: white;
+      text-align: center;
+    }
+
+    @keyframes glowTitle {
+      0% { text-shadow: 0 0 6px #ffb700; }
+      50% { text-shadow: 0 0 18px #ffd966; }
+      100% { text-shadow: 0 0 6px #ffb700; }
+    }
+
+    .vote-container {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 25px;
+    }
+
+    .vote-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0,0,0,.08);
+      text-align: center;
+      padding-bottom: 20px;
+      transition: transform 0.3s ease;
+    }
+
+    .vote-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .candidate-img {
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+    }
+
+    .candidate-name {
+      font-size: 22px;
+      font-weight: 800;
+      padding: 15px 15px 5px;
+      color: #222;
+    }
+
+    .vote-count {
+      font-size: 26px;
+      color: #ffb700;
+      font-weight: bold;
+      margin: 10px 0 15px;
+    }
+
+    .vote-btn {
+      background: #222;
+      color: white;
+      border: none;
+      padding: 12px 35px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+    .vote-btn:hover {
+      background: #ffb700;
+      color: #222;
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div style="
+    font-size:30px;
+    font-weight:bold;
+    color:#ffcc33;
+    letter-spacing:2px;
+    text-transform:uppercase;
+    text-shadow:0 0 8px rgba(255,204,0,.8);
+    animation:glowTitle 2s infinite ease-in-out;">
+    VIBE STUDIO - منصة التصويت
+  </div>
+</div>
+
+<div class="vote-container" id="voteBox">
+  <!-- الكروت بتظهر هنا تلقائياً من الـ Firebase -->
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+  authDomain: "sheko-store.firebaseapp.com",
+  databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+  projectId: "sheko-store",
+  storageBucket: "sheko-store.appspot.com",
+  messagingSenderId: "113892775847",
+  appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const voteBox = document.getElementById("voteBox");
+
+// قراءة بيانات التصويت وعرضها مباشرة
+db.ref("vibe_voting").on("value", snapshot => {
+  voteBox.innerHTML = ""; 
+  
+  if(!snapshot.exists()){
+    voteBox.innerHTML = "<div style='grid-column: 1/-1; text-align:center; font-size:18px; color:#666;'>لا توجد خيارات تصويت متاحة حالياً.</div>";
+    return;
+  }
+
+  snapshot.forEach(childSnapshot => {
+    const id = childSnapshot.key;
+    const data = childSnapshot.val();
+
+    const card = document.createElement("div");
+    card.className = "vote-card";
+
+    card.innerHTML = `
+      <img src="${data.image || 'https://via.placeholder.com/250'}" class="candidate-img">
+      <div class="candidate-name">${data.name}</div>
+      <div class="vote-count">🔥 <span>${data.votes || 0}</span> صوت</div>
+      <button class="vote-btn" onclick="castVote('${id}')">تـصـويـت <i class="fa fa-thumbs-up"></i></button>
+    `;
+    voteBox.appendChild(card);
+  });
+});
+
+// دالة تصويت المستخدم العادي (زيادة صووت واحد)
+function castVote(id) {
+  const voteRef = db.ref(`vibe_voting/${id}/votes`);
+  voteRef.transaction(currentVotes => {
+    return (currentVotes || 0) + 1;
+  });
+}
+</script>
+
+</body>
+</html>
