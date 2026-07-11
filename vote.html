@@ -18,9 +18,21 @@
 
     .top-bar {
       background: #222;
-      padding: 15px 20px;
+      padding: 10px 20px;
       color: white;
-      text-align: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .user-area button {
+      background: #ffb700;
+      color: #222;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
     }
 
     @keyframes glowTitle {
@@ -95,22 +107,24 @@
 
 <div class="top-bar">
   <div style="
-    font-size:30px;
+    font-size:24px;
     font-weight:bold;
     color:#ffcc33;
-    letter-spacing:2px;
-    text-transform:uppercase;
-    text-shadow:0 0 8px rgba(255,204,0,.8);
     animation:glowTitle 2s infinite ease-in-out;">
     VIBE STUDIO - منصة التصويت
+  </div>
+  <div class="user-area">
+    <span id="userEmail" style="margin-left: 10px; font-size: 14px;"></span>
+    <button onclick="logout()">خروج <i class="fa fa-sign-out-alt"></i></button>
   </div>
 </div>
 
 <div class="vote-container" id="voteBox">
-  <!-- الكروت بتظهر هنا تلقائياً من الـ Firebase -->
+  <!-- الكروت بتظهر هنا تلقائياً -->
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
 <script>
@@ -125,7 +139,24 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 const db = firebase.database();
+
+let currentUser = null;
+
+// التحقق من تسجيل الدخول بحسب كودك الأصلي
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    location.href = "index.html";
+  } else {
+    currentUser = user;
+    document.getElementById("userEmail").textContent = user.email;
+  }
+});
+
+function logout() {
+  auth.signOut().then(() => location.href = "index.html");
+}
 
 const voteBox = document.getElementById("voteBox");
 
@@ -155,11 +186,31 @@ db.ref("vibe_voting").on("value", snapshot => {
   });
 });
 
-// دالة تصويت المستخدم العادي (زيادة صووت واحد)
+// دالة تصويت تمنع التكرار بالإيميل (عبر الـ UID الحصري لكل مستخدم)
 function castVote(id) {
-  const voteRef = db.ref(`vibe_voting/${id}/votes`);
-  voteRef.transaction(currentVotes => {
-    return (currentVotes || 0) + 1;
+  if(!currentUser) return alert("يجب تسجيل الدخول أولاً!");
+
+  const userId = currentUser.uid;
+  const userVoteRef = db.ref(`vibe_votes_logs/${userId}`);
+
+  // التحقق أولاً إذا كان هذا المستخدم قد قام بالتصويت مسبقاً في المنصة كاملة
+  userVoteRef.once("value", snapshot => {
+    if(snapshot.exists()) {
+      alert("عذراً، لقد قمت بالتصويت بالفعل مسبقاً! لا يمكن التصويت أكثر من مرة.");
+    } else {
+      // 1. تسجيل أن المستخدم قام بالتصويت لمنع التكرار
+      userVoteRef.set({
+        votedFor: id,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+      }).then(() => {
+        // 2. زيادة تصويت الشخص بمقدار 1
+        const voteRef = db.ref(`vibe_voting/${id}/votes`);
+        voteRef.transaction(currentVotes => {
+          return (currentVotes || 0) + 1;
+        });
+        alert("تم تسجيل صوتك بنجاح! شكرًا لك.");
+      });
+    }
   });
 }
 </script>
