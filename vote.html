@@ -5,112 +5,37 @@
   <title> التصويت - VIBE </title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
 
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      margin: 0;
-      background: #f1f1f1;
-    }
-
-    .top-bar {
-      background: #222;
-      padding: 10px 20px;
-      color: white;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .user-area button {
-      background: #ffb700;
-      color: #222;
-      border: none;
-      padding: 8px 15px;
-      border-radius: 5px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
+    body { font-family: 'Cairo', sans-serif; margin: 0; background: #f1f1f1; }
+    .top-bar { background: #222; padding: 10px 20px; color: white; display: flex; justify-content: space-between; align-items: center; }
+    .user-area button { background: #ffb700; color: #222; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; }
     @keyframes glowTitle {
       0% { text-shadow: 0 0 6px #ffb700; }
       50% { text-shadow: 0 0 18px #ffd966; }
       100% { text-shadow: 0 0 6px #ffb700; }
     }
-
-    .vote-container {
-      max-width: 1000px;
-      margin: 30px auto;
-      padding: 10px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 25px;
-    }
-
-    .vote-card {
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 15px rgba(0,0,0,.08);
-      text-align: center;
-      padding-bottom: 20px;
-      transition: transform 0.3s ease;
-    }
-
-    .vote-card:hover {
-      transform: translateY(-5px);
-    }
-
-    .candidate-img {
-      width: 100%;
-      height: 260px;
-      object-fit: cover;
-    }
-
-    .candidate-name {
-      font-size: 22px;
-      font-weight: 800;
-      padding: 15px 15px 5px;
-      color: #222;
-    }
-
-    .vote-count {
-      font-size: 26px;
-      color: #ffb700;
-      font-weight: bold;
-      margin: 10px 0 15px;
-    }
-
-    .vote-btn {
-      background: #222;
-      color: white;
-      border: none;
-      padding: 12px 35px;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 25px;
-      cursor: pointer;
-      transition: 0.3s;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-    }
-
-    .vote-btn:hover {
-      background: #ffb700;
-      color: #222;
-    }
+    .vote-container { max-width: 1000px; margin: 30px auto; padding: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; }
+    .vote-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,.08); text-align: center; padding-bottom: 20px; transition: transform 0.3s ease; }
+    .vote-card:hover { transform: translateY(-5px); }
+    .candidate-img { width: 100%; height: 260px; object-fit: cover; }
+    .candidate-name { font-size: 22px; font-weight: 800; padding: 15px 15px 5px; color: #222; }
+    .vote-count { font-size: 26px; color: #ffb700; font-weight: bold; margin: 10px 0 15px; }
+    .vote-btn { background: #222; color: white; border: none; padding: 12px 35px; font-size: 16px; font-weight: bold; border-radius: 25px; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+    .vote-btn:hover { background: #ffb700; color: #222; }
+    
+    /* شاشة إغلاق التصويت */
+    .closed-msg { display: none; text-align: center; max-width: 600px; margin: 80px auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .closed-msg i { font-size: 60px; color: #ffb700; margin-bottom: 15px; }
+    .closed-msg h2 { font-size: 28px; color: #222; margin: 10px 0; }
+    .closed-msg p { font-size: 18px; color: #666; }
   </style>
 </head>
 <body>
 
 <div class="top-bar">
-  <div style="
-    font-size:24px;
-    font-weight:bold;
-    color:#ffcc33;
-    animation:glowTitle 2s infinite ease-in-out;">
+  <div style="font-size:24px; font-weight:bold; color:#ffcc33; animation:glowTitle 2s infinite ease-in-out;">
     VIBE STUDIO - منصة التصويت
   </div>
   <div class="user-area">
@@ -119,8 +44,15 @@
   </div>
 </div>
 
+<!-- رسالة إغلاق التصويت الافتراضية -->
+<div class="closed-msg" id="closedMessage">
+  <i class="fa fa-clock"></i>
+  <h2>تم الانتهاء من فترة التصويت</h2>
+  <p>ترقبو القادم...</p>
+</div>
+
 <div class="vote-container" id="voteBox">
-  <!-- الكروت بتظهر هنا تلقائياً -->
+  <!-- تظهر كروت المتسابقين هنا -->
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -144,10 +76,9 @@ const db = firebase.database();
 
 let currentUser = null;
 
-// التحقق من تسجيل الدخول بحسب كودك الأصلي
 auth.onAuthStateChanged(user => {
   if (!user) {
-    location.href = "index.html";
+    window.location.replace("index.html");
   } else {
     currentUser = user;
     document.getElementById("userEmail").textContent = user.email;
@@ -155,27 +86,44 @@ auth.onAuthStateChanged(user => {
 });
 
 function logout() {
-  auth.signOut().then(() => location.href = "index.html");
+  auth.signOut().then(() => {
+    window.location.replace("index.html");
+  }).catch(() => {
+    window.location.href = "index.html";
+  });
 }
 
-const voteBox = document.getElementById("voteBox");
+// مراقبة حالة الإغلاق والفتح مع قائمة المشتركين معاً
+db.ref().on("value", mainSnapshot => {
+  const settings = mainSnapshot.child("vibe_settings").val() || { status: "open" };
+  const candidatesData = mainSnapshot.child("vibe_voting");
+  
+  const voteBox = document.getElementById("voteBox");
+  const closedMessage = document.getElementById("closedMessage");
 
-// قراءة بيانات التصويت وعرضها مباشرة
-db.ref("vibe_voting").on("value", snapshot => {
+  // الفحص إذا كانت الإدارة أغلقت التصويت
+  if (settings.status === "closed") {
+    voteBox.style.display = "none";
+    closedMessage.style.display = "block";
+    return;
+  } else {
+    voteBox.style.display = "grid";
+    closedMessage.style.display = "none";
+  }
+
   voteBox.innerHTML = ""; 
   
-  if(!snapshot.exists()){
+  if(!candidatesData.exists()){
     voteBox.innerHTML = "<div style='grid-column: 1/-1; text-align:center; font-size:18px; color:#666;'>لا توجد خيارات تصويت متاحة حالياً.</div>";
     return;
   }
 
-  snapshot.forEach(childSnapshot => {
+  candidatesData.forEach(childSnapshot => {
     const id = childSnapshot.key;
     const data = childSnapshot.val();
 
     const card = document.createElement("div");
     card.className = "vote-card";
-
     card.innerHTML = `
       <img src="${data.image || 'https://via.placeholder.com/250'}" class="candidate-img">
       <div class="candidate-name">${data.name}</div>
@@ -186,34 +134,26 @@ db.ref("vibe_voting").on("value", snapshot => {
   });
 });
 
-// دالة تصويت تمنع التكرار بالإيميل (عبر الـ UID الحصري لكل مستخدم)
 function castVote(id) {
   if(!currentUser) return alert("يجب تسجيل الدخول أولاً!");
 
   const userId = currentUser.uid;
   const userVoteRef = db.ref(`vibe_votes_logs/${userId}`);
 
-  // التحقق أولاً إذا كان هذا المستخدم قد قام بالتصويت مسبقاً في المنصة كاملة
   userVoteRef.once("value", snapshot => {
     if(snapshot.exists()) {
-      alert("عذراً، لقد قمت بالتصويت بالفعل مسبقاً! لا يمكن التصويت أكثر من مرة.");
+      alert("عذراً، لقد قمت بالتصويت بالفعل مسبقاً!");
     } else {
-      // 1. تسجيل أن المستخدم قام بالتصويت لمنع التكرار
       userVoteRef.set({
         votedFor: id,
         timestamp: firebase.database.ServerValue.TIMESTAMP
       }).then(() => {
-        // 2. زيادة تصويت الشخص بمقدار 1
-        const voteRef = db.ref(`vibe_voting/${id}/votes`);
-        voteRef.transaction(currentVotes => {
-          return (currentVotes || 0) + 1;
-        });
-        alert("تم تسجيل صوتك بنجاح! شكرًا لك.");
+        db.ref(`vibe_voting/${id}/votes`).transaction(currentVotes => (currentVotes || 0) + 1);
+        alert("تم تسجيل صوتك بنجاح!");
       });
     }
   });
 }
 </script>
-
 </body>
 </html>
