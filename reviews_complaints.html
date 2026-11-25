@@ -22,16 +22,18 @@
       overflow-x: hidden;
     }
 
-    /* خلفية اللوجو الشفافة للصفحة بالكامل */
+    /* تغطي الشاشة كلها وتبقى موجودة علطول خلف الكلام */
     body::before {
       content: "";
       position: fixed;
       inset: 0;
-      background-image: var(--bg-logo, none);
+      width: 100vw;
+      height: 100vh;
+      background-image: var(--full-bg-image, none);
       background-repeat: no-repeat;
       background-position: center center;
-      background-size: min(620px, 85vw);
-      opacity: 0.14;
+      background-size: cover;
+      opacity: 0.16;
       pointer-events: none;
       z-index: 0;
     }
@@ -41,12 +43,12 @@
       z-index: 1;
       max-width: 900px;
       margin: auto;
-      background: rgba(255, 255, 255, 0.84);
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
       padding: 30px 40px;
       border-radius: 18px;
-      border: 1px solid rgba(25, 118, 210, 0.16);
+      border: 1px solid rgba(25, 118, 210, 0.18);
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
       animation: fadeInUp 0.8s ease forwards;
     }
@@ -73,40 +75,6 @@
       margin: 0;
     }
 
-    .bg-upload-bar {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
-      margin-top: 14px;
-      flex-wrap: wrap;
-    }
-
-    .bg-upload-btn {
-      background: rgba(25, 118, 210, 0.1);
-      color: #1976d2;
-      border: 1.5px dashed #1976d2;
-      border-radius: 10px;
-      padding: 7px 14px;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: none;
-      margin-top: 0;
-    }
-
-    .bg-upload-btn:hover {
-      background: rgba(25, 118, 210, 0.18);
-      transform: none;
-      box-shadow: none;
-    }
-
-    #bgStatus {
-      font-size: 12px;
-      color: #2e7d32;
-      font-weight: 600;
-    }
-
     label {
       font-weight: 600;
       margin-top: 15px;
@@ -119,7 +87,7 @@
       margin-top: 8px;
       border-radius: 10px;
       border: 1.8px solid #90caf9;
-      background: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.92);
       font-size: 16px;
       font-family: 'Cairo', sans-serif;
       resize: vertical;
@@ -289,12 +257,6 @@
     <div class="clinic-header">
       <h2 id="pageTitle">11 Eleven DENTAL CLINIC</h2>
       <p class="clinic-address" id="clinicAddress">📍 المهندسين - 8 شارع جامعة الدول قبل فندق نبيلة</p>
-
-      <div class="bg-upload-bar">
-        <label for="bgLogoInput" class="bg-upload-btn" id="btnUploadBg">🖼️ حفظ صورة الخلفية</label>
-        <input type="file" id="bgLogoInput" accept="image/*" style="display: none;" />
-        <span id="bgStatus"></span>
-      </div>
     </div>
 
     <label id="labelName" for="reviewerName">الاسم:</label>
@@ -325,6 +287,12 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <script>
+    // الصق هنا كود الصورة Base64 (الذي يبدأ بـ data:image/...) ليبقى مدمجاً وتلقائياً في الشاشة كلها
+    const EMBEDDED_BG_IMAGE = "ضع_كود_الصورة_هنا";
+    if (EMBEDDED_BG_IMAGE && EMBEDDED_BG_IMAGE !== "ضع_كود_الصورة_هنا") {
+      document.body.style.setProperty("--full-bg-image", `url("${EMBEDDED_BG_IMAGE}")`);
+    }
+
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -342,9 +310,6 @@
       ar: {
         pageTitle: "11 Eleven DENTAL CLINIC",
         clinicAddress: "📍 المهندسين - 8 شارع جامعة الدول قبل فندق نبيلة",
-        btnUploadBg: "🖼️ حفظ صورة الخلفية",
-        bgSaved: "✅ تم حفظ صورة الخلفية",
-        bgError: "❌ فشل حفظ الصورة",
         labelName: "الاسم:",
         namePlaceholder: "اكتب اسمك هنا...",
         labelStars: "اختر عدد النجوم:",
@@ -359,9 +324,6 @@
       en: {
         pageTitle: "11 Eleven DENTAL CLINIC",
         clinicAddress: "📍 Mohandessin - 8 Gameat El Dowal St., before Nabila Hotel",
-        btnUploadBg: "🖼️ Save Background Image",
-        bgSaved: "✅ Background image saved",
-        bgError: "❌ Failed to save image",
         labelName: "Name:",
         namePlaceholder: "Enter your name...",
         labelStars: "Select rating:",
@@ -380,7 +342,6 @@
       document.body.dir = lang === "ar" ? "rtl" : "ltr";
       document.getElementById("pageTitle").innerText = t[lang].pageTitle;
       document.getElementById("clinicAddress").innerText = t[lang].clinicAddress;
-      document.getElementById("btnUploadBg").innerText = t[lang].btnUploadBg;
       document.getElementById("labelName").innerText = t[lang].labelName;
       document.getElementById("reviewerName").placeholder = t[lang].namePlaceholder;
       document.getElementById("labelStars").innerText = t[lang].labelStars;
@@ -391,42 +352,6 @@
     }
 
     applyLang(localStorage.getItem("lang") || "ar");
-
-    // تطبيق وحفظ صورة الخلفية بنفس أسلوب Base64 في Firebase
-    function applyBackgroundImage(base64) {
-      if (!base64) return;
-      document.body.style.setProperty("--bg-logo", `url("${base64}")`);
-      localStorage.setItem("clinicBgLogo", base64);
-    }
-
-    // عرض سريع من الكاش ثم مزامنة من Firebase
-    applyBackgroundImage(localStorage.getItem("clinicBgLogo"));
-    db.ref("clinic/logoImage").on("value", snap => {
-      if (snap.exists()) {
-        applyBackgroundImage(snap.val());
-      }
-    });
-
-    document.getElementById("bgLogoInput").addEventListener("change", function(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const lang = localStorage.getItem("lang") || "ar";
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const base64Image = e.target.result;
-        applyBackgroundImage(base64Image);
-
-        db.ref("clinic/logoImage").set(base64Image)
-          .then(() => {
-            document.getElementById("bgStatus").textContent = t[lang].bgSaved;
-          })
-          .catch(() => {
-            document.getElementById("bgStatus").textContent = t[lang].bgError;
-          });
-      };
-      reader.readAsDataURL(file);
-    });
 
     let selectedStars = 0;
     const stars = document.querySelectorAll("#starRating span");
