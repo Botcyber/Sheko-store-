@@ -22,14 +22,14 @@
       overflow-x: hidden;
     }
 
-    /* تغطي الشاشة كلها وتبقى موجودة علطول خلف الكلام */
+    /* تغطي الشاشة كلها وتبقى شفافة خلف الكلام */
     body::before {
       content: "";
       position: fixed;
       inset: 0;
       width: 100vw;
       height: 100vh;
-      background-image: var(--full-bg-image, none);
+      background-image: var(--clinic-bg, none);
       background-repeat: no-repeat;
       background-position: center center;
       background-size: cover;
@@ -287,12 +287,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <script>
-    // الصق هنا كود الصورة Base64 (الذي يبدأ بـ data:image/...) ليبقى مدمجاً وتلقائياً في الشاشة كلها
-    const EMBEDDED_BG_IMAGE = "ضع_كود_الصورة_هنا";
-    if (EMBEDDED_BG_IMAGE && EMBEDDED_BG_IMAGE !== "ضع_كود_الصورة_هنا") {
-      document.body.style.setProperty("--full-bg-image", `url("${EMBEDDED_BG_IMAGE}")`);
-    }
-
     const firebaseConfig = {
       apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
       authDomain: "sheko-store.firebaseapp.com",
@@ -305,6 +299,21 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.database();
+
+    function setClinicBackground(imgData) {
+      if (imgData) {
+        document.body.style.setProperty("--clinic-bg", `url("${imgData}")`);
+        localStorage.setItem("clinicBgLogo", imgData);
+      } else {
+        document.body.style.setProperty("--clinic-bg", "none");
+        localStorage.removeItem("clinicBgLogo");
+      }
+    }
+
+    setClinicBackground(localStorage.getItem("clinicBgLogo"));
+    db.ref("clinic/logoImage").on("value", snap => {
+      setClinicBackground(snap.exists() ? snap.val() : null);
+    });
 
     const t = {
       ar: {
