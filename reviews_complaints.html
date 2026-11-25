@@ -68,7 +68,16 @@
       color: #37474f;
       font-size: 15px;
       font-weight: 600;
+      margin: 0 0 6px 0;
+    }
+
+    .clinic-phone {
+      color: #1565c0;
+      font-size: 15px;
+      font-weight: 700;
       margin: 0;
+      direction: ltr;
+      display: inline-block;
     }
 
     label {
@@ -236,6 +245,49 @@
       background: #b71c1c;
     }
 
+    /* ملخص النجوم أسفل التقييمات */
+    .rating-summary {
+      margin-top: 28px;
+      padding-top: 18px;
+      border-top: 1.5px solid rgba(25, 118, 210, 0.25);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .summary-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #1b263b;
+    }
+
+    .summary-badge {
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .badge-bad {
+      background: rgba(229, 57, 53, 0.16);
+      color: #c62828;
+    }
+
+    .badge-good {
+      background: rgba(25, 118, 210, 0.16);
+      color: #1565c0;
+    }
+
+    .badge-excellent {
+      background: rgba(46, 125, 50, 0.18);
+      color: #2e7d32;
+    }
+
     @keyframes fadeInUp {
       0% { opacity: 0; transform: translateY(40px); }
       100% { opacity: 1; transform: translateY(0); }
@@ -250,8 +302,9 @@
 <body>
   <div class="container">
     <div class="clinic-header">
-      <h2 id="pageTitle"> Eleven DENTAL CLINIC 11</h2>
+      <h2 id="pageTitle">11 Eleven DENTAL CLINIC</h2>
       <p class="clinic-address" id="clinicAddress">📍 المهندسين - 8 شارع جامعة الدول قبل فندق نبيلة</p>
+      <p class="clinic-phone" id="clinicPhone">📞 +20 155 499 9954</p>
     </div>
 
     <label id="labelName" for="reviewerName">الاسم:</label>
@@ -274,6 +327,7 @@
     <div class="section">
       <h2 id="reviewsTitle">⭐ تقييمات المستخدمين</h2>
       <div id="reviewsList">جار التحميل...</div>
+      <div id="ratingSummary" class="rating-summary" style="display: none;"></div>
     </div>
   </div>
 
@@ -312,8 +366,9 @@
 
     const t = {
       ar: {
-        pageTitle: " Eleven DENTAL CLINIC 11",
+        pageTitle: "11 Eleven DENTAL CLINIC",
         clinicAddress: "📍 المهندسين - 8 شارع جامعة الدول قبل فندق نبيلة",
+        clinicPhone: "📞 +20 155 499 9954",
         labelName: "الاسم:",
         namePlaceholder: "اكتب اسمك هنا...",
         labelStars: "اختر عدد النجوم:",
@@ -323,11 +378,18 @@
         reviewsTitle: "⭐ تقييمات المستخدمين",
         loading: "جار التحميل...",
         noReviews: "لا توجد تقييمات بعد.",
-        missingFields: "من فضلك اكتب اسمك، واختر النجوم، واكتب تعليقك."
+        missingFields: "من فضلك اكتب اسمك، واختر النجوم، واكتب تعليقك.",
+        totalStarsLabel: "مجموع النجوم:",
+        avgLabel: "المتوسط:",
+        percentLabel: "النسبة المئوية:",
+        bad: "سيئ",
+        good: "جيد",
+        excellent: "ممتاز"
       },
       en: {
-        pageTitle: " Eleven DENTAL CLINIC 11",
+        pageTitle: "11 Eleven DENTAL CLINIC",
         clinicAddress: "📍 Mohandessin - 8 Gameat El Dowal St., before Nabila Hotel",
+        clinicPhone: "📞 +20 155 499 9954",
         labelName: "Name:",
         namePlaceholder: "Enter your name...",
         labelStars: "Select rating:",
@@ -337,7 +399,13 @@
         reviewsTitle: "⭐ User Reviews",
         loading: "Loading...",
         noReviews: "No reviews yet.",
-        missingFields: "Please enter your name, select stars, and write a comment."
+        missingFields: "Please enter your name, select stars, and write a comment.",
+        totalStarsLabel: "Total Stars:",
+        avgLabel: "Average:",
+        percentLabel: "Percentage:",
+        bad: "Bad",
+        good: "Good",
+        excellent: "Excellent"
       }
     };
 
@@ -346,6 +414,7 @@
       document.body.dir = lang === "ar" ? "rtl" : "ltr";
       document.getElementById("pageTitle").innerText = t[lang].pageTitle;
       document.getElementById("clinicAddress").innerText = t[lang].clinicAddress;
+      document.getElementById("clinicPhone").innerText = t[lang].clinicPhone;
       document.getElementById("labelName").innerText = t[lang].labelName;
       document.getElementById("reviewerName").placeholder = t[lang].namePlaceholder;
       document.getElementById("labelStars").innerText = t[lang].labelStars;
@@ -399,20 +468,59 @@
     };
 
     const reviewsContainer = document.getElementById("reviewsList");
+    const summaryContainer = document.getElementById("ratingSummary");
+
+    function renderSummary(reviewsArray, lang) {
+      if (!reviewsArray.length) {
+        summaryContainer.style.display = "none";
+        summaryContainer.innerHTML = "";
+        return;
+      }
+
+      const count = reviewsArray.length;
+      const totalStars = reviewsArray.reduce((sum, item) => sum + (Number(item.stars) || 0), 0);
+      const avg = totalStars / count;
+      const percentage = ((totalStars / (count * 5)) * 100).toFixed(1);
+
+      let statusText = t[lang].good;
+      let badgeClass = "badge-good";
+
+      if (avg < 1) {
+        statusText = t[lang].bad;
+        badgeClass = "badge-bad";
+      } else if (avg >= 4) {
+        statusText = t[lang].excellent;
+        badgeClass = "badge-excellent";
+      }
+
+      summaryContainer.style.display = "flex";
+      summaryContainer.innerHTML = `
+        <div class="summary-stats">
+          <span>★ ${t[lang].totalStarsLabel} ${totalStars} / ${count * 5}</span>
+          <span>📊 ${t[lang].avgLabel} ${avg.toFixed(1)}</span>
+          <span>📈 ${t[lang].percentLabel} ${percentage}%</span>
+        </div>
+        <div class="summary-badge ${badgeClass}">${statusText}</div>
+      `;
+    }
 
     function loadReviews() {
       const lang = localStorage.getItem("lang") || "ar";
       reviewsContainer.innerText = t[lang].loading;
+      summaryContainer.style.display = "none";
 
       db.ref("reviews").on("value", async snapshot => {
         reviewsContainer.innerHTML = "";
         if (!snapshot.exists()) {
           reviewsContainer.innerText = t[lang].noReviews;
+          renderSummary([], lang);
           return;
         }
 
         const entries = Object.entries(snapshot.val())
           .sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp));
+
+        renderSummary(entries.map(([, val]) => val), lang);
 
         for (const [key, r] of entries) {
           const div = document.createElement("div");
