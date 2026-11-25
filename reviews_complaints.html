@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>التقييمات</title>
+  <title>11 Eleven DENTAL CLINIC - التقييمات</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
     body {
       font-family: 'Cairo', sans-serif;
       background: #e3f2fd;
@@ -22,12 +22,24 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       animation: fadeInUp 0.8s ease forwards;
     }
+    .clinic-header {
+      text-align: center;
+      margin-bottom: 25px;
+      padding-bottom: 18px;
+      border-bottom: 2px solid #e3f2fd;
+    }
     h2 {
       text-align: center;
       color: #1976d2;
-      margin-bottom: 25px;
+      margin: 0 0 8px 0;
       font-weight: 700;
-      letter-spacing: 1.2px;
+      letter-spacing: 0.5px;
+    }
+    .clinic-address {
+      color: #455a64;
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0;
     }
     label {
       font-weight: 600;
@@ -36,11 +48,13 @@
     }
     input[type="text"], textarea {
       width: 100%;
+      box-sizing: border-box;
       padding: 12px 15px;
       margin-top: 8px;
       border-radius: 10px;
       border: 1.8px solid #90caf9;
       font-size: 16px;
+      font-family: 'Cairo', sans-serif;
       resize: vertical;
       transition: border-color 0.3s ease;
     }
@@ -55,8 +69,9 @@
       font-weight: 700;
       border: none;
       border-radius: 12px;
-      padding: 12px 15px;
+      padding: 12px 18px;
       font-size: 16px;
+      font-family: 'Cairo', sans-serif;
       margin-top: 20px;
       cursor: pointer;
       transition: background-color 0.3s ease;
@@ -110,7 +125,7 @@
     }
     .review {
       background: #f1f9ff;
-      border-left: 6px solid #1976d2;
+      border-right: 6px solid #1976d2;
       padding: 15px 20px;
       margin-bottom: 20px;
       border-radius: 12px;
@@ -120,6 +135,10 @@
       flex-direction: column;
       gap: 8px;
       animation: fadeIn 0.8s ease forwards;
+    }
+    body[dir="ltr"] .review {
+      border-right: none;
+      border-left: 6px solid #1976d2;
     }
     .stars-review span {
       font-size: 22px;
@@ -132,6 +151,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      font-weight: 700;
     }
     .review-header img {
       width: 40px;
@@ -139,15 +159,21 @@
       border-radius: 50%;
       object-fit: cover;
     }
+    .meta {
+      font-size: 13px;
+      color: #666;
+    }
     .delete-btn {
       background: #e53935;
       color: white;
       border: none;
       border-radius: 8px;
-      padding: 4px 8px;
+      padding: 4px 10px;
       font-size: 12px;
       cursor: pointer;
       align-self: flex-start;
+      margin-top: 6px;
+      box-shadow: none;
     }
     .delete-btn:hover {
       background: #b71c1c;
@@ -164,7 +190,14 @@
 </head>
 <body>
   <div class="container">
-    <h2 id="pageTitle">💬 التقييمات</h2>
+    <div class="clinic-header">
+      <h2 id="pageTitle">🦷 11 Eleven DENTAL CLINIC</h2>
+      <p class="clinic-address" id="clinicAddress">📍 المهندسين - 8 شارع جامعة الدول قبل فندق نبيلة</p>
+    </div>
+
+    <label id="labelName" for="reviewerName">الاسم:</label>
+    <input type="text" id="reviewerName" placeholder="اكتب اسمك هنا..." />
+
     <label id="labelStars">اختر عدد النجوم:</label>
     <div class="stars" id="starRating">
       <span data-value="1">&#9733;</span>
@@ -173,7 +206,10 @@
       <span data-value="4">&#9733;</span>
       <span data-value="5">&#9733;</span>
     </div>
+
+    <label id="labelReview" for="reviewText">التعليق:</label>
     <textarea id="reviewText" placeholder="اكتب تعليقك هنا..." rows="4"></textarea>
+
     <button id="btnSubmit">إرسال التقييم</button>
 
     <div class="section">
@@ -202,124 +238,144 @@
 
     const t = {
       ar: {
-        pageTitle: "💬 التقييمات",
+        pageTitle: "🦷 11 Eleven DENTAL CLINIC",
+        clinicAddress: "📍 المهندسين - 8 شارع جامعة الدول قبل فندق نبيلة",
+        labelName: "الاسم:",
+        namePlaceholder: "اكتب اسمك هنا...",
         labelStars: "اختر عدد النجوم:",
+        labelReview: "التعليق:",
         reviewPlaceholder: "اكتب تعليقك هنا...",
         btnSubmit: "إرسال التقييم",
         reviewsTitle: "⭐ تقييمات المستخدمين",
         loading: "جار التحميل...",
-        noReviews: "لا توجد تقييمات بعد."
+        noReviews: "لا توجد تقييمات بعد.",
+        missingFields: "من فضلك اكتب اسمك، واختر النجوم، واكتب تعليقك."
       },
       en: {
-        pageTitle: "💬 Reviews",
+        pageTitle: "🦷 11 Eleven DENTAL CLINIC",
+        clinicAddress: "📍 Mohandessin - 8 Gameat El Dowal St., before Nabila Hotel",
+        labelName: "Name:",
+        namePlaceholder: "Enter your name...",
         labelStars: "Select rating:",
+        labelReview: "Review:",
         reviewPlaceholder: "Write your comment...",
         btnSubmit: "Submit Review",
         reviewsTitle: "⭐ User Reviews",
         loading: "Loading...",
-        noReviews: "No reviews yet."
+        noReviews: "No reviews yet.",
+        missingFields: "Please enter your name, select stars, and write a comment."
       }
     };
 
     function applyLang(lang){
       localStorage.setItem("lang", lang);
-      document.body.dir = lang==="ar"?"rtl":"ltr";
+      document.body.dir = lang === "ar" ? "rtl" : "ltr";
       document.getElementById("pageTitle").innerText = t[lang].pageTitle;
+      document.getElementById("clinicAddress").innerText = t[lang].clinicAddress;
+      document.getElementById("labelName").innerText = t[lang].labelName;
+      document.getElementById("reviewerName").placeholder = t[lang].namePlaceholder;
       document.getElementById("labelStars").innerText = t[lang].labelStars;
+      document.getElementById("labelReview").innerText = t[lang].labelReview;
       document.getElementById("reviewText").placeholder = t[lang].reviewPlaceholder;
       document.getElementById("btnSubmit").innerText = t[lang].btnSubmit;
       document.getElementById("reviewsTitle").innerText = t[lang].reviewsTitle;
     }
 
-    applyLang(localStorage.getItem("lang")||"ar");
+    applyLang(localStorage.getItem("lang") || "ar");
 
-    let selectedStars=0;
+    let selectedStars = 0;
     const stars = document.querySelectorAll("#starRating span");
-    stars.forEach(star=>{
-      star.addEventListener("click", ()=>{
-        selectedStars=parseInt(star.dataset.value);
-        stars.forEach((s,i)=> s.classList.toggle("active", i<selectedStars));
+    stars.forEach(star => {
+      star.addEventListener("click", () => {
+        selectedStars = parseInt(star.dataset.value);
+        stars.forEach((s, i) => s.classList.toggle("active", i < selectedStars));
       });
     });
 
     let currentUid = null;
     let currentUser = null;
-    auth.onAuthStateChanged(user=>{
-      if(!user) return location.href="index.html";
+    auth.onAuthStateChanged(user => {
+      if (!user) return location.href = "index.html";
       currentUid = user.uid;
       currentUser = user;
       loadReviews();
     });
 
-    document.getElementById("btnSubmit").onclick = ()=>{
+    document.getElementById("btnSubmit").onclick = () => {
+      const lang = localStorage.getItem("lang") || "ar";
+      const name = document.getElementById("reviewerName").value.trim();
       const text = document.getElementById("reviewText").value.trim();
-      if(!selectedStars || !text) return alert("اختر النجوم واكتب تعليق");
+      if (!name || !selectedStars || !text) {
+        return alert(t[lang].missingFields);
+      }
       const data = {
         uid: currentUid,
+        name: name,
         stars: selectedStars,
         text: text,
         timestamp: new Date().toISOString()
       };
       const key = db.ref().child("reviews").push().key;
-      db.ref("reviews/"+key).set(data);
-      document.getElementById("reviewText").value="";
-      selectedStars=0;
-      stars.forEach(s=> s.classList.remove("active"));
+      db.ref("reviews/" + key).set(data);
+
+      document.getElementById("reviewerName").value = "";
+      document.getElementById("reviewText").value = "";
+      selectedStars = 0;
+      stars.forEach(s => s.classList.remove("active"));
     };
 
     const reviewsContainer = document.getElementById("reviewsList");
 
-    function loadReviews(){
-  const lang = localStorage.getItem("lang")||"ar";
-  reviewsContainer.innerText = t[lang].loading;
+    function loadReviews() {
+      const lang = localStorage.getItem("lang") || "ar";
+      reviewsContainer.innerText = t[lang].loading;
 
-  db.ref("reviews").on("value", async snapshot=>{
-    reviewsContainer.innerHTML="";
-    if(!snapshot.exists()){ reviewsContainer.innerText = t[lang].noReviews; return; }
+      db.ref("reviews").on("value", async snapshot => {
+        reviewsContainer.innerHTML = "";
+        if (!snapshot.exists()) {
+          reviewsContainer.innerText = t[lang].noReviews;
+          return;
+        }
 
-    // تحويل البيانات لمصفوفة وترتيبها حسب timestamp (الأحدث أولًا)
-    const entries = Object.entries(snapshot.val())
-      .sort((a,b)=> new Date(b[1].timestamp) - new Date(a[1].timestamp));
+        const entries = Object.entries(snapshot.val())
+          .sort((a, b) => new Date(b[1].timestamp) - new Date(a[1].timestamp));
 
-    for(const [key, r] of entries){
-      const div = document.createElement("div");
-      div.className="review";
+        for (const [key, r] of entries) {
+          const div = document.createElement("div");
+          div.className = "review";
 
-      // جلب اسم وصورة المستخدم من قاعدة البيانات users/UID
-      const userSnap = await db.ref("users/"+r.uid).once("value");
-      const userData = userSnap.val() || {};
-      const name = userData.username || '---';
-      const photo = userData.profileImage || 'https://via.placeholder.com/40';
+          const userSnap = await db.ref("users/" + r.uid).once("value");
+          const userData = userSnap.val() || {};
+          const name = r.name || userData.username || "---";
+          const photo = userData.profileImage || "https://via.placeholder.com/40";
 
-      // نجوم التقييم
-      let starsHTML="";
-      for(let i=1;i<=5;i++){
-        starsHTML += `<span class="${i<=r.stars?'active':''}">&#9733;</span>`;
-      }
+          let starsHTML = "";
+          for (let i = 1; i <= 5; i++) {
+            starsHTML += `<span class="${i <= r.stars ? 'active' : ''}">&#9733;</span>`;
+          }
 
-      div.innerHTML = `
-        <div class="review-header">
-          <img src="${photo}"/>
-          <span>${name}</span>
-        </div>
-        <div class="stars-review">${starsHTML}</div>
-        <p>${r.text}</p>
-        <div class="meta">${new Date(r.timestamp).toLocaleString(lang==="ar"?"ar-EG":"en-US")}</div>
-      `;
+          div.innerHTML = `
+            <div class="review-header">
+              <img src="${photo}" alt="${name}" />
+              <span>${name}</span>
+            </div>
+            <div class="stars-review">${starsHTML}</div>
+            <p>${r.text}</p>
+            <div class="meta">${new Date(r.timestamp).toLocaleString(lang === "ar" ? "ar-EG" : "en-US")}</div>
+          `;
 
-      if(currentUid==="mlifDgEAkKMaOeuUq63cs5NAkV93"){
-        const btn=document.createElement("button");
-        btn.className="delete-btn";
-        btn.innerText = lang==="ar"?"🗑 حذف":"🗑 Delete";
-        btn.onclick = ()=> db.ref("reviews/"+key).remove();
-        div.appendChild(btn);
-      }
+          if (currentUid === "mlifDgEAkKMaOeuUq63cs5NAkV93") {
+            const btn = document.createElement("button");
+            btn.className = "delete-btn";
+            btn.innerText = lang === "ar" ? "🗑 حذف" : "🗑 Delete";
+            btn.onclick = () => db.ref("reviews/" + key).remove();
+            div.appendChild(btn);
+          }
 
-      // إضافة كل تقييم على التوالي لضمان ترتيب صحيح
-      reviewsContainer.appendChild(div);
+          reviewsContainer.appendChild(div);
+        }
+      });
     }
-  });
-}
-    </script>
+  </script>
 </body>
 </html>
