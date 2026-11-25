@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>11 Eleven DENTAL CLINIC - التقييمات</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
 
     * {
       box-sizing: border-box;
@@ -54,6 +54,64 @@
       margin-bottom: 25px;
       padding-bottom: 16px;
       border-bottom: 1.5px solid rgba(25, 118, 210, 0.22);
+    }
+
+    /* شريط حركة متواصلة من اليمين لليسار مع توهج واضح */
+    .marquee-box {
+      width: 100%;
+      overflow: hidden;
+      direction: ltr;
+      padding: 6px 0 10px 0;
+    }
+
+    .marquee-track {
+      display: flex;
+      width: max-content;
+      animation: scrollRightToLeft 11s linear infinite;
+    }
+
+    .marquee-track:hover {
+      animation-play-state: paused;
+    }
+
+    .clinic-brand {
+      display: inline-block;
+      padding: 0 40px;
+      font-size: 24px;
+      font-weight: 800;
+      color: #1565c0;
+      letter-spacing: 1px;
+      white-space: nowrap;
+      text-shadow:
+        0 0 8px rgba(33, 150, 243, 0.55),
+        0 0 18px rgba(25, 118, 210, 0.45),
+        0 0 30px rgba(100, 181, 246, 0.4);
+      animation: brandGlow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes scrollRightToLeft {
+      0% {
+        transform: translateX(0%);
+      }
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+
+    @keyframes brandGlow {
+      0% {
+        color: #1976d2;
+        text-shadow:
+          0 0 7px rgba(33, 150, 243, 0.45),
+          0 0 16px rgba(25, 118, 210, 0.35);
+      }
+      100% {
+        color: #0d47a1;
+        text-shadow:
+          0 0 10px rgba(66, 165, 245, 0.8),
+          0 0 22px rgba(25, 118, 210, 0.65),
+          0 0 34px rgba(144, 202, 249, 0.55);
+      }
     }
 
     h2 {
@@ -303,7 +361,14 @@
 <body>
   <div class="container">
     <div class="clinic-header">
-      <h2 id="pageTitle">11 Eleven DENTAL CLINIC</h2>
+      <div class="marquee-box">
+        <div class="marquee-track">
+          <span class="clinic-brand">11 Eleven DENTAL CLINIC</span>
+          <span class="clinic-brand">11 Eleven DENTAL CLINIC</span>
+          <span class="clinic-brand">11 Eleven DENTAL CLINIC</span>
+          <span class="clinic-brand">11 Eleven DENTAL CLINIC</span>
+        </div>
+      </div>
       <p class="clinic-address" id="clinicAddress">📍 المهندسين - 8 شارع جامعة الدول قبل فندق نبيلة</p>
       <p class="clinic-phone" id="clinicPhone">📞 +20 155 499 9954</p>
     </div>
@@ -367,7 +432,6 @@
 
     const t = {
       ar: {
-        pageTitle: "11 Eleven DENTAL CLINIC",
         clinicAddress: "📍 المهندسين - 8 شارع جامعة الدول قبل فندق نبيلة",
         clinicPhone: "📞 +20 155 499 9954",
         labelName: "الاسم:",
@@ -388,7 +452,6 @@
         excellent: "ممتاز"
       },
       en: {
-        pageTitle: "11 Eleven DENTAL CLINIC",
         clinicAddress: "📍 Mohandessin - 8 Gameat El Dowal St., before Nabila Hotel",
         clinicPhone: "📞 +20 155 499 9954",
         labelName: "Name:",
@@ -413,7 +476,6 @@
     function applyLang(lang){
       localStorage.setItem("lang", lang);
       document.body.dir = lang === "ar" ? "rtl" : "ltr";
-      document.getElementById("pageTitle").innerText = t[lang].pageTitle;
       document.getElementById("clinicAddress").innerText = t[lang].clinicAddress;
       document.getElementById("clinicPhone").innerText = t[lang].clinicPhone;
       document.getElementById("labelName").innerText = t[lang].labelName;
