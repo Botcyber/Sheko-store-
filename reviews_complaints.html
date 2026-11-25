@@ -6,28 +6,58 @@
   <title>11 Eleven DENTAL CLINIC - التقييمات</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       font-family: 'Cairo', sans-serif;
-      background: #e3f2fd;
+      background-color: #f4f9fd;
       margin: 0;
       padding: 20px;
       color: #222;
+      position: relative;
+      min-height: 100vh;
+      overflow-x: hidden;
     }
+
+    /* خلفية اللوجو الشفافة للصفحة بالكامل */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: url('1000325255.jpg');
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: min(620px, 85vw);
+      opacity: 0.14;
+      pointer-events: none;
+      z-index: 0;
+    }
+
     .container {
+      position: relative;
+      z-index: 1;
       max-width: 900px;
       margin: auto;
-      background: white;
+      background: rgba(255, 255, 255, 0.84);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
       padding: 30px 40px;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      border-radius: 18px;
+      border: 1px solid rgba(25, 118, 210, 0.16);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
       animation: fadeInUp 0.8s ease forwards;
     }
+
     .clinic-header {
       text-align: center;
       margin-bottom: 25px;
       padding-bottom: 18px;
-      border-bottom: 2px solid #e3f2fd;
+      border-bottom: 2px solid rgba(25, 118, 210, 0.15);
     }
+
     h2 {
       text-align: center;
       color: #1976d2;
@@ -35,34 +65,40 @@
       font-weight: 700;
       letter-spacing: 0.5px;
     }
+
     .clinic-address {
       color: #455a64;
       font-size: 15px;
       font-weight: 600;
       margin: 0;
     }
+
     label {
       font-weight: 600;
       margin-top: 15px;
       display: block;
     }
+
     input[type="text"], textarea {
       width: 100%;
-      box-sizing: border-box;
       padding: 12px 15px;
       margin-top: 8px;
       border-radius: 10px;
       border: 1.8px solid #90caf9;
+      background: rgba(255, 255, 255, 0.9);
       font-size: 16px;
       font-family: 'Cairo', sans-serif;
       resize: vertical;
-      transition: border-color 0.3s ease;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
     }
+
     input[type="text"]:focus, textarea:focus {
       outline: none;
+      background: #ffffff;
       border-color: #1976d2;
       box-shadow: 0 0 8px #90caf9aa;
     }
+
     button {
       background-color: #1976d2;
       color: white;
@@ -74,19 +110,23 @@
       font-family: 'Cairo', sans-serif;
       margin-top: 20px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
-      box-shadow: 0 5px 12px rgba(25, 118, 210, 0.4);
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      box-shadow: 0 5px 12px rgba(25, 118, 210, 0.35);
     }
+
     button:hover {
       background-color: #115293;
-      box-shadow: 0 8px 20px rgba(17, 82, 147, 0.6);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(17, 82, 147, 0.45);
     }
+
     .stars {
       display: flex;
       justify-content: center;
       gap: 8px;
       margin: 15px 0 10px 0;
     }
+
     .stars span {
       font-size: 28px;
       cursor: pointer;
@@ -95,6 +135,7 @@
       user-select: none;
       animation: starPulse 2.5s infinite alternate ease-in-out;
     }
+
     .stars span.active {
       color: #ffd700;
       text-shadow:
@@ -103,6 +144,7 @@
         0 0 30px #fff48fbb;
       animation: starGlow 1.5s infinite alternate ease-in-out;
     }
+
     .stars span:hover {
       transform: scale(1.4) rotate(10deg);
       color: #ffd700;
@@ -111,58 +153,69 @@
         0 0 25px #ffec859f,
         0 0 35px #fff48fff;
     }
+
     @keyframes starPulse {
-      0% { transform: scale(1) rotate(0deg);}
-      50% { transform: scale(1.1) rotate(5deg);}
-      100% { transform: scale(1) rotate(0deg);}
+      0% { transform: scale(1) rotate(0deg); }
+      50% { transform: scale(1.1) rotate(5deg); }
+      100% { transform: scale(1) rotate(0deg); }
     }
+
     @keyframes starGlow {
       0% { text-shadow: 0 0 8px #ffd700cc; }
       100% { text-shadow: 0 0 20px #fffacdff; }
     }
+
     .section {
       margin-top: 50px;
     }
+
     .review {
-      background: #f1f9ff;
+      background: rgba(241, 249, 255, 0.88);
       border-right: 6px solid #1976d2;
       padding: 15px 20px;
       margin-bottom: 20px;
       border-radius: 12px;
-      box-shadow: 0 4px 10px rgb(25 118 210 / 0.15);
+      box-shadow: 0 4px 10px rgb(25 118 210 / 0.14);
       position: relative;
       display: flex;
       flex-direction: column;
       gap: 8px;
       animation: fadeIn 0.8s ease forwards;
     }
+
     body[dir="ltr"] .review {
       border-right: none;
       border-left: 6px solid #1976d2;
     }
+
     .stars-review span {
       font-size: 22px;
       color: #ccc;
     }
+
     .stars-review span.active {
       color: #ffd700;
     }
+
     .review-header {
       display: flex;
       align-items: center;
       gap: 10px;
       font-weight: 700;
     }
+
     .review-header img {
       width: 40px;
       height: 40px;
       border-radius: 50%;
       object-fit: cover;
     }
+
     .meta {
       font-size: 13px;
       color: #666;
     }
+
     .delete-btn {
       background: #e53935;
       color: white;
@@ -175,23 +228,32 @@
       margin-top: 6px;
       box-shadow: none;
     }
+
     .delete-btn:hover {
       background: #b71c1c;
     }
+
     @keyframes fadeInUp {
-      0% { opacity: 0; transform: translateY(40px);}
-      100% { opacity: 1; transform: translateY(0);}
+      0% { opacity: 0; transform: translateY(40px); }
+      100% { opacity: 1; transform: translateY(0); }
     }
+
     @keyframes fadeIn {
-      from {opacity: 0; transform: translateY(15px);}
-      to {opacity: 1; transform: translateY(0);}
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="clinic-header">
-      <h2 id="pageTitle"> 11 Eleven DENTAL CLINIC</h2>
+      <h2 id="pageTitle">11 Eleven DENTAL CLINIC</h2>
       <p class="clinic-address" id="clinicAddress">📍 المهندسين - 8 شارع جامعة الدول قبل فندق نبيلة</p>
     </div>
 
@@ -238,7 +300,7 @@
 
     const t = {
       ar: {
-        pageTitle: " 11 Eleven DENTAL CLINIC",
+        pageTitle: "11 Eleven DENTAL CLINIC",
         clinicAddress: "📍 المهندسين - 8 شارع جامعة الدول قبل فندق نبيلة",
         labelName: "الاسم:",
         namePlaceholder: "اكتب اسمك هنا...",
@@ -252,7 +314,7 @@
         missingFields: "من فضلك اكتب اسمك، واختر النجوم، واكتب تعليقك."
       },
       en: {
-        pageTitle: " 11 Eleven DENTAL CLINIC",
+        pageTitle: "11 Eleven DENTAL CLINIC",
         clinicAddress: "📍 Mohandessin - 8 Gameat El Dowal St., before Nabila Hotel",
         labelName: "Name:",
         namePlaceholder: "Enter your name...",
