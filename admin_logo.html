@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>إدارة خلفية العيادة - 11 Eleven DENTAL CLINIC</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap');
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Cairo', sans-serif;
+      background: linear-gradient(135deg, #e3f2fd, #f4f9fd);
+      margin: 0;
+      padding: 24px;
+      color: #222;
+      min-height: 100vh;
+    }
+
+    .admin-card {
+      max-width: 650px;
+      margin: 40px auto;
+      background: #ffffff;
+      padding: 32px;
+      border-radius: 18px;
+      box-shadow: 0 12px 30px rgba(25, 118, 210, 0.14);
+      text-align: center;
+    }
+
+    h1 {
+      color: #1976d2;
+      margin: 0 0 8px 0;
+      font-size: 24px;
+    }
+
+    .subtitle {
+      color: #546e7a;
+      margin: 0 0 24px 0;
+      font-size: 14px;
+    }
+
+    .upload-box {
+      border: 2px dashed #64b5f6;
+      border-radius: 14px;
+      padding: 24px;
+      background: #f8fcff;
+      margin-bottom: 20px;
+    }
+
+    .btn-select {
+      display: inline-block;
+      background: #1976d2;
+      color: #fff;
+      padding: 12px 22px;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.25s ease;
+    }
+
+    .btn-select:hover {
+      background: #115293;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .preview-wrap {
+      margin: 20px 0;
+      padding: 14px;
+      border-radius: 12px;
+      background: #eef6fc;
+    }
+
+    .preview-wrap img {
+      max-width: 100%;
+      max-height: 260px;
+      border-radius: 10px;
+      object-fit: contain;
+      display: block;
+      margin: 10px auto 0;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    button {
+      font-family: 'Cairo', sans-serif;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 20px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background 0.25s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-save {
+      background: #2e7d32;
+      color: #fff;
+    }
+
+    .btn-save:hover {
+      background: #1b5e20;
+    }
+
+    .btn-clear {
+      background: #e53935;
+      color: #fff;
+    }
+
+    .btn-clear:hover {
+      background: #b71c1c;
+    }
+
+    .btn-link {
+      background: #e3f2fd;
+      color: #1976d2;
+      text-decoration: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-weight: 700;
+      display: inline-block;
+    }
+
+    #statusMsg {
+      margin-top: 16px;
+      font-weight: 700;
+      min-height: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-card">
+    <h1>لوحة تحكم خلفية العيادة</h1>
+    <p class="subtitle">11 Eleven DENTAL CLINIC — رفع وتحديث صورة الخلفية لصفحة التقييمات</p>
+
+    <div class="upload-box">
+      <label for="bgFileInput" class="btn-select">📁 اختر صورة من الجهاز</label>
+      <input type="file" id="bgFileInput" accept="image/*" />
+      <div style="margin-top: 10px; font-size: 13px; color: #607d8b;">
+        يُفضل اختيار صورة واضحة بحجم مناسب لسرعة التحميل
+      </div>
+    </div>
+
+    <div class="preview-wrap">
+      <div style="font-weight: 700; color: #1976d2;">معاينة الصورة الحالية / المختارة:</div>
+      <img id="bgPreview" src="" alt="لا توجد صورة محددة" />
+    </div>
+
+    <div class="actions">
+      <button class="btn-save" id="btnSaveBg">💾 حفظ ونشر في صفحة التقييمات</button>
+      <button class="btn-clear" id="btnClearBg">🗑️ إزالة الخلفية</button>
+      <a class="btn-link" href="reviews_complaints.html">↩ الذهاب لصفحة التقييمات</a>
+    </div>
+
+    <div id="statusMsg"></div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+  <script>
+    const ADMIN_UID = "mlifDgEAkKMaOeuUq63cs5NAkV93";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYcZ2_RjaI4fjP14QlqbUbL3rWvPPWnas",
+      authDomain: "sheko-store.firebaseapp.com",
+      databaseURL: "https://sheko-store-default-rtdb.firebaseio.com",
+      projectId: "sheko-store",
+      storageBucket: "sheko-store.appspot.com",
+      messagingSenderId: "113892775847",
+      appId: "1:113892775847:web:2aa4c11c3f5dd1d15f0882"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    const statusMsg = document.getElementById("statusMsg");
+    const previewImg = document.getElementById("bgPreview");
+    let selectedBase64 = null;
+
+    function setStatus(text, color = "#1976d2") {
+      statusMsg.textContent = text;
+      statusMsg.style.color = color;
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        location.href = "index.html";
+        return;
+      }
+      if (user.uid !== ADMIN_UID) {
+        document.querySelector(".admin-card").innerHTML = `
+          <h1 style="color:#e53935;">غير مسموح بالوصول</h1>
+          <p class="subtitle">هذه الصفحة مخصصة لحساب الأدمن فقط.</p>
+          <a class="btn-link" href="reviews_complaints.html">العودة لصفحة التقييمات</a>
+        `;
+        return;
+      }
+
+      db.ref("clinic/logoImage").once("value").then(snap => {
+        if (snap.exists() && snap.val()) {
+          selectedBase64 = snap.val();
+          previewImg.src = selectedBase64;
+        }
+      });
+    });
+
+    document.getElementById("bgFileInput").addEventListener("change", function (event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        selectedBase64 = e.target.result;
+        previewImg.src = selectedBase64;
+        setStatus("تم تحميل الصورة للمعاينة — اضغط (حفظ ونشر) لتطبيقها.", "#1976d2");
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById("btnSaveBg").addEventListener("click", function () {
+      if (!selectedBase64) {
+        setStatus("اختر صورة أولاً من الجهاز.", "#e53935");
+        return;
+      }
+
+      db.ref("clinic/logoImage").set(selectedBase64)
+        .then(() => {
+          localStorage.setItem("clinicBgLogo", selectedBase64);
+          setStatus("✅ تم حفظ صورة الخلفية بنجاح وستظهر في صفحة التقييمات.", "#2e7d32");
+        })
+        .catch(err => {
+          setStatus("❌ حدث خطأ أثناء الحفظ: " + err.message, "#e53935");
+        });
+    });
+
+    document.getElementById("btnClearBg").addEventListener("click", function () {
+      db.ref("clinic/logoImage").remove()
+        .then(() => {
+          selectedBase64 = null;
+          previewImg.src = "";
+          localStorage.removeItem("clinicBgLogo");
+          setStatus("تمت إزالة صورة الخلفية.", "#e53935");
+        })
+        .catch(err => {
+          setStatus("❌ حدث خطأ أثناء الإزالة: " + err.message, "#e53935");
+        });
+    });
+  </script>
+</body>
+</html>
